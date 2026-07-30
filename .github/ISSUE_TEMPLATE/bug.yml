@@ -1,0 +1,76 @@
+name: Bug report
+description: A run does something it should not.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A run is identified by `(seed, config_hash, world_format_version)`. Without
+        the triple the report cannot be reproduced, and it will be closed with a
+        request to complete it — see `docs/COMMUNITY.md`, "Воспроизводимость как
+        контракт".
+
+        Every identifier below is on the line `liminis run` prints:
+
+        ```
+        seed=42 config_hash=blake3:… world_format_version=0 code_version=0.1.0
+        ```
+
+  - type: input
+    id: seed
+    attributes:
+      label: seed
+      description: The `--seed` value the run was started with.
+      placeholder: "42"
+    validations:
+      required: true
+
+  - type: input
+    id: config-hash
+    attributes:
+      label: config_hash
+      description: >-
+        Copy it verbatim, including the `blake3:` prefix. It is taken after
+        defaults are applied, so it identifies the configuration and not the file.
+      placeholder: "blake3:0123456789abcdef"
+    validations:
+      required: true
+
+  - type: input
+    id: world-format-version
+    attributes:
+      label: world_format_version
+      description: >-
+        The world semantics version (ADR-020). Separate from the code version:
+        results produced under different values do not belong on the same plot.
+      placeholder: "0"
+    validations:
+      required: true
+
+  - type: input
+    id: code-version
+    attributes:
+      label: Code version
+      description: >-
+        The `code_version` field, or the commit hash if you built from a working
+        tree.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps, expected, observed
+      description: >-
+        The exact commands, what you expected to see, and what happened instead.
+        Attach or paste the scenario TOML if it is not one of the configs in the
+        repository.
+      placeholder: |
+        1. cargo run -p liminis-cli -- run --config configs/scenarios/hello.toml --seed 42
+        2. …
+
+        Expected:
+        Observed:
+    validations:
+      required: true

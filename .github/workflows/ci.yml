@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: build, lint, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # rustup honours rust-toolchain.toml, so this installs the pinned
+      # compiler and prints which one the rest of the job runs on. The toolchain
+      # version is part of reproducibility, alongside seed and config (ADR-024).
+      - name: Toolchain
+        run: rustup show
+
+      - name: Format
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace
+
+      - name: Hook tests
+        run: scripts/test-hooks.sh
+
+  world-version:
+    name: world semantics version (ADR-020)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # A change to a config or a kernel changes what the numbers mean, and old
+      # runs stop being comparable to new ones. Refactoring that preserves
+      # behaviour changes the code version and leaves this one alone; anything
+      # that touches dynamics has to move it.
+      - name: WORLD_FORMAT_VERSION must move with the semantics
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+
+          changed="$(git diff --name-only "$BASE_SHA" HEAD)"
+          sensitive="$(printf '%s\n' "$changed" \
+            | grep -E '^(configs/|crates/liminis-core/src/kernels/)' || true)"
+
+          if [ -z "$sensitive" ]; then
+            echo "No configs/** or kernels/** changes in this pull request."
+            exit 0
+          fi
+
+          echo "This pull request touches world semantics:"
+          printf '  %s\n' $sensitive
+
+          bumped="$(git diff "$BASE_SHA" HEAD -- crates/liminis-core/src/version.rs \
+            | grep -c '^[+-]pub const WORLD_FORMAT_VERSION' || true)"
+
+          if [ "$bumped" -eq 0 ]; then
+            echo
+            echo "::error::WORLD_FORMAT_VERSION was not changed (ADR-020)."
+            echo "A change under configs/** or crates/liminis-core/src/kernels/**"
+            echo "changes what a run means, so results from before and after this"
+            echo "pull request cannot go on the same plot. Bump the constant in"
+            echo "crates/liminis-core/src/version.rs."
+            echo
+            echo "If this change genuinely cannot affect dynamics, say so in the"
+            echo "pull request description and record why."
+            exit 1
+          fi
+
+          echo
+          echo "WORLD_FORMAT_VERSION moved. Good."
