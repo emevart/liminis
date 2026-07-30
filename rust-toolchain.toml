@@ -1,0 +1,5 @@
+# The compiler version is part of reproducibility, alongside seed and config
+# (ADR-024). Pinned, not floating.
+[toolchain]
+channel = "1.97.1"
+components = ["rustfmt", "clippy"]

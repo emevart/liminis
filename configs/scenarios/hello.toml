@@ -1,0 +1,20 @@
+# Minimal scenario. Nothing here influences anything yet: there are no fields,
+# no substances and no tick loop. It exists so that `liminis run` has something
+# to read and hash.
+#
+# Scale discipline (SPEC §10): dx and dt are the only parameters allowed to
+# mention the voxel. Everything added later is expressed in concentrations and
+# per-kilogram rates.
+
+name = "hello"
+
+# Timestep, seconds.
+dt = 0.05
+
+[grid]
+nx = 64
+ny = 64
+nz = 64
+
+# Voxel edge, metres. 1e-4 m = 100 um, the eco regime (ADR-013).
+dx = 1.0e-4
