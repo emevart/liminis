@@ -1,0 +1,17 @@
+# Rust
+/target
+
+# Cargo.lock is committed on purpose: this workspace ships a binary,
+# and the exact dependency set is part of run reproducibility (ADR-020).
+
+# macOS
+.DS_Store
+
+# Claude Code local overrides
+.claude/settings.local.json
+
+# Run outputs
+/runs
+
+# Snapshots
+*.snap

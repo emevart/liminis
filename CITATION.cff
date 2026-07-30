@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Liminis"
+abstract: >-
+  A voxel simulator of a biological ecosystem, built to study the major
+  evolutionary transitions. Environment and organisms are made of the same
+  substance registry and the same reaction engine; genomes are rule sets rather
+  than blueprints; every gram entering or leaving the world passes through a
+  named, counted channel.
+type: software
+license: Apache-2.0
+version: "0.1.0"
+authors:
+  - family-names: "TODO(human)"
+    given-names: "TODO(human)"
+    # orcid: "https://orcid.org/TODO(human)"
+repository-code: "TODO(human)"
+# doi: assigned by Zenodo on the first tagged release (ADR-019)
+keywords:
+  - artificial life
+  - evolutionary transitions
+  - individual-based modelling
+  - reaction-diffusion
+  - voxel simulation
