@@ -11,10 +11,9 @@ type: software
 license: Apache-2.0
 version: "0.1.0"
 authors:
-  - family-names: "TODO(human)"
-    given-names: "TODO(human)"
-    # orcid: "https://orcid.org/TODO(human)"
-repository-code: "TODO(human)"
+  - family-names: "Artemev"
+    given-names: "Pavel"
+repository-code: "https://github.com/emevart/liminis"
 # doi: assigned by Zenodo on the first tagged release (ADR-019)
 keywords:
   - artificial life
