@@ -104,11 +104,31 @@ EOF
 
 echo '# frozen-docs'
 
-check 'блокирует Write в docs/SPEC.md' 2 frozen-docs.py \
+# Триггер заморозки — первый файл в kernels/, а не дата и не обещание
+# (ADR-032). Поэтому проверяются оба состояния: до реализации и после.
+
+check 'пропускает docs/SPEC.md, пока kernels/ пуст' 0 frozen-docs.py \
     "$(payload Write "$FAKE/docs/SPEC.md")"
-check 'блокирует Edit в docs/NORTH_STAR.md' 2 frozen-docs.py \
+check 'пропускает docs/NORTH_STAR.md, пока kernels/ пуст' 0 frozen-docs.py \
     "$(payload Edit "$FAKE/docs/NORTH_STAR.md")"
-check 'блокирует запись в docs/archive/' 2 frozen-docs.py \
+
+# .gitkeep существует затем, чтобы пустой каталог попал в git. Считать его
+# началом реализации значило бы захлопнуть заморозку до первой строки кода.
+touch "$FAKE/crates/liminis-core/src/kernels/.gitkeep"
+check 'скрытый файл в kernels/ началом не считается' 0 frozen-docs.py \
+    "$(payload Write "$FAKE/docs/SPEC.md")"
+
+# Первый настоящий файл ядра захлопывает заморозку — и обратной дороги нет.
+echo 'pub fn advect() {}' >"$FAKE/crates/liminis-core/src/kernels/advect.rs"
+check 'блокирует docs/SPEC.md после первого ядра' 2 frozen-docs.py \
+    "$(payload Write "$FAKE/docs/SPEC.md")"
+check 'блокирует docs/NORTH_STAR.md после первого ядра' 2 frozen-docs.py \
+    "$(payload Edit "$FAKE/docs/NORTH_STAR.md")"
+rm "$FAKE/crates/liminis-core/src/kernels/advect.rs" \
+   "$FAKE/crates/liminis-core/src/kernels/.gitkeep"
+
+# archive заморожен по другой причине и безусловно: до реализации тоже.
+check 'блокирует docs/archive/ и до реализации' 2 frozen-docs.py \
     "$(payload Write "$FAKE/docs/archive/ecosim-spec.md")"
 check 'пропускает docs/OPEN_QUESTIONS.md' 0 frozen-docs.py \
     "$(payload Write "$FAKE/docs/OPEN_QUESTIONS.md")"
