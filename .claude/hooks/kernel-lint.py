@@ -7,18 +7,18 @@
 PostToolUse не блокирует — файл уже записан. Ненулевой код выхода здесь означает
 «показать stderr модели», и для линтера это ровно нужное поведение.
 
-О grep-проверке. Первый рубеж против голой арифметики над `Q` — сам тип: `Q` не
-реализует `Deref` и не раскрывает внутреннее поле, поэтому `a * b` над двумя `Q`
-не компилируется (NUMERIC.md §7-8). Эта проверка — второй рубеж, для случаев,
-которые тип пропускает: распаковка через `.0` и арифметика над значениями,
-объявленными как `Q`, в шаблонах и в коде, который до компилятора ещё не дошёл.
-Она сознательно неполна: `qmul(a, b) * 2.0` она не увидит, потому что оператор
-стоит рядом со скобкой, а не с идентификатором. Полноту даёт тип, не grep.
+Сама grep-проверка живёт в `scripts/check_bare_q.py`, и оттуда же её запускает
+CI: хук работает только внутри сессии Claude Code, а PR стороннего
+контрибьютора проверяется в CI или нигде. Две копии одного правила разошлись бы
+молча, поэтому здесь импорт, а не повторение. Общая часть возвращает находку
+кодом; формулирует её вызывающий — здесь по-русски, в CI по-английски.
+
+Область осталась прежней: хук смотрит только `.rs`, потому что следом идут
+`cargo fmt` и `clippy`. Шаблоны WGSL проверяет CI тем же модулем.
 """
 
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -26,13 +26,28 @@ import sys
 TOOLS = ("Write", "Edit")
 KERNELS = "crates/liminis-core/src/kernels/"
 
-# Идентификаторы, объявленные с типом Q: `let flux: Q`, `fn f(rate: Q)`,
-# `struct S { conc: Q }` — все три формы ловятся одним выражением.
-Q_DECLARATION = re.compile(r"\b([A-Za-z_]\w*)\s*:\s*Q\b")
+# Разделяемая проверка лежит в scripts/ репозитория, рядом с test-hooks.sh.
+SHARED = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))),
+    "scripts",
+)
 
-LINE_COMMENT = re.compile(r"//.*$")
-STRING_LITERAL = re.compile(r"\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'")
-ARROW = re.compile(r"->")
+REASON = {
+    "unwrap": "распаковка Q через .0",
+    "operator": "голый арифметический оператор над Q",
+}
+
+
+def load_shared():
+    """Модуль общей проверки. Ошибка импорта — не повод молча пропустить файл."""
+    # Иначе импорт оставляет в дереве scripts/__pycache__/, который никто не
+    # просил и который .gitignore не знает.
+    sys.dont_write_bytecode = True
+    if SHARED not in sys.path:
+        sys.path.insert(0, SHARED)
+    import check_bare_q
+
+    return check_bare_q
 
 
 def repo_relative_path(payload):
@@ -44,37 +59,6 @@ def repo_relative_path(payload):
     root = os.path.realpath(root)
     relative = os.path.relpath(os.path.realpath(target), root)
     return relative.replace(os.sep, "/"), root
-
-
-def scrub(line):
-    """Убрать из строки то, что арифметикой не является."""
-    return ARROW.sub("  ", STRING_LITERAL.sub('""', LINE_COMMENT.sub("", line)))
-
-
-def bare_q_operators(text):
-    """Вернуть [(номер строки, текст, что не так)] для голой арифметики над Q."""
-    lines = text.splitlines()
-    scrubbed = [scrub(line) for line in lines]
-
-    names = set()
-    for line in scrubbed:
-        names.update(Q_DECLARATION.findall(line))
-    if not names:
-        return []
-
-    alternation = "|".join(re.escape(name) for name in sorted(names))
-    operator = re.compile(
-        rf"(?:\b(?:{alternation})\b\s*[-+*/]|[-+*/]\s*\b(?:{alternation})\b)"
-    )
-    unwrap = re.compile(rf"\b(?:{alternation})\b\s*\.\s*0\b")
-
-    findings = []
-    for number, (raw, clean) in enumerate(zip(lines, scrubbed), start=1):
-        if unwrap.search(clean):
-            findings.append((number, raw.strip(), "распаковка Q через .0"))
-        elif operator.search(clean):
-            findings.append((number, raw.strip(), "голый арифметический оператор над Q"))
-    return findings
 
 
 def cargo_binary():
@@ -112,15 +96,26 @@ def main():
     absolute = os.path.join(root, relative)
 
     if relative.startswith(KERNELS) and os.path.exists(absolute):
+        try:
+            shared = load_shared()
+        except ImportError as exc:
+            print(
+                f"kernel-lint: не импортировал scripts/check_bare_q.py ({exc}) — "
+                "проверка на голую арифметику над Q не выполнялась",
+                file=sys.stderr,
+            )
+            return 1
+
         with open(absolute, encoding="utf-8") as handle:
-            findings = bare_q_operators(handle.read())
+            findings = shared.bare_q_operators(handle.read())
         if findings:
             print(
                 f"{relative}: голая арифметика над Q запрещена внутри ядер "
                 f"(ADR-022, NUMERIC.md §2). Только обёртки qmul/qdiv/qadd/qsub/qexp/…",
                 file=sys.stderr,
             )
-            for number, text, what in findings:
+            for number, text, code in findings:
+                what = REASON.get(code, code)
                 print(f"  {relative}:{number}: {what}\n      {text}", file=sys.stderr)
             return 2
 

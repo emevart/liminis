@@ -34,8 +34,102 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
+  # The rule is old, the check is not: NUMERIC.md section 8 asks for "a linter or
+  # a grep in CI, rather than a line in CLAUDE.md". The PostToolUse hook greps
+  # the same thing, but only inside a Claude Code session — a pull request from
+  # anyone else was passing this rule by. Both call scripts/check_bare_q.py, so
+  # there is one implementation and not two that drift apart in silence.
+  #
+  # The type is the first line of defence and needs no job: Q implements no
+  # Deref and exposes no field, so `a * b` over two Q does not compile. This is
+  # the second line, for what the type cannot see — unwrapping through .0, and
+  # WGSL templates, which have no type system at all.
+  numeric:
+    name: no bare arithmetic over Q (ADR-022)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Passes while kernels/ is still empty: an empty directory is the normal
+      # state of the project until the first kernel (ADR-032), not a failure.
+      - name: Kernels and WGSL templates go through the wrappers
+        run: python3 scripts/check_bare_q.py
+
+  # A hook that quietly lets through what it should block is worse than no hook,
+  # so the hooks have tests. Those tests ran on Linux only, which left the one
+  # platform they were hardened for untested: .gitattributes forces LF on
+  # checkout because bash refuses a shebang with a trailing carriage return, and
+  # that is a statement about a Windows clone. macOS is here for the other
+  # promise in the script — an old bash and a BSD userland.
+  hooks:
+    name: hook tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      # The last hook test runs kernel-lint against the real repository, and
+      # that hook shells out to cargo fmt and cargo clippy. This materialises
+      # the pinned toolchain before the test needs it, on every platform.
+      - name: Toolchain
+        run: rustup show
+
+      # The tests execute each hook through its shebang, and the shebang says
+      # python3. The Windows image ships python.exe; python3.exe next to it is
+      # not something to rely on, and a missing interpreter would fail the run
+      # for a reason that has nothing to do with the guards.
+      - name: python3 in PATH (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          set -euo pipefail
+
+          if command -v python3 >/dev/null; then
+            echo "python3 already resolves to $(command -v python3)"
+            exit 0
+          fi
+
+          python="$(command -v python || true)"
+          if [ -z "$python" ]; then
+            echo "::error::neither python3 nor python is in PATH; the hooks cannot run"
+            exit 1
+          fi
+
+          # python.exe finds its standard library next to itself, so the copy
+          # has to stay in the same directory. A wrapper elsewhere on PATH is
+          # the fallback for when that directory is read-only.
+          if cp "$python" "$(dirname "$python")/python3.exe" 2>/dev/null; then
+            echo "copied $python next to itself as python3.exe"
+          else
+            shim="$RUNNER_TEMP/python3-shim"
+            mkdir -p "$shim"
+            printf '#!/bin/sh\nexec python "$@"\n' >"$shim/python3"
+            chmod +x "$shim/python3"
+            cygpath -w "$shim" >>"$GITHUB_PATH"
+            echo "wrapped python as $shim/python3"
+          fi
+
+      # TMPDIR on Windows: the script builds a fake repository under mktemp -d
+      # and hands its path to the hooks, which run on native Windows Python.
+      # Git Bash hands out /tmp/... paths, and that Python resolves them against
+      # the current drive instead — the fake repository would look empty, the
+      # guards would look silent, and the tests would pass for the wrong reason.
+      # cygpath -m gives a path both halves read the same way.
       - name: Hook tests
-        run: scripts/test-hooks.sh
+        run: |
+          set -euo pipefail
+
+          if [ "$RUNNER_OS" = Windows ]; then
+            TMPDIR="$(cygpath -m "$RUNNER_TEMP")"
+            export TMPDIR
+          fi
+
+          scripts/test-hooks.sh
 
   world-version:
     name: world semantics version (ADR-020)
@@ -46,10 +140,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      # A change to a config or a kernel changes what the numbers mean, and old
-      # runs stop being comparable to new ones. Refactoring that preserves
-      # behaviour changes the code version and leaves this one alone; anything
-      # that touches dynamics has to move it.
+      # A change to a config, a kernel or the tick order changes what the
+      # numbers mean, and old runs stop being comparable to new ones.
+      # Refactoring that preserves behaviour changes the code version and leaves
+      # this one alone; anything that touches dynamics has to move it.
       - name: WORLD_FORMAT_VERSION must move with the semantics
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -58,10 +152,10 @@ jobs:
 
           changed="$(git diff --name-only "$BASE_SHA" HEAD)"
           sensitive="$(printf '%s\n' "$changed" \
-            | grep -E '^(configs/|crates/liminis-core/src/kernels/)' || true)"
+            | grep -E '^(configs/|crates/liminis-core/src/(kernels|process)/)' || true)"
 
           if [ -z "$sensitive" ]; then
-            echo "No configs/** or kernels/** changes in this pull request."
+            echo "No configs/**, kernels/** or process/** changes in this pull request."
             exit 0
           fi
 
@@ -74,10 +168,17 @@ jobs:
           if [ "$bumped" -eq 0 ]; then
             echo
             echo "::error::WORLD_FORMAT_VERSION was not changed (ADR-020)."
-            echo "A change under configs/** or crates/liminis-core/src/kernels/**"
-            echo "changes what a run means, so results from before and after this"
-            echo "pull request cannot go on the same plot. Bump the constant in"
+            echo "A change under configs/**, crates/liminis-core/src/kernels/**"
+            echo "or crates/liminis-core/src/process/** changes what a run means,"
+            echo "so results from before and after this pull request cannot go on"
+            echo "the same plot. Bump the constant in"
             echo "crates/liminis-core/src/version.rs."
+            echo
+            echo "process/** counts because the order of processes inside a tick"
+            echo "is part of the world semantics: with Lie-Trotter splitting the"
+            echo "result depends on it, so swapping two processes has to move the"
+            echo "version even though no config and no kernel changed (ADR-036,"
+            echo "SPEC section 8)."
             echo
             echo "If this change genuinely cannot affect dynamics, say so in the"
             echo "pull request description and record why."
@@ -86,3 +187,88 @@ jobs:
 
           echo
           echo "WORLD_FORMAT_VERSION moved. Good."
+
+  frozen-docs:
+    name: frozen documents (ADR-032)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # The freeze has a mechanical trigger: the first file under kernels/ means
+      # implementation started, and from that moment SPEC.md and NORTH_STAR.md
+      # are read-only. The PreToolUse hook of the same name enforces it inside a
+      # Claude Code session, and only for Write and Edit — a human, or a shell
+      # redirect, walks straight past it. This is the same rule where everything
+      # lands anyway.
+      #
+      # A hidden file is not a start: .gitkeep exists so that an empty directory
+      # reaches git at all. Same reading as in the hook.
+      - name: SPEC and NORTH_STAR are frozen once the first kernel exists
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+
+          frozen="$(git diff --name-only "$BASE_SHA" HEAD \
+            | grep -E '^docs/(SPEC|NORTH_STAR)\.md$' || true)"
+
+          if [ -z "$frozen" ]; then
+            echo "This pull request touches neither document."
+            exit 0
+          fi
+
+          started=""
+          if [ -d crates/liminis-core/src/kernels ]; then
+            started="$(find crates/liminis-core/src/kernels \
+              -type f ! -path '*/.*' -print -quit)"
+          fi
+
+          if [ -z "$started" ]; then
+            echo "No kernel yet, so the window is still open (ADR-032). Changed:"
+            printf '  %s\n' $frozen
+            echo
+            echo "Inside the window these two are brought in line with"
+            echo "docs/DECISIONS.md, not extended: a new idea goes to"
+            echo "docs/OPEN_QUESTIONS.md. Nothing checks that part."
+            exit 0
+          fi
+
+          echo "Implementation has started, first kernel file: $started"
+          echo
+          echo "::error::A frozen document was edited (ADR-032)."
+          printf '  %s\n' $frozen
+          echo
+          echo "The freeze starts with the first file under"
+          echo "crates/liminis-core/src/kernels/, and from that point"
+          echo "docs/SPEC.md and docs/NORTH_STAR.md are not edited at all."
+          echo "A new idea goes to docs/OPEN_QUESTIONS.md; a new decision goes"
+          echo "to the end of docs/DECISIONS.md."
+          exit 1
+
+      # docs/archive/** is frozen for a different reason and unconditionally:
+      # these are superseded drafts that contradict the current spec, so they
+      # are neither edited nor cited at any stage of the project (ADR-032).
+      - name: docs/archive stays superseded
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+
+          touched="$(git diff --name-only "$BASE_SHA" HEAD \
+            | grep -E '^docs/archive/' || true)"
+
+          if [ -z "$touched" ]; then
+            echo "This pull request leaves docs/archive/ alone."
+            exit 0
+          fi
+
+          echo "::error::docs/archive/** is frozen unconditionally (ADR-032)."
+          printf '  %s\n' $touched
+          echo
+          echo "Superseded drafts are kept as history. If something in there is"
+          echo "still true, it belongs in the current documents, not in a patch"
+          echo "to the draft."
+          exit 1
