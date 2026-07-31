@@ -13,7 +13,7 @@ body:
         Every identifier below is on the line `liminis run` prints:
 
         ```
-        seed=42 config_hash=blake3:… world_format_version=0 code_version=0.1.0
+        seed=42 config_hash=blake3:… world_format_version=1 code_version=0.1.0
         ```
 
   - type: input
@@ -43,7 +43,7 @@ body:
       description: >-
         The world semantics version (ADR-020). Separate from the code version:
         results produced under different values do not belong on the same plot.
-      placeholder: "0"
+      placeholder: "1"
     validations:
       required: true
 

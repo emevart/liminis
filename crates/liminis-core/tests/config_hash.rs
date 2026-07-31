@@ -19,7 +19,7 @@ fn hash_of(name: &str, text: &str) -> String {
 
 const PLAIN: &str = r#"
 name = "hello"
-dt = 0.05
+dt = 1.0
 
 [grid]
 nx = 64
@@ -32,7 +32,7 @@ dx = 1.0e-4
 /// indentation moved around, comments added, floats written another way.
 const SCRAMBLED: &str = r#"
 # the same scenario, typed by someone else
-    dt   =    5.0e-2
+    dt   =    1e0
 name="hello"
 
 
@@ -76,7 +76,7 @@ fn an_unknown_field_is_an_error() {
 #[test]
 fn an_omitted_field_hashes_as_its_default() {
     let spelled_out =
-        "name = \"defaults\"\ndt = 0.05\n\n[grid]\nnx = 64\nny = 64\nnz = 64\ndx = 1.0e-4\n";
+        "name = \"defaults\"\ndt = 1.0\n\n[grid]\nnx = 64\nny = 64\nnz = 64\ndx = 1.0e-4\n";
     let omitted = "name = \"defaults\"\n\n[grid]\n";
     assert_eq!(
         hash_of("spelled_out.toml", spelled_out),

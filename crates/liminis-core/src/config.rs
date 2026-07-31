@@ -26,7 +26,9 @@ use std::path::Path;
 pub struct Config {
     /// Scenario name. The one field without a default.
     pub name: String,
-    /// Timestep, seconds.
+    /// Timestep, seconds. One second in the eco regime: a field whose
+    /// diffusion outruns the tick subdivides its own step rather than
+    /// shortening the tick for everyone (ADR-030).
     #[serde(default = "default_dt")]
     pub dt: f64,
     pub grid: Grid,
@@ -49,7 +51,7 @@ pub struct Grid {
 }
 
 fn default_dt() -> f64 {
-    0.05
+    1.0
 }
 
 fn default_extent() -> u32 {
