@@ -8,8 +8,11 @@
 
 name = "hello"
 
-# Timestep, seconds.
-dt = 0.05
+# Timestep, seconds. The eco tick is a second. A field whose diffusion outruns
+# it subdivides its own step, n = ceil(6*D*dt/dx^2), derived at config load: the
+# few fast fields pay for themselves rather than the whole world running ten
+# times slower for their sake (ADR-030).
+dt = 1.0
 
 [grid]
 nx = 64
