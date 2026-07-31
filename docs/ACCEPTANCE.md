@@ -20,8 +20,8 @@
 
 ### Валидатор отказывается грузить
 
-Восемь отказов. Каждый — класс ошибки, который иначе проявится как странная
-динамика через сто тысяч тиков.
+Шестнадцать отказов. Каждый — класс ошибки, который иначе проявится как
+странная динамика через сто тысяч тиков.
 
 ```
 reaction_unbalanced_by_element_is_rejected
@@ -33,15 +33,71 @@ courant_violation_is_rejected
 outflow_bound_violation_is_rejected
 scale_overflow_is_rejected
 scale_underflow_is_rejected
+substance_dynamic_range_over_2e14_is_rejected
+reaction_with_unrepresentable_concentration_spread_is_rejected
+stoichiometry_in_storage_units_fits_i32
+substance_count_over_s_max_is_rejected
+reaction_count_over_r_max_is_rejected
 every_n_ticks_on_diffusive_field_is_rejected
 calibration_path_that_leads_nowhere_is_rejected
 ```
 
 `courant_violation_is_rejected` и `outflow_bound_violation_is_rejected` — разные проверки. Первая про линейную устойчивость, `max(|u|·dt/dx) ≤ 1`. Вторая про неотрицательность: воксель с расходящимся течением отдаёт сумму по исходящим граням, а не максимум, и условие там строже (SPEC §4.2). Конфиг, проходящий первую и валящий вторую, существует, и он даёт отрицательные количества.
 
-`scale_underflow_is_rejected` — про нижнюю границу разрешения (ADR-035):
-сценарий экорежима, запущенный при микрорежимном `dx`, обязан отказаться
-грузиться, а не считать воду одной единицей.
+`scale_underflow_is_rejected` — про нижнюю границу разрешения: сценарий
+экорежима, запущенный при микрорежимном `dx`, обязан отказаться грузиться, а не
+считать воду одной единицей.
+
+Три отказа посередине списка пришли из ADR-039. Два из них —
+`reaction_with_unrepresentable_concentration_spread_is_rejected` и
+`stoichiometry_in_storage_units_fits_i32` — отличаются от прочих тем, что называют
+не вещество, а **пару «вещество, реакция»**; третий,
+`substance_dynamic_range_over_2e14_is_rejected`, сравнивает `max_conc` и
+`typical_conc` одного вещества и о реакциях не знает. Разброс концентраций внутри
+одной реакции ограничен: при `sᵢ · max_conc,ⱼ / typ_conc,ᵢ > 2²⁸·β` (ADR-042) коэффициент
+хранения `νᵢ` либо переполняет `i32`, либо оказывается больше всего пула вещества
+`i` — и тогда реакция не совершается ни разу, молча. Сообщение об отказе обязано
+назвать обе стороны: конфиг, в котором виновата пара, нельзя починить, глядя на
+одно имя.
+
+`reaction_with_unrepresentable_concentration_spread_is_rejected` проверяется на
+настоящем реестре §2.3, а не на выдуманном. Единственная известная в проекте
+несовместность — его собственная: вода и протон в одной реакции при `i32` для
+воды. Тест обязан её воспроизводить, иначе он проверяет, что валидатор умеет
+отказывать, а не что он отказывает там, где надо.
+
+### Вывод масштабов
+
+Масштабы, экспонента экстента и разрядность не задаются, а выводятся (ADR-039,
+ADR-040), поэтому проверять их надо как вычисление, а не как объявление.
+
+```
+extent_exponent_is_derived_from_the_scarcest_participant
+storage_width_is_derived_not_declared
+water_is_stored_in_64_bits_in_the_default_registry
+reaction_energy_delta_is_integral_after_load
+```
+
+`extent_exponent_is_derived_from_the_scarcest_participant` — прямая защита от
+ошибки, ради исправления которой ADR-039 и написан. `e_r`, взятая от самого
+обильного участника вместо самого дефицитного, компилируется, грузится и даёт
+мир, в котором химия стоит на месте при внешне исправном ledger. Тест подаёт
+реакцию с двумя участниками заведомо разной концентрации и смотрит, от которого
+получилось число.
+
+`water_is_stored_in_64_bits_in_the_default_registry` выглядит как тест про воду, а
+на деле про вывод: если правило разрядности однажды выродится в список имён, он
+продолжит проходить. Поэтому рядом стоит `storage_width_is_derived_not_declared` —
+он двигает `max_conc` произвольного вещества и требует, чтобы ширина поменялась
+следом.
+
+`reaction_energy_delta_is_integral_after_load` — про то, что энтальпия участвует
+в реакции наравне с веществом (ADR-041). Объявленная `enthalpy` вещественна, её
+коэффициент округляется при загрузке, и тест требует двух вещей сразу: что
+округление произошло один раз и до первого тика, и что валидатор назвал
+наведённую относительную ошибку числом. Неокруглённый коэффициент дал бы
+округление в рантайме на каждом применении — то есть независимое от вещественного,
+то есть расходящийся энергетический ledger.
 
 ### Сохранение
 
@@ -50,7 +106,9 @@ flux_is_antisymmetric
 advection_never_produces_negative_amount
 advection_alone_conserves_exactly
 diffusion_alone_conserves_exactly
+transport_of_a_64_bit_substance_conserves_exactly
 reaction_alone_conserves_each_element_exactly
+competition_scaling_conserves_each_element_exactly
 pressure_relaxation_conserves_exactly
 sedimentation_conserves_exactly
 boundary_outflow_appears_in_channel_counter
@@ -116,6 +174,7 @@ config_schema_declares_no_voxel_dependent_units
 same_seed_and_config_give_byte_identical_state
 different_seed_gives_different_state
 reaction_id_is_stable_under_reordering_in_toml
+reaction_result_is_independent_of_order_in_toml
 stochastic_rounding_is_unbiased_over_1e6_draws
 config_hash_ignores_the_calibration_section
 ```
@@ -123,6 +182,12 @@ config_hash_ignores_the_calibration_section
 `reaction_id_is_stable_under_reordering_in_toml` — прямое следствие ADR-027:
 если идентификатор берётся от позиции в файле, перестановка двух реакций меняет
 поток случайных чисел и, значит, прогон, при неизменной семантике.
+
+`reaction_result_is_independent_of_order_in_toml` — соседний и не тот же самый.
+Первый ловит подмену идентификатора, второй — последовательное применение
+реакций внутри вокселя: если наличие пересчитывается после каждой, порядок
+начинает решать, кто съел субстрат первым. Ошибка невидима, потому что баланс при
+этом продолжает сходиться (ADR-041).
 
 ### Наблюдаемое поведение
 
