@@ -16,8 +16,17 @@ Pre-S0. Nothing is simulated yet.
 There is no grid, no fields, no tick loop, no kernels. The repository currently holds
 the design documents, a Cargo workspace, and a single command that reads a scenario
 config, applies defaults, and prints the identity of the run it would have performed.
-The roadmap starts at S0 ("dead world": grid, advection, diffusion, pressure, light,
-temperature, ledger) and is laid out in `docs/SPEC.md` §13.
+
+The roadmap is laid out in `docs/SPEC.md` §13 and starts at S0: infrastructure first
+(pinned toolchain, config validator, golden tests, `world_format_version`), then the
+grid, the fields, advection, diffusion with substeps, pressure, light, enthalpy, the
+reaction engine with abiotic chemistry, a ledger for substance and a ledger for
+energy, and a volume viewer. Chemistry is in S0 because transport conserves substance
+by construction, so on a world without reactions the central invariant has almost
+nothing to catch (ADR-031) — and with oxidation fronts and chemical zonation the
+stage is no longer a dead world, though not yet a live one. Temperature is absent from
+the list on purpose: it follows from stored enthalpy instead of being a field of its
+own (ADR-028).
 
 ## Expectations
 
@@ -35,7 +44,7 @@ cargo run -p liminis -- run --config configs/scenarios/hello.toml --seed 42
 The second command prints the triple that identifies a run:
 
 ```
-seed=42 config_hash=blake3:<hex16> world_format_version=0 code_version=0.1.0
+seed=42 config_hash=blake3:<hex16> world_format_version=1 code_version=0.1.0
 ```
 
 `config_hash` is computed after defaults are applied and over a canonical
@@ -46,9 +55,14 @@ Changing a parameter value does.
 
 - [docs/NORTH_STAR.md](docs/NORTH_STAR.md) — what is being built and why. Wins over
   the spec if the two disagree.
-- [docs/SPEC.md](docs/SPEC.md) — the design, frozen until the first working run.
+- [docs/SPEC.md](docs/SPEC.md) — the design. It freezes the moment the first file
+  appears in `crates/liminis-core/src/kernels/`; until then it is brought in line with
+  the decision log rather than extended (ADR-032). A hook reads that directory, so the
+  trigger is a check and not a promise.
 - [docs/DECISIONS.md](docs/DECISIONS.md) — the decision log. Append-only; a reversal is
   a new entry, not an edit.
+- [docs/CONFIG_SCHEMA.md](docs/CONFIG_SCHEMA.md) — the scenario schema: what a config
+  declares and what the validator rejects at load time.
 
 The remaining documents (`ARCHITECTURE.md`, `NUMERIC.md`, `QUANTITIES.md`,
 `ACCEPTANCE.md`, `COMMUNITY.md`, `OPEN_QUESTIONS.md`, `PRIOR_ART.md`,
