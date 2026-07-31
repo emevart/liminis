@@ -5,8 +5,8 @@ abstract: >-
   A voxel simulator of a biological ecosystem, built to study the major
   evolutionary transitions. Environment and organisms are made of the same
   substance registry and the same reaction engine; genomes are rule sets rather
-  than blueprints; every gram entering or leaving the world passes through a
-  named, counted channel.
+  than blueprints; every mole of substance and every joule of energy entering or
+  leaving the world passes through a named, counted channel.
 type: software
 license: Apache-2.0
 version: "0.1.0"
