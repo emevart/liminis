@@ -10,6 +10,12 @@
 # Claude Code local overrides
 .claude/settings.local.json
 
+# Secrets. The crates.io token belongs in ~/.cargo/credentials.toml via
+# `cargo login`, not in the working tree — but a stray .env should never be
+# one `git add -A` away from the public history.
+.env
+.env.*
+
 # Run outputs
 /runs
 
