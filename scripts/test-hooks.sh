@@ -9,13 +9,22 @@
 # Блокировка засчитывается только при коде выхода 2 и непустом stderr: без
 # сообщения запрет неотличим от падения скрипта.
 #
-# Совместимо с bash 3.2 (системный на macOS). Из внешнего нужен только python3 —
+# Совместимо с bash 3.2 (системный на macOS). Из внешнего нужен только Python 3 —
 # тот же, на котором написаны сами хуки.
 
 set -u
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 HOOKS="$ROOT/.claude/hooks"
+
+# На Windows установщик с python.org кладёт python.exe, а python3 есть не всегда.
+# Ищем оба и падаем громко: молчаливый пропуск здесь означал бы «тесты защиты
+# прошли», хотя не запускался ни один.
+PYTHON="$(command -v python3 || command -v python || true)"
+if [ -z "$PYTHON" ]; then
+    echo "нужен Python 3 в PATH (python3 или python) — на нём написаны хуки" >&2
+    exit 1
+fi
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
@@ -59,7 +68,7 @@ check() {
 
 # payload <инструмент> <путь> [событие]
 payload() {
-    TOOL="$1" FILE="$2" EVENT="${3:-PreToolUse}" python3 - <<'PY'
+    TOOL="$1" FILE="$2" EVENT="${3:-PreToolUse}" "$PYTHON" - <<'PY'
 import json
 import os
 
@@ -110,7 +119,7 @@ echo
 echo '# adr-append-only'
 
 adr_payload() {
-    MODE="$1" TARGET="$FAKE/docs/DECISIONS.md" python3 - <<'PY'
+    MODE="$1" TARGET="$FAKE/docs/DECISIONS.md" "$PYTHON" - <<'PY'
 import json
 import os
 

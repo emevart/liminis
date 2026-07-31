@@ -1,0 +1,14 @@
+# Line endings are LF in the repository and LF on checkout, on every platform.
+#
+# Git on Windows converts to CRLF by default, and bash refuses a shebang with a
+# trailing carriage return:
+#
+#     bad interpreter: /usr/bin/env bash^M
+#
+# which would silently disable scripts/test-hooks.sh on a Windows clone — the
+# one thing that proves the guards still guard.
+* text=auto eol=lf
+
+# Belt and braces for the files where it actually matters.
+*.sh text eol=lf
+*.py text eol=lf
