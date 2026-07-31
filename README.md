@@ -50,9 +50,10 @@ Changing a parameter value does.
 - [docs/DECISIONS.md](docs/DECISIONS.md) — the decision log. Append-only; a reversal is
   a new entry, not an edit.
 
-The remaining documents (`NUMERIC.md`, `COMMUNITY.md`, `OPEN_QUESTIONS.md`,
-`PRIOR_ART.md`, `LEARNING.md`) are indexed in `CLAUDE.md`. Everything under
-`docs/archive/` is a superseded draft and contradicts the current spec.
+The remaining documents (`NUMERIC.md`, `QUANTITIES.md`, `COMMUNITY.md`,
+`OPEN_QUESTIONS.md`, `PRIOR_ART.md`, `LEARNING.md`) are indexed in `CLAUDE.md`.
+Everything under `docs/archive/` is a superseded draft and contradicts the
+current spec.
 
 ## License
 

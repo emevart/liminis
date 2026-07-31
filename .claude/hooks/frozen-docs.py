@@ -1,13 +1,25 @@
 #!/usr/bin/env python3
-"""PreToolUse: docs/SPEC.md, docs/NORTH_STAR.md и docs/archive/** — только чтение.
+"""PreToolUse: docs/archive/** — только чтение всегда; docs/SPEC.md и
+docs/NORTH_STAR.md — с момента, когда началась реализация ядер.
 
-Спека заморожена до первого работающего прогона (NORTH_STAR.md, «Что помнить,
-когда трудно»). Проектировать приятнее, чем отлаживать, и на этом умирает
-большинство таких проектов. Правило вынесено из документа в хук, потому что
-инструкция в CLAUDE.md — контекст, а не запрет.
+Заморозка наступает не по календарю и не по обещанию, а по состоянию
+репозитория: как только в crates/liminis-core/src/kernels/ появляется первый
+файл, реализация началась и спека перестаёт редактироваться (ADR-032). До
+этого момента она приводится в соответствие с журналом решений — но не
+дополняется: новая идея по-прежнему идёт в docs/OPEN_QUESTIONS.md.
 
-docs/archive/** заморожен по другой причине: это вытесненные черновики,
-противоречащие актуальной спеке. Их не правят, на них не ссылаются.
+Мотив самой заморозки прежний (NORTH_STAR.md, «Что помнить, когда трудно»):
+проектировать приятнее, чем отлаживать, и на этом умирает большинство таких
+проектов. Сменился момент. Прежним триггером был первый работающий прогон, и до
+него документ успевал разойтись с принятыми решениями — то есть врал ровно
+тогда, когда его читают как источник истины.
+
+docs/archive/** заморожен по другой причине и безусловно: это вытесненные
+черновики, противоречащие актуальной спеке. Их не правят, на них не ссылаются,
+и никакая стадия проекта этого не меняет.
+
+Скрытые файлы в kernels/ началом реализации не считаются: .gitkeep существует
+ровно затем, чтобы пустой каталог попал в git.
 
 Ограничение области: хук видит только Write, Edit и NotebookEdit. Запись через
 Bash (`>>`, `sed -i`, `tee`) проходит мимо — сознательный компромисс в пользу
@@ -20,21 +32,48 @@ import sys
 
 WRITING_TOOLS = ("Write", "Edit", "NotebookEdit")
 
-FROZEN_FILES = ("docs/SPEC.md", "docs/NORTH_STAR.md")
+# Правятся, пока не началась реализация ядер (ADR-032).
+THAWED_UNTIL_KERNELS = ("docs/SPEC.md", "docs/NORTH_STAR.md")
+
+# Заморожено безусловно, на любой стадии.
 FROZEN_TREES = ("docs/archive/",)
 
-MESSAGE = "спека заморожена до первого прогона; идея → docs/OPEN_QUESTIONS.md"
+KERNELS_DIR = "crates/liminis-core/src/kernels"
+
+FROZEN_MESSAGE = (
+    "реализация ядер началась, спека заморожена (ADR-032); "
+    "идея → docs/OPEN_QUESTIONS.md"
+)
+ARCHIVE_MESSAGE = (
+    "вытесненный черновик, противоречит актуальной спеке; не правится и не "
+    "цитируется"
+)
 
 
-def repo_relative_path(payload):
+def repo_root(payload):
+    """Корень репозитория, относительно которого считаются пути."""
+    root = os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd()
+    return os.path.realpath(root)
+
+
+def repo_relative_path(payload, root):
     """Путь редактируемого файла относительно корня репозитория."""
     tool_input = payload.get("tool_input") or {}
     target = tool_input.get("file_path") or tool_input.get("notebook_path")
     if not target:
         return None
-    root = os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or os.getcwd()
-    relative = os.path.relpath(os.path.realpath(target), os.path.realpath(root))
+    relative = os.path.relpath(os.path.realpath(target), root)
     return relative.replace(os.sep, "/")
+
+
+def implementation_started(root):
+    """Есть ли в kernels/ хоть один нескрытый файл."""
+    kernels = os.path.join(root, *KERNELS_DIR.split("/"))
+    for _, dirs, files in os.walk(kernels):
+        dirs[:] = [name for name in dirs if not name.startswith(".")]
+        if any(not name.startswith(".") for name in files):
+            return True
+    return False
 
 
 def main():
@@ -47,7 +86,8 @@ def main():
     if payload.get("tool_name") not in WRITING_TOOLS:
         return 0
 
-    path = repo_relative_path(payload)
+    root = repo_root(payload)
+    path = repo_relative_path(payload, root)
     if path is None:
         print(
             "frozen-docs: в tool_input нет пути, проверить нечего",
@@ -55,9 +95,12 @@ def main():
         )
         return 1
 
-    frozen = path in FROZEN_FILES or any(path.startswith(t) for t in FROZEN_TREES)
-    if frozen:
-        print(f"{path}: {MESSAGE}", file=sys.stderr)
+    if any(path.startswith(tree) for tree in FROZEN_TREES):
+        print(f"{path}: {ARCHIVE_MESSAGE}", file=sys.stderr)
+        return 2
+
+    if path in THAWED_UNTIL_KERNELS and implementation_started(root):
+        print(f"{path}: {FROZEN_MESSAGE}", file=sys.stderr)
         return 2
 
     return 0
