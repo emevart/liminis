@@ -10,4 +10,4 @@
 
 /// Version of the world semantics. A run is identified by
 /// `(seed, config_hash, world_format_version)`.
-pub const WORLD_FORMAT_VERSION: u32 = 0;
+pub const WORLD_FORMAT_VERSION: u32 = 1;
