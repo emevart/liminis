@@ -67,7 +67,7 @@ body:
         Attach or paste the scenario TOML if it is not one of the configs in the
         repository.
       placeholder: |
-        1. cargo run -p liminis-cli -- run --config configs/scenarios/hello.toml --seed 42
+        1. cargo run -p liminis -- run --config configs/scenarios/hello.toml --seed 42
         2. …
 
         Expected:

@@ -1,0 +1,20 @@
+[package]
+name = "liminis"
+description = "Voxel simulator of a biological ecosystem, built to study the major evolutionary transitions."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories = ["science", "simulation", "command-line-utilities"]
+
+[[bin]]
+name = "liminis"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+liminis-core = { path = "../liminis-core", version = "0.1.0" }

@@ -29,7 +29,7 @@ kernels are accepted rarely — see `docs/COMMUNITY.md` for why the boundary sit
 
 ```
 cargo build --workspace
-cargo run -p liminis-cli -- run --config configs/scenarios/hello.toml --seed 42
+cargo run -p liminis -- run --config configs/scenarios/hello.toml --seed 42
 ```
 
 The second command prints the triple that identifies a run:

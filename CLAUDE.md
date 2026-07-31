@@ -61,7 +61,7 @@ cargo test --workspace                               тесты
 cargo clippy --workspace --all-targets -- -D warnings   линт
 cargo fmt --all --check                              формат
 scripts/test-hooks.sh                                тесты хуков
-cargo run -p liminis-cli -- run --config configs/scenarios/hello.toml --seed 42
+cargo run -p liminis -- run --config configs/scenarios/hello.toml --seed 42
 ```
 
 Тулчейн закреплён в `rust-toolchain.toml` и входит в воспроизводимость наравне с
