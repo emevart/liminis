@@ -5,4 +5,8 @@
 //! config loader that turns a TOML file into a run identity.
 
 pub mod config;
+pub mod kernels;
+pub mod numeric;
+pub mod process;
 pub mod version;
+pub mod world;
