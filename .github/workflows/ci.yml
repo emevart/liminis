@@ -206,47 +206,58 @@ jobs:
       #
       # A hidden file is not a start: .gitkeep exists so that an empty directory
       # reaches git at all. Same reading as in the hook.
+      #
+      # The check is per commit, not per pull request, and that distinction is
+      # the whole rule. The freeze is in force for a commit whose PARENT
+      # already carries a kernel — because it is the first kernel file that
+      # closes the window, so everything after that commit is frozen and
+      # everything at or before it is not. A pull request that first brings the
+      # spec in line and then lands the first kernel is exactly the intended
+      # sequence; judging it by its final tree would forbid the one workflow
+      # ADR-032 describes.
       - name: SPEC and NORTH_STAR are frozen once the first kernel exists
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
 
-          frozen="$(git diff --name-only "$BASE_SHA" HEAD \
-            | grep -E '^docs/(SPEC|NORTH_STAR)\.md$' || true)"
+          kernel_in() {
+            git ls-tree -r --name-only "$1" -- crates/liminis-core/src/kernels \
+              | grep -vE '(^|/)\.' | head -n 1
+          }
 
-          if [ -z "$frozen" ]; then
-            echo "This pull request touches neither document."
-            exit 0
-          fi
+          violation=0
+          for sha in $(git rev-list --reverse "$BASE_SHA..HEAD"); do
+            frozen="$(git diff-tree --no-commit-id --name-only -r "$sha" \
+              | grep -E '^docs/(SPEC|NORTH_STAR)\.md$' || true)"
+            [ -z "$frozen" ] && continue
 
-          started=""
-          if [ -d crates/liminis-core/src/kernels ]; then
-            started="$(find crates/liminis-core/src/kernels \
-              -type f ! -path '*/.*' -print -quit)"
-          fi
+            parent="$(git rev-parse "$sha^")"
+            started="$(kernel_in "$parent")"
 
-          if [ -z "$started" ]; then
-            echo "No kernel yet, so the window is still open (ADR-032). Changed:"
-            printf '  %s\n' $frozen
+            if [ -z "$started" ]; then
+              echo "$sha: window still open, edits allowed:"
+              printf '    %s\n' $frozen
+              continue
+            fi
+
+            echo "::error::$sha edits a frozen document (ADR-032)."
+            printf '    %s\n' $frozen
+            echo "    the freeze was already closed by: $started"
+            violation=1
+          done
+
+          if [ "$violation" -ne 0 ]; then
             echo
-            echo "Inside the window these two are brought in line with"
-            echo "docs/DECISIONS.md, not extended: a new idea goes to"
-            echo "docs/OPEN_QUESTIONS.md. Nothing checks that part."
-            exit 0
+            echo "The freeze starts with the first file under"
+            echo "crates/liminis-core/src/kernels/, and from that point"
+            echo "docs/SPEC.md and docs/NORTH_STAR.md are not edited at all."
+            echo "A new idea goes to docs/OPEN_QUESTIONS.md; a new decision goes"
+            echo "to the end of docs/DECISIONS.md."
+            exit 1
           fi
 
-          echo "Implementation has started, first kernel file: $started"
-          echo
-          echo "::error::A frozen document was edited (ADR-032)."
-          printf '  %s\n' $frozen
-          echo
-          echo "The freeze starts with the first file under"
-          echo "crates/liminis-core/src/kernels/, and from that point"
-          echo "docs/SPEC.md and docs/NORTH_STAR.md are not edited at all."
-          echo "A new idea goes to docs/OPEN_QUESTIONS.md; a new decision goes"
-          echo "to the end of docs/DECISIONS.md."
-          exit 1
+          echo "No commit edits a frozen document after the freeze closed."
 
       # docs/archive/** is frozen for a different reason and unconditionally:
       # these are superseded drafts that contradict the current spec, so they
