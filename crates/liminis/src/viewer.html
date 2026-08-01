@@ -1,0 +1,1407 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Liminis — viewer</title>
+    <!--
+      The whole viewer, in one file, with nothing fetched from anywhere but the
+      simulator itself. Two reasons, and neither is tidiness: a run has to be
+      watchable on a machine with no network (ADR-016 puts serious runs on a box
+      with a GPU, not on a laptop), and a page that pulls a library from a CDN
+      has a version that nobody recorded, which makes it one more thing that can
+      change what you saw between two runs.
+
+      SHAPE. The specimen on the left, the reading on the right, the residual
+      underneath, and one vertical axis shared by the first two: the oxycline
+      that shows in the volume as a change of colour sits on the same horizontal
+      line as the kink in the profile. That is why the camera orbits in azimuth
+      but is clamped in elevation. Depth is not a direction you are allowed to
+      lose in a world whose entire physics is stratification by gravity.
+
+      THE RESIDUAL IS THE POINT. ADR-037 asks for the residual to be written to
+      the metrics stream even though it must be zero, because a written zero is
+      proof that the check ran, while a missing line is indistinguishable from a
+      check that was switched off. The same argument put it on screen, in the
+      largest type after the wordmark. It is quiet when right and loud when
+      wrong, and it is the only thing here that separates interesting dynamics
+      from a beautiful bug.
+    -->
+    <style>
+      /*
+        Palette. Surfaces, ink and rules come from the project's own identity
+        (site/index.html); the series hues come from the validated categorical
+        set and were re-checked against THESE surfaces rather than the defaults,
+        because contrast only means anything against the surface a mark actually
+        lands on.
+
+        Light mode reports three of the four series below 3:1 — the relief rule
+        applies, and it is discharged by direct labels at the end of every curve
+        plus the table view, not by darkening the hues out of their band.
+      */
+      :root {
+        color-scheme: light;
+
+        --surface: #fdfdfc;
+        --plane: #f5f5f2;
+        --ink: #191917;
+        --ink-2: #52514e;
+        --muted: #6b6b64;
+        --rule: #dcdcd6;
+        --axis: #c3c2b7;
+        --grid: #e6e5df;
+        --ring: rgba(25, 25, 23, 0.1);
+
+        --ok: #006300;
+        --critical: #d03b3b;
+
+        /* Categorical slots 1, 3, 4, 5. O2 blue and H2S yellow are fixed by
+           SPEC section 11.1; the other two follow slot order. */
+        --s-1: #2a78d6;
+        --s-2: #1baf7a;
+        --s-3: #eda100;
+        --s-4: #e87ba4;
+
+        --step: 0.25rem;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:where(:not([data-theme="light"])) {
+          color-scheme: dark;
+
+          --surface: #121211;
+          --plane: #0b0b0a;
+          --ink: #e9e9e3;
+          --ink-2: #c3c2b7;
+          --muted: #8b8b82;
+          --rule: #2e2e2a;
+          --axis: #383835;
+          --grid: #232320;
+          --ring: rgba(233, 233, 227, 0.1);
+
+          --ok: #0ca30c;
+          --critical: #e05a5a;
+
+          --s-1: #3987e5;
+          --s-2: #199e70;
+          --s-3: #c98500;
+          --s-4: #d55181;
+        }
+      }
+
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+
+        --surface: #121211;
+        --plane: #0b0b0a;
+        --ink: #e9e9e3;
+        --ink-2: #c3c2b7;
+        --muted: #8b8b82;
+        --rule: #2e2e2a;
+        --axis: #383835;
+        --grid: #232320;
+        --ring: rgba(233, 233, 227, 0.1);
+
+        --ok: #0ca30c;
+        --critical: #e05a5a;
+
+        --s-1: #3987e5;
+        --s-2: #199e70;
+        --s-3: #c98500;
+        --s-4: #d55181;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--plane);
+        color: var(--ink);
+        font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Helvetica, Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Every number on this page is an instrument reading, and readings line
+         up in columns. */
+      .num {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* The vernacular of lab equipment: small, tracked-out, upper case. Used
+         for axis names and field names, never for prose. */
+      .micro {
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .shell {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        height: 100%;
+        max-width: 1500px;
+        margin: 0 auto;
+        background: var(--surface);
+        border-left: 1px solid var(--rule);
+        border-right: 1px solid var(--rule);
+      }
+
+      /* ---------- header ---------- */
+
+      .masthead {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 0.85rem 1.25rem;
+        border-bottom: 1px solid var(--rule);
+      }
+
+      .wordmark {
+        margin: 0;
+        font-family: ui-serif, Georgia, "Times New Roman", serif;
+        font-size: 1.3rem;
+        font-weight: 400;
+        letter-spacing: 0.01em;
+      }
+
+      .scenario {
+        color: var(--ink-2);
+      }
+
+      .identity {
+        margin-left: auto;
+        display: flex;
+        gap: 1.1rem;
+        font-size: 11.5px;
+        color: var(--muted);
+      }
+
+      .identity b {
+        font-weight: 500;
+        color: var(--ink-2);
+      }
+
+      /* ---------- the two panels, locked to one depth axis ---------- */
+
+      .panels {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
+        min-height: 0;
+      }
+
+      .specimen {
+        position: relative;
+        min-height: 0;
+        border-right: 1px solid var(--rule);
+        background: var(--plane);
+      }
+
+      #gl {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: grab;
+        touch-action: none;
+      }
+
+      #gl:active {
+        cursor: grabbing;
+      }
+
+      #gl:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: -2px;
+      }
+
+      .fallback {
+        position: absolute;
+        inset: 0;
+        display: none;
+        place-content: center;
+        padding: 2rem;
+        text-align: center;
+        color: var(--muted);
+      }
+
+      .specimen[data-gl="off"] #gl {
+        display: none;
+      }
+
+      .specimen[data-gl="off"] .fallback {
+        display: grid;
+      }
+
+      .stamp {
+        position: absolute;
+        left: 1rem;
+        bottom: 0.85rem;
+        pointer-events: none;
+      }
+
+      /* The depth rail. Drawn on the specimen so the shared axis is a thing you
+         can see, not a claim in a comment. */
+      .rail {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: 3.4rem;
+        pointer-events: none;
+      }
+
+      .reading {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 0;
+        min-width: 0;
+      }
+
+      .reading-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.7rem 1rem 0.35rem;
+      }
+
+      #profile {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .plot {
+        position: relative;
+        min-height: 0;
+      }
+
+      .tip {
+        position: absolute;
+        z-index: 2;
+        display: none;
+        min-width: 8.5rem;
+        padding: 0.5rem 0.6rem;
+        background: var(--surface);
+        border: 1px solid var(--ring);
+        border-radius: 3px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.09);
+        font-size: 11.5px;
+        pointer-events: none;
+      }
+
+      .tip[data-open="1"] {
+        display: block;
+      }
+
+      .tip-row {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        justify-content: space-between;
+      }
+
+      .swatch {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        flex: none;
+      }
+
+      /* ---------- the residual, and the rest of the readout ---------- */
+
+      .readout {
+        display: flex;
+        align-items: flex-end;
+        gap: 2rem;
+        flex-wrap: wrap;
+        padding: 0.8rem 1.25rem;
+        border-top: 1px solid var(--rule);
+      }
+
+      .residual-value {
+        display: flex;
+        align-items: baseline;
+        gap: 0.9rem;
+        font-size: 1.6rem;
+        line-height: 1.1;
+        color: var(--ok);
+      }
+
+      .residual[data-state="broken"] .residual-value {
+        color: var(--critical);
+      }
+
+      .residual-value span small {
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        display: block;
+      }
+
+      .residual-note {
+        margin: 0.35rem 0 0;
+        max-width: 34rem;
+        font-size: 11.5px;
+        color: var(--muted);
+      }
+
+      .stat {
+        text-align: right;
+      }
+
+      .stat-value {
+        font-size: 1rem;
+      }
+
+      /* ---------- controls ---------- */
+
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-left: auto;
+      }
+
+      button {
+        font: inherit;
+        color: inherit;
+        background: transparent;
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        padding: 0.3rem 0.7rem;
+        cursor: pointer;
+        transition: border-color 0.12s ease, background-color 0.12s ease;
+      }
+
+      button:hover,
+      button:focus-visible {
+        border-color: var(--ink);
+      }
+
+      button:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 1px;
+      }
+
+      button[aria-pressed="true"] {
+        background: var(--ink);
+        color: var(--surface);
+        border-color: var(--ink);
+      }
+
+      .chips {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.25rem 0.6rem;
+        font-size: 12px;
+      }
+
+      .chip[aria-pressed="false"] {
+        color: var(--muted);
+      }
+
+      .chip[aria-pressed="false"] .swatch {
+        opacity: 0.3;
+      }
+
+      .chip[aria-pressed="true"] {
+        background: transparent;
+        color: var(--ink);
+        border-color: var(--axis);
+      }
+
+      input[type="range"] {
+        width: 8rem;
+        accent-color: var(--ink);
+      }
+
+      .field-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        padding: 0.6rem 1.25rem;
+        border-top: 1px solid var(--rule);
+      }
+
+      /* ---------- table view (the relief rule, and the honest fallback) ---- */
+
+      .table-wrap {
+        display: none;
+        overflow: auto;
+        max-height: 40vh;
+        padding: 0 1.25rem 1rem;
+      }
+
+      .table-wrap[data-open="1"] {
+        display: block;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 11.5px;
+      }
+
+      th,
+      td {
+        padding: 0.25rem 0.6rem;
+        text-align: right;
+        border-bottom: 1px solid var(--grid);
+        white-space: nowrap;
+      }
+
+      th:first-child,
+      td:first-child {
+        text-align: left;
+      }
+
+      thead th {
+        position: sticky;
+        top: 0;
+        background: var(--surface);
+        color: var(--muted);
+        font-weight: 500;
+      }
+
+      .offline {
+        padding: 0.5rem 1.25rem;
+        background: var(--critical);
+        color: #fff;
+        font-size: 12px;
+        display: none;
+      }
+
+      .offline[data-open="1"] {
+        display: block;
+      }
+
+      @media (max-width: 900px) {
+        .panels {
+          grid-template-columns: 1fr;
+          grid-template-rows: minmax(280px, 45vh) minmax(260px, 1fr);
+        }
+
+        .specimen {
+          border-right: 0;
+          border-bottom: 1px solid var(--rule);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="masthead">
+        <h1 class="wordmark">Liminis</h1>
+        <span class="scenario" id="scenario">—</span>
+        <div class="identity num">
+          <span>seed <b id="seed">—</b></span>
+          <span>config <b id="hash">—</b></span>
+          <span>world <b id="wfv">—</b></span>
+        </div>
+      </header>
+
+      <div class="offline" id="offline" data-open="0">
+        Lost the simulator. The picture below is the last frame that arrived, not
+        the current state.
+      </div>
+
+      <div class="panels">
+        <section class="specimen" id="specimen" aria-label="Volume">
+          <canvas id="gl" tabindex="0" aria-label="Volume render. Drag to orbit, scroll to zoom."></canvas>
+          <div class="fallback">
+            <p>
+              This browser has no WebGL2, so the volume cannot be drawn. The
+              profile on the right is the same data and needs nothing but a 2D
+              canvas.
+            </p>
+          </div>
+          <div class="rail" id="rail" aria-hidden="true"></div>
+          <div class="stamp micro" id="stamp">—</div>
+        </section>
+
+        <section class="reading" aria-label="Vertical profile">
+          <div class="reading-head">
+            <span class="micro">Vertical profile · mean over XY</span>
+            <span class="micro">each series ÷ its own max_conc</span>
+          </div>
+          <div class="plot" id="plot">
+            <canvas id="profile"></canvas>
+            <div class="tip" id="tip" role="status" aria-live="polite"></div>
+          </div>
+          <div class="field-row">
+            <div class="chips" id="chips" role="group" aria-label="Fields"></div>
+            <button id="table-toggle" aria-pressed="false" aria-controls="table-wrap">
+              Table
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <div class="table-wrap" id="table-wrap" data-open="0">
+        <table id="table">
+          <caption class="micro" style="text-align: left; padding: 0.5rem 0">
+            Profile values, one row per depth layer
+          </caption>
+        </table>
+      </div>
+
+      <footer class="readout">
+        <div class="residual" id="residual" data-state="closed">
+          <div class="micro">Ledger residual</div>
+          <div class="residual-value num">
+            <span><b id="res-matter">0</b><small>matter</small></span>
+            <span><b id="res-energy">0</b><small>energy</small></span>
+          </div>
+          <p class="residual-note" id="res-note">
+            Zero, and written down anyway: a recorded zero is proof the check
+            ran, and a missing one is indistinguishable from a check that was
+            switched off.
+          </p>
+        </div>
+
+        <div class="stat">
+          <div class="micro">Tick</div>
+          <div class="stat-value num" id="tick">0</div>
+        </div>
+        <div class="stat">
+          <div class="micro">Ticks / s</div>
+          <div class="stat-value num" id="tps">0</div>
+        </div>
+        <div class="stat">
+          <div class="micro">Depth slab</div>
+          <div class="stat-value num" id="slab">full</div>
+        </div>
+
+        <div class="controls">
+          <button id="play" aria-pressed="false">Run</button>
+          <button id="step">Step</button>
+          <label class="micro" for="speed">Speed</label>
+          <input id="speed" type="range" min="1" max="200" value="30" />
+          <label class="micro" for="clip">Slab</label>
+          <input id="clip" type="range" min="0" max="100" value="100" />
+          <button id="theme" aria-label="Switch theme">Theme</button>
+        </div>
+      </footer>
+    </div>
+
+    <script type="module">
+      // ---------------------------------------------------------------------
+      // Talking to the simulator.
+      //
+      // Four routes, and the shapes they return are the contract this file is
+      // written against; crates/liminis/src/serve.rs is the other half of it.
+      //
+      //   GET  /api/state              run identity, grid, fields, residual
+      //   GET  /api/volume/<field>     self-describing binary, u8 per voxel
+      //   GET  /api/profile/<field>    mean/min/max over XY, one entry per z
+      //   POST /api/control            play | pause | step | speed
+      //
+      // The volume payload carries its own dimensions rather than trusting the
+      // ones from /api/state: the two arrive from different requests, and a
+      // frame drawn against a stale shape is a picture of nothing, silently.
+      // ---------------------------------------------------------------------
+
+      const VOLUME_MAGIC = 0x4c4d4e56; // "LMNV"
+
+      async function getState() {
+        const r = await fetch("/api/state", { cache: "no-store" });
+        if (!r.ok) throw new Error(`state: ${r.status}`);
+        return r.json();
+      }
+
+      async function getVolume(field) {
+        const r = await fetch(`/api/volume/${encodeURIComponent(field)}`, { cache: "no-store" });
+        if (!r.ok) throw new Error(`volume ${field}: ${r.status}`);
+        const buf = await r.arrayBuffer();
+        const head = new DataView(buf, 0, 24);
+        if (head.getUint32(0, true) !== VOLUME_MAGIC) throw new Error("volume: not a volume");
+        return {
+          nx: head.getUint32(4, true),
+          ny: head.getUint32(8, true),
+          nz: head.getUint32(12, true),
+          // What one byte is worth, in the field's own unit. The server
+          // quantises against the declared max_conc, so the ramp means the same
+          // thing from tick to tick — a transfer function rescaled per frame
+          // makes a still world look like it is breathing.
+          scale: head.getFloat32(16, true),
+          data: new Uint8Array(buf, 24),
+        };
+      }
+
+      async function getProfile(field) {
+        const r = await fetch(`/api/profile/${encodeURIComponent(field)}`, { cache: "no-store" });
+        if (!r.ok) throw new Error(`profile ${field}: ${r.status}`);
+        return r.json();
+      }
+
+      async function control(action, value) {
+        await fetch("/api/control", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action, value }),
+        });
+      }
+
+      // ---------------------------------------------------------------------
+      // State the page holds.
+      // ---------------------------------------------------------------------
+
+      const SLOTS = ["--s-1", "--s-2", "--s-3", "--s-4"];
+      const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+      const view = {
+        state: null,
+        fields: [],       // [{ id, label, unit, slot, on }]
+        volumes: new Map(),
+        profiles: new Map(),
+        azimuth: 0.7,
+        elevation: 0.22,  // clamped: see the note on the drag handler
+        distance: 3.1,
+        clip: 1,
+        hoverZ: null,
+        connected: true,
+      };
+
+      const el = (id) => document.getElementById(id);
+
+      // ---------------------------------------------------------------------
+      // Volume: a raymarch over one RGBA 3D texture.
+      //
+      // Four fields, four channels, one sample per step. Fetching them as
+      // separate single-channel volumes and packing here keeps the field
+      // selection a client-side decision — the alternative, letting the server
+      // pack, turns every toggle into a refetch of everything.
+      // ---------------------------------------------------------------------
+
+      const VERT = `#version 300 es
+      in vec2 pos;
+      out vec2 uv;
+      void main() {
+        uv = pos;
+        gl_Position = vec4(pos, 0.0, 1.0);
+      }`;
+
+      const FRAG = `#version 300 es
+      precision highp float;
+      precision highp sampler3D;
+
+      in vec2 uv;
+      out vec4 frag;
+
+      uniform sampler3D volume;
+      uniform mat4 invViewProj;
+      uniform vec3 eye;
+      uniform vec3 colours[4];
+      uniform float gains[4];
+      uniform float clipTop;
+      uniform vec3 boxScale;
+      uniform vec3 surface;
+
+      // Slab-intersect a unit box centred on the origin.
+      bool hitBox(vec3 o, vec3 d, out float t0, out float t1) {
+        vec3 inv = 1.0 / d;
+        vec3 a = (-boxScale - o) * inv;
+        vec3 b = (boxScale - o) * inv;
+        vec3 lo = min(a, b), hi = max(a, b);
+        t0 = max(max(lo.x, lo.y), lo.z);
+        t1 = min(min(hi.x, hi.y), hi.z);
+        return t1 > max(t0, 0.0);
+      }
+
+      void main() {
+        vec4 near = invViewProj * vec4(uv, -1.0, 1.0);
+        vec4 far = invViewProj * vec4(uv, 1.0, 1.0);
+        vec3 dir = normalize(far.xyz / far.w - near.xyz / near.w);
+
+        float t0, t1;
+        if (!hitBox(eye, dir, t0, t1)) { frag = vec4(surface, 1.0); return; }
+        t0 = max(t0, 0.0);
+
+        const int STEPS = 192;
+        float dt = (t1 - t0) / float(STEPS);
+
+        vec3 acc = vec3(0.0);
+        float alpha = 0.0;
+        float edge = 0.0;
+
+        for (int i = 0; i < STEPS; i++) {
+          if (alpha > 0.985) break;
+          vec3 p = eye + dir * (t0 + dt * (float(i) + 0.5));
+          vec3 box = (p / boxScale) * 0.5 + 0.5;
+
+          // Render space and grid space are not the same space, and confusing
+          // them is invisible on a cube and obvious on nothing else. The camera
+          // is built with world +Y up, and the box is scaled so that +Y spans
+          // the grid's Z extent — depth — because a stratified world must not
+          // be drawn on its side. So the sample has to be swizzled back into
+          // grid order here: g = (gx, gy, gz) with gz upward on screen.
+          vec3 g = vec3(box.x, box.z, box.y);
+
+          // The slab keeps the top of the domain: gz = 1 is the surface,
+          // gz = 0 the floor (SPEC section 1.6 — z_min is the solid floor).
+          if (g.z < 1.0 - clipTop) continue;
+
+          // Distance to the two nearest faces, for the container edge below.
+          vec3 d3 = min(g, 1.0 - g);
+          float m1 = min(min(d3.x, d3.y), d3.z);
+          float m2 = max(min(max(d3.x, d3.y), max(d3.y, d3.z)), min(max(d3.x, d3.y), d3.z));
+          edge = max(edge, 1.0 - smoothstep(0.0, 0.012, max(m1, m2)));
+
+          vec4 v = texture(volume, g);
+          float chan[4];
+          chan[0] = v.r; chan[1] = v.g; chan[2] = v.b; chan[3] = v.a;
+
+          vec3 c = vec3(0.0);
+          float a = 0.0;
+          for (int k = 0; k < 4; k++) {
+            float s = chan[k] * gains[k];
+            if (s <= 0.0) continue;
+            c += colours[k] * s;
+            a = a + s - a * s;
+          }
+          if (a <= 0.0) continue;
+          c /= max(a, 1e-4);
+
+          // Beer-Lambert over the step, not a fixed slice weight. The medium
+          // then has an extinction per unit length rather than per sample, so
+          // the picture does not change density when STEPS changes — which it
+          // did, and which reads as the world having got thicker.
+          float w = (1.0 - alpha) * (1.0 - exp(-a * dt * 2.6));
+          acc += c * w;
+          alpha += w;
+        }
+
+        // A hairline where the container is. Without it the specimen floats,
+        // and a volume with no visible bounds gives no sense of how deep the
+        // thing you are looking at goes.
+        acc = mix(acc, vec3(0.45) * (1.0 - alpha) + acc, edge * 0.5);
+
+        // Front-to-back over an opaque background. The medium is darker than a
+        // near-white surface and lighter than a near-black one, so the same
+        // expression thickens the specimen in both themes.
+        frag = vec4(acc + surface * (1.0 - alpha), 1.0);
+      }`;
+
+      const gl3 = (() => {
+        const canvas = el("gl");
+        const gl = canvas.getContext("webgl2", { antialias: false, alpha: false });
+        if (!gl) {
+          el("specimen").dataset.gl = "off";
+          return null;
+        }
+
+        const compile = (type, src) => {
+          const s = gl.createShader(type);
+          gl.shaderSource(s, src);
+          gl.compileShader(s);
+          if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+            throw new Error(gl.getShaderInfoLog(s) || "shader");
+          }
+          return s;
+        };
+
+        const prog = gl.createProgram();
+        gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+        gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+        gl.linkProgram(prog);
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+          el("specimen").dataset.gl = "off";
+          return null;
+        }
+
+        const quad = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+        const loc = gl.getAttribLocation(prog, "pos");
+        gl.enableVertexAttribArray(loc);
+        gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_3D, tex);
+        gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+
+        return { gl, canvas, prog, tex, dims: null };
+      })();
+
+      function uploadVolume() {
+        if (!gl3) return;
+        const { gl, tex } = gl3;
+        const shown = view.fields.filter((f) => f.on).slice(0, 4);
+        const first = shown.map((f) => view.volumes.get(f.id)).find(Boolean);
+        if (!first) return;
+
+        const { nx, ny, nz } = first;
+        const packed = new Uint8Array(nx * ny * nz * 4);
+        shown.forEach((f, k) => {
+          const vol = view.volumes.get(f.id);
+          if (!vol || vol.nx !== nx || vol.ny !== ny || vol.nz !== nz) return;
+          for (let i = 0, n = nx * ny * nz; i < n; i++) packed[i * 4 + k] = vol.data[i];
+        });
+
+        gl.bindTexture(gl.TEXTURE_3D, tex);
+        gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, nx, ny, nz, 0, gl.RGBA, gl.UNSIGNED_BYTE, packed);
+        gl3.dims = { nx, ny, nz };
+      }
+
+      // Minimal 4x4 matrix work, written out rather than imported: three
+      // functions is less code than the smallest library that would do it.
+      const mul = (a, b) => {
+        const o = new Float32Array(16);
+        for (let r = 0; r < 4; r++)
+          for (let c = 0; c < 4; c++)
+            o[c * 4 + r] = a[r] * b[c * 4] + a[4 + r] * b[c * 4 + 1] + a[8 + r] * b[c * 4 + 2] + a[12 + r] * b[c * 4 + 3];
+        return o;
+      };
+
+      function invert(m) {
+        const inv = new Float32Array(16);
+        const A = (r, c) => m[c * 4 + r];
+        // Cofactor expansion. Verbose, but this runs once a frame on a 4x4 and
+        // the alternative is a dependency.
+        const s0 = A(0, 0) * A(1, 1) - A(1, 0) * A(0, 1);
+        const s1 = A(0, 0) * A(1, 2) - A(1, 0) * A(0, 2);
+        const s2 = A(0, 0) * A(1, 3) - A(1, 0) * A(0, 3);
+        const s3 = A(0, 1) * A(1, 2) - A(1, 1) * A(0, 2);
+        const s4 = A(0, 1) * A(1, 3) - A(1, 1) * A(0, 3);
+        const s5 = A(0, 2) * A(1, 3) - A(1, 2) * A(0, 3);
+        const c5 = A(2, 2) * A(3, 3) - A(3, 2) * A(2, 3);
+        const c4 = A(2, 1) * A(3, 3) - A(3, 1) * A(2, 3);
+        const c3 = A(2, 1) * A(3, 2) - A(3, 1) * A(2, 2);
+        const c2 = A(2, 0) * A(3, 3) - A(3, 0) * A(2, 3);
+        const c1 = A(2, 0) * A(3, 2) - A(3, 0) * A(2, 2);
+        const c0 = A(2, 0) * A(3, 1) - A(3, 0) * A(2, 1);
+        const det = s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0;
+        if (!det) return inv;
+        const d = 1 / det;
+        const set = (r, c, v) => (inv[c * 4 + r] = v * d);
+        set(0, 0, A(1, 1) * c5 - A(1, 2) * c4 + A(1, 3) * c3);
+        set(0, 1, -A(0, 1) * c5 + A(0, 2) * c4 - A(0, 3) * c3);
+        set(0, 2, A(3, 1) * s5 - A(3, 2) * s4 + A(3, 3) * s3);
+        set(0, 3, -A(2, 1) * s5 + A(2, 2) * s4 - A(2, 3) * s3);
+        set(1, 0, -A(1, 0) * c5 + A(1, 2) * c2 - A(1, 3) * c1);
+        set(1, 1, A(0, 0) * c5 - A(0, 2) * c2 + A(0, 3) * c1);
+        set(1, 2, -A(3, 0) * s5 + A(3, 2) * s2 - A(3, 3) * s1);
+        set(1, 3, A(2, 0) * s5 - A(2, 2) * s2 + A(2, 3) * s1);
+        set(2, 0, A(1, 0) * c4 - A(1, 1) * c2 + A(1, 3) * c0);
+        set(2, 1, -A(0, 0) * c4 + A(0, 1) * c2 - A(0, 3) * c0);
+        set(2, 2, A(3, 0) * s4 - A(3, 1) * s2 + A(3, 3) * s0);
+        set(2, 3, -A(2, 0) * s4 + A(2, 1) * s2 - A(2, 3) * s0);
+        set(3, 0, -A(1, 0) * c3 + A(1, 1) * c1 - A(1, 2) * c0);
+        set(3, 1, A(0, 0) * c3 - A(0, 1) * c1 + A(0, 2) * c0);
+        set(3, 2, -A(3, 0) * s3 + A(3, 1) * s1 - A(3, 2) * s0);
+        set(3, 3, A(2, 0) * s3 - A(2, 1) * s1 + A(2, 2) * s0);
+        return inv;
+      }
+
+      function drawVolume() {
+        if (!gl3 || !gl3.dims) return;
+        const { gl, canvas, prog, tex } = gl3;
+
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
+        const h = Math.max(1, Math.round(canvas.clientHeight * dpr));
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+        }
+        gl.viewport(0, 0, w, h);
+        gl.useProgram(prog);
+
+        const ce = Math.cos(view.elevation), se = Math.sin(view.elevation);
+        const ca = Math.cos(view.azimuth), sa = Math.sin(view.azimuth);
+        const eye = [view.distance * ce * sa, view.distance * se, view.distance * ce * ca];
+
+        // Look-at with a fixed world up. The elevation clamp lives on the drag
+        // handler, so this never has to cope with a degenerate up vector.
+        const f = eye.map((v) => -v);
+        const fl = Math.hypot(...f);
+        const fw = f.map((v) => v / fl);
+        const up = [0, 1, 0];
+        const s = [fw[1] * up[2] - fw[2] * up[1], fw[2] * up[0] - fw[0] * up[2], fw[0] * up[1] - fw[1] * up[0]];
+        const sl = Math.hypot(...s);
+        const sn = s.map((v) => v / sl);
+        const u = [sn[1] * fw[2] - sn[2] * fw[1], sn[2] * fw[0] - sn[0] * fw[2], sn[0] * fw[1] - sn[1] * fw[0]];
+
+        const look = new Float32Array([
+          sn[0], u[0], -fw[0], 0,
+          sn[1], u[1], -fw[1], 0,
+          sn[2], u[2], -fw[2], 0,
+          -(sn[0] * eye[0] + sn[1] * eye[1] + sn[2] * eye[2]),
+          -(u[0] * eye[0] + u[1] * eye[1] + u[2] * eye[2]),
+          fw[0] * eye[0] + fw[1] * eye[1] + fw[2] * eye[2],
+          1,
+        ]);
+
+        const aspect = w / h;
+        const fov = 0.72, near = 0.05, far = 20;
+        const t = 1 / Math.tan(fov / 2);
+        const proj = new Float32Array([
+          t / aspect, 0, 0, 0,
+          0, t, 0, 0,
+          0, 0, (far + near) / (near - far), -1,
+          0, 0, (2 * far * near) / (near - far), 0,
+        ]);
+
+        const surfaceHex = css("--surface");
+        const rgb = (hex) => {
+          const n = parseInt(hex.replace("#", ""), 16);
+          // sRGB to linear, so that two overlapping channels add the way light
+          // adds rather than the way bytes add.
+          return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+            const c = v / 255;
+            return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+          });
+        };
+
+        const shown = view.fields.filter((f) => f.on).slice(0, 4);
+        const colours = new Float32Array(12);
+        const gains = new Float32Array(4);
+        shown.forEach((fld, k) => {
+          const c = rgb(css(fld.slot));
+          colours.set(c, k * 3);
+          // A texture sample is already normalised to [0,1] — the byte was
+          // divided by 255 by the sampler. Dividing again here is the bug that
+          // makes a whole world look like a faint smudge, and it looks like a
+          // physics problem rather than a shader one.
+          gains[k] = 1;
+        });
+
+        const { nx, ny, nz } = gl3.dims;
+        const m = Math.max(nx, ny, nz);
+
+        gl.uniformMatrix4fv(gl.getUniformLocation(prog, "invViewProj"), false, invert(mul(proj, look)));
+        gl.uniform3fv(gl.getUniformLocation(prog, "eye"), new Float32Array(eye));
+        gl.uniform3fv(gl.getUniformLocation(prog, "colours"), colours);
+        gl.uniform1fv(gl.getUniformLocation(prog, "gains"), gains);
+        gl.uniform1f(gl.getUniformLocation(prog, "clipTop"), view.clip);
+        gl.uniform3fv(gl.getUniformLocation(prog, "boxScale"), new Float32Array([nx / m, nz / m, ny / m]));
+        gl.uniform3fv(gl.getUniformLocation(prog, "surface"), new Float32Array(rgb(surfaceHex)));
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_3D, tex);
+        gl.uniform1i(gl.getUniformLocation(prog, "volume"), 0);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+      }
+
+      // ---------------------------------------------------------------------
+      // Profile. Depth runs downward, and its scale is the same one the volume
+      // is drawn against — that shared axis is the whole point of the layout.
+      // ---------------------------------------------------------------------
+
+      const PAD = { top: 12, right: 62, bottom: 30, left: 46 };
+
+      function drawProfile() {
+        const canvas = el("profile");
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = canvas.clientWidth, h = canvas.clientHeight;
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        const ctx = canvas.getContext("2d");
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, w, h);
+
+        const shown = view.fields.filter((f) => f.on && view.profiles.has(f.id));
+        if (!shown.length) return;
+
+        const nz = view.profiles.get(shown[0].id).mean.length;
+
+        const x0 = PAD.left, x1 = w - PAD.right;
+        const y0 = PAD.top, y1 = h - PAD.bottom;
+        // z = nz-1 is the top of the domain, z = 0 the floor. Depth increases
+        // downward on screen because it increases downward in the world.
+        const yOf = (z) => y0 + ((nz - 1 - z) / Math.max(1, nz - 1)) * (y1 - y0);
+
+        // ONE AXIS, and getting there took a decision.
+        //
+        // These series share a unit — mol/m^3 — but not a magnitude: the proton
+        // sits near 1e-4 and sulfate near 1e2, six decades apart, and on a
+        // shared linear scale everything but the largest is a line on the
+        // spine. The two usual escapes are a second y-scale, which is the one
+        // thing a chart may never have, and a log scale, which turns "where is
+        // the oxycline" into an exercise in reading exponents.
+        //
+        // So: index every series to its own declared max_conc. A profile is
+        // read for SHAPE — at what depth the curve breaks — and shape survives
+        // the normalisation intact, while the absolute number stays one hover
+        // or one table row away. The volume beside it is quantised against the
+        // same declared maximum, so the two panels agree about what "full"
+        // means.
+        const xOf = (v, f) => x0 + Math.max(0, Math.min(1, v / (f.max || 1))) * (x1 - x0);
+
+        // The depths the rail on the specimen is ticked at. Drawn faintly here
+        // so the shared axis is something you can see rather than something the
+        // layout merely claims.
+        const ticks = [0, 1, 2, 3, 4].map((i) => Math.round((i / 4) * (nz - 1)));
+        view.tickGeometry = { ticks, ys: ticks.map(yOf), top: y0, bottom: y1 };
+
+        ctx.strokeStyle = css("--grid");
+        ctx.lineWidth = 1;
+        ticks.forEach((z) => {
+          const y = Math.round(yOf(z)) + 0.5;
+          ctx.beginPath();
+          ctx.moveTo(x0, y);
+          ctx.lineTo(x1, y);
+          ctx.stroke();
+        });
+
+        ctx.strokeStyle = css("--axis");
+        ctx.beginPath();
+        ctx.moveTo(Math.round(x0) + 0.5, y0);
+        ctx.lineTo(Math.round(x0) + 0.5, y1);
+        ctx.stroke();
+
+        ctx.fillStyle = css("--muted");
+        ctx.font = "10px ui-monospace, SFMono-Regular, Menlo, monospace";
+        ctx.textAlign = "left";
+        ctx.fillText("0", x0, y1 + 14);
+        ctx.textAlign = "right";
+        ctx.fillText("1 · of declared max", x1, y1 + 14);
+
+        // Series. Two-pixel lines, no markers on every point.
+        shown.forEach((f) => {
+          const p = view.profiles.get(f.id);
+          ctx.strokeStyle = css(f.slot);
+          ctx.lineWidth = 2;
+          ctx.lineJoin = "round";
+          ctx.beginPath();
+          p.mean.forEach((v, z) => (z ? ctx.lineTo(xOf(v, f), yOf(z)) : ctx.moveTo(xOf(v, f), yOf(z))));
+          ctx.stroke();
+        });
+
+        // Direct labels at the shallow end of each curve. This is the relief
+        // the palette validator asked for on the light surface, where three of
+        // these hues sit below 3:1 — identity must not rest on colour alone.
+        ctx.font = "11px ui-sans-serif, -apple-system, sans-serif";
+        ctx.textAlign = "left";
+        const placed = [];
+        shown.forEach((f) => {
+          const p = view.profiles.get(f.id);
+          // At the depth where this series is at its own maximum, not at the
+          // surface. Every curve starts at the surface, so labelling there
+          // stacks them all in one corner and the collision nudge turns the
+          // label position into a function of iteration order. A peak is where
+          // a profile is most itself, and different profiles peak at different
+          // depths — which is the thing the reader is here to see.
+          let z = 0;
+          for (let i = 1; i < p.mean.length; i++) if (p.mean[i] > p.mean[z]) z = i;
+          let y = yOf(z);
+          while (placed.some((o) => Math.abs(o - y) < 15)) y += 15;
+          y = Math.max(y0 + 5, Math.min(y1 - 14, y));
+          placed.push(y);
+          ctx.fillStyle = css(f.slot);
+          ctx.fillRect(x1 + 4, y - 4, 8, 8);
+          ctx.fillStyle = css("--ink-2");
+          ctx.fillText(f.label, x1 + 16, y + 4);
+        });
+
+        // Crosshair, when hovering.
+        if (view.hoverZ != null) {
+          const y = yOf(view.hoverZ);
+          ctx.strokeStyle = css("--axis");
+          ctx.setLineDash([2, 3]);
+          ctx.beginPath();
+          ctx.moveTo(x0, Math.round(y) + 0.5);
+          ctx.lineTo(x1, Math.round(y) + 0.5);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      }
+
+      function drawRail() {
+        // The depth rail, and the one thing on this page that has to be exact.
+        //
+        // The layout claims the specimen and the profile share a vertical axis.
+        // That claim is only true if the rail's ticks land on the profile's
+        // gridlines to the pixel, and they do not do so by construction: the
+        // profile has a heading above it and a row of chips below, so its plot
+        // area is shorter than the specimen and starts lower. Positioning the
+        // rail by percentage would put the numbers near the lines and make the
+        // page lie quietly.
+        //
+        // So the geometry is measured rather than assumed: the profile reports
+        // where it drew each depth, and the rail is placed against the same
+        // page coordinates. If the two panels ever stop sharing an axis, the
+        // numbers visibly slide off the lines instead of the alignment becoming
+        // subtly wrong.
+        const rail = el("rail");
+        const geom = view.tickGeometry;
+        if (!geom) return;
+
+        const plotRect = el("plot").getBoundingClientRect();
+        const specimenRect = el("specimen").getBoundingClientRect();
+        const offset = plotRect.top - specimenRect.top;
+
+        rail.innerHTML = geom.ticks
+          .map((z, i) => {
+            const top = offset + geom.ys[i];
+            return (
+              `<div style="position:absolute;top:${top}px;left:0;right:0;height:1px;background:var(--grid)"></div>` +
+              `<div class="micro num" style="position:absolute;top:${top}px;right:0.4rem;transform:translateY(-50%);background:var(--plane);padding:0 0.2rem">${z}</div>`
+            );
+          })
+          .join("");
+      }
+
+      // ---------------------------------------------------------------------
+      // Wiring.
+      // ---------------------------------------------------------------------
+
+      function renderChips() {
+        const chips = el("chips");
+        chips.innerHTML = "";
+        view.fields.forEach((f) => {
+          const b = document.createElement("button");
+          b.className = "chip";
+          b.type = "button";
+          b.setAttribute("aria-pressed", String(f.on));
+          b.innerHTML = `<span class="swatch" style="background:var(${f.slot})"></span>${f.label}`;
+          b.addEventListener("click", async () => {
+            f.on = !f.on;
+            b.setAttribute("aria-pressed", String(f.on));
+            await refreshFrames();
+          });
+          chips.appendChild(b);
+        });
+      }
+
+      function renderTable() {
+        const shown = view.fields.filter((f) => f.on && view.profiles.has(f.id));
+        const table = el("table");
+        if (!shown.length) {
+          table.innerHTML = "";
+          return;
+        }
+        const nz = view.profiles.get(shown[0].id).mean.length;
+        const head = `<thead><tr><th>z</th>${shown.map((f) => `<th>${f.label}</th>`).join("")}</tr></thead>`;
+        const rows = [];
+        for (let z = nz - 1; z >= 0; z--) {
+          rows.push(
+            `<tr><td class="num">${z}</td>${shown
+              .map((f) => `<td class="num">${view.profiles.get(f.id).mean[z].toPrecision(4)}</td>`)
+              .join("")}</tr>`,
+          );
+        }
+        table.innerHTML = `${head}<tbody>${rows.join("")}</tbody>`;
+      }
+
+      function renderReadout() {
+        const s = view.state;
+        if (!s) return;
+        el("scenario").textContent = s.scenario ?? "—";
+        el("seed").textContent = s.seed ?? "—";
+        el("hash").textContent = s.config_hash ?? "—";
+        el("wfv").textContent = s.world_format_version ?? "—";
+        el("tick").textContent = (s.tick ?? 0).toLocaleString("en-US");
+        el("tps").textContent = (s.ticks_per_second ?? 0).toFixed(1);
+        el("play").setAttribute("aria-pressed", String(!!s.running));
+        el("play").textContent = s.running ? "Pause" : "Run";
+
+        const m = s.residual?.matter ?? 0;
+        const e = s.residual?.energy ?? 0;
+        el("res-matter").textContent = m;
+        el("res-energy").textContent = e;
+
+        const closed = m === 0 && e === 0;
+        el("residual").dataset.state = closed ? "closed" : "broken";
+        el("res-note").textContent = closed
+          ? "Zero, and written down anyway: a recorded zero is proof the check ran, and a missing one is indistinguishable from a check that was switched off."
+          : "Not zero. Matter or energy moved without a channel to account for it, and nothing below this line means anything until it is found.";
+
+        const g = s.grid;
+        el("stamp").textContent = g ? `${g.nx}x${g.ny}x${g.nz} · dx ${g.dx} m` : "—";
+      }
+
+      async function refreshFrames() {
+        const shown = view.fields.filter((f) => f.on).slice(0, 4);
+        await Promise.all(
+          shown.map(async (f) => {
+            const [vol, prof] = await Promise.all([getVolume(f.id), getProfile(f.id)]);
+            view.volumes.set(f.id, vol);
+            view.profiles.set(f.id, prof);
+          }),
+        );
+        uploadVolume();
+        drawVolume();
+        drawProfile();
+        drawRail();
+        renderTable();
+      }
+
+      async function poll() {
+        try {
+          view.state = await getState();
+          if (!view.connected) {
+            view.connected = true;
+            el("offline").dataset.open = "0";
+          }
+          if (!view.fields.length) {
+            view.fields = (view.state.fields || []).map((f, i) => ({
+              id: f.id,
+              label: f.label || f.id,
+              unit: f.unit || "",
+              max: f.max || 1,
+              slot: SLOTS[i % SLOTS.length],
+              on: i < 2,
+            }));
+            renderChips();
+          }
+          renderReadout();
+          await refreshFrames();
+        } catch {
+          view.connected = false;
+          el("offline").dataset.open = "1";
+        }
+      }
+
+      // Orbit. Azimuth is free; elevation is clamped to a narrow band, so the
+      // depth axis stays vertical on screen and the profile beside it keeps
+      // meaning the same thing. Losing that alignment would cost more than
+      // free tumbling buys.
+      (function orbit() {
+        const canvas = el("gl");
+        let dragging = false, lx = 0, ly = 0;
+        canvas.addEventListener("pointerdown", (e) => {
+          dragging = true;
+          lx = e.clientX;
+          ly = e.clientY;
+          canvas.setPointerCapture(e.pointerId);
+        });
+        canvas.addEventListener("pointermove", (e) => {
+          if (!dragging) return;
+          view.azimuth += (e.clientX - lx) * 0.008;
+          view.elevation = Math.max(-0.45, Math.min(0.45, view.elevation + (e.clientY - ly) * 0.005));
+          lx = e.clientX;
+          ly = e.clientY;
+          drawVolume();
+        });
+        const stop = () => (dragging = false);
+        canvas.addEventListener("pointerup", stop);
+        canvas.addEventListener("pointercancel", stop);
+        canvas.addEventListener(
+          "wheel",
+          (e) => {
+            e.preventDefault();
+            view.distance = Math.max(1.8, Math.min(7, view.distance * (1 + Math.sign(e.deltaY) * 0.08)));
+            drawVolume();
+          },
+          { passive: false },
+        );
+        canvas.addEventListener("keydown", (e) => {
+          const k = { ArrowLeft: -0.12, ArrowRight: 0.12 }[e.key];
+          if (k === undefined) return;
+          e.preventDefault();
+          view.azimuth += k;
+          drawVolume();
+        });
+      })();
+
+      // Hover on the profile: a crosshair and the values at that depth.
+      (function hover() {
+        const canvas = el("profile");
+        const tip = el("tip");
+        canvas.addEventListener("pointermove", (e) => {
+          const shown = view.fields.filter((f) => f.on && view.profiles.has(f.id));
+          if (!shown.length) return;
+          const r = canvas.getBoundingClientRect();
+          const nz = view.profiles.get(shown[0].id).mean.length;
+          const y0 = PAD.top, y1 = r.height - PAD.bottom;
+          const frac = Math.max(0, Math.min(1, (e.clientY - r.top - y0) / (y1 - y0)));
+          view.hoverZ = Math.round((1 - frac) * (nz - 1));
+          drawProfile();
+
+          tip.dataset.open = "1";
+          tip.style.left = `${Math.min(r.width - 150, e.clientX - r.left + 12)}px`;
+          tip.style.top = `${e.clientY - r.top + 12}px`;
+          tip.innerHTML =
+            `<div class="micro">layer ${view.hoverZ}</div>` +
+            shown
+              .map(
+                (f) =>
+                  // Absolute, with the unit. The plot is indexed to each
+                  // series' declared maximum; this is where the real number
+                  // lives, and the table view is the other place.
+                  `<div class="tip-row"><span><span class="swatch" style="display:inline-block;background:var(${f.slot})"></span> ${f.label}</span><span class="num">${view.profiles
+                    .get(f.id)
+                    .mean[view.hoverZ].toPrecision(3)} ${f.unit}</span></div>`,
+              )
+              .join("");
+        });
+        canvas.addEventListener("pointerleave", () => {
+          view.hoverZ = null;
+          tip.dataset.open = "0";
+          drawProfile();
+        });
+      })();
+
+      el("play").addEventListener("click", async () => {
+        await control(view.state?.running ? "pause" : "play");
+        await poll();
+      });
+      el("step").addEventListener("click", async () => {
+        await control("step");
+        await poll();
+      });
+      el("speed").addEventListener("change", (e) => control("speed", Number(e.target.value)));
+      el("clip").addEventListener("input", (e) => {
+        view.clip = Number(e.target.value) / 100;
+        el("slab").textContent = view.clip >= 1 ? "full" : `${Math.round(view.clip * 100)}%`;
+        drawVolume();
+      });
+      el("table-toggle").addEventListener("click", (e) => {
+        const open = el("table-wrap").dataset.open === "1";
+        el("table-wrap").dataset.open = open ? "0" : "1";
+        e.currentTarget.setAttribute("aria-pressed", String(!open));
+      });
+      el("theme").addEventListener("click", () => {
+        const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+        const now = document.documentElement.dataset.theme || (dark ? "dark" : "light");
+        document.documentElement.dataset.theme = now === "dark" ? "light" : "dark";
+        drawVolume();
+        drawProfile();
+      });
+
+      addEventListener("resize", () => {
+        drawVolume();
+        drawProfile();
+        drawRail();
+      });
+
+      poll();
+      setInterval(poll, 700);
+    </script>
+  </body>
+</html>
