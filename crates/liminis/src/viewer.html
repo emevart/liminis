@@ -149,7 +149,7 @@
 
       .shell {
         display: grid;
-        grid-template-rows: auto 1fr auto;
+        grid-template-rows: auto auto minmax(0, 1fr) auto auto;
         height: 100%;
         max-width: 1500px;
         margin: 0 auto;
@@ -344,6 +344,10 @@
         color: var(--critical);
       }
 
+      .residual[data-state="unreported"] .residual-value {
+        color: var(--muted);
+      }
+
       .residual-value span small {
         font-size: 10px;
         letter-spacing: 0.1em;
@@ -449,14 +453,16 @@
       /* ---------- table view (the relief rule, and the honest fallback) ---- */
 
       .table-wrap {
-        display: none;
-        overflow: auto;
-        max-height: 40vh;
-        padding: 0 1.25rem 1rem;
+        overflow: hidden;
+        height: 0;
+        padding: 0 1.25rem;
       }
 
       .table-wrap[data-open="1"] {
-        display: block;
+        height: auto;
+        overflow: auto;
+        max-height: 40vh;
+        padding: 0 1.25rem 1rem;
       }
 
       table {
@@ -486,16 +492,21 @@
         font-weight: 500;
       }
 
+      /* Collapsed rather than removed: a `display: none` grid child vacates its
+         track and shifts every row below it, which turned the specimen panel
+         into an auto row and handed the free space to the footer. */
       .offline {
-        padding: 0.5rem 1.25rem;
+        overflow: hidden;
+        height: 0;
+        padding: 0 1.25rem;
         background: var(--critical);
         color: #fff;
         font-size: 12px;
-        display: none;
       }
 
       .offline[data-open="1"] {
-        display: block;
+        height: auto;
+        padding: 0.5rem 1.25rem;
       }
 
       @media (max-width: 900px) {
@@ -689,6 +700,7 @@
         clip: 1,
         hoverZ: null,
         connected: true,
+        everConnected: false,
       };
 
       const el = (id) => document.getElementById(id);
@@ -927,8 +939,25 @@
       }
 
       function drawVolume() {
-        if (!gl3 || !gl3.dims) return;
+        if (!gl3) return;
         const { gl, canvas, prog, tex } = gl3;
+
+        // An unpainted canvas is black, and black reads as "the world is empty"
+        // rather than "no world arrived" — a distinction this page exists to
+        // keep. Clear to the surrounding plane and stop.
+        if (!gl3.dims) {
+          const dpr0 = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = Math.max(1, Math.round(canvas.clientWidth * dpr0));
+          canvas.height = Math.max(1, Math.round(canvas.clientHeight * dpr0));
+          const [r, g, b] = css("--plane")
+            .replace("#", "")
+            .match(/../g)
+            .map((h) => parseInt(h, 16) / 255);
+          gl.viewport(0, 0, canvas.width, canvas.height);
+          gl.clearColor(r, g, b, 1);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          return;
+        }
 
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const w = Math.max(1, Math.round(canvas.clientWidth * dpr));
@@ -1230,16 +1259,26 @@
         el("play").setAttribute("aria-pressed", String(!!s.running));
         el("play").textContent = s.running ? "Pause" : "Run";
 
-        const m = s.residual?.matter ?? 0;
-        const e = s.residual?.energy ?? 0;
-        el("res-matter").textContent = m;
-        el("res-energy").textContent = e;
+        // A zero here means "the check ran and it closed". When no state has
+        // arrived there is no check to report, and printing zero would be the
+        // exact thing ADR-037 warns about — a number indistinguishable from a
+        // check that was switched off. So: an em dash, and say why.
+        const reported = s.residual && typeof s.residual.matter === "number";
+        const m = reported ? s.residual.matter : null;
+        const e = reported ? s.residual.energy : null;
+        el("res-matter").textContent = reported ? m : "—";
+        el("res-energy").textContent = reported ? e : "—";
 
-        const closed = m === 0 && e === 0;
-        el("residual").dataset.state = closed ? "closed" : "broken";
-        el("res-note").textContent = closed
-          ? "Zero, and written down anyway: a recorded zero is proof the check ran, and a missing one is indistinguishable from a check that was switched off."
-          : "Not zero. Matter or energy moved without a channel to account for it, and nothing below this line means anything until it is found.";
+        const state = !reported ? "unreported" : m === 0 && e === 0 ? "closed" : "broken";
+        el("residual").dataset.state = state;
+        el("res-note").textContent = {
+          unreported:
+            "Nothing to report: no tick has been accounted for. This is not a zero — a zero would mean the check ran.",
+          closed:
+            "Zero, and written down anyway: a recorded zero is proof the check ran, and a missing one is indistinguishable from a check that was switched off.",
+          broken:
+            "Not zero. Matter or energy moved without a channel to account for it, and nothing below this line means anything until it is found.",
+        }[state];
 
         const g = s.grid;
         el("stamp").textContent = g ? `${g.nx}x${g.ny}x${g.nz} · dx ${g.dx} m` : "—";
@@ -1268,6 +1307,7 @@
             view.connected = true;
             el("offline").dataset.open = "0";
           }
+          view.everConnected = true;
           if (!view.fields.length) {
             view.fields = (view.state.fields || []).map((f, i) => ({
               id: f.id,
@@ -1282,8 +1322,30 @@
           renderReadout();
           await refreshFrames();
         } catch {
+          const everConnected = view.everConnected;
           view.connected = false;
+          view.state = null;
           el("offline").dataset.open = "1";
+          // Two different failures wearing one banner would be a small lie. A
+          // frame that went stale and a frame that never existed call for
+          // different things from the reader.
+          el("offline").textContent = everConnected
+            ? "Lost the simulator. The picture below is the last frame that arrived, not the current state."
+            : "No simulator answering on this port. Nothing below has ever been drawn from a world.";
+
+          el("residual").dataset.state = "unreported";
+          el("res-matter").textContent = "—";
+          el("res-energy").textContent = "—";
+          el("res-note").textContent =
+            "Nothing to report: the simulator is not answering, so no tick is being accounted for.";
+          el("tick").textContent = "—";
+          el("tps").textContent = "—";
+
+          // Paint something, even if it is only the plane. Reaching here
+          // without drawing leaves an unpainted canvas, and an unpainted canvas
+          // is black — which reads as a world that is empty rather than one
+          // that never arrived.
+          drawVolume();
         }
       }
 
@@ -1400,6 +1462,7 @@
         drawRail();
       });
 
+      drawVolume();
       poll();
       setInterval(poll, 700);
     </script>
