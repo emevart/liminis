@@ -7,7 +7,7 @@
 use anyhow::{Result, bail};
 
 use super::{Conservation, Invariant};
-use crate::kernels::{DiffuseParams, diffuse_voxel_32, diffuse_voxel_64};
+use crate::kernels::diffuse::{DiffuseParams, diffuse_voxel_32, diffuse_voxel_64};
 use crate::numeric::Q;
 use crate::world::{Boundary, Face, Field32, Field64, Grid};
 
@@ -342,7 +342,7 @@ fn periodic_mask(grid: &Grid) -> Result<u32> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::kernels::flux_32;
+    use crate::kernels::diffuse::flux_32;
     use crate::numeric::{M32, M64};
     use crate::world::Field;
 

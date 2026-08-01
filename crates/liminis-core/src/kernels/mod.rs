@@ -37,6 +37,20 @@
 //! Neither of them can see a broken flux function — only `flux_is_antisymmetric`
 //! can (`ARCHITECTURE.md`).
 
-mod diffuse;
-
-pub use diffuse::{DiffuseParams, diffuse_voxel_32, diffuse_voxel_64, flux_32, flux_64};
+// Each kernel is its own public module rather than a private one re-exported
+// here, and the reason is authorship rather than taste: these files are written
+// in parallel, and a shared re-export list is a shared line in a shared file —
+// the one kind of conflict that does not announce itself. Two writers landing
+// on it do not collide loudly, they overwrite, and the build still passes.
+//
+// The cost is that a caller writes `kernels::advect::flux_32` instead of
+// `kernels::flux_32`. That is legible, and it says which kernel a flux belongs
+// to at the call site, which matters here more than usual: every transport
+// kernel has a function called `flux`, and they are not interchangeable.
+pub mod advect;
+pub mod diffuse;
+pub mod fold;
+pub mod light;
+pub mod pressure;
+pub mod react;
+pub mod settle;

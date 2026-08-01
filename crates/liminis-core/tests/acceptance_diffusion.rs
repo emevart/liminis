@@ -22,7 +22,9 @@
 //! substeps, and against the analytic solution. Either one can fail while the
 //! other passes.
 
-use liminis_core::kernels::{DiffuseParams, diffuse_voxel_32, diffuse_voxel_64, flux_32, flux_64};
+use liminis_core::kernels::diffuse::{
+    DiffuseParams, diffuse_voxel_32, diffuse_voxel_64, flux_32, flux_64,
+};
 use liminis_core::numeric::{M32, M64, Q};
 use liminis_core::process::Diffuse;
 use liminis_core::world::{Boundary, Field, Field32, Field64, Grid};
