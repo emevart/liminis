@@ -149,7 +149,12 @@ const QUESTIONS = [
   },
 ]
 
-const ITEMS = Array.isArray(args) && args.length ? args : QUESTIONS
+// Accepts the batch as an array, as {questions: [...]}, or as a JSON string of
+// either. The three look identical at the call site and differ only in what
+// reaches the script.
+const input = typeof args === 'string' ? JSON.parse(args) : args
+const given = Array.isArray(input) ? input : input && Array.isArray(input.questions) ? input.questions : null
+const ITEMS = given && given.length ? given : QUESTIONS
 
 const HOUSE_RULES = `
 ФОРМАТ ЗАПИСИ. Русский язык. Ровно такой скелет, без отступлений:
