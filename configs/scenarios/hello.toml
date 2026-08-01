@@ -14,6 +14,14 @@ name = "hello"
 # times slower for their sake (ADR-030).
 dt = 1.0
 
+# Storage reference state for enthalpy, kelvin. Required with no default since
+# ADR-044: it exists so that the bit width is not spent on a constant offset,
+# and a number picked on the author's behalf would be a scenario decision made
+# by the schema. Nothing reads it here — there is no enthalpy field yet — but
+# every scenario has to declare one, and `every_scenario_in_the_repository_loads`
+# is what says so out loud.
+T_ref = 298.15
+
 [grid]
 nx = 64
 ny = 64

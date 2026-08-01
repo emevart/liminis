@@ -47,7 +47,7 @@
 
 mod diffuse;
 
-pub use diffuse::{Diffuse, substeps_for};
+pub use diffuse::{Diffuse, N_MAX, substeps_and_alpha, substeps_for};
 
 /// What a process does to one of the two ledgers over one tick.
 ///

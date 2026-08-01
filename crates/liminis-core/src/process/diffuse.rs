@@ -18,6 +18,27 @@ use crate::world::{Boundary, Face, Field32, Field64, Grid};
 /// substeps below exists to keep this true after the tick has been divided.
 const STABILITY_LIMIT: f64 = 1.0 / 6.0;
 
+/// The most substeps one field may cost per tick (ADR-061).
+///
+/// A build-time bound and deliberately not a config key. One substep is one pass
+/// over the field — read `src`, write `dst` — so on the 128^3 base grid of SPEC
+/// section 1.1 it is 16 MiB of traffic; sixty-four of them are exactly one GiB
+/// per tick for one field. `N_MAX = 64` reads as "a field may not cost more than
+/// a gibibyte a tick", where a round hundred would mean nothing and would let
+/// through the two cases the bound exists for: a proton at `dx = 25 um` (90
+/// substeps) and the enthalpy field at the default `lod = 0` (84).
+///
+/// A key that raised it would have exactly one effect — turning a refusal into a
+/// run — because `n` is derived from `D`, `dt` and `dx` and nothing else, and
+/// the loader has no tick budget to judge a raised value against. So there is
+/// none.
+///
+/// Here rather than beside `S_MAX` and `R_MAX` in `world/registry.rs`: those
+/// size a kernel's local arrays, this one sizes nothing at all and exists
+/// because the tick budget is not in the config. "Beside `STABILITY_LIMIT`" is
+/// by kind, and this is the kind (ADR-061).
+pub const N_MAX: u32 = 64;
+
 /// Diffusion of one substance on one lane of one field.
 ///
 /// Holds what a tick needs: how many substeps, and the parameters of one of
@@ -98,12 +119,23 @@ impl Diffuse {
     /// writes one lane of one substance field and nothing else. Enthalpy is its
     /// own field with its own transport (ADR-028), so nothing here reaches the
     /// energy ledger.
-    // TODO(enthalpy-of-transport): whether the enthalpy carried by a diffusing
-    // substance should follow it is not decided anywhere. Today enthalpy is
-    // transported as a field in its own right (ADR-028, ADR-030) and no document
-    // couples the two, so this declaration is what the code does; if the
-    // coupling is ever added, this process stops conserving energy and starts
-    // moving it, and the declaration has to move with it.
+    ///
+    /// That the enthalpy of a diffusing substance does *not* follow it is
+    /// decided — ADR-062, which closed the `TODO(enthalpy-of-transport)` that
+    /// stood here — and the decision was paid for rather than declared. The
+    /// discarded term is bounded, `Sum D_i*c_i*c_p,i / (alpha*Sum c_j*c_p,j)`,
+    /// and the bound is checked at load in `config::derive`: over 5% the
+    /// scenario is refused. So this half of the invariant rests on that check
+    /// and no longer on the absence of a document, which is what ADR-028 calls
+    /// being half inside the ledger. On the corpus registry the term is 1.64%,
+    /// and all of it is the self-diffusion of water, which in a homogeneous
+    /// solvent transports no enthalpy at all.
+    // TODO(diffusing-matter-does-not-move-enthalpy): `ACCEPTANCE.md` names the
+    // assertion, and it cannot be written here. This process takes one field and
+    // an enthalpy field is not something it can be handed, so a test would
+    // assert that a buffer nobody passed in did not change; the statement
+    // belongs to the orchestration that holds both fields at once, and there is
+    // no tick loop yet (`ARCHITECTURE.md`, the host side).
     #[inline]
     #[must_use]
     pub fn invariant(&self) -> Invariant {
@@ -194,7 +226,7 @@ impl Diffuse {
 /// # Errors
 ///
 /// Returns an error if `D` is negative or not finite, if `dt` or `dx` is not
-/// finite and positive, or if the count does not fit a `u32`.
+/// finite and positive, or if the count is over [`N_MAX`].
 pub fn substeps_for(diffusivity: f64, dt: f64, dx: f64) -> Result<u32> {
     Ok(substeps_and_alpha(diffusivity, dt, dx)?.0)
 }
@@ -206,7 +238,17 @@ pub fn substeps_for(diffusivity: f64, dt: f64, dx: f64) -> Result<u32> {
 /// apart. Written as `ratio / (6n)` so that `alpha <= 1/6` follows from
 /// `n >= ratio` in the same arithmetic that produced `n`, rather than from a
 /// separate calculation that could round the other way.
-fn substeps_and_alpha(diffusivity: f64, dt: f64, dx: f64) -> Result<(u32, f64)> {
+///
+/// Public because the loader needs both halves for a field it is not building a
+/// [`Diffuse`] for yet (`config/derive.rs`): taking only `n` from here and
+/// recomputing `alpha` there is exactly the second source of truth this function
+/// exists to prevent.
+///
+/// # Errors
+///
+/// The errors of [`substeps_for`], of which the substep bound is the one a
+/// scenario meets.
+pub fn substeps_and_alpha(diffusivity: f64, dt: f64, dx: f64) -> Result<(u32, f64)> {
     if !diffusivity.is_finite() || diffusivity < 0.0 {
         bail!("diffusivity {diffusivity} m^2/s is not a usable coefficient");
     }
@@ -227,28 +269,39 @@ fn substeps_and_alpha(diffusivity: f64, dt: f64, dx: f64) -> Result<(u32, f64)> 
         );
     }
 
-    // TODO(n-max): a field that needs more than `N_max` substeps is supposed to
-    // coarsen its LOD or be solved to steady state, and this is where it would
-    // be refused (ADR-030). `N_max` is not a number anywhere: ADR-030 says
-    // outright that it will have to be named, and `CONFIG_SCHEMA.md` section 13
-    // item 4 records that it is not named and that it is not even settled
-    // whether it is a config key or a build-time bound next to `S_MAX` and
-    // `R_MAX`. Choosing one here would pick the boundary between "explicit with
-    // substeps" and "needs a steady-state solver" for the whole project, from
-    // inside a process that has no way to see the tick budget that decides it.
-    //
-    // So the only bound below is representability. The micro regime is the case
-    // that will hit it: ADR-030 puts `n` in the hundreds of thousands at
-    // dx = 1 um, and sends those fields to the quasi-steady-state solver rather
-    // than to a longer loop.
+    // A field that needs more than `N_MAX` substeps has to coarsen its LOD or be
+    // solved to steady state, and this is the one place where either can be
+    // asked for (ADR-030, ADR-061). The count is printed before the cast: at
+    // dx = 1 um a proton needs 55 801 substeps and the micro regime is meant to
+    // meet this refusal rather than to run.
     let substeps = ratio.ceil().max(1.0);
-    if substeps > f64::from(u32::MAX) {
+    if substeps > f64::from(N_MAX) {
+        // Coarsening divides `n` by `4^dlod`, so the message can name the one
+        // exit that applies instead of listing both. The lod range is 0..=2
+        // (`QUANTITIES.md` section 1), so past `64*4^2 = 1024` only the solver
+        // is left — and the solver is not written: S0 has none and ADR-030 says
+        // it should not. Promising a stage is honest, promising a solver is not.
+        let dlod = (substeps / f64::from(N_MAX)).log2() / 2.0;
+        let dlod = dlod.ceil();
+        let fix = if dlod <= 2.0 {
+            format!("coarsen its lod by {dlod} (each step divides n by four)")
+        } else {
+            format!(
+                "coarsening would need {dlod} steps of lod against a range of \
+                 0..=2, so this field has to wait for the steady-state solver of \
+                 stage S1'"
+            )
+        };
         bail!(
             "diffusion needs {substeps} substeps per tick at D = {diffusivity} \
-             m^2/s, dt = {dt} s, dx = {dx} m, which does not fit a u32; the \
-             scenario needs a coarser field or a steady-state solver (ADR-030)"
+             m^2/s, dt = {dt} s, dx = {dx} m, over the bound of N_MAX = {N_MAX} \
+             substeps: {fix} (ADR-030, ADR-061)"
         );
     }
+    debug_assert!(
+        substeps <= f64::from(u32::MAX),
+        "the N_MAX bound above refuses long before a u32 runs out"
+    );
 
     let alpha = ratio / (6.0 * substeps);
     debug_assert!(
@@ -371,12 +424,17 @@ mod tests {
 
     #[test]
     fn alpha_stays_under_the_stability_limit() {
-        // The reason substeps exist at all. Swept over ten orders of magnitude
-        // of D — from a tenth of the slowest thing in the registry to seven
-        // orders above the fastest — including the values that make the ratio
-        // land on an integer, where `ceil` gives back what it was given and
-        // `alpha` sits exactly on the limit rather than under it.
-        for exponent in -12..-1 {
+        // The reason substeps exist at all. Swept over five orders of magnitude
+        // of D — from a tenth of the slowest thing in the registry to the top of
+        // what `N_MAX` admits at this dx — including the values that make the
+        // ratio land on an integer, where `ceil` gives back what it was given
+        // and `alpha` sits exactly on the limit rather than under it.
+        //
+        // The sweep stops at 1e-7 because that is where it has to: at dx = 100 um
+        // and a one-second tick, D above `N_MAX*dx^2/(6*dt) = 1.07e-7` is a
+        // refusal rather than a longer loop (ADR-061), and that case belongs to
+        // `field_over_n_max_substeps_is_rejected` below.
+        for exponent in -12..-7 {
             for multiplier in [1.0, 1.5, 2.0, 3.0, 6.0, 9.99] {
                 let diffusivity = multiplier * 10f64.powi(exponent);
                 let (substeps, alpha) = substeps_and_alpha(diffusivity, DT, DX).unwrap();
@@ -389,12 +447,12 @@ mod tests {
                 // `n` is the smallest count that stays inside the limit, so one
                 // substep fewer does not.
                 //
-                // `>=` rather than `>`, because at the top of the sweep the
-                // recomputation runs out of mantissa: 6*D*dt/dx^2 comes out as
-                // 900000.0000000001, `n` is 900001, and dividing by 900000 lands
-                // back on the nearest f64 to a sixth. The inequality is strict in
-                // exact arithmetic and this is what is left of it in f64 —
-                // tightening the assertion would only be pinning the rounding.
+                // `>=` rather than `>`, because the recomputation can run out of
+                // mantissa: where 6*D*dt/dx^2 lands a hair over an integer, `n`
+                // is that integer plus one and dividing back lands on the
+                // nearest f64 to a sixth. The inequality is strict in exact
+                // arithmetic and this is what is left of it in f64 — tightening
+                // the assertion would only be pinning the rounding.
                 if substeps > 1 {
                     let coarser = alpha * f64::from(substeps) / f64::from(substeps - 1);
                     assert!(
@@ -415,16 +473,59 @@ mod tests {
         assert!(substeps_for(1.6e-9, DT, 0.0).is_err());
         assert!(substeps_for(1.6e-9, DT, f64::INFINITY).is_err());
 
-        // Not a limit on the physics: a count this large simply has nowhere to
-        // be stored. See TODO(n-max) — the limit that ADR-030 actually asks for
-        // is not a number yet.
-        let err = substeps_for(1.0, DT, 1.0e-9).unwrap_err().to_string();
-        assert!(err.contains("substeps"), "unhelpful message: {err}");
-
         // A substance that does not diffuse is a no-op, not an error.
         let (substeps, alpha) = substeps_and_alpha(0.0, DT, DX).unwrap();
         assert_eq!(substeps, 1);
         assert_eq!(alpha, 0.0);
+    }
+
+    /// `ACCEPTANCE.md`, from ADR-061.
+    #[test]
+    fn field_over_n_max_substeps_is_rejected() {
+        // The boundary itself, and both sides of it. At dx = 100 um and a
+        // one-second tick, N_MAX admits everything up to D = 1.07e-7 m^2/s —
+        // which is where the enthalpy field of ADR-062 sits at lod 2, and it
+        // passes at 1.4e-7 only because its own grid step is four times coarser.
+        let limit = f64::from(N_MAX) * DX * DX / (6.0 * DT);
+        assert_eq!(substeps_for(limit, DT, DX).unwrap(), N_MAX);
+        assert!(substeps_for(limit * 1.01, DT, DX).is_err());
+
+        // The micro regime, which is meant to meet this refusal rather than run
+        // (SPEC section 1.7, ADR-030): the proton at dx = 1 um needs 55 801
+        // substeps, and until ADR-061 that config loaded in silence and simply
+        // did not finish its arithmetic.
+        let err = substeps_for(9.3e-9, DT, 1.0e-6).unwrap_err().to_string();
+        assert!(err.contains("55801"), "the count has to be named: {err}");
+        assert!(err.contains("64"), "the bound has to be named: {err}");
+        assert!(err.contains("substeps"), "{err}");
+
+        // And the representability bound it replaced: 64 refuses long before a
+        // u32 runs out, so that message is gone and this one arrives instead.
+        let err = substeps_for(1.0, DT, 1.0e-9).unwrap_err().to_string();
+        assert!(err.contains("substeps"), "unhelpful message: {err}");
+        assert!(
+            !err.contains("u32"),
+            "the u32 bound is unreachable now: {err}"
+        );
+    }
+
+    /// `ACCEPTANCE.md`, from ADR-061. The refusal has to say which of the two
+    /// exits of ADR-030 applies, not list both.
+    #[test]
+    fn n_max_refusal_names_the_field_and_the_lod_that_fixes_it() {
+        // 84 substeps — the enthalpy field of ADR-062 on the fine grid — is
+        // `ceil(log4(84/64)) = 1` step of coarsening away from loading. The
+        // field's own name is added by the loader, which is the only place that
+        // knows it (`config/derive.rs`).
+        let err = substeps_for(1.4e-7, DT, DX).unwrap_err().to_string();
+        assert!(err.contains("84"), "{err}");
+        assert!(err.contains("lod by 1"), "the one exit that applies: {err}");
+
+        // Past 64*4^2 = 1024 no lod in the range 0..=2 is enough, and the
+        // message says so rather than promising a solver that S0 does not have.
+        let err = substeps_for(9.3e-9, DT, 1.0e-6).unwrap_err().to_string();
+        assert!(err.contains("S1'"), "{err}");
+        assert!(!err.contains("lod by "), "{err}");
     }
 
     /// `ACCEPTANCE.md`, section "Conservation" — the name is fixed there.
