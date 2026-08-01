@@ -20,7 +20,7 @@
 
 ### Валидатор отказывается грузить
 
-Восемнадцать отказов. Каждый — класс ошибки, который иначе проявится как
+Девятнадцать отказов. Каждый — класс ошибки, который иначе проявится как
 странная динамика через сто тысяч тиков.
 
 ```
@@ -29,6 +29,7 @@ reaction_unbalanced_by_mass_is_rejected
 reaction_unbalanced_by_energy_is_rejected
 reaction_enthalpy_disagreeing_with_formation_enthalpies_is_rejected
 mass_tolerance_above_the_lightest_untracked_substance_is_rejected
+reaction_without_t_vmax_is_rejected
 reaction_stoichiometry_must_be_positive_integers
 substance_without_molar_mass_is_rejected
 courant_violation_is_rejected
@@ -111,6 +112,10 @@ advection_alone_conserves_exactly
 diffusion_alone_conserves_exactly
 transport_of_a_64_bit_substance_conserves_exactly
 energy_fold_from_fine_to_coarse_conserves_exactly
+absorbed_light_appears_in_enthalpy
+all_reactions_share_one_competition_coefficient
+cell_contributions_are_gathered_not_scattered
+cell_energy_ledger_closes_over_apoptosis
 reaction_alone_conserves_each_element_exactly
 competition_scaling_conserves_each_element_exactly
 pressure_relaxation_conserves_exactly
