@@ -221,9 +221,13 @@ jobs:
         run: |
           set -euo pipefail
 
+          # `|| true` is load-bearing under `set -o pipefail`: when the parent
+          # carries no kernel at all — which is the normal case while the window
+          # is open — git prints nothing, grep finds nothing and exits 1, and
+          # the whole script would die instead of reporting an open window.
           kernel_in() {
             git ls-tree -r --name-only "$1" -- crates/liminis-core/src/kernels \
-              | grep -vE '(^|/)\.' | head -n 1
+              | { grep -vE '(^|/)\.' || true; } | head -n 1
           }
 
           violation=0
