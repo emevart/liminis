@@ -10,30 +10,16 @@
 
 use anyhow::{Result, bail};
 
-/// The number of substances the reaction kernel sizes its local arrays for.
-///
-/// ADR-041: the kernel keeps a demand vector `[S_MAX]` on the stack because
-/// kernels may not allocate, so the bound has to be named somewhere. Thirty-two
-/// is also what makes [`Registry::width_mask`] a `u32`, which is the form
-/// ADR-041 gives it in `ReactParams` — the two numbers are one decision, not
-/// two.
-///
-/// "The registry is data" (ADR-018) means "data within a declared bound" after
-/// this, and it should be said that way rather than implied.
-// TODO(s-max-home): `ARCHITECTURE.md` declares S_MAX and R_MAX in
-// `kernels/react.rs`, which is where they belong — they are the size of that
-// kernel's local arrays and of nothing else. They live here for now because
-// `kernels/react.rs` does not exist and `kernels/` may not depend on `world/`
-// (dependency map, `ARCHITECTURE.md`). Whoever writes the reaction kernel moves
-// them and leaves a `pub use` here. Do not spell either number a second time:
-// two literals, one of them nudged once, and the validator accepts a registry
-// the kernel has no room for.
-pub const S_MAX: usize = 32;
-
-/// The number of reactions the reaction kernel sizes its local `xi[R_MAX]` for
-/// (ADR-041). Carried here for the same reason as [`S_MAX`], and it moves with
-/// it.
-pub const R_MAX: usize = 64;
+// The two build-time bounds of ADR-041 live in `kernels/react.rs`, which is
+// where `ARCHITECTURE.md` declares them and where they belong: they are the size
+// of that kernel's local arrays and of nothing else. They were carried here
+// while `kernels/react.rs` was a placeholder, under a TODO asking whoever wrote
+// the kernel to move them and leave a re-export. That has happened.
+//
+// A re-export and not a second pair of literals, deliberately: two spellings,
+// one of them nudged once, and the validator accepts a registry the kernel has
+// no room for.
+pub use crate::kernels::react::{R_MAX, S_MAX};
 
 /// How many substances a registry may hold: one less than [`S_MAX`].
 ///
@@ -127,11 +113,12 @@ pub struct SubstanceSlot {
 ///
 /// The bearing test of ADR-056 — `mixed_width_storage_matches_uniform_width_storage`,
 /// which runs the reaction kernel over a mixed-width registry and an artificially
-/// uniform one and demands the same result — is **not written**: there is no
-/// reaction kernel yet. Until it exists, an addressing mistake inside a kernel is
-/// caught by nothing at all, and the pinned tables in this file are the whole of
-/// the defence. Said out loud so that its absence does not read as a settled
-/// question.
+/// uniform one and demands the same result — is written, in
+/// `tests/acceptance_reactions.rs`. It could not be until `kernels/react.rs`
+/// existed, and until it did, an addressing mistake inside a kernel was caught
+/// by nothing at all. It covers the one kernel that reads by substance index;
+/// the `kernel-lint` grep of `.claude/rules/kernels.md` covers the shape of the
+/// mistake everywhere else.
 ///
 /// # What the registry does not do
 ///

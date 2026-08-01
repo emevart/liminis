@@ -376,9 +376,10 @@ fn diffusion_alone_conserves_exactly() {
         // Water, at the scale that made ADR-040 necessary, with a gradient of a
         // few hundred units on top of it. The small difference on the large pool
         // is the case that separates `q_conc(there - here)` from
-        // `q_conc(there) - q_conc(here)`: at 5.1e12 an f32 step is 512 units, so
-        // the second form would round the whole gradient away and this field
-        // would sit there looking perfectly conserved and perfectly still.
+        // `q_conc(there) - q_conc(here)`: at 5.1e12 an f32 step is
+        // `2^19 = 524 288` units, so the second form would round the whole
+        // gradient away and this field would sit there looking perfectly
+        // conserved and perfectly still.
         5_100_000_000_000 + i64::from(x * 100 + y * 10 + z)
     });
 

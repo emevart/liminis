@@ -4,6 +4,16 @@
 Порядок важен. Сначала дешёвая текстовая проверка ядер, потом тулчейн: если в
 ядре голый оператор над `Q`, незачем ждать clippy.
 
+Проверок в грепе две. Вторая — адресация по индексу вещества вместо полосы
+(ADR-056, `.claude/rules/kernels.md`): `s * n_voxels + idx` компилируется,
+выглядит как в скелете `ARCHITECTURE.md` и читает чужое количество, а ledger при
+этом сходится — потеряно ничего, прочитано не то. Живёт она здесь, а не в
+`scripts/check_bare_q.py`, потому что тот файл называет ровно одно правило и
+одноимённая работа CI обещает ровно его. Цена названа вслух: **CI этой половины
+не гоняет**, PR стороннего контрибьютора её не видит, и единственная защита там —
+`mixed_width_storage_matches_uniform_width_storage`. Закрыть разрыв значит завести
+общий модуль проверок ядра, а это решение о том, где живут проверки.
+
 PostToolUse не блокирует — файл уже записан. Ненулевой код выхода здесь означает
 «показать stderr модели», и для линтера это ровно нужное поведение.
 
@@ -19,12 +29,23 @@ CI: хук работает только внутри сессии Claude Code, 
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 
 TOOLS = ("Write", "Edit")
 KERNELS = "crates/liminis-core/src/kernels/"
+
+# Умножение идентификатора на число вокселей. Законный адрес умножает на него
+# элемент таблицы полос — `rx.lane[s as usize] * p.n_voxels + idx`, — а там
+# слева от звёздочки скобка, а не имя. Отсюда и форма выражения: ловится ровно
+# `имя * n_voxels`.
+SUBSTANCE_MAJOR = re.compile(r"\b([A-Za-z_]\w*)\s*\*\s*(?:[A-Za-z_]\w*\s*\.\s*)?n_voxels\b")
+
+# Кроме имени полосы: `let lane = rx.lane[s]` с последующим `lane * p.n_voxels`
+# — законная запись, и ADR-056 приводит адрес именно через полосу.
+LANE_NAMES = ("lane", "lane_of")
 
 # Разделяемая проверка лежит в scripts/ репозитория, рядом с test-hooks.sh.
 SHARED = os.path.join(
@@ -36,6 +57,20 @@ REASON = {
     "unwrap": "распаковка Q через .0",
     "operator": "голый арифметический оператор над Q",
 }
+
+
+def substance_major_addressing(text):
+    """Вернуть [(номер строки, текст)] для адресации по индексу вещества."""
+    shared = load_shared()
+    findings = []
+    for number, line in enumerate(text.splitlines(), start=1):
+        # Комментарии и строковые литералы вычищает та же функция, что и у
+        # проверки над Q: правило про код, а не про то, как о нём пишут.
+        for name in SUBSTANCE_MAJOR.findall(shared.scrub(line)):
+            if name not in LANE_NAMES:
+                findings.append((number, line.strip()))
+                break
+    return findings
 
 
 def load_shared():
@@ -107,7 +142,9 @@ def main():
             return 1
 
         with open(absolute, encoding="utf-8") as handle:
-            findings = shared.bare_q_operators(handle.read())
+            source = handle.read()
+
+        findings = shared.bare_q_operators(source)
         if findings:
             print(
                 f"{relative}: голая арифметика над Q запрещена внутри ядер "
@@ -117,6 +154,23 @@ def main():
             for number, text, code in findings:
                 what = REASON.get(code, code)
                 print(f"  {relative}:{number}: {what}\n      {text}", file=sys.stderr)
+            return 2
+
+        lanes = substance_major_addressing(source)
+        if lanes:
+            print(
+                f"{relative}: адрес считается через таблицу полос, а не по индексу "
+                f"вещества (ADR-056). `rx.lane[s as usize] * p.n_voxels + idx`; "
+                f"`s * n_voxels + idx` читает чужое количество, и ledger при этом "
+                f"сходится — потеряно ничего, прочитано не то",
+                file=sys.stderr,
+            )
+            for number, text in lanes:
+                print(
+                    f"  {relative}:{number}: адресация по индексу вещества\n"
+                    f"      {text}",
+                    file=sys.stderr,
+                )
             return 2
 
     cargo = cargo_binary()
