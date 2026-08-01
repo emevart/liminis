@@ -7,9 +7,30 @@ export const meta = {
     { title: 'Draft', detail: 'one advocate per question writes the full record' },
     { title: 'Refute', detail: 'a prosecutor tries to overturn it against the 55-record journal' },
     { title: 'Settle', detail: 'a judge merges what survived into the final text' },
+    { title: 'Arithmetic', detail: 'every computed number recomputed from the corpus, not from the record' },
     { title: 'Cohere', detail: 'one pass over the whole batch for mutual contradictions' },
   ],
 }
+
+// WHY THE ARITHMETIC STAGE EXISTS, measured rather than assumed.
+//
+// The first batch run through this workflow produced eleven records of
+// genuinely good prose and, on a separate pass, 92 checkable numbers of which
+// 21 were wrong — 23%. The prosecutor stage did not catch them, and would not
+// have: it argues against a claim, and these numbers are not claims anyone
+// argues with. Two of the errors changed a decision rather than a figure.
+//
+// The failure mode is specific and worth naming, because it does not look like
+// an error while you are reading it. A record computes a worst case from the
+// wrong worst case — the 32-bit substance rather than the 64-bit one — and every
+// number downstream is internally consistent with that base. Another quotes a
+// pool ten times too large; the four numbers derived from it all agree with each
+// other and none agrees with the registry. Prose this fluent reads as checked.
+//
+// The reason it must be a stage and not a habit is ADR-055: a quantity with a
+// wrong number is compensated by calibration for years and is never found. And
+// the numbers in a journal record do not stay in the journal — they are copied
+// into tests, into validator messages, into comments beside assertions.
 
 // ---------------------------------------------------------------------------
 // The batch.
@@ -245,6 +266,31 @@ const FINAL_SCHEMA = {
   },
 }
 
+const ARITHMETIC_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['claims'],
+  properties: {
+    claims: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['quoted', 'verdict', 'recomputed'],
+        properties: {
+          quoted: { type: 'string', description: 'Утверждение из записи, дословно' },
+          verdict: {
+            type: 'string',
+            enum: ['correct', 'wrong', 'unverifiable', 'right-number-wrong-reason'],
+          },
+          recomputed: { type: 'string', description: 'Счёт: входы, действие, результат' },
+          impact: { type: 'string', description: 'Что меняется в решении, если число неверно' },
+        },
+      },
+    },
+  },
+}
+
 const CORPUS = `
 КАРТА КОРПУСА. Читай прицельно, а не целиком.
 
@@ -359,6 +405,41 @@ ${HOUSE_RULES}
 const records = settled.filter(Boolean).sort((a, b) => a.number - b.number)
 log(`${records.length} из ${ITEMS.length} записей сведено`)
 
+phase('Arithmetic')
+
+// One checker per record, in parallel with nothing else: it needs the settled
+// text, and its findings have to reach the coherence pass.
+const arithmetic = await parallel(
+  records.map((r) => () =>
+    agent(
+      `Ты проверяешь АРИФМЕТИКУ записи ADR-0${r.number} журнала решений проекта Liminis. Не формулировки, не стиль, не убедительность — только числа.
+
+ЗАПИСЬ:
+
+${r.markdown}
+
+ВЫПИШИ КАЖДОЕ ЧИСЛО, которое запись утверждает как посчитанное, и пересчитай его сам, с нуля, взяв входные величины ИЗ КОРПУСА, а не из самой записи. Это условие несущее: половина ошибок этого класса — числа, внутренне согласованные с неверной базой, и пересчёт по записи их подтверждает.
+
+Числа, которые надо проверять: байты на воксель, мегабайты при 128³ и 256³; число подшагов n = ceil(6·D·dt/dx²); масштабы kᵢ, экспоненты e_r, коэффициенты νᵢ; трафик памяти за тик, доли и проценты; вероятности, порядки, отношения; значения хеш-функций.
+
+ОТКУДА ВХОДЫ: docs/SPEC.md §1.2, §1.7, §2.3; docs/QUANTITIES.md; docs/DECISIONS.md (ADR-039, ADR-040, ADR-042, ADR-045); crates/liminis-core/src/.
+
+ОСОБО:
+1. Найди худший случай сам, а не поверь тому, который назвала запись. Реестр разноширинный (ADR-040), и запись, взявшая худшим случаем 32-битное вещество, ошибётся на три порядка, оставаясь при этом внутренне непротиворечивой.
+2. Значения хеш-функций и генераторов не выводи рассуждением. Либо посчитай запуском (в репозитории есть cargo и python3), либо верни «unverifiable» и скажи, что число обязано быть получено прогоном.
+3. Проверь единицы: грамм против килограмма, джоуль против килоджоуля, МиБ против МБ.
+4. Верное число, полученное неверным рассуждением, — отдельный вердикт: следующий читатель повторит рассуждение на других входах.`,
+      { label: `arith:${r.slug}`, phase: 'Arithmetic', effort: 'high', schema: ARITHMETIC_SCHEMA },
+    ).then((a) => ({ number: r.number, slug: r.slug, ...(a || { claims: [] }) })),
+  ),
+)
+
+const badNumbers = arithmetic
+  .filter(Boolean)
+  .flatMap((a) => (a.claims || []).filter((c) => c.verdict !== 'correct').map((c) => ({ ...c, adr: a.number })))
+
+log(`арифметика: ${badNumbers.length} чисел требуют правки`)
+
 // Барьер оправдан: связность — свойство пачки, а не записи. Судить о том, не
 // противоречат ли ADR-056 и ADR-065 друг другу, можно только увидев обе.
 phase('Cohere')
@@ -381,6 +462,10 @@ ${records.map((r) => r.markdown).join('\n\n---\n\n')}
 5. Имя теста, объявленное дважды или противоречащее docs/ACCEPTANCE.md.
 6. Пропущенная связь: запись, которая обязана была сослаться на соседнюю по номеру и не сослалась.
 7. Работа, которую пачка создаёт и никто не назвал: файл, который придётся править, тест, который сломается, WORLD_FORMAT_VERSION.
+
+ОТДЕЛЬНО: проверка арифметики уже прошла и вернула вот это. Числа в тексте ниже НЕ исправлены — их правит человек. Твоя задача здесь одна: сказать, какие из находок меняют не число, а решение, и какие из них противоречат соседним записям пачки.
+
+${badNumbers.length ? badNumbers.map((c) => `[ADR-0${c.adr}] ${c.verdict}: ${c.quoted}\n    пересчёт: ${c.recomputed}\n    следствие: ${c.impact || '—'}`).join('\n\n') : 'ни одного неверного числа'}
 
 Верни список находок, каждая — с номерами обеих записей и предложением, какую из двух править. Отдельно верни сводный список файлов, которые пачка обязывает править, и список новых имён тестов.`,
   {
