@@ -6,6 +6,7 @@
 
 pub mod config;
 pub mod kernels;
+pub mod ledger;
 pub mod numeric;
 pub mod process;
 pub mod version;

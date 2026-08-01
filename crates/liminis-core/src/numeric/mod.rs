@@ -87,4 +87,4 @@ pub use convert::{
 };
 pub use m::{M32, M64};
 pub use mode::{Q, qadd, qdiv, qexp, qlog, qmul, qpow, qrcp, qsigmoid, qsqrt, qsub};
-pub use rng::rand;
+pub use rng::{rand, run_key};

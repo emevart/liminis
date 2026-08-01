@@ -20,7 +20,10 @@ export const meta = {
 // the other's module declaration and the build still passes. So concurrency is
 // declared by the caller, per wave, over file sets it has checked are disjoint.
 
-const WAVES = (args && args.waves) || []
+// Accepts the argument as an object or as a JSON string: the two look identical
+// at the call site and differ only in what reaches the script.
+const input = typeof args === 'string' ? JSON.parse(args) : args || {}
+const WAVES = input.waves || []
 if (!WAVES.length) {
   throw new Error('s0-slice needs args.waves: an array of waves, each an array of work items')
 }

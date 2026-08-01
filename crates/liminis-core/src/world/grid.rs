@@ -176,14 +176,23 @@ impl Grid {
     // neighbour — but every number it needs is missing, and guessing any of them
     // silently changes the physics of the top of the domain:
     //
-    // - the channel counter. Matter leaving through this face has to land in
-    //   `BOUNDARY_EXCHANGE` (SPEC section 7), or the per-tick invariant of
-    //   ADR-003 stops closing: `ledger/` does not exist yet, and
-    //   `boundary_outflow_appears_in_channel_counter` (ACCEPTANCE.md) is the
-    //   test that will say so;
+    // - the ghost cell. ADR-059 settled the mechanism: a field lane grows to
+    //   `n_voxels + 1`, the last element holds the reservoir in storage units,
+    //   and `Grid::neighbour` returns its index for this face — the same trick
+    //   by which `closed` already returns the voxel itself and therefore
+    //   carries no flux without a branch. That is a change to `world::Field`
+    //   and to every bounds check over a lane, and it is not written;
     // - the reservoir itself. The channel is two-way, so the outside has a
-    //   composition and an exchange rate, and `CONFIG_SCHEMA.md` section 13
-    //   item 6 records that neither is declared anywhere.
+    //   composition, a temperature and an exchange rate, and `CONFIG_SCHEMA.md`
+    //   section 13 item 6 records that none of them is declared anywhere. The
+    //   `[boundary.reservoir]` section and its validator are a wave of their
+    //   own.
+    //
+    // The channel counter is no longer among them: `ledger::Channel` and the
+    // `(channel, substance)` table exist, so matter leaving through this face
+    // has somewhere to land — `BOUNDARY_EXCHANGE` (SPEC section 7, ADR-059) —
+    // and `boundary_outflow_appears_in_channel_counter` (ACCEPTANCE.md) is
+    // waiting for the face rather than for the ledger.
     //
     // Treating the face as `closed` in the meantime would compile, pass every
     // test in this file, and quietly seal the lid on a world that is supposed to

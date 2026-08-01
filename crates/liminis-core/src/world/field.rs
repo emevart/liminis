@@ -57,27 +57,16 @@ use crate::numeric::{M32, M64};
 /// derived by the loader from its declared concentrations, never chosen here
 /// (ADR-040); in the default registry exactly one substance comes out 64-bit,
 /// and it is water.
-// TODO(width-lanes): who maps a substance index onto a (width, lane) pair is not
-// decided, and this type deliberately does not decide it.
-//
-// A `Field` addresses lanes, not substances, and for a single-width registry the
-// two coincide. For a mixed-width one they cannot, and the two documents that
-// describe the mixed case disagree about how:
-//
-// - `ARCHITECTURE.md`'s reaction skeleton addresses **both** width arrays with
-//   the same `s * n_voxels + idx`, and picks between them on `width_mask`. That
-//   only works if both arrays are `n_substances * n_voxels` long, i.e. if every
-//   substance occupies a slot in both and one of the two is dead space;
-// - ADR-040 prices the same registry at "water 4 -> 8 bytes, +8 bytes per voxel,
-//   214 -> 222", which is compact storage: 13 lanes in the narrow array, 1 in
-//   the wide one. Parallel full-size arrays would be 168 bytes per voxel before
-//   double buffering instead of 60.
-//
-// Compact storage needs a substance -> lane table that neither document
-// mentions, and inventing one here would put a silent second addressing scheme
-// underneath every kernel. The first kernel does not need it — diffusion of one
-// substance takes one lane — so it is left where it belongs: with whoever writes
-// the substance registry, and with an entry in the journal.
+///
+/// A `Field` addresses **lanes, not substances**, and it still does not resolve
+/// the difference: that is [`Registry`](super::Registry)'s job, and its answer
+/// is the only one (ADR-056). Storage is compact — a `Field32` of thirteen lanes
+/// and a `Field64` of one for the registry of SPEC section 2.3, not two
+/// full-size parallel arrays with dead slots — so a lane index equals a
+/// substance index nowhere, by rule rather than by accident. Anything that has a
+/// substance index and wants a buffer address goes through
+/// `Registry::slot` or `Registry::lane_of`; nothing computes
+/// `s * n_voxels + idx` for itself.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Field<T> {
     lanes: u32,

@@ -6,7 +6,7 @@
 //! index; everything about *which* slices, how long they are and what the index
 //! means lives here, and none of it ever travels into WGSL.
 //!
-//! Two types, and they answer two questions.
+//! Three types, and they answer three questions.
 //!
 //! [`Grid`] answers "where". One linear index, `idx = x + y*NX + z*NX*NY`, six
 //! faces, one boundary condition per face (SPEC section 1.1, section 1.6). It
@@ -14,6 +14,10 @@
 //!
 //! [`Field`] answers "where do the numbers live". A flat, substance-major,
 //! double buffer over a grid (ADR-041, ADR-034).
+//!
+//! [`Registry`] answers "whose numbers are these". A `Field` addresses lanes; a
+//! reaction, a snapshot and a genome's input vector address substances, and
+//! since storage is compact the two are not the same number (ADR-056).
 //!
 //! # What the pair is for
 //!
@@ -48,12 +52,16 @@
 //!
 //! # What is not here
 //!
-//! No `World` aggregate. The skeleton in `ARCHITECTURE.md` writes
-//! `world.pair_mut(s)` and `world.swap(s)`, indexed by substance — and a
-//! substance index only becomes a buffer address once the registry says which
-//! width and which lane it got, which is derived at load time (ADR-039,
-//! ADR-040) by a loader that does not exist yet. The open end is written up in
-//! the `TODO(width-lanes)` on [`Field`].
+//! No `World` aggregate — but no longer for want of the mapping. A substance
+//! index becomes a buffer address through [`Registry`], which resolves it to a
+//! width and a lane inside that width's field (ADR-056); what is missing is
+//! everything that would fill one in. The widths and scales it carries are
+//! derived at load time (ADR-039, ADR-040) by a loader that does not exist yet,
+//! and the aggregate's other half — who owns the buffers across a process
+//! boundary, and which of them holds state `N` for a lane that took a different
+//! number of substeps — is ADR-057, unimplemented. The skeleton in
+//! `ARCHITECTURE.md` still writes `world.swap(s)`, a per-substance swap that
+//! ADR-057 does away with.
 //!
 //! No LOD. SPEC section 1.5 makes a coarse field a coarsening of the same grid
 //! by a shift per axis, so a coarse field is another [`Grid`] and another
@@ -64,6 +72,8 @@
 
 mod field;
 mod grid;
+mod registry;
 
 pub use field::{Field, Field32, Field64};
 pub use grid::{Axis, Boundary, Face, Grid};
+pub use registry::{MAX_SUBSTANCES, R_MAX, Registry, S_MAX, SubstanceDecl, SubstanceSlot, Width};
