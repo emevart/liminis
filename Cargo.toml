@@ -16,5 +16,9 @@ categories = ["science", "simulation"]
 anyhow = "1"
 blake3 = "1"
 clap = { version = "4", features = ["derive"] }
+# Without `fork` and `timeout`: those isolate a failing case in a child process
+# with a wall-clock limit, and they cost eight transitive dependencies for a
+# property over a pure function that cannot hang or abort.
+proptest = { version = "1", default-features = false, features = ["std", "bit-set"] }
 serde = { version = "1", features = ["derive"] }
 toml = "0.9"

@@ -15,3 +15,9 @@ anyhow.workspace = true
 blake3.workspace = true
 serde.workspace = true
 toml.workspace = true
+
+# `flux_is_antisymmetric` is the one test in ACCEPTANCE.md that names its tool:
+# the property has to hold for *every* pair of amounts, and a hand-written sweep
+# only ever visits the pairs its author thought of.
+[dev-dependencies]
+proptest.workspace = true
