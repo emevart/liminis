@@ -9,7 +9,7 @@ use anyhow::{Result, bail};
 use super::{Conservation, Invariant};
 use crate::kernels::diffuse::{DiffuseParams, diffuse_voxel_32, diffuse_voxel_64};
 use crate::numeric::Q;
-use crate::world::{Boundary, Face, Field32, Field64, Grid};
+use crate::world::{Boundary, Direction, Face, Field32, Field64, Grid, ParitySplit, Width};
 
 /// The stability limit of the explicit 7-point stencil, as a bound on `alpha`.
 ///
@@ -39,20 +39,41 @@ const STABILITY_LIMIT: f64 = 1.0 / 6.0;
 /// by kind, and this is the kind (ADR-061).
 pub const N_MAX: u32 = 64;
 
+/// The default of `enabled` for diffusion, and it is `true` (ADR-065).
+///
+/// The one of the nine the record illustrates itself: "the user who forgot the
+/// diffusion record gets working diffusion. His canonical form carries
+/// `[[process]] id = "diffusion", enabled = true, every_n_ticks = 1` — a line he
+/// never wrote — and his `config_hash` matches, byte for byte, the hash of a
+/// colleague who did write it." An illustration is not an assignment, and the
+/// value here rests on more than the example: `substeps_for` derives `n` from
+/// the `D` of every substance in the registry, so a scenario that declares
+/// matter has already said what diffusion does, and a default of `false` would
+/// leave that derivation computing a number nothing uses.
+///
+/// Here rather than in `config/`, for the reason ADR-065 gives and `advect.rs`
+/// repeats: `config/**` is outside the CI guard of ADR-020, so a default living
+/// there could turn every run of every scenario into a different world without
+/// moving `WORLD_FORMAT_VERSION`.
+// TODO(CONFIG_SCHEMA.md section 13 item 23): the value is argued for above and
+// assigned by no record. ADR-065 names the consequence of `true` and does not
+// decide it; section 13 item 23 keeps the seven undecided defaults open as one
+// address. Closing it is an entry in `DECISIONS.md`, and it moves `config_hash`
+// for every scenario the moment it changes.
+pub const ENABLED_BY_DEFAULT: bool = true;
+
 /// Diffusion of one substance on one lane of one field.
 ///
 /// Holds what a tick needs: how many substeps, and the parameters of one of
 /// them. Both are derived once, at construction, from the scenario — never
 /// per tick, and never by hand (ADR-030).
 ///
-/// One substance per instance. That is not a simplification, it is what the
-/// buffers currently allow: substances get different substep counts from the
-/// same tick (six for the proton, two for oxygen, one for most of the
-/// registry), so after a diffusion phase two lanes of a shared field would have
-/// changed buffers a different number of times. `world::Field` records the
-/// choice that has to be made before lanes can advance independently, as
-/// `TODO(swap-granularity)`, and says what this file relies on instead: a
-/// process that writes every lane and swaps once needs none of it.
+/// One substance per instance, and one **lane** per application: substances get
+/// different substep counts from the same tick — six for the proton, two for
+/// oxygen, one for most of the registry (ADR-030) — so a shared field cannot
+/// advance them together. [`Diffuse::advance_lane_32`] therefore touches one
+/// lane and never the field's pointers; putting the field back together
+/// afterwards is [`DiffusePhase`]'s job, once per phase, by the rule of ADR-057.
 #[derive(Clone, Copy, Debug)]
 pub struct Diffuse {
     substeps: u32,
@@ -130,12 +151,15 @@ impl Diffuse {
     /// being half inside the ledger. On the corpus registry the term is 1.64%,
     /// and all of it is the self-diffusion of water, which in a homogeneous
     /// solvent transports no enthalpy at all.
-    // TODO(diffusing-matter-does-not-move-enthalpy): `ACCEPTANCE.md` names the
-    // assertion, and it cannot be written here. This process takes one field and
-    // an enthalpy field is not something it can be handed, so a test would
-    // assert that a buffer nobody passed in did not change; the statement
-    // belongs to the orchestration that holds both fields at once, and there is
-    // no tick loop yet (`ARCHITECTURE.md`, the host side).
+    // The assertion `ACCEPTANCE.md` names for this,
+    // `diffusing_matter_does_not_move_enthalpy`, is not here and could not be:
+    // this process takes one field and an enthalpy field is not something it can
+    // be handed, so a test written here would assert that a buffer nobody passed
+    // in did not change. It belongs to the orchestration that holds both fields
+    // at once, and it lives in `tests/acceptance_tick.rs` — over a *uniform*
+    // enthalpy field, which is the one state this process's own application to
+    // that field cannot move (SPEC section 8 `d` puts the enthalpy in this step
+    // too), so what is left for the assertion to see is the discarded term.
     #[inline]
     #[must_use]
     pub fn invariant(&self) -> Invariant {
@@ -152,56 +176,294 @@ impl Diffuse {
 /// side and `NUMERIC.md` section 5 gives for shaders: two hand-written copies
 /// drift apart, and here they would drift in the substep loop, which is the one
 /// place a difference would look like physics.
-macro_rules! define_apply {
+macro_rules! define_advance {
     ($name:ident, $field:ty, $voxel:ident) => {
-        #[doc = concat!("Run one tick of diffusion over a `", stringify!($field), "`.")]
+        #[doc = concat!("Run this substance's substeps on one lane of a `", stringify!($field), "`.")]
         ///
-        /// The field must hold exactly one lane: this process advances both
-        /// buffers of the whole field on every substep, and a lane it did not
-        /// write would come back two steps stale rather than unchanged
-        /// (`world::Field`).
+        /// **Not one swap.** The exchange is one per field (`world::Field`), so
+        /// a swap between substeps would carry every other lane forward with
+        /// this one, and lanes take different numbers of substeps from the same
+        /// tick. The run alternates direction inside its own two slices instead
+        /// and leaves the pointers where it found them (ADR-057).
+        ///
+        /// After `n` substeps this lane's state `N` is therefore in the front
+        /// buffer when `n` is even and in the back buffer when `n` is odd.
+        /// Nobody outside this process is allowed to see that: the phase puts it
+        /// right before it returns — see [`DiffusePhase`].
         ///
         /// The loop is the shape of every transport phase and the part that does
-        /// not survive the port: on the GPU the inner loop becomes a dispatch,
-        /// the swap becomes a rebinding, and `diffuse_voxel` becomes WGSL.
+        /// not survive the port: on the GPU the inner loop becomes a dispatch
+        /// and `diffuse_voxel` becomes WGSL.
         ///
         /// # Panics
         ///
-        /// Panics if the field does not match the grid the process was folded
-        /// against — a wrong lane count or a wrong voxel count. Both are
-        /// programming errors rather than bad scenarios, and both would
-        /// otherwise show up as a quietly wrong world.
-        pub fn $name(&self, field: &mut $field) {
-            assert_eq!(
-                field.lanes(),
-                1,
-                "Diffuse advances the whole field per substep, so it takes a \
-                 single-lane field (see TODO(swap-granularity) on world::Field)"
-            );
+        /// Panics if the field does not have the shape this process was folded
+        /// against, or if `lane` is not one of its lanes. Both are programming
+        /// errors rather than bad scenarios, and both would otherwise show up as
+        /// a quietly wrong world.
+        pub fn $name(&self, field: &mut $field, lane: u32) {
             let n_voxels = field.n_voxels();
             assert_eq!(
                 n_voxels,
                 self.params.nx * self.params.ny * self.params.nz,
                 "the field does not have the shape this process was folded for"
             );
+            assert!(
+                lane < field.lanes(),
+                "lane {lane} of a field holding {}",
+                field.lanes()
+            );
 
-            for _ in 0..self.substeps {
-                let (src, dst) = field.lane_pair_mut(0);
+            for substep in 0..self.substeps {
+                let dir = if substep % 2 == 0 {
+                    Direction::Forward
+                } else {
+                    Direction::Backward
+                };
+                let (src, dst) = field.lane_pair_dir_mut(lane, dir);
                 // Every voxel, in one pass, reading state N and writing state
                 // N+1. Nothing else may go in this loop: a second pass over the
                 // same buffers would be a kernel reading what it wrote.
                 for idx in 0..n_voxels {
                     $voxel(src, dst, &self.params, idx);
                 }
-                field.swap();
             }
         }
     };
 }
 
 impl Diffuse {
-    define_apply!(apply_32, Field32, diffuse_voxel_32);
-    define_apply!(apply_64, Field64, diffuse_voxel_64);
+    define_advance!(advance_lane_32, Field32, diffuse_voxel_32);
+    define_advance!(advance_lane_64, Field64, diffuse_voxel_64);
+}
+
+/// One diffusion phase over a whole field: every lane advanced, the
+/// process-boundary invariant restored once.
+///
+/// This is the unit ADR-057 talks about. [`Diffuse`] is one lane's parameters
+/// and one lane's substeps; a phase owns all of them, plus the [`ParitySplit`]
+/// that says how the field is put back together at the end.
+///
+/// # A lane with `D = 0` is not dispatched at all
+///
+/// It used to take one substep at `alpha = 0` — a copy under another name, plus
+/// six flux computations per voxel that all come out zero. ADR-057 calls
+/// dropping it a by-product: the lane takes **zero** substeps, which is an even
+/// number, so it lands in the even group and costs exactly the same copy without
+/// the arithmetic. Its values do not move by a unit either way, and that has to
+/// be checked by values and not only by a dispatch count — otherwise "do not run
+/// it" turns quietly into "do not restore it", and the lane comes back holding
+/// the write buffer's contents: the previous phase's state, and zeroes on the
+/// first tick.
+///
+/// # The split is per field, not per world
+///
+/// A swap is one per field and the world holds two amount fields (ADR-056), so
+/// the minority is chosen separately for the `Field32` and for the `Field64`.
+/// The arithmetic of ADR-057 — three lanes, 25.2 MB of copy, 50.3 MB of traffic
+/// — is computed over *one* field, in the wording ADR-041 used before ADR-056
+/// split it in two. On the corpus registry the number survives by accident (all
+/// three even lanes are narrow, and the single wide lane leaves an empty even
+/// group and a copy of length zero); on a registry with a second bulk component
+/// a globally chosen branch would pick the opposite parity for one of the two
+/// fields and leave its lanes a tick stale.
+#[derive(Clone, Debug)]
+pub struct DiffusePhase {
+    /// One entry per lane, in lane order. `None` is a lane with `D = 0`, which
+    /// is not dispatched.
+    lanes: Vec<Option<Diffuse>>,
+    split: ParitySplit,
+    /// The width of the field this phase was folded for. Carried only so that
+    /// [`DiffusePhase::restoration_bytes_per_tick`] can report bytes rather than
+    /// lanes.
+    width: Width,
+    n_voxels: u32,
+}
+
+impl DiffusePhase {
+    /// Fold a whole `Field32`'s worth of diffusion: one diffusivity per **lane**,
+    /// in lane order.
+    ///
+    /// Per lane and never per substance. The natural way to collect the
+    /// coefficients is by substance, and on the registry of SPEC section 2.3
+    /// water is first and takes lane 0, so a substance-indexed array is right
+    /// for lane 0 and off by one from there on — a set of lanes of exactly the
+    /// right size gets copied, and it is the wrong set (ADR-056, ADR-057).
+    /// Resolve with `Registry::slot(s).lane` before calling.
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`Diffuse::new`], and a mismatch between `lanes` and the
+    /// length of `diffusivity_by_lane`.
+    pub fn new_32(
+        grid: &Grid,
+        lanes: u32,
+        diffusivity_by_lane: &[f64],
+        dt: f64,
+        dx: f64,
+    ) -> Result<Self> {
+        Self::fold(grid, lanes, diffusivity_by_lane, dt, dx, Width::Bits32)
+    }
+
+    /// Fold a whole `Field64`'s worth of diffusion. See [`DiffusePhase::new_32`].
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`DiffusePhase::new_32`].
+    pub fn new_64(
+        grid: &Grid,
+        lanes: u32,
+        diffusivity_by_lane: &[f64],
+        dt: f64,
+        dx: f64,
+    ) -> Result<Self> {
+        Self::fold(grid, lanes, diffusivity_by_lane, dt, dx, Width::Bits64)
+    }
+
+    fn fold(
+        grid: &Grid,
+        lanes: u32,
+        diffusivity_by_lane: &[f64],
+        dt: f64,
+        dx: f64,
+        width: Width,
+    ) -> Result<Self> {
+        if diffusivity_by_lane.len() as u32 != lanes {
+            bail!(
+                "a field of {lanes} lanes was given {} diffusivities: the array \
+                 is indexed by lane, not by substance (ADR-056)",
+                diffusivity_by_lane.len()
+            );
+        }
+
+        let mut folded = Vec::with_capacity(lanes as usize);
+        // The parity is taken from the substeps the phase will actually **run**,
+        // not from a declared count. A lane at `D = 0` that stopped being
+        // dispatched but went on being counted as `n = 1` lands in the odd group
+        // and gets the write buffer promoted into its front — the previous
+        // phase's state, and zeroes on the first tick, which is a legal amount.
+        let mut substeps_by_lane = Vec::with_capacity(lanes as usize);
+
+        for &diffusivity in diffusivity_by_lane {
+            // Built even for a lane that will not be dispatched, so that a
+            // negative or non-finite coefficient is refused at load rather than
+            // ignored because it happened to be zero-adjacent.
+            let diffuse = Diffuse::new(grid, diffusivity, dt, dx)?;
+            if diffusivity == 0.0 {
+                folded.push(None);
+                substeps_by_lane.push(0);
+            } else {
+                substeps_by_lane.push(diffuse.substeps());
+                folded.push(Some(diffuse));
+            }
+        }
+
+        Ok(Self {
+            lanes: folded,
+            split: ParitySplit::from_substeps(&substeps_by_lane),
+            width,
+            n_voxels: grid.n_voxels(),
+        })
+    }
+
+    /// How the field is put back together at the end of the phase.
+    #[inline]
+    #[must_use]
+    pub fn parity_split(&self) -> &ParitySplit {
+        &self.split
+    }
+
+    /// How many substeps lane `lane` runs. Zero for a lane that is not
+    /// dispatched at all.
+    ///
+    /// # Panics
+    ///
+    /// If `lane` is not one of this phase's lanes.
+    #[inline]
+    #[must_use]
+    pub fn substeps_of(&self, lane: u32) -> u32 {
+        self.lanes[lane as usize].map_or(0, |d| d.substeps())
+    }
+
+    /// The restoration traffic in bytes per tick, read plus write
+    /// (`ParitySplit::bytes_per_tick`).
+    ///
+    /// The number ADR-057 makes the loader print beside the substep counts,
+    /// because the parity of a lane is a property of the config and not of the
+    /// code: the threshold between `n = 1` and `n = 2` sits at
+    /// `D = dx^2/(6*dt) = 1.67e-9 m^2/s`, and H2S and CH4 are declared four per
+    /// cent under it.
+    // TODO(load-report): `load_reports_the_restoration_traffic_per_tick`
+    // (`ACCEPTANCE.md`, ADR-057) is not closed by this function, because there is
+    // nobody to print it. `config/derive.rs` says in its own words that the
+    // substep counts of substances are not derived there, and the line belongs to
+    // whoever holds both the registry and the phases at once — a caller this
+    // function does not have yet.
+    #[inline]
+    #[must_use]
+    pub fn restoration_bytes_per_tick(&self) -> u64 {
+        self.split.bytes_per_tick(self.n_voxels, self.width)
+    }
+
+    /// Diffusion conserves matter and does not touch energy — see
+    /// [`Diffuse::invariant`], which this phase repeats lane by lane.
+    #[inline]
+    #[must_use]
+    pub fn invariant(&self) -> Invariant {
+        Invariant {
+            matter: Conservation::Conserved,
+            energy: Conservation::Conserved,
+        }
+    }
+}
+
+/// Generates the per-width phase, for the reason [`define_advance`] gives: two
+/// hand-written copies would drift in the restoration, which is the one place a
+/// difference looks like physics.
+macro_rules! define_phase_apply {
+    ($name:ident, $field:ty, $advance:ident, $width:expr) => {
+        #[doc = concat!("Run one tick of diffusion over every lane of a `", stringify!($field), "`.")]
+        ///
+        /// Returns with the process-boundary invariant of ADR-057 restored: the
+        /// front buffer holds state `N` for **every** lane, including the lanes
+        /// this phase did not dispatch. No process may leave a split parity
+        /// behind — not even to save the next process a copy.
+        ///
+        /// # Panics
+        ///
+        /// Panics if the field's lane count or shape is not the one this phase
+        /// was folded for.
+        pub fn $name(&self, field: &mut $field) {
+            assert_eq!(
+                self.width, $width,
+                "this phase was folded for the other storage width"
+            );
+            assert_eq!(
+                field.lanes() as usize,
+                self.lanes.len(),
+                "the field holds {} lanes and this phase was folded for {}",
+                field.lanes(),
+                self.lanes.len()
+            );
+            assert_eq!(
+                field.n_voxels(),
+                self.n_voxels,
+                "the field does not have the shape this phase was folded for"
+            );
+
+            for (lane, folded) in self.lanes.iter().enumerate() {
+                if let Some(diffuse) = folded {
+                    diffuse.$advance(field, lane as u32);
+                }
+            }
+            field.restore_boundary(&self.split);
+        }
+    };
+}
+
+impl DiffusePhase {
+    define_phase_apply!(apply_32, Field32, advance_lane_32, Width::Bits32);
+    define_phase_apply!(apply_64, Field64, advance_lane_64, Width::Bits64);
 }
 
 /// How many explicit substeps one tick of diffusion needs:
@@ -381,6 +643,18 @@ mod tests {
         field.read().iter().map(|v| v.to_i64()).sum()
     }
 
+    /// A one-lane diffusion phase: what a whole-field application looks like
+    /// when the field holds a single substance. Every call below goes through
+    /// the phase rather than through `Diffuse` directly, because the phase is
+    /// what a tick runs and what owes the invariant of ADR-057.
+    fn phase_32(grid: &Grid, diffusivity: f64) -> DiffusePhase {
+        DiffusePhase::new_32(grid, 1, &[diffusivity], DT, DX).unwrap()
+    }
+
+    fn phase_64(grid: &Grid, diffusivity: f64) -> DiffusePhase {
+        DiffusePhase::new_64(grid, 1, &[diffusivity], DT, DX).unwrap()
+    }
+
     /// Put a state into a field's read buffer.
     fn seed_32(field: &mut Field32, amounts: impl Fn(u32) -> i32) {
         let n_voxels = field.n_voxels();
@@ -539,10 +813,10 @@ mod tests {
         for grid in [torus(5, 6, 7), floored(5, 6, 7)] {
             // The proton: six substeps, the worst case of the registry, so the
             // rounding gets six chances per tick to lose a unit.
-            let diffuse = Diffuse::new(&grid, 9.3e-9, DT, DX).unwrap();
-            assert_eq!(diffuse.substeps(), 6);
+            let phase = phase_32(&grid, 9.3e-9);
+            assert_eq!(phase.substeps_of(0), 6);
             assert_eq!(
-                diffuse.invariant(),
+                phase.invariant(),
                 Invariant {
                     matter: Conservation::Conserved,
                     energy: Conservation::Conserved,
@@ -554,7 +828,7 @@ mod tests {
             let before = total_32(&field);
 
             for _ in 0..8 {
-                diffuse.apply_32(&mut field);
+                phase.apply_32(&mut field);
                 assert_eq!(total_32(&field), before, "a tick moved the total");
             }
 
@@ -575,7 +849,7 @@ mod tests {
     #[test]
     fn transport_of_a_64_bit_substance_conserves_exactly() {
         let grid = torus(4, 5, 6);
-        let diffuse = Diffuse::new(&grid, 2.1e-9, DT, DX).unwrap();
+        let phase = phase_64(&grid, 2.1e-9);
 
         let mut field: Field64 = Field::new(&grid, 1).unwrap();
         {
@@ -590,7 +864,7 @@ mod tests {
 
         let before = total_64(&field);
         for _ in 0..4 {
-            diffuse.apply_64(&mut field);
+            phase.apply_64(&mut field);
             assert_eq!(total_64(&field), before);
         }
     }
@@ -615,6 +889,7 @@ mod tests {
     fn a_point_source_spreads_without_changing_the_total() {
         let grid = torus(9, 9, 9);
         let diffuse = Diffuse::new(&grid, 0.8e-9, DT, DX).unwrap();
+        let phase = phase_32(&grid, 0.8e-9);
         assert_eq!(diffuse.substeps(), 1);
 
         let centre = grid.index(4, 4, 4) as usize;
@@ -643,7 +918,7 @@ mod tests {
         let per_face = flux_32(M32::ZERO, M32::new(source), diffuse.params().alpha);
         assert_eq!(per_face, M32::new(80_000_000));
 
-        diffuse.apply_32(&mut field);
+        phase.apply_32(&mut field);
         assert_eq!(total_32(&field), i64::from(source));
         assert_eq!(
             field.read()[centre],
@@ -660,7 +935,7 @@ mod tests {
         let mut peak = field.read()[centre].to_i64();
         let mut support = occupied(&field);
         for tick in 0..6 {
-            diffuse.apply_32(&mut field);
+            phase.apply_32(&mut field);
 
             let next_peak = field.read()[centre].to_i64();
             let next_support = occupied(&field);
@@ -686,12 +961,12 @@ mod tests {
         // The interesting half is the floored grid, where the walls are also
         // asked to do nothing.
         let grid = floored(4, 4, 4);
-        let diffuse = Diffuse::new(&grid, 9.3e-9, DT, DX).unwrap();
+        let phase = phase_32(&grid, 9.3e-9);
         let mut field: Field32 = Field::new(&grid, 1).unwrap();
         seed_32(&mut field, |_| 1_000_003);
 
         let before = field.read().to_vec();
-        diffuse.apply_32(&mut field);
+        phase.apply_32(&mut field);
         assert_eq!(field.read(), before.as_slice());
     }
 
@@ -701,19 +976,329 @@ mod tests {
         // corner voxels — three walls each — are where a lookup that fell off
         // the grid would show up.
         let grid = Grid::new(3, 4, 5, [Boundary::Closed; 6]).unwrap();
-        let diffuse = Diffuse::new(&grid, 9.3e-9, DT, DX).unwrap();
-        assert_eq!(diffuse.params().periodic_mask, 0);
+        let phase = phase_32(&grid, 9.3e-9);
+        assert_eq!(
+            Diffuse::new(&grid, 9.3e-9, DT, DX)
+                .unwrap()
+                .params()
+                .periodic_mask,
+            0
+        );
 
         let mut field: Field32 = Field::new(&grid, 1).unwrap();
         seed_32(&mut field, |idx| if idx == 0 { 1_000_000 } else { 0 });
         let before = total_32(&field);
 
         for _ in 0..10 {
-            diffuse.apply_32(&mut field);
+            phase.apply_32(&mut field);
             assert_eq!(total_32(&field), before);
         }
         // The corner is a corner: it kept more than the middle of the box.
         assert!(field.read()[0].to_i64() > field.read()[grid.index(1, 2, 2) as usize].to_i64());
+    }
+
+    /// Diffusivities giving substeps `[6, 2, 1, 1, 1]` — the shape of the
+    /// registry of SPEC section 1.7, minority **even** (two lanes), so the
+    /// restoration swaps.
+    const MINORITY_EVEN: [f64; 5] = [9.3e-9, 2.1e-9, 1.6e-9, 0.8e-9, 1.0e-9];
+
+    /// Diffusivities giving substeps `[6, 2, 2, 2, 1, 0]` — minority **odd**
+    /// (one lane), so the restoration does not swap, and one lane at `D = 0`
+    /// that is not dispatched at all.
+    const MINORITY_ODD: [f64; 6] = [9.3e-9, 2.1e-9, 1.9e-9, 2.1e-9, 1.6e-9, 0.0];
+
+    /// A value that depends on lane and voxel both, so that a lane mix-up
+    /// cannot pass by accident.
+    fn lane_pattern(lane: u32, idx: u32) -> i32 {
+        (1 + lane as i32) * 1_000_003 + (idx as i32 * 7919) % 100_000
+    }
+
+    /// Seed every lane's read buffer, and leave a distinguishable marker in the
+    /// write buffer so that a restoration copying the wrong way is visible.
+    fn seed_lanes_32(field: &mut Field32) {
+        let n_voxels = field.n_voxels();
+        let lanes = field.lanes();
+        {
+            let buffer = field.write_mut();
+            for lane in 0..lanes {
+                for idx in 0..n_voxels {
+                    buffer[(lane * n_voxels + idx) as usize] = M32::new(lane_pattern(lane, idx));
+                }
+            }
+        }
+        field.swap();
+        let buffer = field.write_mut();
+        for value in buffer.iter_mut() {
+            *value = M32::new(-1);
+        }
+    }
+
+    /// The same lane, run alone in a field of its own. The reference every
+    /// assertion about a multi-lane phase is made against.
+    fn alone_32(grid: &Grid, diffusivity: f64, lane: u32) -> Field32 {
+        let mut field: Field32 = Field::new(grid, 1).unwrap();
+        seed_32(&mut field, |idx| lane_pattern(lane, idx));
+        DiffusePhase::new_32(grid, 1, &[diffusivity], DT, DX)
+            .unwrap()
+            .apply_32(&mut field);
+        field
+    }
+
+    /// `ACCEPTANCE.md`, section "Conservation", from ADR-057.
+    ///
+    /// The invariant itself, checked through the **write** buffer as well: after
+    /// a phase no lane has its state `N` only in `write_mut()`. A process that
+    /// left a split parity behind — even to save the next process a copy, which
+    /// ADR-057 forbids outright — fails here.
+    #[test]
+    fn a_process_returns_with_state_n_in_the_front_buffer_for_every_lane() {
+        let grid = torus(5, 6, 7);
+
+        for diffusivities in [&MINORITY_EVEN[..], &MINORITY_ODD[..]] {
+            let lanes = diffusivities.len() as u32;
+            let phase = DiffusePhase::new_32(&grid, lanes, diffusivities, DT, DX).unwrap();
+            let mut field: Field32 = Field::new(&grid, lanes).unwrap();
+            seed_lanes_32(&mut field);
+            phase.apply_32(&mut field);
+
+            for lane in 0..lanes {
+                let reference = alone_32(&grid, diffusivities[lane as usize], lane);
+                assert_eq!(
+                    field.lane(lane),
+                    reference.read(),
+                    "lane {lane} of {lanes} did not come back in the front buffer"
+                );
+            }
+        }
+    }
+
+    /// `ACCEPTANCE.md`, section "Conservation", from ADR-057.
+    #[test]
+    fn mixed_substep_lanes_diffuse_as_if_each_were_alone() {
+        // Six substeps beside one, in the same field. Fails if the alternation
+        // slipped — a lane reading its own half-finished result — or if a field
+        // swap came back inside the substep loop and carried the neighbouring
+        // lane one step forward.
+        let grid = floored(5, 6, 7);
+        let diffusivities = [9.3e-9, 1.6e-9];
+        let phase = DiffusePhase::new_32(&grid, 2, &diffusivities, DT, DX).unwrap();
+        assert_eq!(phase.substeps_of(0), 6);
+        assert_eq!(phase.substeps_of(1), 1);
+
+        let mut field: Field32 = Field::new(&grid, 2).unwrap();
+        seed_lanes_32(&mut field);
+        let totals: Vec<i64> = (0..2)
+            .map(|lane| field.lane(lane).iter().map(|v| v.to_i64()).sum())
+            .collect();
+
+        for _ in 0..3 {
+            phase.apply_32(&mut field);
+        }
+
+        for lane in 0..2u32 {
+            let mut reference: Field32 = Field::new(&grid, 1).unwrap();
+            seed_32(&mut reference, |idx| lane_pattern(lane, idx));
+            let alone =
+                DiffusePhase::new_32(&grid, 1, &[diffusivities[lane as usize]], DT, DX).unwrap();
+            for _ in 0..3 {
+                alone.apply_32(&mut reference);
+            }
+            assert_eq!(field.lane(lane), reference.read(), "lane {lane}");
+
+            let after: i64 = field.lane(lane).iter().map(|v| v.to_i64()).sum();
+            assert_eq!(after, totals[lane as usize], "lane {lane} moved its total");
+        }
+    }
+
+    /// `ACCEPTANCE.md`, section "Conservation", from ADR-057.
+    #[test]
+    fn a_lane_no_process_touched_is_not_left_a_tick_stale() {
+        // Zero substeps is an even number of substeps. A lane counted as odd
+        // instead gets the write buffer promoted into its front — the previous
+        // phase's state, and on the first tick zeroes, which is a legal amount
+        // that moves no domain sum a process would notice.
+        let grid = torus(4, 5, 6);
+        let untouched = (MINORITY_ODD.len() - 1) as u32;
+        let phase =
+            DiffusePhase::new_32(&grid, MINORITY_ODD.len() as u32, &MINORITY_ODD, DT, DX).unwrap();
+        assert_eq!(phase.substeps_of(untouched), 0);
+
+        let mut field: Field32 = Field::new(&grid, MINORITY_ODD.len() as u32).unwrap();
+        seed_lanes_32(&mut field);
+        let before = field.lane(untouched).to_vec();
+        assert!(before.iter().any(|&v| v != M32::ZERO));
+
+        phase.apply_32(&mut field);
+        assert_eq!(
+            field.lane(untouched),
+            before.as_slice(),
+            "a lane the phase never dispatched came back holding something else"
+        );
+    }
+
+    /// From ADR-057, which calls this a by-product of the decision.
+    #[test]
+    fn a_zero_diffusivity_lane_is_not_dispatched_and_counts_as_even() {
+        // Two claims, and the second is the one that matters. Not dispatching is
+        // visible in the substep count; that the values do not move by a unit
+        // has to be checked separately, or "do not run it" turns quietly into
+        // "do not restore it".
+        let grid = floored(4, 5, 6);
+        let phase = DiffusePhase::new_32(&grid, 2, &[0.0, 1.6e-9], DT, DX).unwrap();
+        assert_eq!(phase.substeps_of(0), 0, "a D = 0 lane runs no substep");
+        assert_eq!(phase.substeps_of(1), 1);
+
+        // Zero substeps is even, so this lane is in the even group: with one
+        // even lane and one odd one the tie rule gives no swap and the odd lane
+        // is the copy.
+        assert!(!phase.parity_split().swaps());
+        assert_eq!(phase.parity_split().lanes_to_copy(), &[1]);
+
+        let mut field: Field32 = Field::new(&grid, 2).unwrap();
+        seed_lanes_32(&mut field);
+        let before = field.lane(0).to_vec();
+        phase.apply_32(&mut field);
+        assert_eq!(field.lane(0), before.as_slice());
+
+        // And a substance that does not diffuse is still a legal substance: the
+        // one that does moved.
+        assert_ne!(field.lane(1), alone_32(&grid, 0.0, 1).read());
+    }
+
+    /// From ADR-057. The operational form of "the result is bit-identical to
+    /// today's single-lane arrangement", which is what the `WORLD_FORMAT_VERSION`
+    /// increment of this wave rests on.
+    #[test]
+    fn a_substep_run_alternates_direction_instead_of_swapping() {
+        let grid = torus(5, 6, 7);
+        let diffuse = Diffuse::new(&grid, 9.3e-9, DT, DX).unwrap();
+        let params = diffuse.params();
+
+        // The previous implementation, reproduced: swap after every substep.
+        let mut swapping: Field32 = Field::new(&grid, 1).unwrap();
+        seed_32(&mut swapping, |idx| lane_pattern(0, idx));
+        for _ in 0..diffuse.substeps() {
+            let n_voxels = swapping.n_voxels();
+            let (src, dst) = swapping.lane_pair_mut(0);
+            for idx in 0..n_voxels {
+                diffuse_voxel_32(src, dst, &params, idx);
+            }
+            swapping.swap();
+        }
+
+        // The new one, on a field of three lanes so that the neighbours can say
+        // whether the pointers moved: only lane 0 is dispatched, and the other
+        // two must still hold exactly what they were seeded with in `front` and
+        // the marker in `back`.
+        let mut alternating: Field32 = Field::new(&grid, 3).unwrap();
+        seed_lanes_32(&mut alternating);
+        diffuse.advance_lane_32(&mut alternating, 0);
+
+        for lane in 1..3u32 {
+            for idx in 0..alternating.n_voxels() {
+                assert_eq!(
+                    alternating.lane(lane)[idx as usize],
+                    M32::new(lane_pattern(lane, idx)),
+                    "lane {lane} moved while lane 0 was taking its substeps"
+                );
+                assert_eq!(
+                    alternating.write_mut()[(lane * grid.n_voxels() + idx) as usize],
+                    M32::new(-1),
+                    "the write buffer of lane {lane} moved: the field swapped"
+                );
+            }
+        }
+
+        // Six substeps is even, so the answer is in the front buffer already and
+        // the restoration has nothing to do for this lane.
+        assert_eq!(alternating.lane(0), swapping.read(), "bit for bit");
+    }
+
+    /// From ADR-057, and the one mistake here that no other test in this file
+    /// can see.
+    #[test]
+    fn the_parity_split_is_indexed_by_lane_and_not_by_substance() {
+        use crate::world::{Registry, SubstanceDecl, Width};
+
+        // A registry whose wide substance is not at index zero, so that lanes
+        // and substance indices come apart: on the registry of SPEC section 2.3
+        // water is first and takes lane 0, and the shift only starts at the
+        // second substance.
+        let decls: Vec<SubstanceDecl> = ["A", "B", "WATER", "C", "D"]
+            .iter()
+            .map(|id| SubstanceDecl {
+                id: (*id).to_string(),
+                width: if *id == "WATER" {
+                    Width::Bits64
+                } else {
+                    Width::Bits32
+                },
+                k: 0,
+            })
+            .collect();
+        let registry = Registry::new(&decls).unwrap();
+
+        // Substep counts as a scenario declares them: by **substance**.
+        let by_substance = [6u32, 3, 2, 1, 2];
+
+        // Resolved to lanes of the narrow field, which is what the split takes.
+        let mut by_lane = vec![0u32; registry.lanes(Width::Bits32) as usize];
+        for s in 0..registry.n_substances() {
+            let slot = registry.slot(s);
+            if slot.width == Width::Bits32 {
+                by_lane[slot.lane as usize] = by_substance[s as usize];
+            }
+        }
+        assert_eq!(by_lane, vec![6, 3, 1, 2]);
+
+        let right = ParitySplit::from_substeps(&by_lane);
+        assert_eq!(right.lanes_to_copy(), &[1, 2]);
+
+        // What a substance-indexed array would have produced: a set of lanes of
+        // exactly the right size, and the wrong membership. Nothing downstream
+        // can tell the two apart — the ledger closes either way, because the
+        // lanes that were not copied are not lost, only a phase stale.
+        let wrong = ParitySplit::from_substeps(&by_substance[..by_lane.len()]);
+        assert_eq!(wrong.lanes_to_copy().len(), right.lanes_to_copy().len());
+        assert_ne!(wrong.lanes_to_copy(), right.lanes_to_copy());
+    }
+
+    /// `ACCEPTANCE.md`, "Derivation at load", from ADR-057 — the arithmetic half
+    /// of it. The printing half is `TODO(load-report)`.
+    #[test]
+    fn the_restoration_traffic_is_the_number_adr_057_prices() {
+        // The registry of SPEC section 1.7 at 128^3, as a `Field32` of thirteen
+        // lanes: three of them even (H+ at six substeps, O2 and CO2 at two), so
+        // the minority is the even group, and the traffic is 50.3 MB.
+        let grid = Grid::new(128, 128, 128, [Boundary::Periodic; 6]).unwrap();
+        let mut diffusivities = vec![0.8e-9; 13];
+        diffusivities[0] = 9.3e-9;
+        diffusivities[1] = 2.1e-9;
+        diffusivities[2] = 1.9e-9;
+
+        let phase = DiffusePhase::new_32(&grid, 13, &diffusivities, DT, DX).unwrap();
+        assert!(phase.parity_split().swaps());
+        assert_eq!(phase.parity_split().lanes_to_copy(), &[0, 1, 2]);
+        assert_eq!(phase.restoration_bytes_per_tick(), 50_331_648);
+
+        // And the choice is made per field, not per world: the wide field is a
+        // separate `DiffusePhase` with a split of its own, and the corpus
+        // registry's single wide lane leaves an empty group and a copy of length
+        // zero. A globally chosen branch would be right here by accident.
+        let wide = DiffusePhase::new_64(&grid, 1, &[9.3e-9], DT, DX).unwrap();
+        assert_eq!(wide.restoration_bytes_per_tick(), 0);
+    }
+
+    #[test]
+    fn a_diffusivity_array_of_the_wrong_length_is_refused() {
+        // The array is indexed by lane. A substance-indexed one is usually of
+        // the wrong length too, and when it is, this is what says so.
+        let grid = torus(3, 3, 3);
+        let err = DiffusePhase::new_32(&grid, 3, &[1.6e-9, 1.6e-9], DT, DX)
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("lane"), "unhelpful message: {err}");
+        assert!(DiffusePhase::new_32(&grid, 0, &[], DT, DX).is_ok());
     }
 
     #[test]
@@ -727,19 +1312,24 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "single-lane")]
-    fn a_multi_lane_field_is_refused() {
+    #[should_panic(expected = "lanes")]
+    fn a_field_of_another_lane_count_is_refused() {
+        // The refusal that replaced `lanes() == 1`. A phase is folded for a
+        // known number of lanes, and a field with another number is a
+        // programming error rather than a bad scenario: the parity split would
+        // then name lanes the field does not have, or leave lanes it does have
+        // a phase stale.
         let grid = torus(3, 3, 3);
-        let diffuse = Diffuse::new(&grid, 1.6e-9, DT, DX).unwrap();
+        let phase = phase_32(&grid, 1.6e-9);
         let mut field: Field32 = Field::new(&grid, 2).unwrap();
-        diffuse.apply_32(&mut field);
+        phase.apply_32(&mut field);
     }
 
     #[test]
     #[should_panic(expected = "shape")]
     fn a_field_of_the_wrong_shape_is_refused() {
-        let diffuse = Diffuse::new(&torus(3, 3, 3), 1.6e-9, DT, DX).unwrap();
+        let phase = phase_32(&torus(3, 3, 3), 1.6e-9);
         let mut field: Field32 = Field::new(&torus(4, 4, 4), 1).unwrap();
-        diffuse.apply_32(&mut field);
+        phase.apply_32(&mut field);
     }
 }

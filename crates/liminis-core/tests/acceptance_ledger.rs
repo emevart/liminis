@@ -19,7 +19,7 @@
 
 use liminis_core::ledger::{CHANNEL_COUNT, Channel, DomainSums, Ledger};
 use liminis_core::numeric::{M32, M64};
-use liminis_core::process::Diffuse;
+use liminis_core::process::DiffusePhase;
 use liminis_core::world::{Boundary, Field, Field32, Field64, Grid};
 
 // ---------------------------------------------------------------------------
@@ -155,7 +155,8 @@ fn a_closed_domain_leaves_every_channel_counter_at_zero() {
 
     let grid = torus(L, L, L);
     let n_voxels = i128::from(grid.n_voxels());
-    let diffuse = Diffuse::new(&grid, D_PROTON, DT, DX).unwrap();
+    let phase = DiffusePhase::new_32(&grid, 1, &[D_PROTON], DT, DX).unwrap();
+    let wide_phase = DiffusePhase::new_64(&grid, 1, &[D_PROTON], DT, DX).unwrap();
 
     // The checkerboard, with a pool dropped into one voxel of it.
     //
@@ -223,8 +224,8 @@ fn a_closed_domain_leaves_every_channel_counter_at_zero() {
         reduce(&mut before, &narrow, &wide);
 
         ledger.begin_tick();
-        diffuse.apply_32(&mut narrow);
-        diffuse.apply_64(&mut wide);
+        phase.apply_32(&mut narrow);
+        wide_phase.apply_64(&mut wide);
 
         reduce(&mut after, &narrow, &wide);
 

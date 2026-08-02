@@ -31,9 +31,16 @@
 ```
 crates/liminis-core/src/
     numeric/      типы M и Q, обёртки, таблицы трансцендентных
-    world/        буферы полей, раскладка, двойная буферизация, LOD
+    world/        буферы полей, раскладка, двойная буферизация, LOD-сетки,
+                  агрегат World и инвариант границы процесса (ADR-057)
     config/       схема сценария, валидатор, вывод масштабов и подшагов
     kernels/      ядра. Свободные функции. Форма под WGSL
+                  diffuse, advect, settle, pressure — перенос вещества
+                  react, fold — химия и свёртка энергии на грубую сетку
+                  light — затухание по столбцу
+                  potential, noise, curl — поле скоростей шага b (ADR-069):
+                  широкая разность температуры и интерполяция потенциала,
+                  октавы шума, узкий ротор и выборка на грани мелкой сетки
     process/      трейт Process, порядок тика, диспетчеризация
     ledger/       счётчики каналов, доменные суммы, обе невязки (см. ниже)
     observe/      поток метрик, снапшоты
@@ -197,26 +204,41 @@ fn flux(a: M, b: M, alpha: Q) -> M {
 ```rust
 // crates/liminis-core/src/process/diffuse.rs
 
-impl Process for Diffuse {
-    fn reads(&self) -> &[FieldRef] { &self.fields }
-    fn writes(&self) -> &[FieldRef] { &self.fields }
-    fn invariant(&self) -> Invariant { Invariant::ConservesMatter }
+impl DiffusePhase {
+    fn apply_32(&self, field: &mut Field32) {
+        // По полосе, а не по веществу: адрес буфера даёт Registry::slot(s).lane,
+        // и разрешается он при загрузке (ADR-056).
+        for (lane, folded) in self.lanes.iter().enumerate() {
+            // Полоса с D = 0 не диспетчеризуется вовсе: ноль подшагов, чётная
+            // группа, та же копия без арифметики (ADR-057).
+            let Some(diffuse) = folded else { continue };
 
-    fn apply(&self, world: &mut World) {
-        for &s in &self.substances {
-            let p = DiffuseParams { /* … alpha свёрнута здесь … */ };
             // Число подшагов выведено при загрузке конфига (ADR-030).
-            for _ in 0..self.substeps[s] {
-                let (src, dst) = world.pair_mut(s);
-                for idx in 0..world.voxel_count() {
-                    diffuse_voxel(src, dst, &p, idx);
+            for substep in 0..diffuse.substeps {
+                // Свопа внутри цикла нет. Своп у поля один на все полосы, а
+                // подшагов у полос разное число, поэтому направление чередуется
+                // внутри своих двух срезов, и указатели поля не двигаются.
+                let dir = if substep % 2 == 0 { Forward } else { Backward };
+                let (src, dst) = field.lane_pair_dir_mut(lane as u32, dir);
+                for idx in 0..field.n_voxels() {
+                    diffuse_voxel(src, dst, &diffuse.params, idx);
                 }
-                world.swap(s);
             }
         }
+
+        // Инвариант границы процесса, один раз за фазу: свои подшаги полосы
+        // оставили состояние N в переднем буфере у чётных и в заднем у нечётных.
+        // Восстановление — своп поля и копия МЕНЬШЕЙ по числу полос группы
+        // паритета, не более одного пробега полосы за тик (ADR-057).
+        field.restore_boundary(&self.split);
     }
 }
 ```
+
+Посвеществного свопа — `world.pair_mut(s)` и `world.swap(s)` — здесь больше нет
+и быть не может: обмен указателей у `Field` один на все полосы, и ADR-057 эту
+развилку закрыл. Разбиение по паритету `ParitySplit` известно при загрузке,
+потому что там же выводится `n_s`.
 
 Трейт, циклы, владение буферами, подшаги, свёртка параметров — всё здесь.
 В ядре ничего этого нет, и при порте на GPU внутренний цикл заменяется

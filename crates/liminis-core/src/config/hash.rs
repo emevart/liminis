@@ -22,6 +22,18 @@
 //! should, because what the simulator reads has changed. The one gain is the one
 //! that was wanted: adding an *un*simulated key no longer moves any hash.
 //!
+//! **The `[[process]]` array it prints is the materialised roster, not what the
+//! file wrote.** `config::materialise` runs inside `parse`, so by the time the
+//! projection is taken the array holds all nine records of ADR-065, each with an
+//! explicit `enabled`, sorted into the order of SPEC section 8. Two things follow
+//! and both are the point of that record: a scenario that omitted a record hashes
+//! exactly like one that spelled the default out (`CONFIG_SCHEMA.md` section 11
+//! item 2), and two files listing the same processes in different orders hash the
+//! same. The order of the records is fixed *there* rather than here — this
+//! module serializes `&[Process]` whole, so it has no say in it — which is why
+//! `the_process_order_in_the_canonical_form_does_not_depend_on_the_file` is a
+//! test of the loader and not of the projection.
+//!
 //! **The compiler checks the names and types of these fields, and not their
 //! order** (ADR-066 says so outright). A field moved within [`Hashed`] compiles,
 //! changes every `config_hash`, and turns nothing red — the path difference

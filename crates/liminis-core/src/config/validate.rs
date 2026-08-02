@@ -67,31 +67,35 @@ use std::collections::BTreeMap;
 use super::derive::MASS_EPSILON;
 use super::{Config, Derived, Face, Reaction, Scale, Substance, derive};
 use crate::ledger::Channel;
+use crate::process::ProcessId;
 
 /// The field id whose `lod` fixes the grid the wide temperature difference is
 /// taken on (ADR-062, ADR-069).
 const ENTHALPY_FIELD: &str = "enthalpy";
 
-/// The process id of the velocity field.
-// TODO(CONFIG_SCHEMA.md section 13 item 23): ADR-069 says "the record of the
-// velocity-field process" and prints no `id` line; `velocity_field` in section
-// 12 is a proposal and not a decision. Taken here the same way
-// `DIFFUSION_PROCESS` is taken in `derive.rs` — a constant with a TODO, not as
-// knowledge.
-const VELOCITY_FIELD_PROCESS: &str = "velocity_field";
+/// The process id of the velocity field, taken from the closed roster.
+///
+/// A lookup and no longer a literal: the registry of process ids lives under
+/// `process/` (ADR-065), and a second spelling here would be a second thing to
+/// rename — with the failure being a check that silently stops finding the record
+/// it guards, which is how the Courant condition would lose its only live input.
+const VELOCITY_FIELD_PROCESS: &str = ProcessId::VelocityField.id();
 
 /// The default of `enabled` for the velocity field, and the one default of the
 /// nine S0 processes that a record assigns (ADR-069).
 ///
+/// **Taken from the process, not held here.** ADR-065 puts the default of
+/// `enabled` beside the invariant, in the code of the process itself, and a
+/// second copy in the validator is two constants of one meaning: they drift, and
+/// the direction that drifts silently is a validator that reads an enabled
+/// process as disabled — the Courant condition then loses its only live input and
+/// the config loads with an advection speed nobody checked.
+///
 /// `false`, and the reason is arithmetic rather than caution: `u_conv_max` is
 /// required when the process is on and has no default, so a default of `true`
 /// would refuse every scenario that never mentions the velocity field —
-/// `hello.toml` first. Reading `None` as `true` breaks that scenario loudly; the
-/// mirror error is quieter and worse, and it is guarded separately: an *enabled*
-/// process without `u_conv_max` may not be treated as disabled, or the only live
-/// input of the Courant condition disappears and the config loads with an
-/// advection speed nobody checked.
-const VELOCITY_FIELD_ENABLED_BY_DEFAULT: bool = false;
+/// `hello.toml` first. The argument is written out at the definition.
+use crate::process::velocity::VELOCITY_FIELD_ENABLED_BY_DEFAULT;
 
 /// One transport operator and the speed bound that belongs to it.
 ///
@@ -1379,7 +1383,7 @@ id = "diffusion"
 enabled = true
 
 [[process]]
-id = "reactions_abiotic"
+id = "reactions"
 enabled = true
 
 [[process]]
@@ -1692,12 +1696,16 @@ composition = {}
         validate(&parse(text).expect("the fixture must parse")).expect("the fixture must validate")
     }
 
+    /// The refusal a fixture earns, from whichever stage refuses it.
+    ///
+    /// Parse **and** validate, because since ADR-065 the load has two stages that
+    /// can refuse: `parse` materialises the process roster and rejects an unknown
+    /// or duplicated process id there, `validate` holds every rule of section 10.
+    /// A helper that only unwrapped `parse` would turn a refusal moving between
+    /// the two into a panic reading "the fixture must parse".
     fn refusal(text: &str) -> String {
-        format!(
-            "{:#}",
-            validate(&parse(text).expect("the fixture must parse"))
-                .expect_err("the fixture must be refused")
-        )
+        let refused = parse(text).and_then(|config| validate(&config).map(|_| ()));
+        format!("{:#}", refused.expect_err("the fixture must be refused"))
     }
 
     /// Rewrite one passage of a fixture, refusing to be a no-op.
@@ -2356,17 +2364,17 @@ composition = { C = 106, N = 16, P = 1 }
         let message = refusal(&text);
         assert_names(&message, &["diffusion", "every_n_ticks", "2"]);
 
-        // The known hole, asserted rather than described: the ban is tied to the
-        // literal `"diffusion"` (TODO(process-roster) in `derive.rs`), so a
-        // scenario that calls its transport process something else walks past
-        // ADR-030 in silence. The registry of process ids lives under `process/`
-        // and is not written (ADR-065).
+        // The hole this test used to record — the ban tied to a literal, so that
+        // a scenario calling its transport process something else walked past
+        // ADR-030 in silence — is closed by the roster of ADR-065: there is no
+        // other name to give it. Asserted from the other side, so that reopening
+        // the roster reopens this too.
         let renamed = swap(
             WORKED_EXAMPLE,
             "id = \"diffusion\"\nenabled = true",
             "id = \"transport\"\nenabled = true\nevery_n_ticks = 2",
         );
-        validated(&renamed);
+        assert_names(&refusal(&renamed), &["transport", "roster"]);
     }
 
     #[test]
@@ -2629,14 +2637,11 @@ composition = { C = 106, N = 16, P = 1 }
     // --- processes -----------------------------------------------------------
 
     #[test]
-    #[ignore = "the closed registry of process ids lives under process/ and is \
-                not written (ADR-065); the default `enabled` of eight of the nine \
-                S0 processes is assigned by nothing (CONFIG_SCHEMA.md section 13 \
-                item 23), and the corpus does not print the names of four of the \
-                nine at all. Writing the check now means writing the registry \
-                here, which decides ADR-065 on the journal's behalf and moves \
-                process/** under the guard of ADR-020"]
     fn an_unknown_process_id_is_rejected() {
+        // The roster is closed (ADR-065), so a misspelled id names no process at
+        // all. Refused while the roster is materialised — that is, before the
+        // hash — because a stray record would otherwise reach the canonical form
+        // and give a scenario an identity built partly out of a typo.
         let text = swap(WORKED_EXAMPLE, "id = \"pressure\"", "id = \"presure\"");
         assert_names(&refusal(&text), &["presure"]);
     }

@@ -96,7 +96,7 @@
 use anyhow::{Context, Result, bail};
 
 use super::{Config, Field as FieldRecord, Reaction, Substance};
-use crate::process::{N_MAX, substeps_and_alpha};
+use crate::process::{N_MAX, ProcessId, substeps_and_alpha};
 use crate::world::{MAX_SUBSTANCES, R_MAX, SubstanceDecl, Width};
 
 /// Relative tolerance of the mass balance, and of the significance of `nu_E`.
@@ -141,15 +141,15 @@ const ENTHALPY_FIELD: &str = "enthalpy";
 /// at the comparison so that raising it is a visible act.
 const CARRIED_ENTHALPY_LIMIT: f64 = 0.05;
 
-/// The process that moves diffusive fields, as `CONFIG_SCHEMA.md` section 12
-/// spells it.
-// TODO(process-roster): which process touches which field is not in the corpus.
-// The registry of processes is closed and lives under `process/` (ADR-065), and
-// it is not written; section 12 names five ids and does not say what each one
-// reads. So the ban of ADR-030 on `every_n_ticks > 1` is applied to the one id
-// the corpus does name for transport. When the roster exists, this becomes a
-// lookup of the fields a process declares in `reads`.
-const DIFFUSION_PROCESS: &str = "diffusion";
+/// The process that moves diffusive fields, taken from the closed roster.
+// TODO(process-roster): which process touches which field is still not in the
+// corpus. The roster of ADR-065 now fixes the *name*, so the ban of ADR-030 on
+// `every_n_ticks > 1` can no longer be walked past by calling the process
+// something else — but "which fields does this process read" is a different
+// question, and `reads` is not in the config (ADR-034) and not in the roster
+// either. When a process declares the fields it touches, this becomes a lookup
+// over them instead of a comparison against one id.
+const DIFFUSION_PROCESS: &str = ProcessId::Diffusion.id();
 
 /// Everything derived at load, in one value.
 ///
@@ -167,7 +167,10 @@ pub struct Derived {
 }
 
 /// One substance after the derivation (ADR-039, ADR-040).
-#[derive(Clone, Debug, PartialEq, Eq)]
+// `Eq` is gone from the derive list as of the `diffusivity` field below: a
+// declared coefficient is an `f64`, and the rest of this module is `PartialEq`
+// for the same reason.
+#[derive(Clone, Debug, PartialEq)]
 pub struct DerivedSubstance {
     /// The id as written in TOML.
     pub id: String,
@@ -192,6 +195,18 @@ pub struct DerivedSubstance {
     pub amount_at_max: i128,
     /// Units held by one voxel at `typical_conc` and the derived `k`.
     pub amount_at_typical: i128,
+    /// The declared diffusion coefficient, m^2/s, carried through unchanged.
+    ///
+    /// Copied rather than derived, and it earns its place for a reason the other
+    /// fields do not have: the substep count of substance transport is derived
+    /// **per lane**, in `process/diffuse.rs`, out of exactly this number
+    /// (`resolve_field` says so in as many words), and the caller that folds a
+    /// `DiffusePhase` holds a `Derived` and a `World` and no `Config`. Reading it
+    /// off the scenario there instead would put the loader's output and the
+    /// scenario side by side in one function, which is how the two come apart —
+    /// the substance order of a `Config` and the substance order of a `Derived`
+    /// agree only because nothing has yet had a reason to reorder either.
+    pub diffusivity: f64,
 }
 
 /// One reaction after the derivation (ADR-039, ADR-041, ADR-043).
@@ -292,6 +307,24 @@ pub struct DerivedField {
     pub substeps: u32,
     /// `D*dt/(n*dx_coarse^2)`, the number the kernel is handed.
     pub alpha: f64,
+    /// The coefficient the two above were derived from, m^2/s. For the enthalpy
+    /// record it is `thermal_diffusivity` (ADR-062); for every other record it
+    /// is zero, because a field that declares no coefficient does not diffuse.
+    ///
+    /// Kept beside the results rather than dropped, because the host that folds
+    /// the field's transport needs the *inputs*: `process/diffuse.rs` derives
+    /// `n` and `alpha` itself out of `D`, `dt` and `dx`, and handing it the
+    /// outputs instead would be a second construction of the same pair — the one
+    /// thing `substeps_and_alpha` exists to prevent. `Tick::new` checks that the
+    /// pair it folds is the pair recorded here.
+    pub diffusivity: f64,
+    /// `dx * 2^lod`, metres: the edge of a cell of *this* field's grid.
+    ///
+    /// Derived here and not at the call site for the same reason. `lod` enters
+    /// the substep count as `(dx*2^lod)^2`, so a caller that reconstructed the
+    /// coarse step with a shift or a `powi` would be a second place where one
+    /// step of `lod` divides `n` by four.
+    pub coarse_dx: f64,
 }
 
 /// Used where a bound is set by no reaction at all, which is legal: a scenario
@@ -328,6 +361,27 @@ impl Derived {
     #[must_use]
     pub fn fields(&self) -> &[DerivedField] {
         &self.fields
+    }
+
+    /// The one record every scenario has: the enthalpy field (ADR-062).
+    ///
+    /// A named door rather than a search at the call site, because the host that
+    /// dispatches steps `c` and `d` over it (`process/tick.rs`) would otherwise
+    /// carry the spelling `"enthalpy"` as a literal of its own — and the spelling
+    /// is the loader's, not the tick's.
+    ///
+    /// # Panics
+    ///
+    /// Never for a [`Derived`] this module built: a scenario without the record
+    /// is refused before any field is resolved, because the energy scale is
+    /// derived from its temperature range and there is nowhere else to take it
+    /// from.
+    #[must_use]
+    pub fn enthalpy_field(&self) -> &DerivedField {
+        self.fields
+            .iter()
+            .find(|field| field.id == ENTHALPY_FIELD)
+            .expect("a scenario without an enthalpy record does not derive")
     }
 
     /// The substances as [`crate::world::Registry`] takes them.
@@ -888,6 +942,7 @@ fn resolve_substance(
         width,
         amount_at_max,
         amount_at_typical,
+        diffusivity: substance.diffusivity,
     })
 }
 
@@ -1425,6 +1480,8 @@ fn resolve_field(record: &FieldRecord, dt: f64, dx: f64) -> Result<DerivedField>
         lod: record.lod,
         substeps,
         alpha,
+        diffusivity,
+        coarse_dx,
     })
 }
 

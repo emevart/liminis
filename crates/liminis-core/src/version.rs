@@ -281,4 +281,316 @@
 /// The substances of a voxel differ in width, so the accumulator can be neither
 /// of them; the alternative inside the kernel is a bare `as i32`, and in release
 /// that turns a pool which overflowed into one of the opposite sign, in silence.
-pub const WORLD_FORMAT_VERSION: u32 = 8;
+///
+/// Version 9 is the process boundary, and it is the increment that changes
+/// **nothing**. ADR-057 says so itself, in as many words: "the edit to
+/// `crates/liminis-core/src/process/**` requires an increment of
+/// `WORLD_FORMAT_VERSION` (ADR-020), and it will have to move even though the
+/// world does not change by a unit: the result agrees bit for bit with today's
+/// single-lane arrangement. The guard looks at the path, not at the semantics,
+/// and this is the case where it fires for nothing. Saying so outright is more
+/// honest than going round it."
+///
+/// So: `process/diffuse.rs` moved, the guard of ADR-020 fires, and every run of
+/// version 8 comes out under version 9 bit for bit as it did. That claim is not
+/// a promise here — it is `a_substep_run_alternates_direction_instead_of_swapping`,
+/// which runs the previous implementation (a swap after every substep) beside
+/// the new one (alternating direction, no swap at all) and demands equality, and
+/// it is the whole acceptance suite of diffusion and of the ledger, which is
+/// unchanged and green.
+///
+/// What did change is who owes what at the end of a phase. A substep no longer
+/// touches the field's pointers, because the exchange is one per field and lanes
+/// take different numbers of substeps from the same tick (six for the proton,
+/// two for oxygen, one for the rest of the registry). A phase therefore ends
+/// with the lanes split by parity, and it repairs that itself, once, by swapping
+/// the field and copying the **smaller** of the two parity groups — not the odd
+/// one, which on the corpus registry costs four times as much because the single
+/// 64-bit lane stands on the odd side (100.7 MB a tick against 25.2 at 128^3).
+/// From outside the process nothing of this is visible, and that is the point:
+/// the front buffer holds state `N` for every lane, so the six readers of a
+/// coherent snapshot — reactions, pressure, settling, phase change, `ledger/`,
+/// `observe/` — never learn that parity exists.
+///
+/// One thing arrives with it that will be visible the first time a scenario
+/// carries a substance that does not diffuse: a lane at `D = 0` is no longer
+/// dispatched at all. It used to take one substep at `alpha = 0`, which is a
+/// copy under another name plus six flux computations per voxel; now it takes
+/// zero substeps, which is an even number, and lands in the even group. No value
+/// moves by a unit either way — ADR-057 calls this a by-product — and the reason
+/// it is worth a paragraph is the failure next door: a lane that stopped being
+/// dispatched while still being counted as `n = 1` would be restored as an odd
+/// one, and would come back holding the write buffer's contents, which is the
+/// previous phase's state and on the first tick zeroes. Zero is a legal amount
+/// and no invariant would notice.
+///
+/// Version 9 is also the `World` aggregate, and this half of the number claims
+/// less than it looks like it should. `world/world.rs` allocates the buffers of a
+/// run — both amount fields, the coarse enthalpy field, the single-buffered
+/// reaction energy accumulator, light, and the prescribed velocity field with its
+/// potential — and adds the mapping from a fine voxel to the coarse cell covering
+/// it. It is under no guard (`world/**` is not watched by ADR-020) and it runs no
+/// tick: nothing constructs a `World` outside tests, because the loader that
+/// would derive the widths, the scales and the substep counts does not build one
+/// yet.
+///
+/// Three decisions arrive with it that a later increment would find expensive to
+/// revisit, and they belong here rather than in a commit message.
+///
+/// The first is that the coarse grid **inherits the boundary conditions of the
+/// fine one**. No record declares it. `Grid::new` wants six faces and
+/// `[Boundary::Periodic; 6]` is the shortest thing to write; under it heat leaves
+/// through a closed floor and comes back through the lid, the energy invariant
+/// closes exactly — periodic transport conserves no worse than closed — and the
+/// temperature field looks entirely plausible.
+///
+/// The second is that the reaction energy accumulator is `i64` and single
+/// buffered. Both halves are already decided (ADR-062 for the width, ADR-045 for
+/// the buffering) and both are contradicted by three places in the corpus that
+/// still print `i32`, and by the symmetry argument for a second buffer. The width
+/// matters because `M32::from_i64_clamping` asserts in debug and **saturates
+/// silently in release**; the single buffer matters because the reaction kernel
+/// overwrites its cell, so there is no clearing pass to forget, and a second
+/// buffer would make a forgotten one invisible.
+///
+/// The third is that the two coarse grids are named by **role** —
+/// `enthalpy_cell_of` and `velocity_cell_of` — and that no `coarse_cell_of(idx,
+/// lod)` exists. They are different grids (32^3 and 64^3 against a 128^3 base),
+/// the reaction kernel reads the temperature of the covering *enthalpy* cell, and
+/// a `cnx`/`cny` taken from the velocity grid gives it a plausible, neighbouring,
+/// wrong cell. Temperature is class `Q`, so that error appears in no invariant at
+/// all.
+///
+/// Version 10 is the two transport processes of steps `c` and `f`, and it is the
+/// second increment in a row that changes **no bit of any run that exists**.
+/// `process/advect.rs` and `process/settle.rs` stopped being placeholders, the
+/// guard of ADR-020 looks at the path rather than at the semantics, and neither
+/// process is reachable from a scenario: advection has no velocity field to
+/// advect with (`process/velocity.rs` is still a placeholder, and ADR-069 leaves
+/// the interpolation of `u` onto a fine face unwritten), and a settling
+/// substance is refused outright by `config/validate.rs`, because `g` is
+/// assigned no value by any document and the density of the medium has no ASCII
+/// name. `configs/**` is untouched: the keys these processes read —
+/// `settling_radius`, `partial_molar_volume`, `mu`, `u_conv_max` — are all
+/// already in the schema.
+///
+/// Four decisions arrive with them that a later increment would find expensive
+/// to revisit.
+///
+/// The first is `AXIS_ORDER = [0, 1, 2]` in `process/advect.rs`. ADR-036 makes
+/// the order of *operators* world semantics and settles that advection is split
+/// component-wise, but **no document says in which order the three axes run**,
+/// or whether the order alternates between ticks. Lie-Trotter splitting does not
+/// commute, so this array moves the result of every run that advects. It is a
+/// named constant with a test on it rather than a literal in a loop, so that
+/// changing it is a visible edit rather than a silent shift.
+///
+/// The second is that both Courant conditions are compared on the `Q` the kernel
+/// receives and not on the `f64` it was folded from, as ADR-068 requires. At a
+/// bound of one — exactly representable in both — this is not the stricter of
+/// the two comparisons but the *looser* one, and that is the point: the grain
+/// sitting exactly on the radius limit ADR-067 derives, `5.27 um`, has an `f64`
+/// Courant of `1.0000000000000002` and reaches the kernel as exactly one. An
+/// `f64` comparison would make the record's own limit unreachable, and would
+/// stop being merely conservative the day `Q` becomes `FIXED`.
+///
+/// The third is that a settling lane is dispatched on `w != 0` and not on
+/// `settling_radius > 0`. The two differ for a grain that is neutrally buoyant,
+/// which is physics rather than a refactor, and if the dispatch and the parity
+/// count ever branch on different predicates the lane lands in the odd group and
+/// gets the write buffer promoted into its front — the previous phase's state,
+/// and zeroes on the first tick, which is a legal amount no invariant would
+/// notice (ADR-057).
+///
+/// The fourth is that `Advect::fold_courant` checks **both** inequalities of
+/// SPEC section 4.2 and not only the first. The second — the sum over the faces
+/// matter leaves a voxel through — is about non-negativity rather than about
+/// stability, and a field passes the first and fails the second whenever a voxel
+/// loses matter through both of its faces on one axis at once. The sum is taken
+/// over the two faces of the axis being swept and not over all six, which is the
+/// reading ADR-067 already gives settling: under Lie-Trotter splitting an
+/// operator moves matter only through the faces it sweeps (ADR-036), so the sum
+/// degenerates to the terms of its own axis. This does not move
+/// `outflow_bound_violation_is_rejected` out of `config/validate.rs` and does not
+/// change what loads: the validator bounds the *declared* `u_conv_max` over six
+/// faces, six times stricter than the two here, so nothing that loads reaches the
+/// refusal. It exists because the kernel's positivity rests on the condition by
+/// name and the fold is the only place in the project that sees the velocity a
+/// face actually has — including the one step (b) of ADR-069 will interpolate
+/// onto it, which a bound on the declared maximum cannot vouch for.
+///
+/// Version 10 is also steps `a`, `b` and `e`, which share this one increment
+/// rather than asking for a fourth: the guard of ADR-020 compares a commit
+/// against its base, and light, the prescribed velocity field and pressure arrive
+/// in the same wave as the two transport processes above. Three things arrive
+/// with them, and all three are orderings or absences rather than formulas —
+/// which is exactly the kind of change a commit message loses.
+///
+/// **Steps `a`, `b` and `e` have an orchestration for the first time.**
+/// `process/light.rs` folds the four Beer-Lambert coefficients of SPEC section
+/// 4.6 with `dz` and dispatches `light_column` over the `nx*ny` **columns**;
+/// `process/velocity.rs` derives `L`, `r`, the octave count and the estimate of
+/// `|u|` at load and runs the four dispatches of ADR-069; `process/pressure.rs`
+/// takes one overflow field from snapshot `N` and relaxes every lane of both
+/// widths against it. Two of the three are still unreachable from a scenario —
+/// nothing builds a `World` from a config, and the velocity field defaults to
+/// `enabled = false` (ADR-065, ADR-069) — so every run of version 9 that loads
+/// comes out bit for bit as it did. What changed is what a world can be asked to
+/// do, and the remark version 7 made about advection applies to all three.
+///
+/// **Light stands before the fold of step `i'`, and the order is the decision.**
+/// ADR-049 makes absorption a derived quantity: the fold computes
+/// `light[z+1] - light[z]` out of the stored field, so the field has to belong to
+/// the current tick. Put the light after the fold and the field lags by exactly
+/// one tick while the energy ledger closes exactly — the counter and the enthalpy
+/// move together either way — and the only symptom is a transient nobody is
+/// plotting yet. The same paragraph explains why `process/light.rs` credits
+/// nothing at all: a `SOLAR_IN` credit there would be the same joules counted
+/// twice, and the residual would stay at zero while it happened.
+///
+/// **The velocity of step `e` is never added to the prescribed field of step
+/// `b`.** ADR-069 forbids the sum on three independent grounds, of which the
+/// first is arithmetic: ADR-055 derives the pressure mobility so that step `e`
+/// already spends the whole Courant budget of its own step, and a sum of two
+/// fields that each satisfy their own condition satisfies neither. The second is
+/// that the pressure flux is divergent by construction — that is its purpose — so
+/// the sum would take from the prescribed field the one property it is built as a
+/// curl to have, while `prescribed_velocity_is_divergence_free_bit_for_bit` went
+/// on being green, because it looks at the buffer `u` and not at a sum. The
+/// displacement over a tick is therefore three separate terms and not one budget.
+///
+/// One thing arrives with the velocity field that a later increment would find
+/// expensive to revisit, and it is not in ADR-069. The estimate `||D||_1` is
+/// convolved from the three stencils the kernels **implement** — the wide
+/// difference, the trilinear interpolation of the potential, the narrow curl —
+/// and not from the closed form of the record, which is written for a composition
+/// without an interpolation stage. Taken from the formula, `L` comes out wrong,
+/// the field passes the ceiling `dx/(6*dt)`, and nothing reports it: the
+/// validator checked `u_conv_max` rather than the real maximum, the debug
+/// assertion is required never to fire and is absent in release, and the amounts
+/// go negative and read as the accepted undershoot of ADR-068.
+///
+/// Version 10 is also step `h`, the chemistry, which shares this wave's one
+/// increment by the same precedent as everything above it: the guard of ADR-020
+/// compares a commit against its base, and `process/react.rs` arrives in the same
+/// commit as the five other processes. `config/**`, `kernels/**` and `world/**`
+/// are untouched by it — the tables it hands the kernel are `config/derive.rs`
+/// flattened, not derived a second time (ADR-039, ADR-040).
+///
+/// Three things arrive with it that a later increment would find expensive to
+/// revisit, and none of them is a formula.
+///
+/// **The whole of the chemistry is one step and one call.** ADR-050 merges the
+/// abiotic reactions of step `h`, the microbial ones of step `i` and the cellular
+/// chemistry of the APPLY phase into a single application, and `React::apply` is
+/// that application: one loop over the voxels, one `react_voxel` each, every
+/// reaction of the scenario inside it. Restoring the three steps is not a
+/// refactor. It breaks two things and neither of them fails: the competition
+/// coefficient of SPEC section 5 stops being shared, so whichever group ran first
+/// takes its substrate at full demand — and the *matter* ledger closes exactly,
+/// because conservation is a property of `nu` and not of the extent (ADR-027) —
+/// while the second dispatch **erases** the energy increment of the first, since
+/// the kernel writes its cell of the accumulator rather than adding to it. The
+/// energy residual is the only thing that would see the second, and nothing
+/// computes it today. `all_chemistry_is_applied_by_one_call` therefore fixes the
+/// discrepancy between the two arrangements as *expected*, so that going back is
+/// a red test rather than a silent edit.
+///
+/// **The seed reaches the chemistry.** `React::params` puts the tick and
+/// `run_key(seed)` into the two neighbouring `u32` of `ReactParams`, and from
+/// there they are the second and fourth counters of every draw
+/// `rand(voxel_idx, tick, reaction_id, run_key)` (ADR-058). Under version 9 the
+/// key existed and reached no kernel, because no process called one; under this
+/// one, two seeds on a scenario with a reaction are two worlds. The canonical
+/// order of the counters is part of it and is invisible to the compiler: swapped,
+/// the stream stays uniform and unbiased, passes every test in `numeric/rng.rs`,
+/// and is incomparable with the reference run.
+///
+/// **The energy increment stays on the fine grid.** The step writes
+/// `energy_delta` per fine voxel and does not touch the enthalpy field at all;
+/// collecting it into `32^3` is step `i'` and a separate operator (ADR-045).
+/// Folding it here "to be safe" would have step `i'` credit the same joules a
+/// second time, and the energy residual would come out doubled exactly where
+/// nobody computes it.
+///
+/// One thing this half of the number does **not** record is a change to any run
+/// that exists. No scenario in the repository carries a reaction, nothing builds a
+/// `World` from a config, and the process refuses three keys the kernel does not
+/// implement — a non-empty `catalyst`, a `requires` window and a named
+/// `energy_from`. So the set of admissible worlds shrank again, in the way version
+/// 5 and version 6 shrank it, and every run of version 9 that loads comes out bit
+/// for bit as it did.
+///
+/// # Version 11: the splitting order becomes executable, and the roster is closed
+///
+/// Two changes arrive together and one increment covers both, because both are
+/// `process/**` and both are semantics.
+///
+/// **The Lie-Trotter order becomes a thing that runs.** `process/tick.rs` holds
+/// `STEP_ORDER`, and ADR-036 makes it world semantics: swapping two of its nine
+/// entries changes the result of every run that dispatches both, and it changes
+/// nothing a test can see — both residuals close under any order, every "alone"
+/// test and every kernel test stays green, and there is no golden run in the
+/// repository to disagree. Under version 10 the order existed as prose in
+/// `process/mod.rs`; under this one it is executed. Of the nine steps two are
+/// dispatched — advection and diffusion — and the other seven are refused when a
+/// roster enables them, each naming the number or the operator that is missing.
+///
+/// **The enthalpy is transported, and it is the half of the increment that moves
+/// a number.** SPEC section 8 names the field on line `c` and on line `d` beside
+/// the substances and calls it an ordinary diffusive field updated every tick;
+/// under version 10 nothing transported it, because nothing ran a tick at all.
+/// Both dispatched steps now run over three fields rather than two — the narrow
+/// amounts, the wide amounts and the enthalpy on its own `32³` grid (ADR-062),
+/// with its own `alpha` and its own six substeps, refolded from the two inputs
+/// `config/derive.rs` derived the record from and checked against them. Leaving
+/// it out is the version of this file that no test in the repository could have
+/// caught: transport conserves, so both residuals stay at exactly zero for ever,
+/// while heat neither conducts nor is carried by the flow in a system where
+/// thermal diffusion is the *fastest* transport there is (ADR-028) and the
+/// temperature derived from the field goes on looking plausible.
+/// `the_enthalpy_field_is_transported_by_the_steps_that_name_it` and
+/// `diffusing_matter_does_not_move_enthalpy` are what notice, and the second of
+/// them is a criterion `ACCEPTANCE.md` has carried unwritten since ADR-062:
+/// it needs a uniform enthalpy field, because a uniform field is the one state
+/// the field's own diffusion cannot move, and until this increment there was
+/// nothing that held both fields at once to write it against.
+///
+/// **The process roster is closed and materialised before the hash** (ADR-065).
+/// `config::materialise` fills every scenario out to the nine records of
+/// `process::ProcessId::ALL`, each with the `enabled` its own module declares,
+/// sorted into the order of SPEC section 8. That moves the `config_hash` of
+/// **every** scenario in existence without changing a single one of them, which is
+/// the side effect ADR-065 requires to be named: the canonical form grows by nine
+/// records nobody wrote. The over-caution is one-sided — runs are declared
+/// incomparable more often than strictly necessary, and never comparable when
+/// they are not — and the shift is guarded, since it arrives with this increment
+/// rather than silently.
+///
+/// Three smaller things ride along, and each of them is a decision rather than a
+/// refactor:
+///
+/// - **the ids of six processes and the default `enabled` of seven of them are
+///   assigned here for the first time**, and by code rather than by a record.
+///   `CONFIG_SCHEMA.md` section 13 item 23 keeps them open; every one carries a
+///   `TODO` naming what has to be decided and where. They enter `config_hash`
+///   through the canonical form, so the day the journal settles them the version
+///   moves again;
+/// - **`reactions_abiotic` is gone.** The name section 12 prints describes the
+///   split of the chemistry that ADR-050 rejected, so the roster spells the step
+///   `reactions`. A scenario carrying the old spelling no longer loads;
+/// - **an unknown or duplicated process id is a load error**, at the moment the
+///   roster is materialised. Under version 10 a scenario could call its transport
+///   process anything and walk past the ban of ADR-030 on `every_n_ticks > 1` in
+///   silence — `every_n_ticks_on_diffusive_field_is_rejected` asserted the hole
+///   from the inside — and there is no longer another name to give it. Both
+///   refusals are made twice, and the second time is the one that counts:
+///   `Tick::new` refuses a repeated id and a diffusion running every other tick
+///   over the roster array, which is the door a run goes through and which
+///   nothing in the crate builds out of a `Config`.
+///
+/// What this number does **not** record is a change to the trajectory of any run
+/// that existed: nothing built a `World` from a config under version 10 and
+/// nothing advanced one, so there is no version-10 run for a version-11 run to
+/// differ from. What changed is the identity every future run is compared under.
+pub const WORLD_FORMAT_VERSION: u32 = 11;

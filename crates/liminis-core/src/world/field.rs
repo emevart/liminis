@@ -8,7 +8,173 @@
 use anyhow::{Result, bail};
 
 use super::grid::Grid;
+use super::registry::Width;
 use crate::numeric::{M32, M64};
+
+/// Which buffer a substep reads and which it writes.
+///
+/// Before ADR-057 there was no such choice: a substep read `front`, wrote
+/// `back`, and the field swapped. Swapping is what a multi-lane field cannot
+/// afford — the exchange is one per field, so it drags every other lane forward
+/// with it — so a run of substeps alternates the direction instead and leaves
+/// the pointers alone. Two substeps of alternating direction land the lane back
+/// where it started, which is the whole trick: after `n` of them the lane's
+/// state `N` sits in `front` when `n` is even and in `back` when `n` is odd, and
+/// nothing else in the field has moved.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Direction {
+    /// Read state `N` from `front`, write state `N+1` into `back`.
+    Forward,
+    /// Read state `N` from `back`, write state `N+1` into `front`.
+    Backward,
+}
+
+/// Which lanes of a field a process has to copy to restore the invariant of
+/// ADR-057, and whether it swaps first.
+///
+/// # The invariant
+///
+/// > On completion of a process the front buffer holds state `N` **for every
+/// > lane**.
+///
+/// A process that advanced its lanes by different numbers of substeps has
+/// broken it — the odd ones ended in `back`, the even ones in `front` — and owes
+/// the repair. There are exactly two correct repairs and they produce identical
+/// state:
+///
+/// ```text
+/// do not swap, copy the odd lanes   back -> front
+/// swap,        copy the even lanes  back -> front
+/// ```
+///
+/// After the swap the odd lanes are already in the new front, so it is the even
+/// ones that are behind. Whichever group is **smaller** is copied; the split is
+/// a function of the config, because the substep counts are derived at load
+/// (ADR-030).
+///
+/// # Why minority and not "the odd ones"
+///
+/// The shorter rule — always copy the odd lanes — is one line less and needs no
+/// registry. ADR-057 priced it: on the registry of SPEC section 2.3 the even
+/// side holds three lanes (H+ at six substeps, O2 and CO2 at two) and the odd
+/// side eleven, **and water is on the odd side**. Copying the odd group costs
+/// 100.7 MB a tick at 128^3 against 25.2 MB for the minority — four times, and
+/// four times precisely because the one 64-bit lane fell on the expensive side.
+/// Nothing about the result differs, so only
+/// `the_restoration_copies_the_smaller_parity_group` can see the difference.
+///
+/// # Indexed by lane, never by substance
+///
+/// [`ParitySplit::from_substeps`] takes an array indexed by **lane**. The
+/// natural way to collect substep counts is by substance, and on the registry of
+/// SPEC section 2.3 water is first and takes lane 0, so a substance-indexed
+/// array shifts every entry after it by one: a set of lanes of exactly the right
+/// size is copied, and it is the wrong set. The ledger closes, the invariant is
+/// formally "restored", and eleven lanes of thirteen are a phase stale.
+///
+/// # A lane nobody advanced is even
+///
+/// Zero substeps is an even number of substeps, and the parity has to be
+/// computed from the substeps a process **ran**, not from the ones a table
+/// declares. A lane with `D = 0` that is no longer dispatched (ADR-057) but is
+/// still counted as `n = 1` lands in the odd group and gets the write buffer's
+/// contents promoted into its front — the previous phase's state, and on the
+/// first tick zeroes. Zero is a legal amount and nothing falls over.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ParitySplit {
+    /// Whether the field is swapped before the copies.
+    swaps: bool,
+    /// The lanes to copy `back -> front`, ascending.
+    copy: Vec<u32>,
+    /// How many lanes the field this split belongs to must have.
+    lanes: u32,
+}
+
+impl ParitySplit {
+    /// Work out the repair from the substeps each **lane** ran.
+    ///
+    /// The index is the lane, and the value is the number of substeps that lane
+    /// actually took this phase — zero for a lane the process did not dispatch.
+    ///
+    /// # The tie
+    ///
+    /// At `|even| == |odd|` both branches cost the same and no record chooses
+    /// between them. **Not swapping wins**, and the rule is written down rather
+    /// than left to whichever comparison the author typed: the split has to be a
+    /// function of the config (ADR-057 — "the split is known at load"), or the
+    /// traffic the loader reports and the traffic the run pays would part
+    /// company on exactly the configurations where nobody compares them.
+    #[must_use]
+    pub fn from_substeps(substeps_by_lane: &[u32]) -> Self {
+        let mut odd = Vec::new();
+        let mut even = Vec::new();
+        for (lane, &substeps) in substeps_by_lane.iter().enumerate() {
+            let lane = lane as u32;
+            if substeps % 2 == 1 {
+                odd.push(lane);
+            } else {
+                even.push(lane);
+            }
+        }
+
+        let lanes = substeps_by_lane.len() as u32;
+        if odd.len() <= even.len() {
+            Self {
+                swaps: false,
+                copy: odd,
+                lanes,
+            }
+        } else {
+            Self {
+                swaps: true,
+                copy: even,
+                lanes,
+            }
+        }
+    }
+
+    /// Whether the repair swaps the field before copying.
+    #[inline]
+    #[must_use]
+    pub fn swaps(&self) -> bool {
+        self.swaps
+    }
+
+    /// The lanes copied `back -> front`, ascending. Possibly empty — a field
+    /// whose lanes all took the same parity of substeps pays nothing.
+    #[inline]
+    #[must_use]
+    pub fn lanes_to_copy(&self) -> &[u32] {
+        &self.copy
+    }
+
+    /// How many lanes the field this split was built for holds.
+    #[inline]
+    #[must_use]
+    pub fn lanes(&self) -> u32 {
+        self.lanes
+    }
+
+    /// The restoration **traffic** in bytes per tick: read plus write, which is
+    /// twice the bytes copied.
+    ///
+    /// Traffic and not the size of the copy, because traffic is what ADR-057
+    /// prices and what the loader is required to report
+    /// (`load_reports_the_restoration_traffic_per_tick`): three lanes of `i32`
+    /// at 128^3 are 25.2 MB of copy and **50.3 MB of traffic**. Two numbers
+    /// computed by two rules — one printed at load, one paid at run — is a
+    /// report that lies, and the report exists precisely because a calibration
+    /// nudge to a diffusivity carries a lane across the parity threshold without
+    /// saying a word.
+    #[must_use]
+    pub fn bytes_per_tick(&self, n_voxels: u32, width: Width) -> u64 {
+        let per_element = match width {
+            Width::Bits32 => 4u64,
+            Width::Bits64 => 8,
+        };
+        2 * self.copy.len() as u64 * u64::from(n_voxels) * per_element
+    }
+}
 
 /// A double-buffered field over a grid.
 ///
@@ -174,6 +340,26 @@ impl<T> Field<T> {
         (&self.front[range.clone()], &mut self.back[range])
     }
 
+    /// One lane of each buffer, in the direction asked for.
+    ///
+    /// [`Field::lane_pair_mut`] is this at [`Direction::Forward`]. The other
+    /// direction exists so that a run of substeps can alternate instead of
+    /// swapping (ADR-057): a swap is one per field and would carry every other
+    /// lane along with it, while alternating touches nothing but this lane's
+    /// two slices.
+    ///
+    /// Which buffer holds the lane's state `N` afterwards is then a matter of
+    /// counting: `front` after an even number of substeps, `back` after an odd
+    /// one. Restoring the invariant from that is [`Field::restore_boundary`].
+    #[inline]
+    pub fn lane_pair_dir_mut(&mut self, lane: u32, dir: Direction) -> (&[T], &mut [T]) {
+        let range = self.lane_range(lane);
+        match dir {
+            Direction::Forward => (&self.front[range.clone()], &mut self.back[range]),
+            Direction::Backward => (&self.back[range.clone()], &mut self.front[range]),
+        }
+    }
+
     /// Exchange the buffers: state `N+1` becomes state `N`.
     ///
     /// Constant time — the two `Vec`s trade pointers. Read the note on
@@ -181,29 +367,10 @@ impl<T> Field<T> {
     /// being promoted has to have been written in full.
     ///
     /// The exchange is for the **whole field**: every lane advances together.
-    // TODO(swap-granularity): the skeleton in `ARCHITECTURE.md` writes
-    // `world.swap(s)`, one substance at a time, and this exchange cannot serve
-    // that call without a decision nobody has taken.
-    //
-    // The two are not the same operation, and the difference is forced by
-    // ADR-030: substances get different substep counts from the same tick — six
-    // for the proton, two for oxygen, one for most — so after a diffusion phase
-    // an odd-substep lane and an even-substep one have changed buffers a
-    // different number of times. Advancing lanes independently over one shared
-    // pair of buffers costs one of two things, and neither is free:
-    //
-    // - a parity bit per lane, so a lane knows which buffer holds its state N.
-    //   O(1), but there is then no single flat array holding state N for every
-    //   substance at once, which is precisely what the reaction kernel of
-    //   ADR-041 is handed;
-    // - a copy of the lane between the buffers on every advance. Keeps the flat
-    //   array coherent, and pays a full buffer round trip per substep on the
-    //   hottest loop in the tick — on the GPU, per dispatch.
-    //
-    // A process whose substances all take the same number of substeps needs
-    // neither: it writes every lane and swaps once, which is what this method
-    // does and what the first kernel needs. Beyond that it is a question for the
-    // journal, not for this file.
+    /// A per-lane swap does not exist and cannot: ADR-057 settled that the
+    /// granularity stays the field, and that a process which advanced its lanes
+    /// by different numbers of substeps repairs the difference with one swap and
+    /// a copy of the smaller parity group — see [`Field::restore_boundary`].
     #[inline]
     pub fn swap(&mut self) {
         core::mem::swap(&mut self.front, &mut self.back);
@@ -222,6 +389,55 @@ impl<T> Field<T> {
         // construction, and `lane < lanes`.
         let start = (lane * self.n_voxels) as usize;
         start..start + self.n_voxels as usize
+    }
+}
+
+impl<T: Copy> Field<T> {
+    /// Copy one lane `back -> front`, so that the front buffer holds it.
+    ///
+    /// **Always in that direction**, and after whatever swap the caller has
+    /// already done — [`Field::restore_boundary`] is the caller that gets the
+    /// order right. The direction is the one load-bearing thing in this
+    /// function and it is invisible to every conservation test in the project:
+    /// `front -> back` leaves the copied lanes exactly one phase stale, and a
+    /// stale state is conserved no worse than a fresh one, so both domain sums
+    /// stand still while the world quietly stops moving for those lanes. Only a
+    /// comparison against the same lane run alone can see it, which is what
+    /// `restoration_copies_back_to_front_after_the_optional_swap` is.
+    pub fn restore_lane(&mut self, lane: u32) {
+        let range = self.lane_range(lane);
+        self.front[range.clone()].copy_from_slice(&self.back[range]);
+    }
+
+    /// Restore the process-boundary invariant of ADR-057: the front buffer holds
+    /// state `N` for every lane.
+    ///
+    /// One swap at most, one pass over each lane of the minority at most, and
+    /// never more than that per tick. See [`ParitySplit`] for which group is
+    /// copied and why it is the smaller one rather than the odd one.
+    ///
+    /// # Panics
+    ///
+    /// If the split was built for a different number of lanes. A split of the
+    /// wrong length would copy a set of lanes of plausible size and leave the
+    /// rest of the field a phase behind, which nothing downstream can detect.
+    pub fn restore_boundary(&mut self, split: &ParitySplit) {
+        assert_eq!(
+            split.lanes(),
+            self.lanes,
+            "a parity split of {} lanes applied to a field of {}: the invariant \
+             would be restored for a set of lanes of the right size and the \
+             wrong membership (ADR-057)",
+            split.lanes(),
+            self.lanes
+        );
+
+        if split.swaps() {
+            self.swap();
+        }
+        for &lane in split.lanes_to_copy() {
+            self.restore_lane(lane);
+        }
     }
 }
 
@@ -439,6 +655,212 @@ mod tests {
         field.swap();
         assert_eq!(field.read()[7], water);
         assert!(water.to_i64() > M32::MAX.to_i64());
+    }
+
+    /// `ACCEPTANCE.md`, section "Conservation", from ADR-057.
+    #[test]
+    fn the_restoration_copies_the_smaller_parity_group() {
+        // The rule, pinned as a rule and not as a result. Both branches leave
+        // the field in the same state, so the only thing that separates
+        // "copy the minority" from "copy the odd ones" is the count — and the
+        // difference is 100.7 MB a tick against 25.2 at 128^3, because the one
+        // 64-bit lane of the registry stands on the odd side (ADR-057).
+
+        // Three even against ten odd: the shape of the registry of SPEC
+        // section 2.3, where H+ takes six substeps and O2 and CO2 take two.
+        let mut substeps = vec![1u32; 13];
+        substeps[0] = 6;
+        substeps[4] = 2;
+        substeps[9] = 2;
+        let split = ParitySplit::from_substeps(&substeps);
+        assert!(
+            split.swaps(),
+            "the minority is even, so the field must swap"
+        );
+        assert_eq!(split.lanes_to_copy(), &[0, 4, 9]);
+
+        // The mirror: ten even, three odd. Same arithmetic, other branch.
+        let mut substeps = vec![2u32; 13];
+        substeps[1] = 1;
+        substeps[5] = 3;
+        substeps[12] = 1;
+        let split = ParitySplit::from_substeps(&substeps);
+        assert!(!split.swaps(), "the minority is odd, so nothing may swap");
+        assert_eq!(split.lanes_to_copy(), &[1, 5, 12]);
+
+        // The tie, which no record settles: not swapping wins, and it has to be
+        // the same answer every time, because the loader prints this traffic at
+        // load and the run pays it later.
+        let split = ParitySplit::from_substeps(&[1, 2, 3, 4]);
+        assert!(!split.swaps());
+        assert_eq!(split.lanes_to_copy(), &[0, 2]);
+        assert_eq!(
+            ParitySplit::from_substeps(&[1, 2, 3, 4]),
+            ParitySplit::from_substeps(&[5, 6, 7, 8]),
+            "the split is a function of the parities and of nothing else"
+        );
+
+        // A field of one parity pays nothing at all.
+        assert!(
+            ParitySplit::from_substeps(&[2, 4, 6])
+                .lanes_to_copy()
+                .is_empty()
+        );
+        assert!(
+            ParitySplit::from_substeps(&[1, 3, 5])
+                .lanes_to_copy()
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn the_restoration_traffic_is_read_plus_write() {
+        // ADR-057 prices the restoration of the SPEC 2.3 registry at 25.2 MB of
+        // copy and **50.3 MB of traffic** at 128^3, and it is the traffic the
+        // loader is required to print. Two numbers computed by two rules is a
+        // report that lies.
+        const N_VOXELS: u32 = 128 * 128 * 128;
+        let mut substeps = vec![1u32; 13];
+        substeps[0] = 6;
+        substeps[4] = 2;
+        substeps[9] = 2;
+        let split = ParitySplit::from_substeps(&substeps);
+
+        let traffic = split.bytes_per_tick(N_VOXELS, Width::Bits32);
+        assert_eq!(traffic, 2 * 3 * u64::from(N_VOXELS) * 4);
+        assert_eq!(traffic, 50_331_648);
+
+        // The same three lanes at the other width cost twice as much, which is
+        // the whole reason the parity of the *water* lane is the expensive one.
+        assert_eq!(split.bytes_per_tick(N_VOXELS, Width::Bits64), 2 * traffic);
+        assert_eq!(
+            ParitySplit::from_substeps(&[2, 2]).bytes_per_tick(N_VOXELS, Width::Bits64),
+            0
+        );
+    }
+
+    /// `ACCEPTANCE.md`, section "Conservation", from ADR-057.
+    #[test]
+    fn restoration_copies_back_to_front_after_the_optional_swap() {
+        // The direction is the one load-bearing thing in `restore_lane`, and no
+        // conservation test in the project can see it: `front -> back` leaves the
+        // minority lanes exactly one phase stale, and a stale state is conserved
+        // no worse than a fresh one, so both domain sums stand still.
+        //
+        // Distinguishable values in *both* buffers, so that "the front holds
+        // something plausible" is not enough to pass.
+        let mut field = field();
+        for lane in 0..LANES {
+            for idx in 0..field.n_voxels() {
+                let at = (lane * field.n_voxels() + idx) as usize;
+                field.write_mut()[at] = pattern(lane, idx);
+            }
+        }
+        field.swap();
+        for lane in 0..LANES {
+            for idx in 0..field.n_voxels() {
+                let at = (lane * field.n_voxels() + idx) as usize;
+                field.write_mut()[at] = -pattern(lane, idx);
+            }
+        }
+
+        // `front` holds `pattern`, `back` holds `-pattern`, and the result of the
+        // substeps is by construction the one in `back`.
+        field.restore_lane(1);
+        for idx in 0..field.n_voxels() {
+            assert_eq!(
+                field.lane(1)[idx as usize],
+                -pattern(1, idx),
+                "voxel {idx} of the restored lane holds what the phase started \
+                 with, not what it produced"
+            );
+        }
+        // And it reached past nobody: the other lanes are untouched.
+        for lane in [0, 2] {
+            for idx in 0..field.n_voxels() {
+                assert_eq!(field.lane(lane)[idx as usize], pattern(lane, idx));
+            }
+        }
+    }
+
+    #[test]
+    fn the_boundary_restoration_swaps_before_it_copies() {
+        // The two branches of ADR-057 written out on one field, and the check is
+        // that they agree: the same substep counts restored either way put the
+        // same state in the front buffer. Only the number of lanes copied
+        // differs, and that is `the_restoration_copies_the_smaller_parity_group`.
+        let seed = |field: &mut Field32, sign: i32| {
+            let n_voxels = field.n_voxels();
+            let lanes = field.lanes();
+            let buffer = field.write_mut();
+            for lane in 0..lanes {
+                for idx in 0..n_voxels {
+                    buffer[(lane * n_voxels + idx) as usize] =
+                        M32::new(sign * pattern(lane, idx).to_i64() as i32);
+                }
+            }
+        };
+
+        // Lane 0 ended odd (its state is in `back`), lanes 1 and 2 ended even.
+        let mut field = field();
+        seed(&mut field, 1);
+        field.swap();
+        seed(&mut field, -1);
+
+        let split = ParitySplit::from_substeps(&[1, 2, 2]);
+        assert!(!split.swaps());
+        assert_eq!(split.lanes_to_copy(), &[0]);
+        field.restore_boundary(&split);
+
+        for idx in 0..field.n_voxels() {
+            assert_eq!(field.lane(0)[idx as usize], -pattern(0, idx));
+            assert_eq!(field.lane(1)[idx as usize], pattern(1, idx));
+            assert_eq!(field.lane(2)[idx as usize], pattern(2, idx));
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "parity split")]
+    fn a_split_built_for_another_field_is_refused() {
+        // A split of the wrong length copies a set of lanes of plausible size
+        // and leaves the rest a phase behind, which nothing downstream detects.
+        let mut field = field();
+        field.restore_boundary(&ParitySplit::from_substeps(&[1, 1]));
+    }
+
+    #[test]
+    fn alternating_direction_leaves_the_pointers_alone() {
+        // The property the whole scheme rests on: an even number of alternating
+        // substeps is the identity on the buffers, so a lane taking two of them
+        // is back where it started while its neighbour, which took one, is not
+        // — and neither has dragged the other anywhere.
+        let mut field = field();
+        let n_voxels = field.n_voxels();
+        let front_before = field.read().as_ptr();
+
+        for step in 0..4u32 {
+            let dir = if step % 2 == 0 {
+                Direction::Forward
+            } else {
+                Direction::Backward
+            };
+            let (src, dst) = field.lane_pair_dir_mut(0, dir);
+            for idx in 0..n_voxels as usize {
+                dst[idx] = src[idx] + M32::new(1);
+            }
+        }
+
+        assert!(
+            core::ptr::eq(field.read().as_ptr(), front_before),
+            "a substep run moved the field's pointers"
+        );
+        // Four increments, and after an even number of them the answer is in
+        // `front`. A run that swapped instead would put it there too — what it
+        // would also do is carry lanes 1 and 2 along, which is what
+        // `mixed_substep_lanes_diffuse_as_if_each_were_alone` catches.
+        for idx in 0..n_voxels {
+            assert_eq!(field.lane(0)[idx as usize], M32::new(4));
+        }
     }
 
     #[test]

@@ -43,6 +43,16 @@ enum Command {
         /// Seed for the run.
         #[arg(long, value_name = "N")]
         seed: u64,
+        /// Print the canonical form the hash was taken over, and exit.
+        ///
+        /// The one thing that makes the roster of ADR-065 visible. Since a
+        /// missing `[[process]]` record means the process's default rather than
+        /// its absence, the configuration a scenario describes and the text of the
+        /// scenario are no longer the same document: nine records nobody wrote
+        /// stand between them. ADR-065 says so outright — "without it the user who
+        /// forgot a record sees nothing at all."
+        #[arg(long)]
+        print_canonical: bool,
     },
     /// Serve the viewer on a local port.
     ///
@@ -58,8 +68,19 @@ enum Command {
 
 fn main() -> Result<()> {
     match Cli::parse().command {
-        Command::Run { config, seed } => {
+        Command::Run {
+            config,
+            seed,
+            print_canonical,
+        } => {
             let scenario = config::load(&config)?;
+            if print_canonical {
+                // The exact bytes the hash is taken over, and not a re-rendering
+                // of them: `config::canonical` is what `config_hash` consumes, so
+                // what is printed here cannot drift away from what is hashed.
+                print!("{}", config::canonical(&scenario)?);
+                return Ok(());
+            }
             let hash = config::config_hash(&scenario)?;
             println!(
                 "seed={seed} config_hash={hash} world_format_version={WORLD_FORMAT_VERSION} code_version={}",

@@ -196,7 +196,7 @@ id = "diffusion"
 enabled = true
 
 [[process]]
-id = "reactions_abiotic"
+id = "reactions"
 enabled = true
 
 [[process]]
@@ -370,12 +370,11 @@ fn an_unknown_field_inside_a_nested_table_is_an_error() {
 /// out because the root scalars cannot stand in for them: a key inside an array
 /// of tables is defaulted per entry.
 ///
-/// `enabled` is deliberately absent from *both* sides. It is the one live
-/// exception to the property asserted here: its default is declared by the
-/// process itself, under `process/` (ADR-065), nothing materializes the roster
-/// yet, and `Option::None` does not serialize at all — so a record with
-/// `enabled = true` and a record without it hash differently. See the TODO on
-/// `config::load`; spelling the key out here would only hide that.
+/// `enabled` is absent from *both* sides, and since ADR-065 that is no longer
+/// an exception but the strongest case of the rule: the loader materialises the
+/// whole roster before the hash, so the key arrives filled in from the process's
+/// own module. `an_omitted_process_section_hashes_as_the_full_default_roster`
+/// carries the same property one level up, for the section rather than the key.
 #[test]
 fn an_omitted_field_hashes_as_its_default() {
     let spelled_out = r#"
@@ -578,4 +577,115 @@ fn every_scenario_in_the_repository_loads() {
         }
     }
     assert!(seen > 0, "no scenario found in {}", dir.display());
+}
+
+/// The full roster of ADR-065, spelled out as a scenario would have to spell it.
+///
+/// Nine records, each with the `enabled` its module declares. Written by hand
+/// rather than generated from `default_roster()`, because a fixture built out of
+/// the thing under test asserts only that the thing agrees with itself: this text
+/// is what a user would have to type, and it goes red when a default changes —
+/// which is the moment ADR-065 wants visible, since it moves `config_hash` for
+/// every scenario in existence.
+const FULL_ROSTER: &str = r#"
+[[process]]
+id = "light"
+enabled = false
+
+[[process]]
+id = "velocity_field"
+enabled = false
+
+[[process]]
+id = "advection"
+enabled = false
+
+[[process]]
+id = "diffusion"
+enabled = true
+
+[[process]]
+id = "pressure"
+enabled = false
+
+[[process]]
+id = "settling"
+enabled = false
+
+[[process]]
+id = "phase_transitions"
+enabled = false
+
+[[process]]
+id = "reactions"
+enabled = false
+
+[[process]]
+id = "external_channels"
+enabled = false
+"#;
+
+/// The minimum a scenario has to write to load at all.
+const BARE: &str = r#"
+name = "roster"
+T_ref = 298.15
+
+[grid]
+"#;
+
+#[test]
+fn an_omitted_process_section_hashes_as_the_full_default_roster() {
+    // Section 11 item 2 of `CONFIG_SCHEMA.md`, applied to a section whose full
+    // membership is not in the file: defaults are applied *before* hashing, so
+    // "wrote nothing" and "wrote every default out" are one configuration
+    // (ADR-065). The variant that had to be rejected — hash what was written,
+    // execute what was materialised — differs from this line and from nothing
+    // else.
+    assert_eq!(
+        hash_of("roster_omitted.toml", BARE),
+        hash_of("roster_spelled_out.toml", &format!("{BARE}{FULL_ROSTER}")),
+    );
+}
+
+#[test]
+fn the_canonical_form_names_every_process_in_the_roster() {
+    // The only thing backing ADR-065's promise that "it is visible what actually
+    // came out". Without it the user who forgot a record sees nothing at all —
+    // which is the same record's argument for `--print-canonical` on the CLI.
+    let config = config::load(&fixture("roster_named.toml", BARE)).expect("loading");
+    let canonical = config::canonical(&config).expect("canonical form");
+    for id in [
+        "light",
+        "velocity_field",
+        "advection",
+        "diffusion",
+        "pressure",
+        "settling",
+        "phase_transitions",
+        "reactions",
+        "external_channels",
+    ] {
+        assert!(
+            canonical.contains(&format!("id = \"{id}\"")),
+            "the canonical form does not name `{id}`:\n{canonical}"
+        );
+    }
+}
+
+#[test]
+fn the_process_order_in_the_canonical_form_does_not_depend_on_the_file() {
+    // Two files naming the same processes in different orders describe one world.
+    // Nothing else in this file sees it: `whitespace_and_key_order_do_not_change_the_hash`
+    // reorders the keys *inside* a table and never the entries of an array of
+    // tables, and the natural materialisation — append the missing records to the
+    // tail, keep the file's order for the rest — passes that test and fails this
+    // one.
+    let forwards =
+        format!("{BARE}\n[[process]]\nid = \"diffusion\"\n\n[[process]]\nid = \"light\"\n");
+    let backwards =
+        format!("{BARE}\n[[process]]\nid = \"light\"\n\n[[process]]\nid = \"diffusion\"\n");
+    assert_eq!(
+        hash_of("roster_forwards.toml", &forwards),
+        hash_of("roster_backwards.toml", &backwards),
+    );
 }

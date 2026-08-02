@@ -26,7 +26,7 @@ use liminis_core::kernels::diffuse::{
     DiffuseParams, diffuse_voxel_32, diffuse_voxel_64, flux_32, flux_64,
 };
 use liminis_core::numeric::{M32, M64, Q};
-use liminis_core::process::Diffuse;
+use liminis_core::process::{Diffuse, DiffusePhase};
 use liminis_core::world::{Boundary, Field, Field32, Field64, Grid};
 use proptest::prelude::*;
 use proptest::test_runner::FileFailurePersistence;
@@ -351,6 +351,8 @@ fn diffusion_alone_conserves_exactly() {
     let grid = torus(12, 10, 8);
     let diffuse = Diffuse::new(&grid, D_PROTON, DT, DX).unwrap();
     assert_eq!(diffuse.substeps(), 6);
+    let phase = DiffusePhase::new_32(&grid, 1, &[D_PROTON], DT, DX).unwrap();
+    let wide_phase = DiffusePhase::new_64(&grid, 1, &[D_PROTON], DT, DX).unwrap();
 
     let mut narrow: Field32 = Field::new(&grid, 1).unwrap();
     seed_32(&mut narrow, &grid, |x, y, z| {
@@ -392,10 +394,10 @@ fn diffusion_alone_conserves_exactly() {
     let wide_spread_before = wide_spread(&wide);
 
     for tick in 0..TICKS {
-        diffuse.apply_32(&mut narrow);
+        phase.apply_32(&mut narrow);
         assert_eq!(total_32(&narrow), narrow_total, "i32: tick {tick}");
 
-        diffuse.apply_64(&mut wide);
+        wide_phase.apply_64(&mut wide);
         assert_eq!(total_64(&wide), wide_total, "i64: tick {tick}");
     }
 

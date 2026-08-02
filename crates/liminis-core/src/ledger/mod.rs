@@ -314,6 +314,18 @@ impl DomainSums {
         self.energy += total_32(lane);
     }
 
+    /// The same field at the wide width, which is the width it actually has.
+    ///
+    /// `world::World` stores enthalpy as a `Field64`, because the window for
+    /// `k_E` at `i32` is empty and the miss is twenty-six binary orders
+    /// (ADR-062). The narrow door above predates that record — three places in
+    /// the corpus still print `i32` for this quantity — and both are kept
+    /// because a `DerivedEnergy` carries a derived width and this module does not
+    /// get to decide which one a scenario ended up with.
+    pub fn add_enthalpy_lane_64(&mut self, lane: &[M64]) {
+        self.energy += total_64(lane);
+    }
+
     /// Add the `energy` column of the cell table, in joules (SPEC section 6.1).
     pub fn add_cell_energy_32(&mut self, energy: &[M32]) {
         self.energy += total_32(energy);

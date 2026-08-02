@@ -48,9 +48,12 @@
 // to at the call site, which matters here more than usual: every transport
 // kernel has a function called `flux`, and they are not interchangeable.
 pub mod advect;
+pub mod curl;
 pub mod diffuse;
 pub mod fold;
 pub mod light;
+pub mod noise;
+pub mod potential;
 pub mod pressure;
 pub mod react;
 pub mod settle;

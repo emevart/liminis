@@ -6,7 +6,7 @@
 //! index; everything about *which* slices, how long they are and what the index
 //! means lives here, and none of it ever travels into WGSL.
 //!
-//! Three types, and they answer three questions.
+//! Four types, and they answer four questions.
 //!
 //! [`Grid`] answers "where". One linear index, `idx = x + y*NX + z*NX*NY`, six
 //! faces, one boundary condition per face (SPEC section 1.1, section 1.6). It
@@ -18,6 +18,15 @@
 //! [`Registry`] answers "whose numbers are these". A `Field` addresses lanes; a
 //! reaction, a snapshot and a genome's input vector address substances, and
 //! since storage is compact the two are not the same number (ADR-056).
+//!
+//! [`World`] answers "whose buffers survive a process boundary". It holds the
+//! grid, the registry and both amount fields together, and it is the one place
+//! that turns a substance index into a buffer address ([`World::lane_of`], and
+//! only through it). The rule it exists to hold up is ADR-057's: on completion
+//! of a process the front buffer holds state `N` for **every** lane, so the six
+//! readers of a coherent snapshot — reactions, pressure, settling, phase
+//! change, `ledger/`, `observe/` — never learn that lanes advance at different
+//! speeds. See [`ParitySplit`] for what a process pays for that.
 //!
 //! # What the pair is for
 //!
@@ -50,30 +59,40 @@
 //! from a `Grid`, because `kernels/` may depend on `numeric/` and on nothing
 //! else. See the note on [`Grid`] about what that costs and who pays it.
 //!
+//! # The coarse grids are grids
+//!
+//! A field on a coarser LOD is not a new mechanism. SPEC section 1.5 coarsens by
+//! a shift **per axis**, so the coarse enthalpy grid is another [`Grid`] with
+//! `nx >> lod` voxels along X and the same six boundary conditions, and the
+//! field on it is another [`Field`]. What `World` adds is the mapping from a
+//! fine voxel to the coarse cell that covers it, named by **role** —
+//! [`World::enthalpy_cell_of`] and [`World::velocity_cell_of`] — because the two
+//! coarse grids differ and a temperature read from the wrong one is plausible,
+//! neighbouring and in no invariant. The fold kernel between the grids
+//! (ADR-045) stays in `kernels/` and keeps taking `lod`, `nx`, `ny`, `nz` as
+//! plain numbers.
+//!
 //! # What is not here
 //!
-//! No `World` aggregate — but no longer for want of the mapping. A substance
-//! index becomes a buffer address through [`Registry`], which resolves it to a
-//! width and a lane inside that width's field (ADR-056); what is missing is
-//! everything that would fill one in. The widths and scales it carries are
-//! derived at load time (ADR-039, ADR-040) by a loader that does not exist yet,
-//! and the aggregate's other half — who owns the buffers across a process
-//! boundary, and which of them holds state `N` for a lane that took a different
-//! number of substeps — is ADR-057, unimplemented. The skeleton in
-//! `ARCHITECTURE.md` still writes `world.swap(s)`, a per-substance swap that
-//! ADR-057 does away with.
-//!
-//! No LOD. SPEC section 1.5 makes a coarse field a coarsening of the same grid
-//! by a shift per axis, so a coarse field is another [`Grid`] and another
-//! [`Field`] rather than a new mechanism — but the fold kernel between them
-//! (ADR-045) belongs to `kernels/`, and nothing in the first kernel needs it.
+//! No loader. The widths, the scales and the substep counts a [`World`] is built
+//! from are derived at load time (ADR-039, ADR-040, ADR-030) by `config/`, and
+//! `World::new` takes them already derived rather than deriving a second set.
 //!
 //! No ledger, no metrics, no snapshots. Those are their own modules.
 
 mod field;
 mod grid;
 mod registry;
+// `world::world`, and the repetition is the point: the aggregate is the module's
+// namesake, one file per type beside `grid.rs`, `field.rs` and `registry.rs`.
+// The alternative clippy is asking for — flattening it into this file — would
+// put nine hundred lines of the one type that ties the other three together in
+// the module header, where every reader looking for the map has to scroll past
+// it.
+#[allow(clippy::module_inception)]
+mod world;
 
-pub use field::{Field, Field32, Field64};
+pub use field::{Direction, Field, Field32, Field64, ParitySplit};
 pub use grid::{Axis, Boundary, Face, Grid};
 pub use registry::{MAX_SUBSTANCES, R_MAX, Registry, S_MAX, SubstanceDecl, SubstanceSlot, Width};
+pub use world::{LaneRef, World, WorldLayout, coarse_grid};
