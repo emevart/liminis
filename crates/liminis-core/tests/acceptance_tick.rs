@@ -274,6 +274,11 @@ fn profile(n: u32, idx: u32, offset: i64) -> i64 {
 /// front buffer — which is where a process expects state `N` (ADR-057).
 fn seed(world: &mut World, n: u32, heat: Heat) {
     let n_voxels = world.grid().n_voxels();
+    // The stride of a lane, which is not the voxel count: a lane ends in the
+    // ghost cell of ADR-059. Written with `n_voxels` instead, every lane after
+    // the first lands one element short of where its substance is — and nothing
+    // downstream notices, because a residual compares a field with itself.
+    let lane_len = world.grid().lane_len();
     let base: Vec<i64> = (0..N_SUBSTANCES)
         .map(|s| 1_000_000 + i64::from(s) * 7_919)
         .collect();
@@ -288,7 +293,7 @@ fn seed(world: &mut World, n: u32, heat: Heat) {
                     // The fixture's amounts stay far inside `i32`, so the cast
                     // below cannot wrap; a scenario's would not, which is why
                     // `M32::from_i64_clamping` exists and why this is a test.
-                    buffer[(lane * n_voxels + idx) as usize] =
+                    buffer[(lane * lane_len + idx) as usize] =
                         M32::from_i64_clamping(profile(n, idx, offset));
                 }
             }
@@ -296,7 +301,7 @@ fn seed(world: &mut World, n: u32, heat: Heat) {
                 let field = world.amounts_64_mut().expect("a wide field");
                 let buffer = field.write_mut();
                 for idx in 0..n_voxels {
-                    buffer[(lane * n_voxels + idx) as usize] = M64::new(profile(n, idx, offset));
+                    buffer[(lane * lane_len + idx) as usize] = M64::new(profile(n, idx, offset));
                 }
             }
         }
@@ -378,6 +383,18 @@ fn snapshot(world: &World) -> Vec<u8> {
     for value in world.velocity_potential() {
         bytes.extend_from_slice(&value.debug_f64().to_bits().to_le_bytes());
     }
+    // The two derived fields of the enthalpy grid (ADR-044, ADR-062). They are
+    // written by `process::Temperature` and by nothing else, and no step of the
+    // tick calls it today — which is exactly why they belong here. "Every buffer
+    // of a world" is a promise this helper keeps by hand, and a buffer left out
+    // of it makes `a_disabled_process_leaves_every_buffer_bit_for_bit` a test
+    // that is green about a world it cannot see.
+    for value in world.heat_capacity() {
+        bytes.extend_from_slice(&value.debug_f64().to_bits().to_le_bytes());
+    }
+    for value in world.temperature() {
+        bytes.extend_from_slice(&value.debug_f64().to_bits().to_le_bytes());
+    }
     bytes
 }
 
@@ -405,7 +422,7 @@ fn amounts_snapshot(world: &World) -> Vec<u8> {
 /// it did not — and a comparison of the whole world would answer neither.
 fn heat_snapshot(world: &World) -> Vec<u8> {
     let mut bytes = Vec::new();
-    for value in world.enthalpy().read() {
+    for value in world.enthalpy().lane(0) {
         bytes.extend_from_slice(&value.raw().to_le_bytes());
     }
     bytes
@@ -415,7 +432,7 @@ fn heat_snapshot(world: &World) -> Vec<u8> {
 fn heat_total(world: &World) -> i128 {
     world
         .enthalpy()
-        .read()
+        .lane(0)
         .iter()
         .map(|value| i128::from(value.to_i64()))
         .sum()
@@ -447,6 +464,59 @@ fn run(ticks: u32, run_key: u32, on: &[ProcessId]) -> World {
         tick.advance(&mut world, &mut ledger, &mut scratch, t, run_key);
     }
     world
+}
+
+#[test]
+#[ignore = "this cannot fail as it stands, and the honest half of ADR-075 is why. \
+            The record calls the configuration reachable — a roster with \
+            `reactions` off runs neither `h` nor `i'` — and in the same breath \
+            says it does not create the dispatch site of step `i'`: \
+            `process::credit_solar` is a door this crate calls from nowhere, on \
+            the precedent of `Advect::fold_courant`. So no roster credits \
+            `SOLAR_IN`, `World::solar_in` is written by nobody, and both \
+            assertions below hold against a reduction moved into phase 5 as \
+            readily as against the one in step `i'` — which is the alternative \
+            they exist to separate. It comes back on the day step `i'` is \
+            dispatched, and until then it is a name for a guard that guards \
+            nothing rather than a criterion; weakening the name instead would \
+            leave the shape of a live test around it"]
+fn a_tick_without_the_fold_leaves_solar_in_untouched() {
+    // ADR-075 puts the reduction of the solar slice inside step `i'` — the second
+    // half of the same dispatch — rather than in phase 5. The property that buys
+    // is structural: no fold, no credit, with nothing to guard it and no tick
+    // stamp to keep.
+    //
+    // The configuration is the one the record names: a roster with `reactions`
+    // off runs neither `h` nor `i'` by the rule at the head of `process/tick.rs`,
+    // and the counter has to stand still. Moved into phase 5, the reduction would
+    // run on a tick the fold did not, and the symptom would be a wrong residual on
+    // the *next* tick, naming nobody. What is missing for the test to tell those
+    // two apart is the other half of the pair — a roster that *does* dispatch the
+    // fold — and that roster does not exist: `Tick::new` refuses `reactions`
+    // outright, so the counter is at zero under every roster that builds.
+    let derived = derived();
+    let mut world = world(&derived);
+    let tick = Tick::new(&world, &derived, &roster(&DISPATCHABLE), DT, DX).expect("folding");
+    let mut ledger = Ledger::new(N_SUBSTANCES).expect("the ledger");
+    let mut scratch = Scratch::new(&world, &tick).expect("the scratch");
+
+    // The premise: reactions are off in this roster, so step `i'` is not among
+    // the steps this tick dispatches.
+    assert!(!DISPATCHABLE.contains(&ProcessId::Reactions));
+
+    for t in 0..8 {
+        tick.advance(&mut world, &mut ledger, &mut scratch, t, 0);
+        assert_eq!(
+            ledger.energy(Channel::SolarIn),
+            0,
+            "SOLAR_IN moved on tick {t} without a fold to move it"
+        );
+    }
+
+    // And the buffer the reduction would read is still the zeroed one it was
+    // allocated as, which is what makes the zero above a statement about the
+    // dispatch rather than about the arithmetic.
+    assert!(world.solar_in().iter().all(|c| c.to_i64() == 0));
 }
 
 // --- the two ledger criteria ---------------------------------------------
@@ -502,17 +572,21 @@ fn ledger_residual_is_zero_over_10k_ticks() {
 #[test]
 #[ignore = "the last assertion cannot pass as it stands, and weakening it would \
             make the criterion unfailable. `SOLAR_IN` needs the fold of step \
-            `i'`, which cannot be dispatched: `FoldParams::joules_per_intensity` \
-            is named by no key (TODO(joules-per-intensity) in kernels/fold.rs) \
-            and what the fold owes the ledger is open question A-16 — three \
-            answers are named and none chosen. The per-tick half above is no \
-            longer vacuous: steps `c` and `d` transport the enthalpy field, so \
-            energy moves inside the domain and a transport that lost a joule \
-            would show here. What is still missing is a *source* — the reaction \
-            energy of an exothermic reaction has no channel and no door in \
-            DomainSums, and enthalpy_formation enters no left-hand side (see the \
-            module header of ledger/mod.rs) — so with the light off the \
-            right-hand side is identically zero"]
+            `i'`, and the two things that used to block it are gone: ADR-076 \
+            declares i_surface and derives units_per_intensity, ADR-075 settles \
+            what the fold owes the ledger and A-16 is closed. What blocks it now \
+            is that no scenario may be lit at all — refused by two locks, an \
+            energy sink that exists nowhere and the width of a channel counter \
+            (A-20, which ADR-075 and ADR-076 call A-19) — and that step `i'` is \
+            dispatched with step `h` or not at \
+            all, while step `h` reads a temperature no operator produces for it. \
+            The per-tick half above is no longer vacuous: steps `c` and `d` \
+            transport the enthalpy field, so energy moves inside the domain and a \
+            transport that lost a joule would show here. What is still missing is \
+            a *source* — the reaction energy of an exothermic reaction has no \
+            channel and no door in DomainSums, and enthalpy_formation enters no \
+            left-hand side (see the module header of ledger/mod.rs) — so with the \
+            light off the right-hand side is identically zero"]
 fn energy_ledger_residual_is_zero_over_10k_ticks() {
     let derived = derived();
     let mut world = world(&derived);
@@ -716,7 +790,7 @@ fn the_left_side_of_the_invariant_is_gathered_in_one_place() {
     // report zero here while the energy residual went on closing.
     let enthalpy: i128 = world
         .enthalpy()
-        .read()
+        .lane(0)
         .iter()
         .map(|v| i128::from(v.to_i64()))
         .sum();

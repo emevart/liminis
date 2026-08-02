@@ -355,6 +355,7 @@ impl World {
 
 fn params() -> ReactParams {
     ReactParams {
+        lane_len: N_VOXELS,
         nx: NX,
         ny: NY,
         n_voxels: N_VOXELS,

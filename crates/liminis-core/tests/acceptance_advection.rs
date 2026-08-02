@@ -80,6 +80,7 @@ fn mask_of(grid: &Grid) -> u32 {
 fn strip(n: u32, boundary: [Boundary; 6]) -> (Grid, AdvectParams) {
     let grid = Grid::new(n, 1, 1, boundary).unwrap();
     let p = AdvectParams {
+        exchange_mask: 0,
         nx: n,
         ny: 1,
         nz: 1,
@@ -1002,4 +1003,175 @@ fn advection_of_a_step_produces_no_new_extrema() {
             "van Leer overshot as far as the unlimited scheme at c = {value}"
         );
     }
+}
+
+// ---------------------------------------------------------------------------
+// exchange_inflow_falls_back_to_first_order
+// ---------------------------------------------------------------------------
+
+/// `ACCEPTANCE.md`, from ADR-059 and ADR-054.
+///
+/// At the face of the domain the limiter switches itself off on **inflow**, and
+/// it costs no branch at all: the cell upwind of the ghost is the ghost, so the
+/// numerator `du` of the ratio is exactly zero and van Leer answers zero at any
+/// `df`. That is precisely the fallback ADR-054 prescribes wherever `r` is
+/// undefined, reached by the address rather than by a special case — the flux is
+/// the same four-cell expression every interior face runs through.
+///
+/// # Asserted on the limiter and not only on its consequence
+///
+/// `kernels/advect.rs` makes the limiter public for this reason and says why: a
+/// test that could see only the flux would pass on a limiter stuck at zero
+/// everywhere. So the first assertion is about `limited_slope_32` itself, over a
+/// spread of `df`, and the second is the flux it produces.
+///
+/// # The mirror is half the test
+///
+/// On **outflow** through the same face the donor is the voxel below the lid, its
+/// upwind cell is inside the domain, the stencil is full, and the limiter is
+/// alive. Without that half a `neighbour_along` that collapsed the ghost onto
+/// itself in *both* directions would pass — and it would have killed the limiter
+/// on outflow too.
+#[test]
+fn exchange_inflow_falls_back_to_first_order() {
+    const NZ: u32 = 5;
+    let grid = Grid::new(
+        1,
+        1,
+        NZ,
+        [
+            Boundary::Closed,
+            Boundary::Closed,
+            Boundary::Closed,
+            Boundary::Closed,
+            Boundary::Closed,
+            Boundary::Exchange,
+        ],
+    )
+    .unwrap();
+    let ghost = grid.ghost_index();
+    let lane_len = grid.lane_len();
+    let top = grid.index(0, 0, NZ - 1);
+    assert_eq!(grid.neighbour(top, Face::ZPlus), ghost);
+    assert_eq!(grid.neighbour(ghost, Face::ZPlus), ghost);
+    assert_eq!(grid.neighbour(ghost, Face::ZMinus), ghost);
+
+    let p = AdvectParams {
+        nx: 1,
+        ny: 1,
+        nz: NZ,
+        periodic_mask: 0,
+        exchange_mask: 1 << (Face::ZPlus as u32),
+        axis: 2,
+    };
+
+    // The column and the reservoir are chosen so that the test can fail.
+    //
+    // A limiter that read **any other cell** as the one upwind of the ghost —
+    // which is what a `neighbour_along` that did not collapse the ghost onto
+    // itself would hand it — must come out nonzero, or the first-order answer
+    // and the second-order one coincide and the assertion below is vacuous. So
+    // the profile is not monotone: it rises into the domain and falls at the
+    // lid, and the reservoir sits between the second voxel and the top one.
+    const COLUMN: [i32; NZ as usize] = [1_000, 1_100, 3_000, 5_000, 2_200];
+    const RESERVOIR: i32 = 1_500;
+    let mut src: Vec<M32> = COLUMN.iter().map(|&a| M32::new(a)).collect();
+    src.push(M32::new(RESERVOIR));
+    assert_eq!(src.len(), lane_len as usize);
+    let reservoir = src[ghost as usize];
+    // The two differences a wrongly-addressed upwind cell would produce have the
+    // same sign, so the limiter would be alive on them.
+    assert_ne!(
+        limited_slope_32(reservoir - src[1], src[top as usize] - reservoir),
+        Q::ZERO,
+        "the fixture cannot tell a live limiter from a dead one"
+    );
+
+    // --- one: the limiter itself ------------------------------------------
+
+    // `du == 0` is what the address buys, and van Leer is zero there at **any**
+    // `df` — including the ones where the two differences would have the same
+    // sign and a live limiter would answer something large.
+    for df in [-1_000_000i32, -9_000, -1, 0, 1, 9_000, 1_000_000] {
+        assert_eq!(
+            limited_slope_32(M32::ZERO, M32::new(df)),
+            Q::ZERO,
+            "the limiter is alive at a zero upwind difference, df = {df}"
+        );
+    }
+    assert_eq!(
+        reservoir - reservoir,
+        M32::ZERO,
+        "du at the face of the domain"
+    );
+
+    // --- two: the flux is the bare donor term -----------------------------
+
+    // Inflow: the Courant number on the lid points toward the smaller index, so
+    // the donor is the ghost and the cell upwind of it is the ghost.
+    let inflow = Q::from_f64(-BUDGET);
+    let donor_only = q_round_32(qmul(inflow, q_conc_32(reservoir, Q::ONE)));
+    assert_ne!(donor_only, M32::ZERO, "the fixture moves nothing at all");
+    assert_eq!(
+        flux_32(
+            src[top as usize],
+            src[top as usize],
+            reservoir,
+            reservoir,
+            inflow
+        ),
+        donor_only,
+        "the face of the domain is not first order on inflow"
+    );
+
+    // And through the kernel, which is what actually reads the address: the top
+    // voxel gains exactly the negative of that face's flux, because a positive
+    // flux points toward the larger index.
+    let mut courant = vec![Q::ZERO; (3 * lane_len) as usize];
+    let base = 2 * lane_len;
+    courant[(base + ghost) as usize] = inflow;
+    let mut dst = vec![M32::ZERO; lane_len as usize];
+    for idx in 0..grid.n_voxels() {
+        advect_voxel_32(&src, &courant, &mut dst, &p, idx);
+    }
+    assert_eq!(
+        dst[top as usize] - src[top as usize],
+        M32::ZERO - donor_only,
+        "the kernel did not apply the first-order flux of the lid"
+    );
+    // Nothing below the top layer moved: the lid is the only open face here.
+    for z in 0..NZ - 1 {
+        let idx = grid.index(0, 0, z) as usize;
+        assert_eq!(dst[idx], src[idx], "voxel at z = {z} moved");
+    }
+
+    // --- three: the mirror, on outflow ------------------------------------
+
+    // The same face, the other sign. The donor is now the voxel under the lid,
+    // its upwind cell is the one below **that**, the stencil is full, and on a
+    // column with a gradient the limiter is not zero.
+    let below = grid.index(0, 0, NZ - 2);
+    let du = src[top as usize] - src[below as usize];
+    let df = reservoir - src[top as usize];
+    assert_ne!(du, M32::ZERO, "the fixture's column is flat");
+    assert_ne!(
+        limited_slope_32(du, df),
+        Q::ZERO,
+        "the limiter is dead on outflow too: the ghost collapses onto itself in \
+         both directions"
+    );
+
+    let outflow = Q::from_f64(BUDGET);
+    let bare = q_round_32(qmul(outflow, q_conc_32(src[top as usize], Q::ONE)));
+    assert_ne!(
+        flux_32(
+            src[below as usize],
+            src[top as usize],
+            reservoir,
+            reservoir,
+            outflow
+        ),
+        bare,
+        "the face of the domain fell back to first order on outflow as well"
+    );
 }

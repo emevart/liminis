@@ -99,7 +99,28 @@ pub struct AdvectParams {
     /// `2a` and not bit `2a+1` would wrap the lower face of the axis and fold
     /// the upper one onto itself, and matter would vanish at one end of the axis
     /// with no symptom other than a ledger residual.
+    ///
+    /// An `exchange` face is the **third** state and lives in
+    /// [`AdvectParams::exchange_mask`]. Folded in here as "not periodic" it
+    /// would seal the lid; left out of both masks it would be closed just the
+    /// same, which is the mistake with no symptom at all — step `d` would vent
+    /// and step `c` would not, and the difference would read as physics.
     pub periodic_mask: u32,
+    /// Bit `f` set: face `f` trades with the reservoir, and the neighbour across
+    /// it is the ghost cell at `nx*ny*nz` (ADR-059).
+    ///
+    /// Same encoding as [`AdvectParams::periodic_mask`] and as
+    /// `DiffuseParams::exchange_mask`: two transport kernels reading one
+    /// host-side mask differently is a class of bug whose only symptom is matter
+    /// going the wrong way at one wall.
+    ///
+    /// **The limiter switches itself off on inflow for free.** The cell upwind of
+    /// the ghost is the ghost — [`neighbour_along`] collapses it onto itself — so
+    /// `du` is exactly zero, `limited_slope` answers `Q::ZERO` at any `df`, and
+    /// the face is the pure donor term. That is precisely the fallback ADR-054
+    /// prescribes wherever the ratio `r` is undefined, arrived at by the address
+    /// rather than by a branch (ADR-059).
+    pub exchange_mask: u32,
     /// The axis this application advects along: `0 = X`, `1 = Y`, `2 = Z`.
     ///
     /// One application is one axis with the **full** step (ADR-036). Advection
@@ -314,9 +335,9 @@ macro_rules! define_advect {
         ///
         /// # The layout of `courant`, where the canonical orientation lives
         ///
-        /// `courant[axis * n_voxels + idx]` is the Courant number on the
+        /// `courant[axis * lane_len + idx]` is the Courant number on the
         /// **lower** face of voxel `idx` along `axis` — one cell per face. The
-        /// indexing follows the only precedent in the corpus, `s * n_voxels +
+        /// indexing follows the only precedent in the corpus, `s * lane_len +
         /// idx` in the reaction skeleton.
         ///
         /// A voxel reads its lower face at `idx` and its upper face at the index
@@ -324,6 +345,21 @@ macro_rules! define_advect {
         /// voxels sharing a face read **the same cell** and build the same
         /// four-cell stencil, so they compute the same integer. That is ADR-054
         /// expressed as a layout rather than as a discipline nobody can check.
+        ///
+        /// **The stride is `lane_len` and not `n_voxels`**, and the extra cell is
+        /// the one the face of the domain needs: the upper face of the last voxel
+        /// of an axis is the *ghost's* lower face, so it is read at
+        /// `axis*lane_len + ghost` and a buffer of `3*n_voxels` has no cell for
+        /// it at all. Three such cells exist, one per axis, and a grid that
+        /// exchanged on both faces of one axis would have them collide — there is
+        /// one ghost per lane, because `[boundary.reservoir]` is one section.
+        // TODO(exchange-courant): what number belongs in that cell is settled
+        // nowhere. ADR-059 gives one `alpha_ex = k_ex*dt/dx` for the *diffusive*
+        // face and no advective speed for the domain face at all; whether it is
+        // `+-alpha_ex`, or the prescribed `u` interpolated onto the lid
+        // (ADR-069), and which way the sign points, is named by no record. The
+        // host leaves it at whatever it was given, and `Advect::fold_courant`
+        // checks it like any other face.
         ///
         /// # Gather, and the sign
         ///
@@ -368,10 +404,19 @@ macro_rules! define_advect {
             debug_assert!(p.axis <= 2, "advection axis {} is not 0, 1 or 2", p.axis);
 
             let axis = p.axis;
-            let base = axis * p.nx * p.ny * p.nz;
+            // `lane_len`, not `n_voxels`: the ghost cell carries the Courant
+            // number of the face of the domain, and there is no other cell for
+            // it (see the note on the layout above).
+            let base = axis * (p.nx * p.ny * p.nz + 1);
             let periodic = axis_is_periodic(p, axis);
             let coord = coord_on_axis(p, idx, axis);
             let extent = extent_on_axis(p, axis);
+            // The two faces of this axis, in the third state. A face left out of
+            // both masks is closed, and a closed face carries nothing — so an
+            // exchanging face that never reached this line would make step `c`
+            // seal a lid that step `d` vents.
+            let exchange_below = (p.exchange_mask >> (2 * axis)) & 1 == 1;
+            let exchange_above = (p.exchange_mask >> (2 * axis + 1)) & 1 == 1;
 
             let here = src[idx as usize];
             let down = neighbour_along(p, idx, axis, 0);
@@ -386,7 +431,7 @@ macro_rules! define_advect {
 
             // The lower face: between `down` and `here`, canonically oriented,
             // and its Courant cell is this voxel's own.
-            if periodic || coord > 0 {
+            if periodic || coord > 0 || exchange_below {
                 net += $flux(
                     src[far_down as usize],
                     src[down as usize],
@@ -407,7 +452,7 @@ macro_rules! define_advect {
             // folds onto its own lower Courant cell, the net comes out near
             // zero, and the voxel at the wall simply never advects while every
             // sum still closes.
-            if periodic || coord + 1 < extent {
+            if periodic || coord + 1 < extent || exchange_above {
                 net -= $flux(
                     src[down as usize],
                     here,
@@ -549,11 +594,24 @@ fn axis_is_periodic(p: &AdvectParams, axis: u32) -> bool {
 /// enough to make the face carry nothing — see [`AdvectParams::periodic_mask`] —
 /// but it is what makes the *limiter* fall back to first order beside a wall for
 /// free: the cell upwind of a donor standing against the wall collapses onto the
-/// donor, `du` is zero, and the limited slope is zero. That is the mechanism
-/// `ACCEPTANCE.md` names `exchange_inflow_falls_back_to_first_order`, checked on
-/// the one boundary that can be built today.
+/// donor, `du` is zero, and the limited slope is zero.
+///
+/// An **exchange** face returns the ghost cell, and the ghost cell is its own
+/// neighbour in both directions. Both halves are load-bearing and they fail
+/// apart. Without the first, step `c` never reads the reservoir and the lid is
+/// sealed for advection while it vents for diffusion. Without the second, the
+/// second neighbour of the stencil — `up(up)` on inflow — decodes `nx*ny*nz` as
+/// a coordinate past the end of the axis and reads outside the lane. And it is
+/// the second that gives `exchange_inflow_falls_back_to_first_order` its
+/// mechanism: the cell upwind of the ghost *is* the ghost, so `du == 0` and van
+/// Leer answers zero (ADR-054, ADR-059).
 #[inline(always)]
 fn neighbour_along(p: &AdvectParams, idx: u32, axis: u32, direction: u32) -> u32 {
+    let ghost = p.nx * p.ny * p.nz;
+    if idx == ghost {
+        return ghost;
+    }
+
     let plane = p.nx * p.ny;
     let z = idx / plane;
     let within_plane = idx - z * plane;
@@ -569,6 +627,19 @@ fn neighbour_along(p: &AdvectParams, idx: u32, axis: u32, direction: u32) -> u32
     } else {
         z
     };
+    let exchanging = if direction == 0 {
+        (p.exchange_mask >> (2 * axis)) & 1 == 1
+    } else {
+        (p.exchange_mask >> (2 * axis + 1)) & 1 == 1
+    };
+    let against_the_face = if direction == 0 {
+        coord == 0
+    } else {
+        coord + 1 == extent
+    };
+    if exchanging && against_the_face {
+        return ghost;
+    }
     let moved = if direction == 0 {
         step_down(coord, extent, periodic)
     } else {
@@ -613,26 +684,31 @@ mod tests {
     /// number of the project rather than a made-up one.
     const BUDGET: f64 = 0.167;
 
+    /// The length of one lane, and of one axis's slice of a Courant buffer:
+    /// the voxels and the ghost cell (ADR-059).
+    const LANE_LEN: u32 = N_VOXELS + 1;
+
     fn params(periodic_mask: u32, axis: u32) -> AdvectParams {
         AdvectParams {
             nx: NX,
             ny: NY,
             nz: NZ,
             periodic_mask,
+            exchange_mask: 0,
             axis,
         }
     }
 
     /// A Courant field with the same number on every face of every axis.
     fn uniform_courant(value: f64) -> Vec<Q> {
-        vec![Q::from_f64(value); (3 * N_VOXELS) as usize]
+        vec![Q::from_f64(value); (3 * LANE_LEN) as usize]
     }
 
     /// A Courant field that differs from face to face, so that the divergence is
     /// nonzero nearly everywhere and conservation cannot come out right by
     /// symmetry.
     fn divergent_courant() -> Vec<Q> {
-        (0..3 * N_VOXELS)
+        (0..3 * LANE_LEN)
             .map(|i| Q::from_f64(((f64::from(i) * 37.0) % 19.0 - 9.0) / 20.0))
             .collect()
     }
@@ -649,6 +725,32 @@ mod tests {
 
     fn total_64(buffer: &[M64]) -> i64 {
         buffer.iter().map(|v| v.to_i64()).sum()
+    }
+
+    /// One lane: the voxels, then a ghost cell nobody reads.
+    ///
+    /// Every fixture in this module has `exchange_mask == 0`, so the ghost is
+    /// unreachable through the neighbourhood — it is here because the *slice* is
+    /// a lane and a lane is `n_voxels + 1` long (ADR-059), and a kernel handed a
+    /// shorter one would index past its end on the first exchanging face.
+    fn lane_32(f: impl Fn(u32) -> i64) -> Vec<M32> {
+        let mut lane: Vec<M32> = (0..N_VOXELS).map(|i| M32::new(f(i) as i32)).collect();
+        lane.push(M32::ZERO);
+        lane
+    }
+
+    fn lane_64(f: impl Fn(u32) -> i64) -> Vec<M64> {
+        let mut lane: Vec<M64> = (0..N_VOXELS).map(|i| M64::new(f(i))).collect();
+        lane.push(M64::ZERO);
+        lane
+    }
+
+    fn empty_32() -> Vec<M32> {
+        vec![M32::ZERO; LANE_LEN as usize]
+    }
+
+    fn empty_64() -> Vec<M64> {
+        vec![M64::ZERO; LANE_LEN as usize]
     }
 
     fn sweep_32(src: &[M32], dst: &mut [M32], courant: &[Q], p: &AdvectParams, n: u32) {
@@ -768,7 +870,7 @@ mod tests {
         // nothing anywhere.
         let p = params(FLOORED, 2);
         let base = 2 * N_VOXELS;
-        let src: Vec<M32> = (0..N_VOXELS).map(|i| M32::new(pattern(i) as i32)).collect();
+        let src = lane_32(pattern);
 
         let mut quiet = uniform_courant(BUDGET);
         let mut loud = uniform_courant(BUDGET);
@@ -777,8 +879,8 @@ mod tests {
             loud[(base + wall) as usize] = Q::from_f64(-0.9);
         }
 
-        let mut with_quiet = vec![M32::ZERO; N_VOXELS as usize];
-        let mut with_loud = vec![M32::ZERO; N_VOXELS as usize];
+        let mut with_quiet = empty_32();
+        let mut with_loud = empty_32();
         sweep_32(&src, &mut with_quiet, &quiet, &p, N_VOXELS);
         sweep_32(&src, &mut with_loud, &loud, &p, N_VOXELS);
 
@@ -808,23 +910,32 @@ mod tests {
             ny: 4,
             nz: 1,
             periodic_mask: TORUS,
+            exchange_mask: 0,
             axis: 2,
         };
-        let src: Vec<M32> = (0..N).map(|i| M32::new(pattern(i) as i32 + 500)).collect();
-        let courant: Vec<Q> = (0..3 * N)
+        let src: Vec<M32> = (0..N + 1)
+            .map(|i| M32::new(pattern(i) as i32 + 500))
+            .collect();
+        let courant: Vec<Q> = (0..3 * (N + 1))
             .map(|i| Q::from_f64(0.1 * f64::from(i % 7)))
             .collect();
 
-        let mut dst = vec![M32::ZERO; N as usize];
+        let mut dst = vec![M32::ZERO; (N + 1) as usize];
         for idx in 0..N {
             advect_voxel_32(&src, &courant, &mut dst, &p, idx);
         }
-        assert_eq!(dst, src);
+        assert_eq!(dst[..N as usize], src[..N as usize]);
 
         // And the flux across that face is not zero, so the assertion above is
         // about the pairing rather than about a dead velocity.
         assert_ne!(
-            flux_32(src[0], src[0], src[0], src[0], courant[(2 * N) as usize]),
+            flux_32(
+                src[0],
+                src[0],
+                src[0],
+                src[0],
+                courant[(2 * (N + 1)) as usize]
+            ),
             M32::ZERO
         );
     }
@@ -843,6 +954,7 @@ mod tests {
             ny: 1,
             nz: 1,
             periodic_mask: TORUS,
+            exchange_mask: 0,
             axis: 0,
         };
 
@@ -861,16 +973,16 @@ mod tests {
         let start = centre(&(0..N).map(bump).collect::<Vec<_>>());
 
         for (value, expected) in [(0.5f64, 1.0f64), (-0.5, -1.0)] {
-            let courant = vec![Q::from_f64(value); (3 * N) as usize];
+            let courant = vec![Q::from_f64(value); (3 * (N + 1)) as usize];
 
-            let mut narrow: Vec<M32> = (0..N).map(|i| M32::new(bump(i) as i32)).collect();
-            let mut wide: Vec<M64> = (0..N).map(|i| M64::new(bump(i))).collect();
+            let mut narrow: Vec<M32> = (0..N + 1).map(|i| M32::new(bump(i) as i32)).collect();
+            let mut wide: Vec<M64> = (0..N + 1).map(|i| M64::new(bump(i))).collect();
             for _ in 0..6 {
-                let mut dst = vec![M32::ZERO; N as usize];
+                let mut dst = vec![M32::ZERO; (N + 1) as usize];
                 sweep_32(&narrow, &mut dst, &courant, &p, N);
                 narrow = dst;
 
-                let mut dst = vec![M64::ZERO; N as usize];
+                let mut dst = vec![M64::ZERO; (N + 1) as usize];
                 sweep_64(&wide, &mut dst, &courant, &p, N);
                 wide = dst;
             }
@@ -899,8 +1011,8 @@ mod tests {
             for value in [0.0, BUDGET, -BUDGET, 0.5, -0.5, 1.0, -1.0, 0.999] {
                 let courant = uniform_courant(value);
 
-                let src = vec![M32::new(1_000_003); N_VOXELS as usize];
-                let mut dst = vec![M32::ZERO; N_VOXELS as usize];
+                let src = lane_32(|_| 1_000_003);
+                let mut dst = lane_32(|_| 1_000_003);
                 sweep_32(&src, &mut dst, &courant, &p, N_VOXELS);
                 assert_eq!(src, dst, "axis {axis}, c {value}");
 
@@ -910,8 +1022,8 @@ mod tests {
                 // an order above the 5.1e11 ADR-040 derives for the registry's
                 // water, where one f32 step is 2^19 = 524 288 and the flux comes
                 // back quantised to hundreds of thousands.
-                let src = vec![M64::new(5_100_000_000_000); N_VOXELS as usize];
-                let mut dst = vec![M64::ZERO; N_VOXELS as usize];
+                let src = lane_64(|_| 5_100_000_000_000);
+                let mut dst = lane_64(|_| 5_100_000_000_000);
                 sweep_64(&src, &mut dst, &courant, &p, N_VOXELS);
                 assert_eq!(src, dst, "axis {axis}, c {value}, water");
             }
@@ -1115,9 +1227,8 @@ mod tests {
                     divergent_courant(),
                 ];
                 for courant in &fields {
-                    let src: Vec<M32> =
-                        (0..N_VOXELS).map(|i| M32::new(pattern(i) as i32)).collect();
-                    let mut dst = vec![M32::ZERO; N_VOXELS as usize];
+                    let src = lane_32(pattern);
+                    let mut dst = empty_32();
                     sweep_32(&src, &mut dst, courant, &p, N_VOXELS);
                     assert_eq!(
                         total_32(&src),
@@ -1125,10 +1236,8 @@ mod tests {
                         "mask {mask:#08b}, axis {axis}"
                     );
 
-                    let src: Vec<M64> = (0..N_VOXELS)
-                        .map(|i| M64::new(5_100_000_000_000 + pattern(i)))
-                        .collect();
-                    let mut dst = vec![M64::ZERO; N_VOXELS as usize];
+                    let src = lane_64(|i| 5_100_000_000_000 + pattern(i));
+                    let mut dst = empty_64();
                     sweep_64(&src, &mut dst, courant, &p, N_VOXELS);
                     assert_eq!(
                         total_64(&src),
@@ -1147,14 +1256,14 @@ mod tests {
     fn the_result_does_not_depend_on_the_traversal_order() {
         let p = params(TORUS, 1);
         let courant = divergent_courant();
-        let src: Vec<M32> = (0..N_VOXELS).map(|i| M32::new(pattern(i) as i32)).collect();
+        let src = lane_32(pattern);
 
-        let mut forwards = vec![M32::ZERO; N_VOXELS as usize];
+        let mut forwards = empty_32();
         for idx in 0..N_VOXELS {
             advect_voxel_32(&src, &courant, &mut forwards, &p, idx);
         }
 
-        let mut backwards = vec![M32::ZERO; N_VOXELS as usize];
+        let mut backwards = empty_32();
         for idx in (0..N_VOXELS).rev() {
             advect_voxel_32(&src, &courant, &mut backwards, &p, idx);
         }

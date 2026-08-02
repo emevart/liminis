@@ -45,6 +45,8 @@ const NX: u32 = 3;
 const NY: u32 = 4;
 const NZ: u32 = 5;
 const N_VOXELS: u32 = NX * NY * NZ;
+/// The stride of a lane: the voxels and the ghost cell after them (ADR-059).
+const LANE_LEN: u32 = N_VOXELS + 1;
 
 /// Two narrow lanes and one wide one. The wide lane is what makes the branch on
 /// storage width load-bearing: skipping water because it is the one `i64`
@@ -129,7 +131,7 @@ fn initial() -> (Field32, Field64) {
     let mut wide = Field::new(&grid, LANES_64).unwrap();
 
     for lane in 0..LANES_32 {
-        let base = (lane * N_VOXELS) as usize;
+        let base = (lane * LANE_LEN) as usize;
         for at in 0..N_VOXELS as usize {
             let amount = 1024 * (1 + (at as i32 * 7 + lane as i32 * 3) % 5);
             narrow.write_mut()[base + at] = M32::new(amount);
@@ -211,7 +213,7 @@ fn pressure_relaxation_reaches_hydrostatic_equilibrium() {
         // a changed-or-not assertion cannot see, and it is the case that breaks.
         assert_eq!(
             narrow.read().len(),
-            (LANES_32 * N_VOXELS) as usize,
+            (LANES_32 * LANE_LEN) as usize,
             "step {step}"
         );
         let recomputed = replay(&pressure, &before_32, &before_64);
@@ -310,7 +312,7 @@ fn the_overflow_is_taken_once_from_the_snapshot_every_lane_relaxes_against() {
 
     // And the two lanes really do differ, or the equality above is a tautology.
     let lane_0 = &straight[0..N_VOXELS as usize];
-    let lane_1 = &straight[N_VOXELS as usize..2 * N_VOXELS as usize];
+    let lane_1 = &straight[LANE_LEN as usize..LANE_LEN as usize + N_VOXELS as usize];
     assert_ne!(lane_0, lane_1);
 }
 
@@ -322,9 +324,11 @@ fn swap_lanes(field: &mut Field32, a: u32, b: u32) {
 }
 
 fn swap_lane_slices(state: &mut [M32], a: u32, b: u32) {
-    let n = N_VOXELS as usize;
-    for at in 0..n {
-        state.swap(a as usize * n + at, b as usize * n + at);
+    // The voxels of the two lanes, at the stride of a lane: the two are no longer
+    // the same number since ADR-059.
+    let stride = LANE_LEN as usize;
+    for at in 0..N_VOXELS as usize {
+        state.swap(a as usize * stride + at, b as usize * stride + at);
     }
 }
 
@@ -347,7 +351,7 @@ fn pressure_touches_every_lane_of_both_fields() {
     );
 
     for lane in 0..LANES_32 {
-        let base = (lane * N_VOXELS) as usize;
+        let base = (lane * LANE_LEN) as usize;
         let range = base..base + N_VOXELS as usize;
         assert_ne!(
             narrow.read()[range.clone()],
@@ -356,7 +360,7 @@ fn pressure_touches_every_lane_of_both_fields() {
         );
     }
     for lane in 0..LANES_64 {
-        let base = (lane * N_VOXELS) as usize;
+        let base = (lane * LANE_LEN) as usize;
         let range = base..base + N_VOXELS as usize;
         assert_ne!(
             wide.read()[range.clone()],

@@ -677,9 +677,16 @@ fn periodic_mask(grid: &Grid) -> Result<u32> {
             Boundary::Periodic => mask |= 1 << (face as u32),
             Boundary::Closed => {}
             Boundary::Exchange => bail!(
-                "face {face:?} is an exchange face: matter crossing it belongs \
-                 in the BOUNDARY_EXCHANGE channel (SPEC section 7), and there \
-                 are no channel counters yet"
+                "face {face:?} is an exchange face, and this process has no \
+                 behaviour on one. The counters exist and the ghost cell exists \
+                 (ADR-059) — what does not exist is a decision about what this \
+                 operator does at the face of the domain: `settling_out_of_the_\
+                 top_face_appears_in_boundary_exchange` (`ACCEPTANCE.md`) names \
+                 an outcome for settling and no mechanism, and pressure and the \
+                 velocity field are named by nothing at all. Refused rather than \
+                 treated as closed, because a lid sealed for one operator and \
+                 vented for the others is a difference in the flux that reads as \
+                 physics"
             ),
         }
     }
@@ -775,17 +782,19 @@ mod tests {
 
     fn seed_lane_32(field: &mut Field32, lane: u32, amounts: impl Fn(u32) -> i32) {
         let n_voxels = field.n_voxels();
+        let lane_len = field.lane_len();
         let buffer = field.write_mut();
         for idx in 0..n_voxels {
-            buffer[(lane * n_voxels + idx) as usize] = M32::new(amounts(idx));
+            buffer[(lane * lane_len + idx) as usize] = M32::new(amounts(idx));
         }
     }
 
     fn seed_lane_64(field: &mut Field64, lane: u32, amounts: impl Fn(u32) -> i64) {
         let n_voxels = field.n_voxels();
+        let lane_len = field.lane_len();
         let buffer = field.write_mut();
         for idx in 0..n_voxels {
-            buffer[(lane * n_voxels + idx) as usize] = M64::new(amounts(idx));
+            buffer[(lane * lane_len + idx) as usize] = M64::new(amounts(idx));
         }
     }
 

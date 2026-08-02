@@ -29,7 +29,8 @@
 //! # Pure gather: not one atomic, not one write into another cell
 //!
 //! A coarse cell reads its own sixty-four fine cells plus their `z`-neighbours in
-//! the light field, and writes exactly one cell — its own. The obvious
+//! the light field, and writes exactly one cell of each output — its own, at the
+//! same index in both. The obvious
 //! alternative is shorter by a field and by a pass: let the fine voxel add its
 //! energy into the covering coarse cell atomically. ADR-045 rejected it in as
 //! many words, and the reason is not contention: it would widen the one exception
@@ -37,6 +38,17 @@
 //! ledger's channel counters" — from counters onto a field of state, and that
 //! exception was kept narrow on purpose. So there is no atomic here, no channel
 //! counter here, and no write into anybody else's cell.
+//!
+//! There are **two** outputs since ADR-075, and that revokes two words of
+//! ADR-034 — "slices in, a slice out" becomes "slices out" — without touching the
+//! gather property it was written to protect: both are addressed by the same
+//! `coarse`, so there is still no atomic, no dependence on traversal order, and
+//! no sight of a channel counter from in here. In WGSL it is a second storage
+//! binding and the line-by-line translation survives. What the second output
+//! carries is the subject of the section below;
+//! `the_fold_writes_only_its_own_coarse_index_in_every_output` is the operational
+//! form of SPEC section 4.6, whose sentence counts cells while the test counts
+//! buffers.
 //!
 //! The other half of ADR-045 that has to survive contact with this file: the fine
 //! field is **not** cleared. The reaction kernel overwrites its cell rather than
@@ -105,19 +117,34 @@
 //! can tell them apart; `the_previous_enthalpy_is_read_from_src_not_from_dst`
 //! can.
 //!
-//! # The light is rounded once per coarse cell, and that is a choice
+//! # The light is rounded once per coarse cell, and read twice
 //!
 //! The sixty-four absorption terms are summed in `Q` and cross into storage units
 //! **once**, through a single `m_delta_64` — one crossing between `M` and `Q` per
 //! invocation, in the spirit of ADR-060 and `NUMERIC.md` section 1. Rounding each
 //! of the sixty-four fine voxels separately would be just as defensible, and no
 //! record in the journal chooses between them. The choice is declared here because
-//! it moves bits, and because of who the second consumer of this number is going
-//! to be: ADR-059 credits `SOLAR_IN` on this step, "by the same fold kernel that
-//! credits the light into enthalpy", and that obligation is unmet — see
-//! `TODO(solar-in)` in [`fold_energy`], which also says why the counter, when it
-//! comes, has to be credited this very number and not a second reduction that
-//! rounded on its own.
+//! it moves bits, and because this number has a second consumer: ADR-059 credits
+//! `SOLAR_IN` on this step, and ADR-075 settles how — the kernel writes the very
+//! integer it added to the enthalpy into a second output slice, one element per
+//! coarse cell, and the host reduces that slice and credits the counter as the
+//! second half of the same dispatch.
+//!
+//! **One number read twice, not two expressions agreeing.** The identity ADR-075
+//! asks for is syntactic: `let from_light = ...` once, two readers. Any variant
+//! that forms the quantity again — a host-side reduction over the light field, or
+//! `(dst_h - src_h) - sum(energy_delta)` — rounds on its own, and the rule of
+//! `NUMERIC.md` section 3 is not additive: `round(a) + round(b) != round(a+b)`.
+//! The two would then disagree by up to half a unit per coarse cell, on exactly
+//! the scenarios where the roundings failed to cancel, and the residual is
+//! compared as an integer and required to be an exact zero — so half a unit is as
+//! fatal as a joule and much rarer.
+//!
+//! The slice is single buffered and is not cleared: this kernel **overwrites** its
+//! element rather than adding to it, which is what ADR-045 says about
+//! `energy_delta` and for the same reason. It is not state — no kernel reads it,
+//! so the process-boundary invariant of ADR-057 does not reach it — and a second
+//! buffer would only add a way to reduce the wrong one.
 //!
 //! # What this kernel cannot check, and the host must
 //!
@@ -190,16 +217,24 @@ pub struct FoldParams {
     /// coefficients are not calibrated yet", and calibrating `i_surface` against
     /// them hides them forever; `Attenuators::coeff` in `kernels/light.rs` names
     /// the same trap for `dz`. Neither is checkable from inside a kernel — it is
-    /// the host's obligation, and this is where it is written down.
-    // TODO(joules-per-intensity): nothing in the corpus names either half of this
-    // number. `CONFIG_SCHEMA.md` section 7 lists exactly `k_w`, `k_b`, `k_d` and
-    // `k_m`; `QUANTITIES.md` section 5 has a row for `I` and none for `I0`; and
-    // `units_per_joule` is derived (ADR-062) but derived by nothing in code yet.
-    // The kernel takes the product folded, and the host that would fold it does
-    // not exist. A plausible constant put here would be compensated by calibrating
-    // `k` and `i_surface` forever, which is why this is a `TODO` and not a number.
-    pub joules_per_intensity: Q,
-    /// The tick, in seconds. Separate from [`FoldParams::joules_per_intensity`]
+    /// the host's obligation, and this is where it is written down. The two names
+    /// that hold it are `the_solar_term_does_not_depend_on_the_enthalpy_lod` and
+    /// `the_solar_term_scales_with_the_tick`.
+    ///
+    /// Both halves are named now (ADR-076): `i_surface` is a key of the light
+    /// process in W/m^2, and `units_per_intensity = dx^2 * units_per_joule` is
+    /// derived at load out of the grid step and the energy scale of ADR-062. It
+    /// is **not** a key: the product `1.4757e12` has no readable preimage, so a
+    /// wrong one is indistinguishable from a right one, and `units_per_joule` is
+    /// already derived — a key would be a second independent source for a derived
+    /// number.
+    ///
+    /// The field is called `units_per_intensity` and not `joules_per_intensity`,
+    /// by the decision of ADR-076 rather than by preference: it measures storage
+    /// units per (W/m^2) per second, and the old name taught the wrong unit in
+    /// the one place the unit is assigned.
+    pub units_per_intensity: Q,
+    /// The tick, in seconds. Separate from [`FoldParams::units_per_intensity`]
     /// rather than folded into it, because that product is a *rate* and this
     /// crossing is `m_delta`, whose second argument is `dt` by its own
     /// documentation (`numeric/convert.rs`).
@@ -212,7 +247,15 @@ pub struct FoldParams {
 /// which is the whole of what makes this kernel different from every other one in
 /// this directory. Reads its own sixty-four cells of `energy_delta`, their
 /// `z`-neighbours in `light`, and one cell of `src_h`; writes exactly one cell of
-/// `dst_h`.
+/// `dst_h` and one cell of `solar`, both at `coarse`.
+///
+/// `solar` is what the ledger is owed for this cell — the same integer this
+/// invocation added to the enthalpy, not a second computation of it (ADR-075).
+/// The host reduces the slice and credits `SOLAR_IN` with it as the second half
+/// of this dispatch; the kernel itself sees no counter, as ADR-034 requires and
+/// as this file's header repeats. Overwritten and never accumulated: on a zeroed
+/// slice `=` and `+=` are indistinguishable and part company on the second tick,
+/// and `the_solar_slice_is_overwritten_not_accumulated` is what tells them apart.
 ///
 /// The loud half of the dispatch contract is asserted below. The quiet half — a
 /// host that dispatches over coarse cells and decodes the index by the fine
@@ -224,6 +267,7 @@ pub fn fold_energy(
     light: &[Q],
     src_h: &[M64],
     dst_h: &mut [M64],
+    solar: &mut [M64],
     p: &FoldParams,
     coarse: u32,
 ) {
@@ -279,33 +323,19 @@ pub fn fold_energy(
     // rather than once per fine voxel (see the module header). `qmul` first, so
     // that what reaches `m_delta_64` is energy per second — which is what that
     // function documents its first argument to be.
-    let from_light = m_delta_64(qmul(absorbed, p.joules_per_intensity), p.dt);
+    let from_light = m_delta_64(qmul(absorbed, p.units_per_intensity), p.dt);
 
-    // TODO(solar-in): this number is owed to the ledger as well, and nothing here
-    // pays it. ADR-059 credits `SOLAR_IN` on step `i'` "by the same fold kernel
-    // that credits the light into enthalpy", and no record stands in the way: the
-    // one exception of ADR-034 **is** the ledger's channel counters — atomic
-    // addition, commutative, because the counters are integers — and what ADR-045
-    // and ADR-049 reject is an atomic into the **coarse enthalpy field**, which
-    // would widen that exception from counters onto a field of state. A counter is
-    // the exception, not a widening of it.
+    // What the ledger is owed for this cell, handed over as an integer rather
+    // than as a second computation (ADR-075). The two lines below read one
+    // binding: the identity between the counter and the field is syntactic, and
+    // any arrangement in which the counter's number is *formed again* rounds a
+    // second time and disagrees by up to half a unit per cell.
     //
-    // What is missing is the shape of the output, and it is not this file's to
-    // invent: `ledger::Ledger::credit_energy` takes `&mut self` and lives in a
-    // host module `kernels/` may not depend on, so this kernel would need a raw
-    // counter slice and a number to index it by, and neither is decided anywhere.
-    // Until it is, absorbed light enters a field of state through a channel with
-    // no counter, so the energy half of the invariant of ADR-003 cannot close for
-    // solar input the moment this kernel is wired into `process/` — which is why
-    // this is a `TODO` and an entry in `OPEN_QUESTIONS.md` (A-16) rather than a
-    // sentence of prose.
-    //
-    // Whatever answers it, the counter has to be credited `from_light` itself.
-    // A host-side reduction over the light field, or
-    // `(dst_h - src_h) - sum(energy_delta)`, forms the same quantity with its own
-    // rounding and would disagree with this one in the last unit — and disagree
-    // only on the scenarios where the two roundings failed to cancel, which is the
-    // worst way for a residual to be nonzero.
+    // Assigned and never accumulated, like the enthalpy line under it, and for
+    // the same reason ADR-045 gave `energy_delta`: a kernel that overwrites needs
+    // no clearing pass, and on a zeroed slice `+=` is indistinguishable from this
+    // until the second tick.
+    solar[coarse as usize] = from_light;
 
     // From `src_h`, never from `dst_h`: `dst_h[coarse] += ...` would be a read
     // from the buffer being written, and it is indistinguishable from this line on
@@ -449,10 +479,11 @@ mod tests {
     /// `2^(3*lod)`: how many fine voxels one coarse cell owns.
     const PER_COARSE: i64 = 1 << (3 * LOD);
 
-    /// Arbitrary, and it has to be: no key names the incident irradiance anywhere
-    /// in the corpus (see [`FoldParams::joules_per_intensity`]). A power of two so
-    /// that the products below are exact and the assertions are about the kernel
-    /// rather than about `f32`.
+    /// Arbitrary, and a fixture is entitled to be: the kernel takes the
+    /// irradiance folded, so no scenario key is involved here at all (ADR-076
+    /// declares `i_surface` and refuses every scenario that sets it above zero).
+    /// A power of two so that the products below are exact and the assertions are
+    /// about the kernel rather than about `f32`.
     const INCIDENT: f64 = 128.0;
 
     /// Also arbitrary, also a power of two, and deliberately not one: a tick of
@@ -461,10 +492,10 @@ mod tests {
 
     /// A power of two, so `qmul` by it is exact and the only inexactness left on
     /// the light path is the single rounding into storage units.
-    const JOULES_PER_INTENSITY: f64 = 1024.0;
+    const UNITS_PER_INTENSITY: f64 = 1024.0;
 
     /// The whole conversion factor from stored intensity to storage units.
-    const PER_INTENSITY: f64 = JOULES_PER_INTENSITY * DT;
+    const PER_INTENSITY: f64 = UNITS_PER_INTENSITY * DT;
 
     fn params() -> FoldParams {
         FoldParams {
@@ -473,7 +504,7 @@ mod tests {
             nz: NZ,
             lod: LOD,
             i_surface: Q::from_f64(INCIDENT),
-            joules_per_intensity: Q::from_f64(JOULES_PER_INTENSITY),
+            units_per_intensity: Q::from_f64(UNITS_PER_INTENSITY),
             dt: Q::from_f64(DT),
         }
     }
@@ -507,7 +538,7 @@ mod tests {
 
     /// What one coarse cell gains from [`stepped`], in storage units: sixty-four
     /// voxels absorbing one unit of intensity each.
-    const LIGHT_PER_COARSE: i64 = PER_COARSE * (JOULES_PER_INTENSITY as i64) * (DT as i64);
+    const LIGHT_PER_COARSE: i64 = PER_COARSE * (UNITS_PER_INTENSITY as i64) * (DT as i64);
 
     /// A sign-alternating reaction increment with no period any stride of the grid
     /// shares: a pattern agreeing with `nx` or with a plane would cancel inside a
@@ -523,7 +554,7 @@ mod tests {
     }
 
     /// The whole dispatch, the way the host runs it: one invocation per coarse
-    /// cell.
+    /// cell, over both outputs.
     fn dispatch(
         energy_delta: &[M64],
         light: &[Q],
@@ -531,11 +562,31 @@ mod tests {
         p: &FoldParams,
         n_coarse: u32,
     ) -> Vec<M64> {
+        dispatch_both(energy_delta, light, src_h, p, n_coarse).0
+    }
+
+    /// The same, keeping the solar slice as well: `(dst_h, solar)`.
+    fn dispatch_both(
+        energy_delta: &[M64],
+        light: &[Q],
+        src_h: &[M64],
+        p: &FoldParams,
+        n_coarse: u32,
+    ) -> (Vec<M64>, Vec<M64>) {
         let mut dst_h = vec![M64::ZERO; n_coarse as usize];
+        let mut solar = vec![M64::ZERO; n_coarse as usize];
         for coarse in 0..n_coarse {
-            fold_energy(energy_delta, light, src_h, &mut dst_h, p, coarse);
+            fold_energy(
+                energy_delta,
+                light,
+                src_h,
+                &mut dst_h,
+                &mut solar,
+                p,
+                coarse,
+            );
         }
-        dst_h
+        (dst_h, solar)
     }
 
     fn total(cells: &[M64]) -> i64 {
@@ -716,6 +767,7 @@ mod tests {
     /// here, and today the only thing connecting them is prose.
     fn light_field(amounts: &[M32]) -> Vec<Q> {
         let lp = LightParams {
+            lane_len: N_FINE,
             nx: NX,
             ny: NY,
             nz: NZ,
@@ -892,17 +944,177 @@ mod tests {
         let mut dirty: Vec<M64> = (0..N_COARSE)
             .map(|c| M64::new(-7_000_000_003 * i64::from(c) - 13))
             .collect();
+        let mut solar = vec![M64::ZERO; N_COARSE as usize];
         for coarse in 0..N_COARSE {
-            fold_energy(&energy_delta, &light, &src_h, &mut dirty, &p, coarse);
+            fold_energy(
+                &energy_delta,
+                &light,
+                &src_h,
+                &mut dirty,
+                &mut solar,
+                &p,
+                coarse,
+            );
         }
         assert_eq!(clean, dirty);
 
         // And running the same dispatch again over its own output changes nothing:
         // one dispatch is idempotent, which is the property `+=` does not have.
         for coarse in 0..N_COARSE {
-            fold_energy(&energy_delta, &light, &src_h, &mut dirty, &p, coarse);
+            fold_energy(
+                &energy_delta,
+                &light,
+                &src_h,
+                &mut dirty,
+                &mut solar,
+                &p,
+                coarse,
+            );
         }
         assert_eq!(clean, dirty);
+    }
+
+    #[test]
+    fn the_solar_slice_is_overwritten_not_accumulated() {
+        // The twin of the test above, for the output ADR-075 added: the same
+        // dispatch over a slice full of somebody else's numbers has to give the
+        // same slice as over a zeroed one, and a second dispatch over its own
+        // output has to change nothing.
+        //
+        // On a zeroed slice `=` and `+=` are indistinguishable, which is the whole
+        // reason this exists. They part company on the second tick, and they part
+        // in the direction of a monotonically growing credit sitting beside a
+        // perfectly correct enthalpy — so the energy residual is wrong and the
+        // field it is checked against is not.
+        let p = params();
+        let energy_delta = reactions_filled(N_FINE);
+        let light = stepped(&p);
+        let src_h = vec![M64::new(29); N_COARSE as usize];
+
+        let (_, clean) = dispatch_both(&energy_delta, &light, &src_h, &p, N_COARSE);
+        assert!(
+            clean.iter().any(|c| c.to_i64() != 0),
+            "the fixture credits nothing, so the claim below is vacuous"
+        );
+
+        let mut dst_h = vec![M64::ZERO; N_COARSE as usize];
+        let mut dirty: Vec<M64> = (0..N_COARSE)
+            .map(|c| M64::new(-3_000_000_019 * i64::from(c) - 5))
+            .collect();
+        for coarse in 0..N_COARSE {
+            fold_energy(
+                &energy_delta,
+                &light,
+                &src_h,
+                &mut dst_h,
+                &mut dirty,
+                &p,
+                coarse,
+            );
+        }
+        assert_eq!(clean, dirty);
+
+        for coarse in 0..N_COARSE {
+            fold_energy(
+                &energy_delta,
+                &light,
+                &src_h,
+                &mut dst_h,
+                &mut dirty,
+                &p,
+                coarse,
+            );
+        }
+        assert_eq!(clean, dirty);
+    }
+
+    #[test]
+    fn the_fold_writes_only_its_own_coarse_index_in_every_output() {
+        // The operational form of SPEC section 4.6, "it stays a pure gather and
+        // writes only into its own coarse cell". The sentence counts cells and
+        // there are now two writes into the one cell (ADR-075); this counts
+        // buffers, and the name survives any number of outputs.
+        //
+        // Both outputs are walked, and both start from values no invocation could
+        // produce: an invocation that wrote a neighbour, or that decoded the index
+        // of the second output by the fine extents, leaves those values disturbed
+        // somewhere other than at `coarse`. The grid's coarse extents are pairwise
+        // different (2 x 3 x 4), or a permutation of the axes is invisible.
+        let p = params();
+        let energy_delta = reactions_filled(N_FINE);
+        let light = stepped(&p);
+        let src_h = vec![M64::new(101); N_COARSE as usize];
+
+        let (want_h, want_solar) = dispatch_both(&energy_delta, &light, &src_h, &p, N_COARSE);
+
+        for coarse in 0..N_COARSE {
+            const SENTINEL_H: i64 = -6_004_799_503_160_661;
+            const SENTINEL_SOLAR: i64 = 4_611_686_018_427_387_847;
+            let mut dst_h = vec![M64::new(SENTINEL_H); N_COARSE as usize];
+            let mut solar = vec![M64::new(SENTINEL_SOLAR); N_COARSE as usize];
+
+            fold_energy(
+                &energy_delta,
+                &light,
+                &src_h,
+                &mut dst_h,
+                &mut solar,
+                &p,
+                coarse,
+            );
+
+            for other in 0..N_COARSE {
+                let at = other as usize;
+                if other == coarse {
+                    assert_eq!(dst_h[at], want_h[at], "enthalpy of the cell dispatched");
+                    assert_eq!(solar[at], want_solar[at], "solar of the cell dispatched");
+                } else {
+                    assert_eq!(
+                        dst_h[at].to_i64(),
+                        SENTINEL_H,
+                        "the invocation for {coarse} wrote the enthalpy of {other}"
+                    );
+                    assert_eq!(
+                        solar[at].to_i64(),
+                        SENTINEL_SOLAR,
+                        "the invocation for {coarse} wrote the solar slice of {other}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn a_dark_scenario_moves_no_enthalpy() {
+        // `i_surface = 0` is the legal closed-box scenario, and it costs no branch
+        // anywhere: the top term of the topmost voxel is `0 - 0`, every term below
+        // it is a difference of two zeros, `qmul(0, units_per_intensity)` is zero
+        // and `m_delta_64` rounds zero to zero (ADR-076).
+        //
+        // Said out loud, because it is a property of the allocation and not a
+        // decision: this holds only because the light buffer is **created** zeroed.
+        // A scenario whose light field held yesterday's beam with `i_surface` since
+        // set to zero would absorb a whole layer of it, and nothing here would
+        // know.
+        let p = FoldParams {
+            i_surface: Q::ZERO,
+            ..params()
+        };
+        let energy_delta = vec![M64::ZERO; N_FINE as usize];
+        let light = vec![Q::ZERO; N_FINE as usize];
+        let src_h: Vec<M64> = (0..N_COARSE)
+            .map(|c| M64::new(i64::from(c) * 700_001 - 3))
+            .collect();
+
+        let (dst_h, solar) = dispatch_both(&energy_delta, &light, &src_h, &p, N_COARSE);
+        assert_eq!(dst_h, src_h);
+        for coarse in 0..N_COARSE {
+            assert_eq!(
+                solar[coarse as usize].to_i64(),
+                0,
+                "coarse cell {coarse} credited light in the dark"
+            );
+        }
     }
 
     #[test]
@@ -918,16 +1130,35 @@ mod tests {
         let src_h = vec![M64::new(17); N_COARSE as usize];
 
         let mut forwards = vec![M64::ZERO; N_COARSE as usize];
+        let mut forwards_solar = vec![M64::ZERO; N_COARSE as usize];
         for coarse in 0..N_COARSE {
-            fold_energy(&energy_delta, &light, &src_h, &mut forwards, &p, coarse);
+            fold_energy(
+                &energy_delta,
+                &light,
+                &src_h,
+                &mut forwards,
+                &mut forwards_solar,
+                &p,
+                coarse,
+            );
         }
 
         let mut backwards = vec![M64::ZERO; N_COARSE as usize];
+        let mut backwards_solar = vec![M64::ZERO; N_COARSE as usize];
         for coarse in (0..N_COARSE).rev() {
-            fold_energy(&energy_delta, &light, &src_h, &mut backwards, &p, coarse);
+            fold_energy(
+                &energy_delta,
+                &light,
+                &src_h,
+                &mut backwards,
+                &mut backwards_solar,
+                &p,
+                coarse,
+            );
         }
 
         assert_eq!(forwards, backwards);
+        assert_eq!(forwards_solar, backwards_solar);
     }
 
     #[test]
@@ -1041,7 +1272,16 @@ mod tests {
         let light = transparent(N_FINE);
         let src_h = vec![M64::ZERO; N_COARSE as usize];
         let mut dst_h = vec![M64::ZERO; N_COARSE as usize];
+        let mut solar = vec![M64::ZERO; N_COARSE as usize];
 
-        fold_energy(&energy_delta, &light, &src_h, &mut dst_h, &p, N_COARSE);
+        fold_energy(
+            &energy_delta,
+            &light,
+            &src_h,
+            &mut dst_h,
+            &mut solar,
+            &p,
+            N_COARSE,
+        );
     }
 }

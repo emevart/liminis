@@ -110,8 +110,12 @@ pub enum Boundary {
     /// The face exchanges with an outside reservoir through the named channel
     /// `BOUNDARY_EXCHANGE` (SPEC section 7) — the default on `z_max`.
     ///
-    /// Nameable, not yet runnable: [`Grid::new`] refuses a grid that has one.
-    /// See the TODO on [`Grid::new`] for what is missing.
+    /// The neighbour across it is the **ghost cell** [`Grid::ghost_index`],
+    /// which is the last element of a field lane and holds the reservoir in
+    /// storage units (ADR-059). That is the same trick by which `closed`
+    /// returns the voxel itself: the boundary condition is folded on the host
+    /// into an *address*, so no transport kernel ever learns that a `Boundary`
+    /// exists.
     Exchange,
 }
 
@@ -163,41 +167,18 @@ impl Grid {
     /// function itself would see it — antisymmetry holds perfectly, it is the
     /// pairing that is broken.
     ///
-    /// **Any `exchange` face**, for now. See the TODO below.
+    /// **An `exchange` face opposite a `periodic` one on the same axis.** The
+    /// same pairing argument, one step further out: the periodic half has a
+    /// neighbour past the face and the exchanging half has the ghost cell, so
+    /// the two ends of the axis are integrated by different neighbourhoods.
+    /// `exchange` opposite `closed`, and `exchange` on both faces, are legal —
+    /// there the pairing is simply absent, and ADR-059 gives the absent half a
+    /// name: the channel counter (see [`Grid::neighbour`]).
     ///
     /// # Errors
     ///
     /// Returns an error in each of the three cases above, naming the face or the
     /// axis at fault.
-    // TODO(exchange): an `exchange` face is refused rather than approximated,
-    // and this is where it stops being refused.
-    //
-    // The face is not hard — it is a flux to a reservoir instead of to a
-    // neighbour — but every number it needs is missing, and guessing any of them
-    // silently changes the physics of the top of the domain:
-    //
-    // - the ghost cell. ADR-059 settled the mechanism: a field lane grows to
-    //   `n_voxels + 1`, the last element holds the reservoir in storage units,
-    //   and `Grid::neighbour` returns its index for this face — the same trick
-    //   by which `closed` already returns the voxel itself and therefore
-    //   carries no flux without a branch. That is a change to `world::Field`
-    //   and to every bounds check over a lane, and it is not written;
-    // - the reservoir itself. The channel is two-way, so the outside has a
-    //   composition, a temperature and an exchange rate, and `CONFIG_SCHEMA.md`
-    //   section 13 item 6 records that none of them is declared anywhere. The
-    //   `[boundary.reservoir]` section and its validator are a wave of their
-    //   own.
-    //
-    // The channel counter is no longer among them: `ledger::Channel` and the
-    // `(channel, substance)` table exist, so matter leaving through this face
-    // has somewhere to land — `BOUNDARY_EXCHANGE` (SPEC section 7, ADR-059) —
-    // and `boundary_outflow_appears_in_channel_counter` (ACCEPTANCE.md) is
-    // waiting for the face rather than for the ledger.
-    //
-    // Treating the face as `closed` in the meantime would compile, pass every
-    // test in this file, and quietly seal the lid on a world that is supposed to
-    // vent — which is the class of error this project refuses by construction.
-    // So: loud, and at load time.
     pub fn new(nx: u32, ny: u32, nz: u32, boundary: [Boundary; 6]) -> Result<Self> {
         for (extent, axis) in [(nx, Axis::X), (ny, Axis::Y), (nz, Axis::Z)] {
             if extent == 0 {
@@ -212,18 +193,6 @@ impl Grid {
             );
         };
 
-        for face in Face::ALL {
-            if boundary[face as usize] == Boundary::Exchange {
-                bail!(
-                    "boundary condition `exchange` on face {face:?} is not \
-                     implemented: it moves matter into the BOUNDARY_EXCHANGE \
-                     channel (SPEC section 7) and there are no channel counters \
-                     yet, nor a declared reservoir (CONFIG_SCHEMA.md section 13, \
-                     item 6)"
-                );
-            }
-        }
-
         for (axis, min, max) in [
             (Axis::X, Face::XMinus, Face::XPlus),
             (Axis::Y, Face::YMinus, Face::YPlus),
@@ -232,15 +201,32 @@ impl Grid {
             let min_is_periodic = boundary[min as usize] == Boundary::Periodic;
             let max_is_periodic = boundary[max as usize] == Boundary::Periodic;
             if min_is_periodic != max_is_periodic {
+                // One message for both shapes of the fault, because they are one
+                // fault: `periodic` against `closed` leaves the wrapping half of
+                // the pairing gathering from a neighbour that gathers nothing
+                // back, and `periodic` against `exchange` leaves it gathering
+                // from a voxel whose opposite face reads the ghost cell instead.
                 bail!(
                     "axis {axis:?} is periodic on one face and not on the other \
                      ({:?} / {:?}): periodicity is a property of an axis, and a \
                      half-periodic axis breaks the face pairing that gather-form \
-                     conservation rests on (ADR-034, CONFIG_SCHEMA.md section 4)",
+                     conservation rests on (ADR-034, ADR-059, CONFIG_SCHEMA.md \
+                     section 4). `exchange` opposite `closed` is legal — there \
+                     the pairing is absent rather than broken, and its second \
+                     half is the BOUNDARY_EXCHANGE counter",
                     boundary[min as usize],
                     boundary[max as usize]
                 );
             }
+        }
+
+        // The ghost cell is one index past the last voxel, so a grid that fills
+        // a `u32` exactly has nowhere to put it (ADR-059).
+        if n_voxels == u32::MAX {
+            bail!(
+                "grid {nx}x{ny}x{nz} fills a u32 linear index exactly, leaving no \
+                 room for the ghost cell at index n_voxels (ADR-059)"
+            );
         }
 
         Ok(Self {
@@ -280,11 +266,90 @@ impl Grid {
         self.n_voxels
     }
 
+    /// The address of the ghost cell: `n_voxels`, one past the last voxel.
+    ///
+    /// **One ghost per lane, shared by every `exchange` face of the grid**,
+    /// because `[boundary.reservoir]` is one section (ADR-059,
+    /// `CONFIG_SCHEMA.md` section 4). Six exchanging faces therefore trade with
+    /// one reservoir, at one composition and one temperature.
+    #[inline]
+    #[must_use]
+    pub fn ghost_index(&self) -> u32 {
+        self.n_voxels
+    }
+
+    /// The length of one lane of a field buffer: `n_voxels + 1` (ADR-059).
+    ///
+    /// **The one place the length is written down.** A lane is the voxels
+    /// followed by the ghost cell, so it is `n_voxels` that is the exception
+    /// now: everything that walks the domain — a ledger reduction, an
+    /// undershoot bound, an export — takes `n_voxels`, and everything that
+    /// hands a slice to a kernel takes this.
+    #[inline]
+    #[must_use]
+    pub fn lane_len(&self) -> u32 {
+        // Checked at construction: `n_voxels < u32::MAX`.
+        self.n_voxels + 1
+    }
+
     /// The boundary condition on one face of the domain.
     #[inline]
     #[must_use]
     pub fn boundary(&self, face: Face) -> Boundary {
         self.boundary[face as usize]
+    }
+
+    /// Bit `f` set: face `f` exchanges with the reservoir.
+    ///
+    /// The same encoding as the periodic mask a transport process folds — the
+    /// bit index is the discriminant of [`Face`] — and deliberately the same
+    /// *shape*, because ADR-059 rejected the alternative by name: a kernel that
+    /// received a table of boundary conditions would have learned about the
+    /// config. Two bit masks say everything the lookup needs and say it in the
+    /// one form WGSL indexes cheaply.
+    #[inline]
+    #[must_use]
+    pub fn exchange_mask(&self) -> u32 {
+        let mut mask = 0u32;
+        for face in Face::ALL {
+            if self.boundary[face as usize] == Boundary::Exchange {
+                mask |= 1 << (face as u32);
+            }
+        }
+        mask
+    }
+
+    /// Whether any face of this grid vents.
+    ///
+    /// What a process's declared invariant turns on: a grid with no exchanging
+    /// face conserves matter outright, and one with an exchanging face conserves
+    /// it only through `BOUNDARY_EXCHANGE` (ADR-028, ADR-059).
+    #[inline]
+    #[must_use]
+    pub fn has_exchange(&self) -> bool {
+        self.exchange_mask() != 0
+    }
+
+    /// How many of a voxel's six faces carry flux at all.
+    ///
+    /// The `f` of the undershoot bound of ADR-068,
+    /// `min(src) - floor(f/2) - 3*ceil(spread/2^24)`, and it counts **open**
+    /// faces rather than un-closed ones. A face is open when its neighbour is
+    /// somebody else: a closed wall folds onto the voxel and carries nothing, a
+    /// degenerate axis folds onto it for a different reason and also carries
+    /// nothing, and an `exchange` face reaches the ghost cell and is therefore
+    /// open like any other.
+    ///
+    /// Getting that last one wrong is silent. A bound written from the count of
+    /// *closed* faces is one unit too tight on the plane of exchange, and only
+    /// on that plane, on a grid whose other tests are all about closed lids.
+    #[inline]
+    #[must_use]
+    pub fn open_faces(&self, idx: u32) -> u32 {
+        Face::ALL
+            .into_iter()
+            .filter(|&face| self.neighbour(idx, face) != idx)
+            .count() as u32
     }
 
     /// The linear index of a voxel: `x + y*NX + z*NX*NY` (SPEC section 1.1).
@@ -355,18 +420,68 @@ impl Grid {
     /// of one voxel is its own neighbour in both directions even when periodic,
     /// because the torus closes onto itself. So `neighbour(idx, f) == idx` means
     /// "this face carries nothing", not "this face is closed".
+    ///
+    /// **An `exchange` face returns [`Grid::ghost_index`]**, by the same trick
+    /// read the other way: the boundary condition is an address (ADR-059). The
+    /// flux across it is the ordinary flux of the ordinary kernel, against a
+    /// cell that holds the reservoir.
+    ///
+    /// What that breaks is not the antisymmetry of the flux — `f(a, b) ==
+    /// -f(b, a)` is a property of a function and goes on holding — but the
+    /// **pairing**: the ghost cell is nobody's voxel, so no second cell gathers
+    /// the opposite. ADR-059 names the second participant: the
+    /// `BOUNDARY_EXCHANGE` counter takes what the voxel gained, negated, and the
+    /// sum over the domain plus the counter is identically zero. That is why
+    /// `face_pairing_is_mutual` walks `0..n_voxels` and skips a face whose
+    /// neighbour is the ghost: there is nothing there to pair with, by
+    /// construction rather than by oversight.
+    ///
+    /// **The ghost cell is its own neighbour across all six faces**, and the
+    /// early return that makes it so is load-bearing rather than tidy. Falling
+    /// through to [`Grid::coords`] would decode `n_voxels` as a coordinate one
+    /// past the end of Z; the `debug_assert!` there catches it in a debug build
+    /// and vanishes in release, where [`Grid::index`] folds the out-of-range
+    /// coordinate back into a number that depends on the extents — sometimes the
+    /// ghost, sometimes a voxel in the middle of the domain. A neighbourhood
+    /// that depends on the shape of the grid is a defect that does not reproduce
+    /// everywhere.
+    ///
+    /// # Panics
+    ///
+    /// In debug builds, if `idx` is neither a voxel nor the ghost cell.
     #[inline]
     #[must_use]
     pub fn neighbour(&self, idx: u32, face: Face) -> u32 {
+        if idx == self.n_voxels {
+            return idx;
+        }
         let (x, y, z) = self.coords(idx);
         let boundary = self.boundary[face as usize];
+        let (coord, extent) = match face.axis() {
+            Axis::X => (x, self.nx),
+            Axis::Y => (y, self.ny),
+            Axis::Z => (z, self.nz),
+        };
+        // Whether this voxel is the one standing against the face. The
+        // comparison is on the coordinate and not on the result of a step,
+        // because "there is no neighbour" and "the neighbour is me" are the same
+        // number across a closed face and only one of them reaches the ghost.
+        let against_the_face = match face {
+            Face::XMinus | Face::YMinus | Face::ZMinus => coord == 0,
+            Face::XPlus | Face::YPlus | Face::ZPlus => coord + 1 == extent,
+        };
+        if against_the_face && boundary == Boundary::Exchange {
+            return self.ghost_index();
+        }
+
+        let periodic = boundary == Boundary::Periodic;
         match face {
-            Face::XMinus => self.index(step_down(x, self.nx, boundary), y, z),
-            Face::XPlus => self.index(step_up(x, self.nx, boundary), y, z),
-            Face::YMinus => self.index(x, step_down(y, self.ny, boundary), z),
-            Face::YPlus => self.index(x, step_up(y, self.ny, boundary), z),
-            Face::ZMinus => self.index(x, y, step_down(z, self.nz, boundary)),
-            Face::ZPlus => self.index(x, y, step_up(z, self.nz, boundary)),
+            Face::XMinus => self.index(step_down(x, self.nx, periodic), y, z),
+            Face::XPlus => self.index(step_up(x, self.nx, periodic), y, z),
+            Face::YMinus => self.index(x, step_down(y, self.ny, periodic), z),
+            Face::YPlus => self.index(x, step_up(y, self.ny, periodic), z),
+            Face::ZMinus => self.index(x, y, step_down(z, self.nz, periodic)),
+            Face::ZPlus => self.index(x, y, step_up(z, self.nz, periodic)),
         }
     }
 }
@@ -376,47 +491,33 @@ impl Grid {
 /// Written with a comparison rather than a modulo: `(coord + extent - 1) %
 /// extent` is the same answer and one integer division, which on a GPU is the
 /// expensive instruction in the whole neighbourhood lookup.
+///
+/// A `bool` rather than a [`Boundary`], and it is the third condition that made
+/// it one: `exchange` does not answer with a coordinate at all — its answer is
+/// the ghost cell, which has no `(x, y, z)` — so it is resolved by
+/// [`Grid::neighbour`] before this is reached. Two conditions are left here, and
+/// they are exactly the two the kernels' own copies carry (`kernels/diffuse.rs`).
 #[inline]
-fn step_down(coord: u32, extent: u32, boundary: Boundary) -> u32 {
+fn step_down(coord: u32, extent: u32, periodic: bool) -> u32 {
     if coord > 0 {
         coord - 1
+    } else if periodic {
+        extent - 1
     } else {
-        match boundary {
-            Boundary::Periodic => extent - 1,
-            Boundary::Closed => coord,
-            Boundary::Exchange => unreachable_exchange(),
-        }
+        coord
     }
 }
 
 /// One step up an axis, or what the boundary says instead.
 #[inline]
-fn step_up(coord: u32, extent: u32, boundary: Boundary) -> u32 {
+fn step_up(coord: u32, extent: u32, periodic: bool) -> u32 {
     if coord + 1 < extent {
         coord + 1
+    } else if periodic {
+        0
     } else {
-        match boundary {
-            Boundary::Periodic => 0,
-            Boundary::Closed => coord,
-            Boundary::Exchange => unreachable_exchange(),
-        }
+        coord
     }
-}
-
-/// Unreachable by construction: [`Grid::new`] refuses a grid with an `exchange`
-/// face, and `Grid`'s fields are private, so there is no other way to build one.
-///
-/// A panic rather than a fallback on purpose. If the check in `Grid::new` is
-/// ever loosened before the channel counters exist, this says so on the first
-/// tick instead of quietly sealing the face.
-#[cold]
-#[inline(never)]
-fn unreachable_exchange() -> ! {
-    unreachable!(
-        "an `exchange` face reached the neighbourhood lookup; Grid::new refuses \
-         those until the BOUNDARY_EXCHANGE channel counters exist — see the TODO \
-         on Grid::new"
-    )
 }
 
 #[cfg(test)]
@@ -434,8 +535,8 @@ mod tests {
         Grid::new(NX, NY, NZ, [Boundary::Periodic; 6]).unwrap()
     }
 
-    /// The eco-regime default of SPEC section 1.6, minus the one face that
-    /// cannot be built yet: periodic in X and Y, solid floor and lid in Z.
+    /// Periodic in X and Y, solid floor and solid lid in Z. Not the eco-regime
+    /// default — that one vents, and it is [`vented`] below.
     fn floored() -> Grid {
         Grid::new(
             NX,
@@ -627,13 +728,20 @@ mod tests {
         // if `here` gathers from `there` across `f`, then `there` gathers from
         // `here` across the opposite face. Break this and mass moves without
         // anything in the flux function looking wrong.
-        for grid in [periodic(), floored()] {
+        //
+        // `0..n_voxels`, so the ghost cell is not walked, and a face that
+        // reaches it is skipped: the face of the domain has no second voxel and
+        // therefore no pairing at all. That is not a hole — ADR-059 names the
+        // second participant, and it is the `BOUNDARY_EXCHANGE` counter, which
+        // this file cannot see.
+        for grid in [periodic(), floored(), vented()] {
             for idx in 0..grid.n_voxels() {
                 for face in Face::ALL {
                     let there = grid.neighbour(idx, face);
-                    if there == idx {
-                        // A closed face, or an axis one voxel deep. Either way
-                        // the face carries no flux and there is nothing to pair.
+                    if there == idx || there == grid.ghost_index() {
+                        // A closed face, an axis one voxel deep, or the face of
+                        // the domain. None of the three has a voxel on the far
+                        // side to pair with.
                         continue;
                     }
                     assert_eq!(
@@ -664,21 +772,130 @@ mod tests {
         }
     }
 
-    #[test]
-    fn an_exchange_face_is_refused_until_the_channel_counters_exist() {
-        // The default scenario asks for `z_max = "exchange"`
-        // (CONFIG_SCHEMA.md section 4). Until the ledger exists, that grid does
-        // not load — loudly, rather than behaving like a closed lid.
-        let mut boundary = [Boundary::Periodic; 6];
-        boundary[Face::ZMinus as usize] = Boundary::Closed;
-        boundary[Face::ZPlus as usize] = Boundary::Exchange;
+    /// The eco-regime default of SPEC section 1.6 in full: periodic in X and Y,
+    /// a solid floor, and a lid that vents (`CONFIG_SCHEMA.md` section 4).
+    fn vented() -> Grid {
+        Grid::new(
+            NX,
+            NY,
+            NZ,
+            [
+                Boundary::Periodic,
+                Boundary::Periodic,
+                Boundary::Periodic,
+                Boundary::Periodic,
+                Boundary::Closed,
+                Boundary::Exchange,
+            ],
+        )
+        .unwrap()
+    }
 
-        let err = Grid::new(NX, NY, NZ, boundary).unwrap_err().to_string();
-        assert!(err.contains("exchange"), "unhelpful message: {err}");
-        assert!(
-            err.contains("BOUNDARY_EXCHANGE"),
-            "unhelpful message: {err}"
-        );
+    /// `ACCEPTANCE.md`, from ADR-059.
+    #[test]
+    fn an_exchange_face_returns_the_ghost_and_the_ghost_is_its_own_neighbour() {
+        let grid = vented();
+        let ghost = grid.ghost_index();
+        assert_eq!(ghost, NX * NY * NZ);
+        assert_eq!(grid.lane_len(), ghost + 1);
+        assert!(grid.has_exchange());
+        assert_eq!(grid.exchange_mask(), 1 << (Face::ZPlus as u32));
+
+        // Every voxel of the top layer reaches the ghost across `+Z`, and no
+        // interior voxel reaches it across anything.
+        for idx in 0..grid.n_voxels() {
+            let (_, _, z) = grid.coords(idx);
+            for face in Face::ALL {
+                let there = grid.neighbour(idx, face);
+                let expected = face == Face::ZPlus && z == NZ - 1;
+                assert_eq!(
+                    there == ghost,
+                    expected,
+                    "voxel {idx} at z = {z}, face {face:?}"
+                );
+                assert!(there <= ghost, "voxel {idx}, face {face:?} left the lane");
+            }
+        }
+
+        // And the ghost is its own neighbour across all six. The early return
+        // that makes it so is the whole of this assertion: without it `coords`
+        // decodes a coordinate one past the end of Z, and in release the answer
+        // depends on the extents.
+        for face in Face::ALL {
+            assert_eq!(grid.neighbour(ghost, face), ghost, "ghost across {face:?}");
+        }
+    }
+
+    /// `ACCEPTANCE.md`, from ADR-059 and ADR-068.
+    #[test]
+    fn the_undershoot_bound_counts_the_exchange_face_as_open() {
+        // `f` in `min(src) - floor(f/2) - 3*ceil(spread/2^24)` is the number of
+        // faces that carry flux, and the face of exchange carries flux. A bound
+        // written from the count of *closed* faces is one unit too tight on the
+        // plane of exchange, and `a_voxel_on_a_closed_boundary_stays_within_the_
+        // five_face_bound` cannot see it: that name is about a closed lid.
+        let vented = vented();
+        let sealed = floored();
+        for y in 0..NY {
+            for x in 0..NX {
+                let lid = vented.index(x, y, NZ - 1);
+                assert_eq!(vented.open_faces(lid), 6, "the vented lid at ({x}, {y})");
+                assert_eq!(sealed.open_faces(lid), 5, "the sealed lid at ({x}, {y})");
+                assert_eq!(vented.open_faces(vented.index(x, y, 0)), 5, "the floor");
+            }
+        }
+        // The interior is six either way, so the fixture is not asserting that
+        // every voxel has six faces.
+        assert_eq!(vented.open_faces(vented.index(1, 2, 2)), 6);
+        assert_eq!(sealed.open_faces(sealed.index(1, 2, 2)), 6);
+
+        // The bound itself, as ADR-068 writes it, over a pool far below 2^24 so
+        // that the `f32` term is its minimum of three.
+        let allowance = |faces: u32| i64::from(faces / 2) + 3;
+        assert_eq!(allowance(vented.open_faces(vented.index(0, 0, NZ - 1))), 6);
+        assert_eq!(allowance(sealed.open_faces(sealed.index(0, 0, NZ - 1))), 5);
+    }
+
+    /// `ACCEPTANCE.md`, from ADR-059.
+    #[test]
+    fn an_exchange_axis_paired_with_periodic_is_refused() {
+        // The half-periodic argument, one step further out. On the periodic half
+        // the neighbour past the face exists; on the exchanging half it is the
+        // ghost. The two ends of the axis are then integrated by different
+        // neighbourhoods, which is the same broken pairing as `periodic` against
+        // `closed`.
+        for (min, max) in [
+            (Boundary::Periodic, Boundary::Exchange),
+            (Boundary::Exchange, Boundary::Periodic),
+        ] {
+            let mut boundary = [Boundary::Closed; 6];
+            boundary[Face::XMinus as usize] = min;
+            boundary[Face::XPlus as usize] = max;
+            let err = Grid::new(NX, NY, NZ, boundary).unwrap_err().to_string();
+            assert!(err.contains("periodic"), "unhelpful message: {err}");
+            assert!(err.contains("Exchange"), "unhelpful message: {err}");
+        }
+
+        // `exchange` opposite `closed` is legal: there the pairing is absent
+        // rather than broken, and its second half is the channel counter.
+        let mut boundary = [Boundary::Closed; 6];
+        boundary[Face::ZPlus as usize] = Boundary::Exchange;
+        assert!(Grid::new(NX, NY, NZ, boundary).is_ok());
+
+        // Six exchanging faces are legal too, and they share one ghost, because
+        // `[boundary.reservoir]` is one section (ADR-059).
+        let all = Grid::new(NX, NY, NZ, [Boundary::Exchange; 6]).unwrap();
+        assert_eq!(all.exchange_mask(), 0b11_1111);
+        let low = all.index(0, 0, 0);
+        let high = all.index(NX - 1, NY - 1, NZ - 1);
+        for face in [Face::XMinus, Face::YMinus, Face::ZMinus] {
+            assert_eq!(all.neighbour(low, face), all.ghost_index());
+            assert_ne!(all.neighbour(high, face), all.ghost_index());
+        }
+        for face in [Face::XPlus, Face::YPlus, Face::ZPlus] {
+            assert_eq!(all.neighbour(high, face), all.ghost_index());
+            assert_ne!(all.neighbour(low, face), all.ghost_index());
+        }
     }
 
     #[test]

@@ -47,7 +47,7 @@ use anyhow::{Context, Result};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
-use super::schema::{Boundary, Config, Field, Grid, Process, Reaction, Substance};
+use super::schema::{Boundary, Config, Field, Grid, Initial, Process, Reaction, Substance};
 
 /// Root sections of the schema that the canonical form leaves out.
 ///
@@ -62,7 +62,7 @@ use super::schema::{Boundary, Config, Field, Grid, Process, Reaction, Substance}
 /// one line here (ADR-066).
 pub const NOT_HASHED: &[&str] = &["calibration"];
 
-/// The hashed projection of a [`Config`]: the eleven root keys the simulator
+/// The hashed projection of a [`Config`]: the twelve root keys the simulator
 /// reads.
 ///
 /// Private on purpose. The test takes its paths from the output of [`canonical`]
@@ -89,6 +89,11 @@ struct Hashed<'a> {
     reaction: &'a [Reaction],
     field: &'a [Field],
     process: &'a [Process],
+    /// Last, and among the tables rather than among the scalars (section 11
+    /// item 3). The initial state determines every subsequent tick, so a run
+    /// that starts elsewhere is a different run and the section is hashed like
+    /// any other thing the simulator reads (ADR-077).
+    initial: &'a Initial,
 }
 
 /// Build the projection.
@@ -116,6 +121,7 @@ fn project(config: &Config) -> Hashed<'_> {
         reaction,
         field,
         process,
+        initial,
         // ADR-038: read by the search driver, never by a tick. Listed in
         // `NOT_HASHED`, which is what keeps this underscore honest.
         calibration: _,
@@ -133,6 +139,7 @@ fn project(config: &Config) -> Hashed<'_> {
         reaction,
         field,
         process,
+        initial,
     }
 }
 

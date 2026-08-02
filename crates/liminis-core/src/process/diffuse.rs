@@ -7,8 +7,11 @@
 use anyhow::{Result, bail};
 
 use super::{Conservation, Invariant};
-use crate::kernels::diffuse::{DiffuseParams, diffuse_voxel_32, diffuse_voxel_64};
-use crate::numeric::Q;
+use crate::kernels::diffuse::{
+    DiffuseParams, diffuse_voxel_32, diffuse_voxel_64, flux_32, flux_64,
+};
+use crate::ledger::{Channel, Ledger};
+use crate::numeric::{M32, M64, Q};
 use crate::world::{Boundary, Direction, Face, Field32, Field64, Grid, ParitySplit, Width};
 
 /// The stability limit of the explicit 7-point stencil, as a bound on `alpha`.
@@ -78,6 +81,10 @@ pub const ENABLED_BY_DEFAULT: bool = true;
 pub struct Diffuse {
     substeps: u32,
     params: DiffuseParams,
+    /// Whether the grid this was folded for has an exchanging face. What the
+    /// declared invariant turns on, and taken from the grid rather than from a
+    /// constant — see [`Conservation`].
+    vents: bool,
 }
 
 impl Diffuse {
@@ -85,26 +92,61 @@ impl Diffuse {
     ///
     /// `diffusivity` is `D` in m^2/s, declared per substance
     /// (`CONFIG_SCHEMA.md` section 5); `dt` is the tick in seconds and `dx` the
-    /// voxel edge in metres, both from the scenario.
+    /// voxel edge in metres, both from the scenario. `k_ex` is the exchange
+    /// velocity of `[boundary.reservoir]`, m/s, one per reservoir and the same
+    /// for every substance (ADR-059); it is ignored on a grid with no
+    /// exchanging face.
+    ///
+    /// # `alpha_ex` is divided by the substeps, exactly as `alpha` is
+    ///
+    /// ADR-059 gives `alpha_ex = k_ex*dt/dx` over a whole tick, and diffusion
+    /// applies its kernel `n` times a tick. Applying that number unchanged on
+    /// every substep would exchange `n` times what the scenario declared —
+    /// which is the multiplied effective step ADR-030 forbids `every_n_ticks`
+    /// for, arrived at from the other side. So the tick is divided the same way
+    /// `substeps_and_alpha` divides `D*dt/dx^2`, and the *tick's* number is what
+    /// the stability bound is checked against.
+    // TODO(exchange-substep): no record states the division. ADR-059 writes one
+    // `alpha_ex` per reservoir and one bound `alpha_ex <= 1`, and ADR-030's ban
+    // is stated for the tick-skipping direction only. Dividing is the reading
+    // that keeps `k_ex` the declared piston velocity at any substep count;
+    // the alternative — the full number on each of `n` substeps — is a different
+    // physics that no test in the corpus can tell apart from this one, because
+    // the counter records whatever actually left. Settling it is an entry in
+    // `DECISIONS.md`.
     ///
     /// # Errors
     ///
-    /// Returns an error if `D`, `dt` or `dx` is not a usable number, or if the
-    /// scenario needs more substeps than a `u32` can count — see
-    /// [`substeps_for`]. Also refuses a grid with an `exchange` face, which
-    /// cannot be built today for a reason of its own (`world::Grid::new`).
-    pub fn new(grid: &Grid, diffusivity: f64, dt: f64, dx: f64) -> Result<Self> {
+    /// Returns an error if `D`, `dt`, `dx` or `k_ex` is not a usable number, if
+    /// the scenario needs more substeps than [`N_MAX`] allows — see
+    /// [`substeps_for`] — or if `k_ex*dt/dx` is over one, which is the stability
+    /// bound ADR-059 states for the exchanging face.
+    pub fn new(grid: &Grid, diffusivity: f64, dt: f64, dx: f64, k_ex: f64) -> Result<Self> {
         let (substeps, alpha) = substeps_and_alpha(diffusivity, dt, dx)?;
+        let (periodic_mask, exchange_mask) = boundary_masks(grid);
 
-        // The one place `D`, `dt` and `dx` are visible at once. Past this line
-        // they exist only as `alpha`, and the kernel cannot recombine them in
-        // the wrong order because it never sees them (`ARCHITECTURE.md`).
+        if !k_ex.is_finite() || k_ex < 0.0 {
+            bail!("exchange velocity {k_ex} m/s is not a usable speed (ADR-059)");
+        }
+        let alpha_ex_tick = k_ex * dt / dx;
+        if alpha_ex_tick > 1.0 {
+            bail!(
+                "the reservoir exchanges at k_ex = {k_ex} m/s, giving alpha_ex =                  k_ex*dt/dx = {alpha_ex_tick} over the limit of 1 at dt = {dt} s                  and dx = {dx} m. The condition is over dx and not over dx^2                  (ADR-059)"
+            );
+        }
+
+        // The one place `D`, `dt`, `dx` and `k_ex` are visible at once. Past this
+        // line they exist only as two folded coefficients, and the kernel cannot
+        // recombine them in the wrong order because it never sees them
+        // (`ARCHITECTURE.md`).
         let params = DiffuseParams {
             nx: grid.nx(),
             ny: grid.ny(),
             nz: grid.nz(),
-            periodic_mask: periodic_mask(grid)?,
+            periodic_mask,
+            exchange_mask,
             alpha: Q::from_f64(alpha),
+            alpha_ex: Q::from_f64(alpha_ex_tick / f64::from(substeps)),
         };
 
         debug_assert!(
@@ -112,7 +154,11 @@ impl Diffuse {
             "alpha {alpha} is over the stability limit after {substeps} substeps"
         );
 
-        Ok(Self { substeps, params })
+        Ok(Self {
+            substeps,
+            params,
+            vents: exchange_mask != 0,
+        })
     }
 
     /// How many applications of the kernel make up one tick (ADR-030).
@@ -160,11 +206,21 @@ impl Diffuse {
     // enthalpy field, which is the one state this process's own application to
     // that field cannot move (SPEC section 8 `d` puts the enthalpy in this step
     // too), so what is left for the assertion to see is the discarded term.
+    ///
+    /// **Unless the grid vents.** A face declared `exchange` moves matter
+    /// between the domain and the reservoir on every substep, and the arm that
+    /// says so names the channel it is counted into (ADR-059). Taken from the
+    /// grid and not from a constant: `Conserved` on a venting grid is a false
+    /// promise of closed accounting that nothing else in the corpus can see.
     #[inline]
     #[must_use]
     pub fn invariant(&self) -> Invariant {
         Invariant {
-            matter: Conservation::Conserved,
+            matter: if self.vents {
+                Conservation::ChangedThrough(Channel::BoundaryExchange)
+            } else {
+                Conservation::Conserved
+            },
             energy: Conservation::Conserved,
         }
     }
@@ -177,7 +233,7 @@ impl Diffuse {
 /// drift apart, and here they would drift in the substep loop, which is the one
 /// place a difference would look like physics.
 macro_rules! define_advance {
-    ($name:ident, $field:ty, $voxel:ident) => {
+    ($name:ident, $inner:ident, $field:ty, $voxel:ident, $boundary:ident) => {
         #[doc = concat!("Run this substance's substeps on one lane of a `", stringify!($field), "`.")]
         ///
         /// **Not one swap.** The exchange is one per field (`world::Field`), so
@@ -201,7 +257,28 @@ macro_rules! define_advance {
         /// against, or if `lane` is not one of its lanes. Both are programming
         /// errors rather than bad scenarios, and both would otherwise show up as
         /// a quietly wrong world.
-        pub fn $name(&self, field: &mut $field, lane: u32) {
+        ///
+        /// `credit` is what the boundary flux of each substep is added to.
+        /// **Each substep**, and not once a tick: `BOUNDARY_EXCHANGE` is
+        /// credited on every substep of steps `c` and `d` (ADR-059). Crediting
+        /// once instead is wrong by exactly the factor `n`, which is one on most
+        /// of the registry — so a fixture built on H2S, CH4, PO4, Fe or CO2 is
+        /// green over the mistake, and only the proton (six) or oxygen (two) can
+        /// go red.
+        pub fn $name(&self, field: &mut $field, lane: u32, substance: u32, ledger: &mut Ledger) {
+            self.$inner(field, lane, |units| {
+                ledger.credit_matter(Channel::BoundaryExchange, substance, units);
+            });
+        }
+
+        #[doc = concat!("[`Diffuse::", stringify!($name), "`] against an arbitrary counter.")]
+        ///
+        /// Private, and it exists because the enthalpy field is a `Field64`
+        /// exactly like a wide amount field and is counted into the *energy*
+        /// half of the ledger rather than into a substance's (ADR-028). One loop
+        /// and two doors; two loops would drift in the substep count, which is
+        /// the one place a difference looks like physics.
+        fn $inner(&self, field: &mut $field, lane: u32, mut credit: impl FnMut(i64)) {
             let n_voxels = field.n_voxels();
             assert_eq!(
                 n_voxels,
@@ -227,14 +304,35 @@ macro_rules! define_advance {
                 for idx in 0..n_voxels {
                     $voxel(src, dst, &self.params, idx);
                 }
+                // The boundary plane, off **this substep's `src`** — the same
+                // buffer the kernel just read, and the reason the pass is here
+                // rather than after the loop. Recomputed from `dst`, or after
+                // the restoration has moved the pointers, the number is
+                // self-consistent and is not the flux that was applied, and the
+                // residual only parts company when the field moves.
+                if self.params.exchange_mask != 0 {
+                    credit($boundary(src, &self.params));
+                }
             }
         }
     };
 }
 
 impl Diffuse {
-    define_advance!(advance_lane_32, Field32, diffuse_voxel_32);
-    define_advance!(advance_lane_64, Field64, diffuse_voxel_64);
+    define_advance!(
+        advance_lane_32,
+        advance_lane_crediting_32,
+        Field32,
+        diffuse_voxel_32,
+        boundary_net_32
+    );
+    define_advance!(
+        advance_lane_64,
+        advance_lane_crediting_64,
+        Field64,
+        diffuse_voxel_64,
+        boundary_net_64
+    );
 }
 
 /// One diffusion phase over a whole field: every lane advanced, the
@@ -278,6 +376,8 @@ pub struct DiffusePhase {
     /// lanes.
     width: Width,
     n_voxels: u32,
+    /// Whether the grid vents. See [`Diffuse::invariant`].
+    vents: bool,
 }
 
 impl DiffusePhase {
@@ -301,8 +401,17 @@ impl DiffusePhase {
         diffusivity_by_lane: &[f64],
         dt: f64,
         dx: f64,
+        k_ex: f64,
     ) -> Result<Self> {
-        Self::fold(grid, lanes, diffusivity_by_lane, dt, dx, Width::Bits32)
+        Self::fold(
+            grid,
+            lanes,
+            diffusivity_by_lane,
+            dt,
+            dx,
+            k_ex,
+            Width::Bits32,
+        )
     }
 
     /// Fold a whole `Field64`'s worth of diffusion. See [`DiffusePhase::new_32`].
@@ -316,16 +425,27 @@ impl DiffusePhase {
         diffusivity_by_lane: &[f64],
         dt: f64,
         dx: f64,
+        k_ex: f64,
     ) -> Result<Self> {
-        Self::fold(grid, lanes, diffusivity_by_lane, dt, dx, Width::Bits64)
+        Self::fold(
+            grid,
+            lanes,
+            diffusivity_by_lane,
+            dt,
+            dx,
+            k_ex,
+            Width::Bits64,
+        )
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn fold(
         grid: &Grid,
         lanes: u32,
         diffusivity_by_lane: &[f64],
         dt: f64,
         dx: f64,
+        k_ex: f64,
         width: Width,
     ) -> Result<Self> {
         if diffusivity_by_lane.len() as u32 != lanes {
@@ -348,7 +468,7 @@ impl DiffusePhase {
             // Built even for a lane that will not be dispatched, so that a
             // negative or non-finite coefficient is refused at load rather than
             // ignored because it happened to be zero-adjacent.
-            let diffuse = Diffuse::new(grid, diffusivity, dt, dx)?;
+            let diffuse = Diffuse::new(grid, diffusivity, dt, dx, k_ex)?;
             if diffusivity == 0.0 {
                 folded.push(None);
                 substeps_by_lane.push(0);
@@ -363,6 +483,7 @@ impl DiffusePhase {
             split: ParitySplit::from_substeps(&substeps_by_lane),
             width,
             n_voxels: grid.n_voxels(),
+            vents: grid.has_exchange(),
         })
     }
 
@@ -402,16 +523,23 @@ impl DiffusePhase {
     #[inline]
     #[must_use]
     pub fn restoration_bytes_per_tick(&self) -> u64 {
-        self.split.bytes_per_tick(self.n_voxels, self.width)
+        // The lane and not the voxels: `restore_lane` copies the ghost cell too
+        // (ADR-057, ADR-059).
+        self.split.bytes_per_tick(self.n_voxels + 1, self.width)
     }
 
     /// Diffusion conserves matter and does not touch energy — see
-    /// [`Diffuse::invariant`], which this phase repeats lane by lane.
+    /// [`Diffuse::invariant`], which this phase repeats lane by lane, and which
+    /// says what changes when the grid vents.
     #[inline]
     #[must_use]
     pub fn invariant(&self) -> Invariant {
         Invariant {
-            matter: Conservation::Conserved,
+            matter: if self.vents {
+                Conservation::ChangedThrough(Channel::BoundaryExchange)
+            } else {
+                Conservation::Conserved
+            },
             energy: Conservation::Conserved,
         }
     }
@@ -429,11 +557,18 @@ macro_rules! define_phase_apply {
         /// this phase did not dispatch. No process may leave a split parity
         /// behind — not even to save the next process a copy.
         ///
+        /// `substance_of_lane` gives, for each lane, the substance index its
+        /// exchange is counted under. Indexed by **lane** and never by
+        /// substance, like every other array a phase is folded from (ADR-056):
+        /// a substance-indexed one is right for the first lane of a width class
+        /// and off by one from there on, and the ledger would close against
+        /// somebody else's substance.
+        ///
         /// # Panics
         ///
         /// Panics if the field's lane count or shape is not the one this phase
-        /// was folded for.
-        pub fn $name(&self, field: &mut $field) {
+        /// was folded for, or if `substance_of_lane` is not one entry per lane.
+        pub fn $name(&self, field: &mut $field, substance_of_lane: &[u32], ledger: &mut Ledger) {
             assert_eq!(
                 self.width, $width,
                 "this phase was folded for the other storage width"
@@ -450,10 +585,18 @@ macro_rules! define_phase_apply {
                 self.n_voxels,
                 "the field does not have the shape this phase was folded for"
             );
+            assert_eq!(
+                substance_of_lane.len(),
+                self.lanes.len(),
+                "the substance table holds {} entries and this phase has {} lanes: \
+                 the array is indexed by lane, not by substance (ADR-056)",
+                substance_of_lane.len(),
+                self.lanes.len()
+            );
 
             for (lane, folded) in self.lanes.iter().enumerate() {
                 if let Some(diffuse) = folded {
-                    diffuse.$advance(field, lane as u32);
+                    diffuse.$advance(field, lane as u32, substance_of_lane[lane], ledger);
                 }
             }
             field.restore_boundary(&self.split);
@@ -464,6 +607,47 @@ macro_rules! define_phase_apply {
 impl DiffusePhase {
     define_phase_apply!(apply_32, Field32, advance_lane_32, Width::Bits32);
     define_phase_apply!(apply_64, Field64, advance_lane_64, Width::Bits64);
+
+    /// Run one tick of diffusion over the enthalpy field.
+    ///
+    /// The same loop as [`DiffusePhase::apply_64`] and a different counter: what
+    /// crosses the lid here is joules, so it is credited with
+    /// `Ledger::credit_energy` and touches no substance's counter at all. That
+    /// separation is ADR-067's — enthalpy goes through the face on its own
+    /// account and drags no matter with it — and it is what
+    /// `exchange_face_carries_enthalpy_into_the_energy_counter` asserts from the
+    /// other side, by checking that no matter counter moved.
+    ///
+    /// One lane, because the field has one (ADR-062).
+    ///
+    /// # Panics
+    ///
+    /// If the field is not the single-lane `Field64` this phase was folded for.
+    pub fn apply_enthalpy(&self, field: &mut Field64, ledger: &mut Ledger) {
+        assert_eq!(
+            self.width,
+            Width::Bits64,
+            "the enthalpy field is 64-bit (ADR-062)"
+        );
+        assert_eq!(
+            self.lanes.len(),
+            1,
+            "the enthalpy field has one lane and this phase was folded for {}",
+            self.lanes.len()
+        );
+        assert_eq!(
+            field.n_voxels(),
+            self.n_voxels,
+            "the field does not have the shape this phase was folded for"
+        );
+
+        if let Some(diffuse) = self.lanes[0] {
+            diffuse.advance_lane_crediting_64(field, 0, |joules| {
+                ledger.credit_energy(Channel::BoundaryExchange, joules);
+            });
+        }
+        field.restore_boundary(&self.split);
+    }
 }
 
 /// How many explicit substeps one tick of diffusion needs:
@@ -575,30 +759,100 @@ pub fn substeps_and_alpha(diffusivity: f64, dt: f64, dx: f64) -> Result<(u32, f6
     Ok((substeps as u32, alpha))
 }
 
-/// The six boundary conditions of the grid, as the bit mask the kernel reads.
+/// The six boundary conditions of the grid, as the two bit masks the kernel
+/// reads: `(periodic, exchange)`.
 ///
-/// Bit `f` is set when face `f` is periodic. A closed face contributes no bit
-/// and the kernel's lookup returns the voxel itself, which carries no flux
+/// Bit `f` is set in the first when face `f` wraps and in the second when it
+/// trades with the reservoir. A closed face is in neither, and the kernel's
+/// lookup then returns the voxel itself, which carries no flux
 /// (`kernels::DiffuseParams`).
-fn periodic_mask(grid: &Grid) -> Result<u32> {
-    let mut mask = 0u32;
+///
+/// **Three states and not two.** Folding `exchange` into "not periodic" makes
+/// the neighbour the voxel itself and seals a lid that is supposed to vent —
+/// exactly the outcome `Grid::new` used to refuse the face in order to prevent,
+/// arriving through the back door now that the refusal is gone.
+fn boundary_masks(grid: &Grid) -> (u32, u32) {
+    let mut periodic = 0u32;
+    let mut exchange = 0u32;
     for face in Face::ALL {
         match grid.boundary(face) {
-            Boundary::Periodic => mask |= 1 << (face as u32),
+            Boundary::Periodic => periodic |= 1 << (face as u32),
+            Boundary::Exchange => exchange |= 1 << (face as u32),
             Boundary::Closed => {}
-            // Unreachable today: `Grid::new` refuses an exchange face until the
-            // channel counters exist. Refused again rather than folded into one
-            // of the other two, because the closest neighbour of "exchange" is
-            // "closed", and quietly sealing a face that is supposed to vent is
-            // exactly the error the refusal upstream exists to prevent.
-            Boundary::Exchange => bail!(
-                "face {face:?} is an exchange face: matter crossing it belongs \
-                 in the BOUNDARY_EXCHANGE channel (SPEC section 7), and there \
-                 are no channel counters yet"
-            ),
         }
     }
-    Ok(mask)
+    (periodic, exchange)
+}
+
+/// Generates the per-width boundary pass: what crossed the faces of the domain
+/// during one substep, in storage units, positive when it entered.
+///
+/// **On the host and not in the kernel.** ADR-034 fixes a kernel's signature at
+/// `(src, dst, p, idx)` and gives it one cell to write; a pass that walks a
+/// plane and adds into a counter is neither, and ADR-059 puts it here.
+///
+/// It calls the kernel's own `flux_*` rather than rewriting the expression.
+/// Rewriting it is the loud mistake — the residual comes out off by a unit or
+/// two. The quiet one is worse and is guarded by the call site rather than by
+/// this function: the right expression over the **wrong buffer**, `dst` instead
+/// of this substep's `src`, gives a self-consistent number that is not the flux
+/// that was applied, and the residual parts company only when the field moves.
+macro_rules! define_boundary_net {
+    ($name:ident, $m:ty, $flux:ident) => {
+        fn $name(src: &[$m], p: &DiffuseParams) -> i64 {
+            let ghost = src[(p.nx * p.ny * p.nz) as usize];
+            let mut net = 0i64;
+            for_each_boundary_voxel(p, |idx| {
+                net += $flux(src[idx as usize], ghost, p.alpha_ex).to_i64();
+            });
+            net
+        }
+    };
+}
+
+define_boundary_net!(boundary_net_32, M32, flux_32);
+define_boundary_net!(boundary_net_64, M64, flux_64);
+
+/// Visit every `(voxel, face)` pair on an exchanging plane, once per face.
+///
+/// The planes and not the whole grid: a sweep over `0..n_voxels` asking each
+/// voxel about each of its six faces would double the cost of a substep, and the
+/// answer is the same. A voxel on the edge of two exchanging planes is visited
+/// twice, which is right — it has two faces of the domain — and so is a
+/// degenerate axis whose single voxel exchanges on both sides.
+fn for_each_boundary_voxel(p: &DiffuseParams, mut visit: impl FnMut(u32)) {
+    let (nx, ny, nz) = (p.nx, p.ny, p.nz);
+    for face in 0..6u32 {
+        if (p.exchange_mask >> face) & 1 == 0 {
+            continue;
+        }
+        match face {
+            0 | 1 => {
+                let x = if face == 0 { 0 } else { nx - 1 };
+                for z in 0..nz {
+                    for y in 0..ny {
+                        visit(x + y * nx + z * nx * ny);
+                    }
+                }
+            }
+            2 | 3 => {
+                let y = if face == 2 { 0 } else { ny - 1 };
+                for z in 0..nz {
+                    for x in 0..nx {
+                        visit(x + y * nx + z * nx * ny);
+                    }
+                }
+            }
+            _ => {
+                let z = if face == 4 { 0 } else { nz - 1 };
+                for y in 0..ny {
+                    for x in 0..nx {
+                        visit(x + y * nx + z * nx * ny);
+                    }
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -611,6 +865,30 @@ mod tests {
     /// The eco regime of SPEC section 1.7: a one-second tick and a 100 um voxel.
     const DT: f64 = 1.0;
     const DX: f64 = 1.0e-4;
+
+    /// The exchange velocity of a grid with no exchanging face: it multiplies a
+    /// flux nobody gathers. The venting cases live in
+    /// `tests/acceptance_boundary.rs`, which is the outside view of ADR-059.
+    const SEALED: f64 = 0.0;
+
+    /// [`DiffusePhase::apply_32`] on a sealed fixture.
+    ///
+    /// The substance table is the identity on the lanes — nothing here vents, so
+    /// no counter is ever touched and which substance a lane stands for cannot
+    /// matter — and the ledger is a scratch one. The venting cases are the
+    /// outside view of ADR-059 and live in `tests/acceptance_boundary.rs`.
+    fn run_32(phase: &DiffusePhase, field: &mut Field32) {
+        let table: Vec<u32> = (0..field.lanes()).collect();
+        phase.apply_32(field, &table, &mut Ledger::new(MAX_SUBSTANCES).unwrap());
+    }
+
+    fn run_64(phase: &DiffusePhase, field: &mut Field64) {
+        let table: Vec<u32> = (0..field.lanes()).collect();
+        phase.apply_64(field, &table, &mut Ledger::new(MAX_SUBSTANCES).unwrap());
+    }
+
+    /// Wide enough for every lane count in this module.
+    const MAX_SUBSTANCES: u32 = 32;
 
     fn torus(nx: u32, ny: u32, nz: u32) -> Grid {
         Grid::new(nx, ny, nz, [Boundary::Periodic; 6]).unwrap()
@@ -636,11 +914,11 @@ mod tests {
     }
 
     fn total_32(field: &Field32) -> i64 {
-        field.read().iter().map(|v| v.to_i64()).sum()
+        field.lane(0).iter().map(|v| v.to_i64()).sum()
     }
 
     fn total_64(field: &Field64) -> i64 {
-        field.read().iter().map(|v| v.to_i64()).sum()
+        field.lane(0).iter().map(|v| v.to_i64()).sum()
     }
 
     /// A one-lane diffusion phase: what a whole-field application looks like
@@ -648,11 +926,11 @@ mod tests {
     /// the phase rather than through `Diffuse` directly, because the phase is
     /// what a tick runs and what owes the invariant of ADR-057.
     fn phase_32(grid: &Grid, diffusivity: f64) -> DiffusePhase {
-        DiffusePhase::new_32(grid, 1, &[diffusivity], DT, DX).unwrap()
+        DiffusePhase::new_32(grid, 1, &[diffusivity], DT, DX, SEALED).unwrap()
     }
 
     fn phase_64(grid: &Grid, diffusivity: f64) -> DiffusePhase {
-        DiffusePhase::new_64(grid, 1, &[diffusivity], DT, DX).unwrap()
+        DiffusePhase::new_64(grid, 1, &[diffusivity], DT, DX, SEALED).unwrap()
     }
 
     /// Put a state into a field's read buffer.
@@ -828,15 +1106,15 @@ mod tests {
             let before = total_32(&field);
 
             for _ in 0..8 {
-                phase.apply_32(&mut field);
+                run_32(&phase, &mut field);
                 assert_eq!(total_32(&field), before, "a tick moved the total");
             }
 
             // And the run did something: a conserving no-op would also pass the
             // assertion above.
-            assert!(field.read().iter().any(|&v| v != M32::new(0)));
+            assert!(field.lane(0).iter().any(|&v| v != M32::new(0)));
             assert_ne!(
-                field.read()[0].to_i64(),
+                field.lane(0)[0].to_i64(),
                 0,
                 "nothing reached the first voxel"
             );
@@ -864,7 +1142,7 @@ mod tests {
 
         let before = total_64(&field);
         for _ in 0..4 {
-            phase.apply_64(&mut field);
+            run_64(&phase, &mut field);
             assert_eq!(total_64(&field), before);
         }
     }
@@ -888,7 +1166,7 @@ mod tests {
     #[test]
     fn a_point_source_spreads_without_changing_the_total() {
         let grid = torus(9, 9, 9);
-        let diffuse = Diffuse::new(&grid, 0.8e-9, DT, DX).unwrap();
+        let diffuse = Diffuse::new(&grid, 0.8e-9, DT, DX, SEALED).unwrap();
         let phase = phase_32(&grid, 0.8e-9);
         assert_eq!(diffuse.substeps(), 1);
 
@@ -902,7 +1180,7 @@ mod tests {
             },
         );
 
-        let occupied = |field: &Field32| field.read().iter().filter(|&&v| v != M32::ZERO).count();
+        let occupied = |field: &Field32| field.lane(0).iter().filter(|&&v| v != M32::ZERO).count();
         assert_eq!(occupied(&field), 1);
 
         // One tick, and the whole stencil in three assertions: each of the six
@@ -918,32 +1196,32 @@ mod tests {
         let per_face = flux_32(M32::ZERO, M32::new(source), diffuse.params().alpha);
         assert_eq!(per_face, M32::new(80_000_000));
 
-        phase.apply_32(&mut field);
+        run_32(&phase, &mut field);
         assert_eq!(total_32(&field), i64::from(source));
         assert_eq!(
-            field.read()[centre],
+            field.lane(0)[centre],
             M32::new(source) - per_face - per_face - per_face - per_face - per_face - per_face
         );
         for face in Face::ALL {
             let neighbour = grid.neighbour(centre as u32, face) as usize;
-            assert_eq!(field.read()[neighbour], per_face);
+            assert_eq!(field.lane(0)[neighbour], per_face);
         }
         assert_eq!(occupied(&field), 7);
 
         // And it keeps going: the peak falls, the support grows, the total is
         // the same integer it started as.
-        let mut peak = field.read()[centre].to_i64();
+        let mut peak = field.lane(0)[centre].to_i64();
         let mut support = occupied(&field);
         for tick in 0..6 {
-            phase.apply_32(&mut field);
+            run_32(&phase, &mut field);
 
-            let next_peak = field.read()[centre].to_i64();
+            let next_peak = field.lane(0)[centre].to_i64();
             let next_support = occupied(&field);
             assert_eq!(total_32(&field), i64::from(source), "tick {tick}");
             assert!(next_peak < peak, "the peak did not fall at tick {tick}");
             assert!(next_support > support, "nothing new was reached at {tick}");
             assert!(
-                field.read().iter().all(|&v| v <= M32::new(source)),
+                field.lane(0).iter().all(|&v| v <= M32::new(source)),
                 "a voxel got more than the whole source at tick {tick}"
             );
 
@@ -965,9 +1243,9 @@ mod tests {
         let mut field: Field32 = Field::new(&grid, 1).unwrap();
         seed_32(&mut field, |_| 1_000_003);
 
-        let before = field.read().to_vec();
-        phase.apply_32(&mut field);
-        assert_eq!(field.read(), before.as_slice());
+        let before = field.lane(0).to_vec();
+        run_32(&phase, &mut field);
+        assert_eq!(field.lane(0), before.as_slice());
     }
 
     #[test]
@@ -978,7 +1256,7 @@ mod tests {
         let grid = Grid::new(3, 4, 5, [Boundary::Closed; 6]).unwrap();
         let phase = phase_32(&grid, 9.3e-9);
         assert_eq!(
-            Diffuse::new(&grid, 9.3e-9, DT, DX)
+            Diffuse::new(&grid, 9.3e-9, DT, DX, SEALED)
                 .unwrap()
                 .params()
                 .periodic_mask,
@@ -990,11 +1268,11 @@ mod tests {
         let before = total_32(&field);
 
         for _ in 0..10 {
-            phase.apply_32(&mut field);
+            run_32(&phase, &mut field);
             assert_eq!(total_32(&field), before);
         }
         // The corner is a corner: it kept more than the middle of the box.
-        assert!(field.read()[0].to_i64() > field.read()[grid.index(1, 2, 2) as usize].to_i64());
+        assert!(field.lane(0)[0].to_i64() > field.lane(0)[grid.index(1, 2, 2) as usize].to_i64());
     }
 
     /// Diffusivities giving substeps `[6, 2, 1, 1, 1]` — the shape of the
@@ -1017,12 +1295,13 @@ mod tests {
     /// write buffer so that a restoration copying the wrong way is visible.
     fn seed_lanes_32(field: &mut Field32) {
         let n_voxels = field.n_voxels();
+        let lane_len = field.lane_len();
         let lanes = field.lanes();
         {
             let buffer = field.write_mut();
             for lane in 0..lanes {
                 for idx in 0..n_voxels {
-                    buffer[(lane * n_voxels + idx) as usize] = M32::new(lane_pattern(lane, idx));
+                    buffer[(lane * lane_len + idx) as usize] = M32::new(lane_pattern(lane, idx));
                 }
             }
         }
@@ -1038,9 +1317,10 @@ mod tests {
     fn alone_32(grid: &Grid, diffusivity: f64, lane: u32) -> Field32 {
         let mut field: Field32 = Field::new(grid, 1).unwrap();
         seed_32(&mut field, |idx| lane_pattern(lane, idx));
-        DiffusePhase::new_32(grid, 1, &[diffusivity], DT, DX)
-            .unwrap()
-            .apply_32(&mut field);
+        run_32(
+            &DiffusePhase::new_32(grid, 1, &[diffusivity], DT, DX, SEALED).unwrap(),
+            &mut field,
+        );
         field
     }
 
@@ -1056,16 +1336,16 @@ mod tests {
 
         for diffusivities in [&MINORITY_EVEN[..], &MINORITY_ODD[..]] {
             let lanes = diffusivities.len() as u32;
-            let phase = DiffusePhase::new_32(&grid, lanes, diffusivities, DT, DX).unwrap();
+            let phase = DiffusePhase::new_32(&grid, lanes, diffusivities, DT, DX, SEALED).unwrap();
             let mut field: Field32 = Field::new(&grid, lanes).unwrap();
             seed_lanes_32(&mut field);
-            phase.apply_32(&mut field);
+            run_32(&phase, &mut field);
 
             for lane in 0..lanes {
                 let reference = alone_32(&grid, diffusivities[lane as usize], lane);
                 assert_eq!(
                     field.lane(lane),
-                    reference.read(),
+                    reference.lane(0),
                     "lane {lane} of {lanes} did not come back in the front buffer"
                 );
             }
@@ -1081,7 +1361,7 @@ mod tests {
         // lane one step forward.
         let grid = floored(5, 6, 7);
         let diffusivities = [9.3e-9, 1.6e-9];
-        let phase = DiffusePhase::new_32(&grid, 2, &diffusivities, DT, DX).unwrap();
+        let phase = DiffusePhase::new_32(&grid, 2, &diffusivities, DT, DX, SEALED).unwrap();
         assert_eq!(phase.substeps_of(0), 6);
         assert_eq!(phase.substeps_of(1), 1);
 
@@ -1092,18 +1372,19 @@ mod tests {
             .collect();
 
         for _ in 0..3 {
-            phase.apply_32(&mut field);
+            run_32(&phase, &mut field);
         }
 
         for lane in 0..2u32 {
             let mut reference: Field32 = Field::new(&grid, 1).unwrap();
             seed_32(&mut reference, |idx| lane_pattern(lane, idx));
             let alone =
-                DiffusePhase::new_32(&grid, 1, &[diffusivities[lane as usize]], DT, DX).unwrap();
+                DiffusePhase::new_32(&grid, 1, &[diffusivities[lane as usize]], DT, DX, SEALED)
+                    .unwrap();
             for _ in 0..3 {
-                alone.apply_32(&mut reference);
+                run_32(&alone, &mut reference);
             }
-            assert_eq!(field.lane(lane), reference.read(), "lane {lane}");
+            assert_eq!(field.lane(lane), reference.lane(0), "lane {lane}");
 
             let after: i64 = field.lane(lane).iter().map(|v| v.to_i64()).sum();
             assert_eq!(after, totals[lane as usize], "lane {lane} moved its total");
@@ -1119,8 +1400,15 @@ mod tests {
         // that moves no domain sum a process would notice.
         let grid = torus(4, 5, 6);
         let untouched = (MINORITY_ODD.len() - 1) as u32;
-        let phase =
-            DiffusePhase::new_32(&grid, MINORITY_ODD.len() as u32, &MINORITY_ODD, DT, DX).unwrap();
+        let phase = DiffusePhase::new_32(
+            &grid,
+            MINORITY_ODD.len() as u32,
+            &MINORITY_ODD,
+            DT,
+            DX,
+            SEALED,
+        )
+        .unwrap();
         assert_eq!(phase.substeps_of(untouched), 0);
 
         let mut field: Field32 = Field::new(&grid, MINORITY_ODD.len() as u32).unwrap();
@@ -1128,7 +1416,7 @@ mod tests {
         let before = field.lane(untouched).to_vec();
         assert!(before.iter().any(|&v| v != M32::ZERO));
 
-        phase.apply_32(&mut field);
+        run_32(&phase, &mut field);
         assert_eq!(
             field.lane(untouched),
             before.as_slice(),
@@ -1144,7 +1432,7 @@ mod tests {
         // has to be checked separately, or "do not run it" turns quietly into
         // "do not restore it".
         let grid = floored(4, 5, 6);
-        let phase = DiffusePhase::new_32(&grid, 2, &[0.0, 1.6e-9], DT, DX).unwrap();
+        let phase = DiffusePhase::new_32(&grid, 2, &[0.0, 1.6e-9], DT, DX, SEALED).unwrap();
         assert_eq!(phase.substeps_of(0), 0, "a D = 0 lane runs no substep");
         assert_eq!(phase.substeps_of(1), 1);
 
@@ -1157,12 +1445,12 @@ mod tests {
         let mut field: Field32 = Field::new(&grid, 2).unwrap();
         seed_lanes_32(&mut field);
         let before = field.lane(0).to_vec();
-        phase.apply_32(&mut field);
+        run_32(&phase, &mut field);
         assert_eq!(field.lane(0), before.as_slice());
 
         // And a substance that does not diffuse is still a legal substance: the
         // one that does moved.
-        assert_ne!(field.lane(1), alone_32(&grid, 0.0, 1).read());
+        assert_ne!(field.lane(1), alone_32(&grid, 0.0, 1).lane(0));
     }
 
     /// From ADR-057. The operational form of "the result is bit-identical to
@@ -1171,7 +1459,7 @@ mod tests {
     #[test]
     fn a_substep_run_alternates_direction_instead_of_swapping() {
         let grid = torus(5, 6, 7);
-        let diffuse = Diffuse::new(&grid, 9.3e-9, DT, DX).unwrap();
+        let diffuse = Diffuse::new(&grid, 9.3e-9, DT, DX, SEALED).unwrap();
         let params = diffuse.params();
 
         // The previous implementation, reproduced: swap after every substep.
@@ -1192,7 +1480,12 @@ mod tests {
         // the marker in `back`.
         let mut alternating: Field32 = Field::new(&grid, 3).unwrap();
         seed_lanes_32(&mut alternating);
-        diffuse.advance_lane_32(&mut alternating, 0);
+        diffuse.advance_lane_32(
+            &mut alternating,
+            0,
+            0,
+            &mut Ledger::new(MAX_SUBSTANCES).unwrap(),
+        );
 
         for lane in 1..3u32 {
             for idx in 0..alternating.n_voxels() {
@@ -1202,7 +1495,7 @@ mod tests {
                     "lane {lane} moved while lane 0 was taking its substeps"
                 );
                 assert_eq!(
-                    alternating.write_mut()[(lane * grid.n_voxels() + idx) as usize],
+                    alternating.write_mut()[(lane * grid.lane_len() + idx) as usize],
                     M32::new(-1),
                     "the write buffer of lane {lane} moved: the field swapped"
                 );
@@ -1211,7 +1504,7 @@ mod tests {
 
         // Six substeps is even, so the answer is in the front buffer already and
         // the restoration has nothing to do for this lane.
-        assert_eq!(alternating.lane(0), swapping.read(), "bit for bit");
+        assert_eq!(alternating.lane(0), swapping.lane(0), "bit for bit");
     }
 
     /// From ADR-057, and the one mistake here that no other test in this file
@@ -1276,16 +1569,19 @@ mod tests {
         diffusivities[1] = 2.1e-9;
         diffusivities[2] = 1.9e-9;
 
-        let phase = DiffusePhase::new_32(&grid, 13, &diffusivities, DT, DX).unwrap();
+        let phase = DiffusePhase::new_32(&grid, 13, &diffusivities, DT, DX, SEALED).unwrap();
         assert!(phase.parity_split().swaps());
         assert_eq!(phase.parity_split().lanes_to_copy(), &[0, 1, 2]);
-        assert_eq!(phase.restoration_bytes_per_tick(), 50_331_648);
+        // ADR-057 prices this at 50.3 MB over the voxels; what is paid is the
+        // whole lane, ghost cell included (ADR-059), which is one element per
+        // copied lane more.
+        assert_eq!(phase.restoration_bytes_per_tick(), 50_331_648 + 2 * 3 * 4);
 
         // And the choice is made per field, not per world: the wide field is a
         // separate `DiffusePhase` with a split of its own, and the corpus
         // registry's single wide lane leaves an empty group and a copy of length
         // zero. A globally chosen branch would be right here by accident.
-        let wide = DiffusePhase::new_64(&grid, 1, &[9.3e-9], DT, DX).unwrap();
+        let wide = DiffusePhase::new_64(&grid, 1, &[9.3e-9], DT, DX, SEALED).unwrap();
         assert_eq!(wide.restoration_bytes_per_tick(), 0);
     }
 
@@ -1294,20 +1590,46 @@ mod tests {
         // The array is indexed by lane. A substance-indexed one is usually of
         // the wrong length too, and when it is, this is what says so.
         let grid = torus(3, 3, 3);
-        let err = DiffusePhase::new_32(&grid, 3, &[1.6e-9, 1.6e-9], DT, DX)
+        let err = DiffusePhase::new_32(&grid, 3, &[1.6e-9, 1.6e-9], DT, DX, SEALED)
             .unwrap_err()
             .to_string();
         assert!(err.contains("lane"), "unhelpful message: {err}");
-        assert!(DiffusePhase::new_32(&grid, 0, &[], DT, DX).is_ok());
+        assert!(DiffusePhase::new_32(&grid, 0, &[], DT, DX, SEALED).is_ok());
     }
 
     #[test]
     fn the_boundary_mask_says_what_the_grid_says() {
-        assert_eq!(periodic_mask(&torus(3, 3, 3)).unwrap(), 0b11_1111);
-        assert_eq!(periodic_mask(&floored(3, 3, 3)).unwrap(), 0b00_1111);
+        assert_eq!(boundary_masks(&torus(3, 3, 3)), (0b11_1111, 0));
+        assert_eq!(boundary_masks(&floored(3, 3, 3)), (0b00_1111, 0));
         assert_eq!(
-            periodic_mask(&Grid::new(3, 3, 3, [Boundary::Closed; 6]).unwrap()).unwrap(),
-            0
+            boundary_masks(&Grid::new(3, 3, 3, [Boundary::Closed; 6]).unwrap()),
+            (0, 0)
+        );
+
+        // The third state, and the one that has to stay out of the first mask.
+        // Folded in as "not periodic" the lid would be closed, and a world that
+        // is supposed to vent would be sealed with nothing to see.
+        let vented = Grid::new(
+            3,
+            3,
+            3,
+            [
+                Boundary::Periodic,
+                Boundary::Periodic,
+                Boundary::Periodic,
+                Boundary::Periodic,
+                Boundary::Closed,
+                Boundary::Exchange,
+            ],
+        )
+        .unwrap();
+        assert_eq!(
+            boundary_masks(&vented),
+            (0b00_1111, 1 << (Face::ZPlus as u32))
+        );
+        assert_eq!(
+            boundary_masks(&Grid::new(3, 3, 3, [Boundary::Exchange; 6]).unwrap()),
+            (0, 0b11_1111)
         );
     }
 
@@ -1322,7 +1644,7 @@ mod tests {
         let grid = torus(3, 3, 3);
         let phase = phase_32(&grid, 1.6e-9);
         let mut field: Field32 = Field::new(&grid, 2).unwrap();
-        phase.apply_32(&mut field);
+        run_32(&phase, &mut field);
     }
 
     #[test]
@@ -1330,6 +1652,6 @@ mod tests {
     fn a_field_of_the_wrong_shape_is_refused() {
         let phase = phase_32(&torus(3, 3, 3), 1.6e-9);
         let mut field: Field32 = Field::new(&torus(4, 4, 4), 1).unwrap();
-        phase.apply_32(&mut field);
+        run_32(&phase, &mut field);
     }
 }

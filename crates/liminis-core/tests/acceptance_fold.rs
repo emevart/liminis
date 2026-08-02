@@ -59,13 +59,13 @@ const INCIDENT: f64 = 128.0;
 const DT: f64 = 2.0;
 
 /// What one unit of stored intensity is worth as energy per second, folded on the
-/// host (`FoldParams::joules_per_intensity`). A power of two, so `qmul` by it is
+/// host (`FoldParams::units_per_intensity`). A power of two, so `qmul` by it is
 /// exact and the only inexactness left on the light path is the single rounding
 /// into storage units.
-const JOULES_PER_INTENSITY: f64 = 1024.0;
+const UNITS_PER_INTENSITY: f64 = 1024.0;
 
 /// The whole conversion factor from stored intensity to storage units.
-const PER_INTENSITY: f64 = JOULES_PER_INTENSITY * DT;
+const PER_INTENSITY: f64 = UNITS_PER_INTENSITY * DT;
 
 fn params() -> FoldParams {
     FoldParams {
@@ -74,7 +74,7 @@ fn params() -> FoldParams {
         nz: NZ,
         lod: LOD,
         i_surface: Q::from_f64(INCIDENT),
-        joules_per_intensity: Q::from_f64(JOULES_PER_INTENSITY),
+        units_per_intensity: Q::from_f64(UNITS_PER_INTENSITY),
         dt: Q::from_f64(DT),
     }
 }
@@ -100,11 +100,31 @@ fn covering(x: u32, y: u32, z: u32) -> u32 {
 /// The whole dispatch, the way a host would run it: one invocation per coarse
 /// cell, over the coarse grid and not the fine one.
 fn dispatch(energy_delta: &[M64], light: &[Q], src_h: &[M64], p: &FoldParams) -> Vec<M64> {
+    dispatch_both(energy_delta, light, src_h, p).0
+}
+
+/// The same, keeping both outputs: `(dst_h, solar)`. The solar slice is what the
+/// host reduces into `SOLAR_IN` on this same step (ADR-075).
+fn dispatch_both(
+    energy_delta: &[M64],
+    light: &[Q],
+    src_h: &[M64],
+    p: &FoldParams,
+) -> (Vec<M64>, Vec<M64>) {
     let mut dst_h = vec![M64::ZERO; N_COARSE as usize];
+    let mut solar = vec![M64::ZERO; N_COARSE as usize];
     for coarse in 0..N_COARSE {
-        fold_energy(energy_delta, light, src_h, &mut dst_h, p, coarse);
+        fold_energy(
+            energy_delta,
+            light,
+            src_h,
+            &mut dst_h,
+            &mut solar,
+            p,
+            coarse,
+        );
     }
-    dst_h
+    (dst_h, solar)
 }
 
 /// A sign-alternating reaction increment with no period any stride of the grid
@@ -199,7 +219,7 @@ fn energy_fold_from_fine_to_coarse_conserves_exactly() {
 
     // Light on, one unit of intensity absorbed per fine voxel. The light is worth
     // an exact integer per coarse cell, so this stays an equality.
-    let per_cell_light = PER_COARSE * (JOULES_PER_INTENSITY as i64) * (DT as i64);
+    let per_cell_light = PER_COARSE * (UNITS_PER_INTENSITY as i64) * (DT as i64);
     let lit = dispatch(&energy_delta, &stepped(), &before, &p);
     assert_eq!(
         total(&lit) - total(&before),
@@ -233,6 +253,7 @@ const OPAQUE: i32 = 512;
 /// file's reading of that convention instead of against the kernel that owns it.
 fn light_field(amounts: &[M32]) -> Vec<Q> {
     let lp = LightParams {
+        lane_len: N_FINE,
         nx: NX,
         ny: NY,
         nz: NZ,
@@ -330,4 +351,240 @@ fn absorbed_light_appears_in_enthalpy() {
         "the column absorbed {column_sum} against a telescoped {telescoped}, over \
          a tolerance of {tolerance} for {ROUNDINGS_PER_COLUMN} roundings"
     );
+}
+
+#[test]
+fn solar_in_is_credited_the_same_integer_the_fold_added_to_enthalpy() {
+    // The identity of ADR-075 (open question A-16, closed): what the host credits
+    // to `SOLAR_IN` is the very integer the kernel added to the enthalpy, not a
+    // number formed a second time. Asserted per coarse cell and over the domain,
+    // as exact equality of integers:
+    //
+    // ```text
+    // solar[c] == dst_h[c] - src_h[c] - sum(energy_delta over the cell)
+    // ```
+    //
+    // The rounding rule of `NUMERIC.md` section 3 is not additive —
+    // `round(a) + round(b) != round(a+b)` — so any implementation that reduced
+    // the light field on the host, or took the difference above as its *source*
+    // rather than as a check, drifts by up to half a unit per cell and only on
+    // the scenarios where the roundings failed to cancel. Both fixtures below are
+    // built so that the roundings do **not** all cancel: the light field is the
+    // real Beer-Lambert one out of `light_column`, not the hand-built `stepped`.
+    const X: u32 = 5;
+    const Y: u32 = 6;
+
+    let p = params();
+
+    // Reactions that are not a multiple of anything, so the enthalpy difference
+    // is not the light term by accident.
+    let mut energy_delta = vec![M64::ZERO; N_FINE as usize];
+    for z in 0..NZ {
+        for y in 0..NY {
+            for x in 0..NX {
+                energy_delta[index(x, y, z) as usize] = M64::new(reaction_pattern(x, y, z));
+            }
+        }
+    }
+
+    // Absorbers scattered down one column and across a second, so different
+    // coarse cells round differently.
+    let mut amounts = vec![M32::ZERO; N_FINE as usize];
+    for z in 0..NZ {
+        amounts[index(X, Y, z) as usize] = M32::new(OPAQUE / 4 + z as i32 * 7);
+        amounts[index(X + 1, Y, z) as usize] = M32::new(OPAQUE / 8 + z as i32 * 3);
+    }
+    let light = light_field(&amounts);
+
+    let before: Vec<M64> = (0..N_COARSE)
+        .map(|c| M64::new(i64::from(c) * 900_007 - 41))
+        .collect();
+    let (dst_h, solar) = dispatch_both(&energy_delta, &light, &before, &p);
+
+    // What the reactions alone owe each coarse cell, summed here from the fine
+    // grid with the covering map written out of SPEC section 1.5.
+    let mut reactions = vec![0i64; N_COARSE as usize];
+    for z in 0..NZ {
+        for y in 0..NY {
+            for x in 0..NX {
+                reactions[covering(x, y, z) as usize] += reaction_pattern(x, y, z);
+            }
+        }
+    }
+
+    let mut credited = 0i64;
+    let mut lit_cells = 0;
+    for coarse in 0..N_COARSE {
+        let at = coarse as usize;
+        let from_light = dst_h[at].to_i64() - before[at].to_i64() - reactions[at];
+        assert_eq!(
+            solar[at].to_i64(),
+            from_light,
+            "coarse cell {coarse} credited {} to the ledger and {from_light} to \
+             the enthalpy: the two are one number read twice (ADR-075)",
+            solar[at].to_i64()
+        );
+        credited += solar[at].to_i64();
+        lit_cells += usize::from(from_light != 0);
+    }
+
+    // The fixture has to have lit something, or the equality above is a row of
+    // zeros agreeing with itself.
+    assert!(
+        lit_cells >= 4,
+        "only {lit_cells} coarse cells absorbed anything; the identity is vacuous"
+    );
+
+    // And over the domain, which is the sum the host actually credits.
+    let owed: i64 = reactions.iter().sum();
+    let moved: i64 = total(&dst_h) - total(&before);
+    assert_eq!(credited, moved - owed);
+}
+
+// ---------------------------------------------------------------------------
+// the two mistakes the kernel cannot check from inside itself
+// ---------------------------------------------------------------------------
+//
+// `FoldParams::units_per_intensity` is folded on the host out of the fine face
+// area and the energy scale (ADR-076), and both ways of getting it wrong leave
+// the shape of `I(z)` untouched, both halves of the invariant closing and every
+// conservation test green. So they are checked here, from outside, against
+// `config::derive` — the one door to the multiplier.
+
+/// The shipped scenario with a light process appended.
+///
+/// Read from `configs/` rather than written here, so that the two claims below
+/// are about a scenario that exists. The light record is appended because no
+/// shipped scenario may declare one: `i_surface > 0` is refused by two locks
+/// (ADR-076), which is also why both tests go through `config::derive` directly
+/// rather than through `config::validate`.
+fn lit_scenario(lod: u32, dt: f64) -> String {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../configs/scenarios/h2s-oxidation.toml"
+    );
+    let text = std::fs::read_to_string(path).expect("the shipped scenario");
+    let text = text.replace("lod = 2  ", &format!("lod = {lod}  "));
+    let text = text.replace("dt = 1.0", &format!("dt = {dt:e}"));
+    format!("{text}\n[[process]]\nid = \"light\"\nenabled = true\ni_surface = 1.0e3\n")
+}
+
+/// `(dx, k_E, units_per_intensity)` of the shipped scenario at an enthalpy `lod`
+/// and a tick.
+fn derived_light(lod: u32, dt: f64) -> (f64, u8, f64) {
+    let config = liminis_core::config::parse(&lit_scenario(lod, dt)).expect("the fixture parses");
+    let dx = config.grid.dx;
+    let derived = liminis_core::config::derive(&config).expect("the fixture derives");
+    let light = derived
+        .light()
+        .expect("an enabled light with an irradiance derives");
+    (dx, derived.energy().k_e, light.units_per_intensity)
+}
+
+/// The solar term of one dispatch over this file's grid, in storage units.
+///
+/// The light field is the hand-built `stepped` one: every fine voxel absorbs
+/// exactly one unit of intensity, so a coarse cell's `Q` sum is an exact integer
+/// however the sixty-four terms are ordered, and the totals below are exact at
+/// any `lod`. That is what lets these be equalities rather than tolerances.
+fn solar_total(lod: u32, units_per_intensity: f64, dt: f64) -> i64 {
+    let n_coarse = ((NX >> lod) * (NY >> lod) * (NZ >> lod)) as usize;
+    let p = FoldParams {
+        nx: NX,
+        ny: NY,
+        nz: NZ,
+        lod,
+        i_surface: Q::from_f64(INCIDENT),
+        units_per_intensity: Q::from_f64(units_per_intensity),
+        dt: Q::from_f64(dt),
+    };
+    let energy_delta = vec![M64::ZERO; N_FINE as usize];
+    let light = stepped();
+    let src_h = vec![M64::ZERO; n_coarse];
+    let mut dst_h = vec![M64::ZERO; n_coarse];
+    let mut solar = vec![M64::ZERO; n_coarse];
+    for coarse in 0..n_coarse as u32 {
+        fold_energy(
+            &energy_delta,
+            &light,
+            &src_h,
+            &mut dst_h,
+            &mut solar,
+            &p,
+            coarse,
+        );
+    }
+    solar.iter().map(|c| c.to_i64()).sum()
+}
+
+#[test]
+fn the_solar_term_does_not_depend_on_the_enthalpy_lod() {
+    // The mistake `kernels/fold.rs` declares uncheckable from inside itself:
+    // folding the **coarse** face `(dx*2^lod)^2` into `units_per_intensity`
+    // instead of the fine `dx^2`. The sum inside the kernel runs over the fine
+    // voxels of a cell, so every term already carries one fine face; the coarse
+    // one multiplies the entire solar input by `2^(2*lod)` — sixteen at
+    // `lod = 2`. The shape of `I(z)` does not move, `SOLAR_IN` is credited the
+    // same number the enthalpy got, both halves of the invariant close exactly,
+    // and it reads as "the attenuators are not calibrated yet" — which
+    // calibrating `k_w … k_m` then hides for good.
+    //
+    // The claim is **not** "the multiplier is the same number at both lods", and
+    // saying it that way would be wrong rather than strict: `units_per_joule` is
+    // `2^k_E`, and `k_E` is derived from `H_max`, which is the heat capacity of a
+    // *coarse cell* times the declared temperature range (ADR-062). Coarsening the
+    // enthalpy grid legitimately moves `k_E` by three bits per level.
+    //
+    // The claim is that what the multiplier carries beside the energy scale is the
+    // **fine** face and nothing else. Checked at two coarsenings, and never at
+    // `lod = 0`, where the wrong factor `4^lod` is one and nothing is on trial —
+    // the shipped scenario would not derive there anyway, at 84 diffusion substeps
+    // against `N_MAX = 64`.
+    let mut seen = Vec::new();
+    for lod in [1u32, 2] {
+        let (dx, k_e, units_per_intensity) = derived_light(lod, 1.0);
+        let face = units_per_intensity / 2.0f64.powi(i32::from(k_e));
+        assert_eq!(
+            face,
+            dx * dx,
+            "at lod = {lod} the multiplier carries a face of {face} m^2 against \
+             the fine dx^2 = {}: a coarse face multiplies the whole solar input \
+             by 4^lod, and nothing else in the project can see it",
+            dx * dx
+        );
+        seen.push(k_e);
+    }
+    assert!(
+        seen.iter().any(|k| *k != seen[0]),
+        "k_E did not move with the lod, so the division above cancels a constant"
+    );
+
+    // And the same through the kernel, over the whole domain: the grouping of
+    // fine voxels into coarse cells changes, the energy does not.
+    let per_intensity = 1024.0;
+    assert_eq!(
+        solar_total(2, per_intensity, DT),
+        solar_total(1, per_intensity, DT)
+    );
+    assert!(solar_total(2, per_intensity, DT) > 0);
+}
+
+#[test]
+fn the_solar_term_scales_with_the_tick() {
+    // The other mistake of the same paragraph: a `dt` folded into
+    // `units_per_intensity` divides the solar input by `dt`, and at a tick of one
+    // second that is invisible outright — every config in `configs/`, every
+    // validator fixture and every process test runs at `dt = 1`.
+    //
+    // **Both halves at `dt != 1`.** Doubling the tick doubles what the fold
+    // credits, and leaves the multiplier alone: `dt` is the second argument of
+    // `m_delta_64` and not a factor of the rate (ADR-076).
+    let per_intensity = 1024.0;
+    let single = solar_total(LOD, per_intensity, 2.0);
+    let double = solar_total(LOD, per_intensity, 4.0);
+    assert!(single > 0);
+    assert_eq!(double, 2 * single);
+
+    // And the multiplier itself, derived at two different ticks, is one number.
+    assert_eq!(derived_light(2, 1.0).2, derived_light(2, 2.0).2);
 }

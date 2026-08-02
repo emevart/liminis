@@ -75,8 +75,20 @@ name="hello"
 ///
 /// Four records here are past section 12 — `requires`, and `[[process]]` for
 /// light and for settling — and they exist for that reason alone: the example
-/// does not write them, and without them `k_w … k_m`, `mu` and
-/// `requires.{field,min,max}` are invisible to the test.
+/// does not write them, and without them `k_w … k_m`, `mu`, the five light keys
+/// of ADR-076 and `requires.{field,min,max}` are invisible to the test.
+///
+/// **Nothing here meets the validator, and that is a decision rather than an
+/// oversight of `load`.** Two of these passages are refused by it outright since
+/// this wave: a non-empty `requires` is a load error until the reaction gate
+/// exists (ADR-073), and `i_surface > 0` is refused by two locks at once
+/// (ADR-076). They stay, because the fixture exists so that
+/// `the_projection_covers_every_simulated_key` can see those keys at all, and a
+/// key nobody may legally write is exactly the key a projection forgets. The
+/// compiler is no help here: `Hashed<'a>` borrows `process: &'a [Process]` whole,
+/// so exhaustive destructuring catches a new field of `Config` and not a new key
+/// of `Process` (E0027 is about a struct, not about its element). This fixture is
+/// the only thing that catches them.
 ///
 /// `charge` is past section 12 too, and for a second reason. The example leaves
 /// it out and says so — the balance closes as `0 = 0` either way — while
@@ -223,6 +235,11 @@ k_w = 0.04                      # placeholder
 k_b = 0.02                      # placeholder
 k_d = 0.01                      # placeholder
 k_m = 0.5                       # placeholder
+i_surface = 300.0               # placeholder
+daily_fraction = 0.5            # placeholder
+daily_period = 86400.0          # placeholder
+seasonal_fraction = 0.25        # placeholder
+seasonal_period = 31536000.0    # placeholder
 
 [[process]]
 id = "settling"
@@ -463,6 +480,62 @@ fn config_hash_ignores_the_calibration_section() {
     assert_eq!(
         config::config_hash(&with).expect("hashing config"),
         config::config_hash(&without).expect("hashing config"),
+    );
+}
+
+/// The side of the layer is printed for every substance, including the ones the
+/// file never mentions (ADR-077, ADR-065).
+///
+/// The argument is ADR-065's, one section over: without the materialisation an
+/// author who wrote nothing sees the side of no substance at all, while the
+/// identity of the run carries a claim that is in no file. The price is a line
+/// per substance in the canonical form.
+#[test]
+fn the_canonical_form_names_the_layer_side_of_every_substance() {
+    let config = config::parse(SCENARIO).expect("the fixture must parse");
+    let canonical = config::canonical(&config).expect("canonical form");
+
+    assert!(
+        canonical.contains("[initial.layer]"),
+        "the canonical form has no layer table:\n{canonical}"
+    );
+    for id in ["H2S", "O2", "SO4", "H_ION"] {
+        assert!(
+            canonical.contains(&format!("{id} = \"sediment\"")),
+            "the canonical form does not name the side of `{id}`:\n{canonical}"
+        );
+    }
+
+    // The fixture writes none of them, which is what makes the four lines above
+    // a statement about the materialisation rather than about the file.
+    assert!(
+        !SCENARIO.contains("[initial"),
+        "the fixture must not declare the section it is used to check"
+    );
+}
+
+/// A side outside the enumeration is a load error (ADR-077).
+///
+/// Serde makes the refusal for nothing; the test is here so that it is a
+/// decision rather than a coincidence — the precedent is
+/// `seed_in_the_scenario_file_is_rejected` one section up. This is also where
+/// the divergence from the frozen SPEC section 12.4 is pinned: it names three
+/// layers, sediment, water and air, and the enumeration knows two sides and
+/// "uniform". The world has no air, by a field or by a boundary, and a side no
+/// process reads would be a value with no addressee (ADR-077, ADR-032).
+#[test]
+fn initial_layer_side_outside_the_enumeration_is_rejected() {
+    let text = format!("{SCENARIO}\n[initial.layer]\nO2 = \"air\"\n");
+    let err = config::parse(&text).expect_err("a side outside the enumeration must be rejected");
+    let message = format!("{err:#}");
+    assert!(
+        message.contains("air"),
+        "the error should name the value it refused, got: {message}"
+    );
+    assert!(
+        message.contains("O2"),
+        "the error should name the key it refused it under, or the author hunts \
+         for the typo through the whole file, got: {message}"
     );
 }
 

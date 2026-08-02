@@ -630,4 +630,158 @@
 /// notice exactly that. The pattern now reads `(kernels|process|worldgen)/`, so
 /// the next edit under `worldgen/` fails a pull request that forgets this
 /// constant instead of passing quietly.
-pub const WORLD_FORMAT_VERSION: u32 = 12;
+/// # Version 13: the world has a temperature
+///
+/// `T = T_ref + H / sum(n_i * c_p_i)` (ADR-044) exists as an operator:
+/// `kernels/temperature.rs` gathers the denominator from the `2^(3*lod)` fine
+/// voxels of a coarse cell and divides, `process/temperature.rs` folds `c_p`,
+/// the storage exponents and `k_E` into what it reads, and `world::World`
+/// allocates the two coarse `Q` fields it writes. Before this version the
+/// quantity `q10` reads existed in `ReactParams` and in no buffer anywhere.
+///
+/// **No run that existed changes by a single bit.** Step `h` still does not
+/// dispatch — `Tick::new` refuses it, and the refusal now names the two arches of
+/// the invariant that chemistry needs instead of the temperature it used to name
+/// — so nothing calls the operator inside `Tick::advance`, and the two new
+/// buffers are written by nobody and read by nobody. What moves is the identity
+/// every future run is compared under, and three things inside it are semantics
+/// in their own right:
+///
+/// - **the mapping from a voxel to its cell.** The shift is per axis (SPEC
+///   section 1.5), so sixty-four fine voxels share one `T`, and which sixty-four
+///   is what the chemistry of every one of them then runs at;
+/// - **the moment of the recomputation.** ADR-044 allows one per tick and the
+///   tick has two consumers on opposite sides of the transport: step `b` reads
+///   `C_cell` before it, step `h` reads `T` after. ADR-079 puts it immediately
+///   before `h`, which leaves step `b` with the previous tick's capacity — the
+///   lag it already carries and already declared (ADR-069). Under the other
+///   placement every reaction runs at a temperature four transport steps old, and
+///   both halves of the ledger close exactly either way;
+/// - **the answer at a non-positive denominator.** A composition that sums to
+///   zero or below has no temperature to derive; ADR-079 settles that the cell
+///   answers `T_ref` and divides nothing, in every build profile, and names what
+///   that costs. Any other answer is a different world.
+///
+/// The two coarse fields also cost 131 kB apiece at the eco regime, and ADR-062
+/// priced only the first of them: its "+393 kB on the coarse grids" becomes
+/// +524 kB. That is a divergence from a record rather than from a frozen
+/// document, and ADR-079 is where it is recorded.
+///
+/// # Version 14: the layer side becomes a key of the scenario
+///
+/// `[initial]` exists, with one key — a table naming the side of the
+/// sediment/water boundary each substance is enriched on, `sediment` | `water` |
+/// `uniform`, defaulting to `sediment` and materialised onto every substance
+/// before the hash (ADR-077). Until now `worldgen/` put every substance on one
+/// side because there was nowhere to declare another, and
+/// `oxidation_front_forms_at_predicted_depth` had no initial condition capable
+/// of producing it. `configs/scenarios/h2s-oxidation.toml` is the first file to
+/// say otherwise, in one line — `O2 = "water"` — which is the whole of what the
+/// section buys the scenario it was written for.
+///
+/// **This increment is one of identity, not of dynamics** — the kind versions 4
+/// and 6 are, and not the kind version 3 is. The arithmetic of `amount_at` under
+/// a declared `sediment` is untouched, so every world of version 13 comes out
+/// under version 14 bit for bit as it did, and the default is what makes that
+/// true: it was chosen for it, rather than turning out convenient. What moved is
+/// the identity every run is compared under, because `Hashed` grew a twelfth
+/// root key and the canonical form of every scenario now carries one line per
+/// substance.
+///
+/// The claim that no world changed rests on the `Sediment` branch staying byte
+/// for byte what it was, and there is no recorded world hash in the repository
+/// to check it against. `the_written_default_and_the_omitted_section_give_one_world`
+/// is the whole of the defence: reordering the terms, `<=` instead of `<` on the
+/// relief, hoisting the division out of the branch — each changes every world
+/// while this comment goes on saying the opposite.
+///
+/// Three things inside it are semantics in their own right:
+///
+/// - **the side is a property of the scenario and never of the seed.** A
+///   per-substance sign taken from `run_key` is free and makes
+///   `different_seed_gives_a_different_initial_state` pass for a reason it must
+///   not: two runs of one scenario would differ by where the oxygen is (ADR-058,
+///   ADR-077);
+/// - **`uniform` drops the layer term and keeps the noise at full amplitude.**
+///   `blended = noise`, not `noise/2`: halving it would make one key govern the
+///   side and the width of the actual scatter at once. Nothing compares a width
+///   against a declaration, so what holds it is a ratio of the two branches over
+///   the floor plane of the domain, where the layer term is present and
+///   constant: the accepted form stands at two to one against the layered run
+///   and the halved one at one to one
+///   (`a_substance_declared_uniform_has_no_layer_step`);
+/// - **the band is now a ratified rule.** `excursion = min(typical, max -
+///   typical)/2` was carried by a `TODO` and is a consequence of ADR-077, with
+///   both bounds as exact integer identities. The arithmetic does not change —
+///   the rule is the one that was already running — but the two checks that
+///   guard it were tightened from a quarter of the headroom, which nobody had
+///   decided, to the half the identity gives.
+/// # Version 15: the lid of the world stopped being a wall
+///
+/// The `exchange` face of SPEC section 1.6 is built rather than refused
+/// (ADR-059). `Grid::new` accepts it, `Grid::neighbour` answers with the ghost
+/// cell, a field lane grows from `n_voxels` to `n_voxels + 1`, and what crosses
+/// the face on steps `c` and `d` is credited to `BOUNDARY_EXCHANGE` on **every**
+/// substep. `configs/scenarios/h2s-oxidation.toml` gets its `z_max = "exchange"`
+/// and its `[boundary.reservoir]` back, so that scenario is a different world
+/// outright: it now holds an oxycline instead of running down.
+///
+/// **This is an increment of dynamics and of identity at once**, and the three
+/// pieces of it are separable:
+///
+/// - **the lid vents.** Any scenario with an exchanging face now moves matter and
+///   enthalpy across it. Nothing conserved before it is conserved now — the
+///   invariant is `ChangedThrough(BOUNDARY_EXCHANGE)` rather than `Conserved`,
+///   which is the second arm of `process::Conservation` that this wave writes;
+/// - **the coefficient follows the address and not the face.** Inside
+///   `kernels/diffuse.rs` a face runs at `alpha_ex` when its neighbour *is* the
+///   ghost, and at `alpha` otherwise. Keyed on the mask instead, every interior
+///   face along the exchanging axis would run at the exchange rate and the domain
+///   would gain matter in its middle;
+/// - **the lane grew, so every flat address did.** `lane * n_voxels + idx` is
+///   `lane * lane_len + idx` now, in `world::Field` and in the four kernels that
+///   address an amount lane by hand — `react`, `light`, `pressure`,
+///   `temperature`, each of which gained a `lane_len` beside its `n_voxels`. The
+///   Courant buffer of step `c` grew the same way and for a sharper reason: the
+///   upper face of the last voxel of an axis *is* the ghost's lower face, and a
+///   buffer of `3*n_voxels` had no cell for it at all.
+///
+/// What did **not** change: a scenario with no `exchange` face. Every such world
+/// comes out bit for bit as it did — the ghost element is allocated, never read
+/// and never summed, `Field::lane` is narrowed to the voxels so no reduction can
+/// swallow it, and `alpha_ex` multiplies a flux nobody gathers. That claim is
+/// what the whole existing suite standing green over this wave is evidence for.
+///
+/// Version 16 is the wave of ADR-073, ADR-075 and ADR-076, and it is an increment
+/// of **identity** rather than of dynamics — the one place that is worth stating
+/// plainly, because all three records touch `kernels/**` or `process/**` and the
+/// guard of ADR-020 looks at the path.
+///
+/// Three things changed, and none of them moves a bit of any world that runs
+/// today:
+///
+/// - **the fold has a second output.** `fold_energy` writes the integer it added
+///   to the enthalpy into a slice of one `M64` per coarse cell, and the host
+///   reduces that slice into `SOLAR_IN` as the second half of step `i'`
+///   (ADR-075). The identity the record asks for is syntactic — one `let`, two
+///   readers — because forming the number again rounds a second time and the
+///   rounding rule of `NUMERIC.md` section 3 is not additive. The fold is still
+///   dispatched from nowhere, so no run gains a joule;
+/// - **the light has five keys.** `i_surface` in W/m^2, and the two amplitude and
+///   period pairs of the daily and seasonal modulation (ADR-076). The folded
+///   multiplier `units_per_intensity = dx^2 * 2^k_E` is derived and is not a key.
+///   Every scenario's `config_hash` moves, because the schema grew — and no
+///   scenario's behaviour does, because a lit scenario does not load at all: it
+///   is refused by two locks, an energy sink that exists nowhere and the width of
+///   a channel counter — open question A-20 (A-19 in ADR-075 and ADR-076, which
+///   were drafted while that number was free);
+/// - **a `requires` window is a load error.** ADR-073 refuses a non-empty
+///   `requires` in the validator instead of accepting a window no kernel can
+///   satisfy. No scenario in `configs/` writes one, so the set of loadable worlds
+///   shrinks by nothing that existed.
+///
+/// The field `FoldParams::joules_per_intensity` is `units_per_intensity` now, by
+/// the decision of ADR-076 and not as tidying: it measures storage units per
+/// (W/m^2) per second, and the old name taught the wrong unit in the one place
+/// the unit is assigned.
+pub const WORLD_FORMAT_VERSION: u32 = 16;

@@ -62,17 +62,43 @@ pub struct DiffuseParams {
     /// for `width_mask` (`ARCHITECTURE.md`): WGSL has no enums, and a mask
     /// indexed by a loop counter is a shift and an and.
     ///
-    /// `exchange` has no encoding here on purpose. It moves matter into the
-    /// `BOUNDARY_EXCHANGE` channel (SPEC section 7) and there are no channel
-    /// counters yet, so the host refuses such a grid rather than letting it
-    /// arrive as one of these two cases.
+    /// An `exchange` face is **not** encoded here. It is the third state and it
+    /// has a mask of its own, [`DiffuseParams::exchange_mask`]; folding it into
+    /// this one as "not periodic" would make the neighbour the voxel itself, and
+    /// a lid that is supposed to vent would be sealed without a word.
     pub periodic_mask: u32,
+    /// Bit `f` set: face `f` trades with the reservoir, and its neighbour is the
+    /// ghost cell at `nx*ny*nz` — the last element of the lane (ADR-059).
+    ///
+    /// Same encoding as [`DiffuseParams::periodic_mask`], and deliberately the
+    /// same *shape*: ADR-059 rejected the alternative by name — a kernel handed a
+    /// table of boundary conditions would have learned about the config. Two bit
+    /// masks and one folded coefficient say everything the lookup needs.
+    ///
+    /// A face cannot be in both masks: `world::Grid` carries one `Boundary` per
+    /// face, and the host folds each of them into exactly one bit.
+    pub exchange_mask: u32,
     /// `D*dt/dx^2` for **one substep**, folded on the host (ADR-030).
     ///
     /// Stability of the explicit 7-point stencil wants `6*alpha <= 1`; the host
     /// gets there by splitting the tick into `n = ceil(6*D*dt/dx^2)` substeps
     /// and dividing, and the kernel neither checks nor knows about it.
     pub alpha: Q,
+    /// `k_ex*dt/dx` for **one substep**, folded on the host (ADR-059).
+    ///
+    /// The face of exchange is driven by the piston velocity of the reservoir and
+    /// not by the diffusivity of the substance: one number per reservoir, the
+    /// same for every substance, which ADR-059 calls a declared simplification.
+    /// A face that ran on `alpha` instead would vent at the speed of the
+    /// substance's own diffusion with `k_ex` silently ignored, the config would
+    /// load, the Courant check in the validator would still pass, and the
+    /// residual would close — the counter records what actually left, whatever
+    /// that was. Nothing in the corpus compares the declared `k_ex` with the
+    /// applied one except a test.
+    ///
+    /// Zero on a grid with no exchanging face, where it multiplies a flux nobody
+    /// gathers.
+    pub alpha_ex: Q,
 }
 
 /// Generates one storage width of the diffusion kernel.
@@ -183,9 +209,21 @@ macro_rules! define_diffuse {
             let here = src[idx as usize];
             let mut net = <$m>::ZERO;
 
+            let ghost = p.nx * p.ny * p.nz;
             for face in 0..6u32 {
                 let n = neighbour(p, idx, face);
-                net += $flux(here, src[n as usize], p.alpha);
+                // The coefficient follows the **address** and not the face, and
+                // the difference is the whole of the correctness here. A face of
+                // the grid is `exchange` for every voxel on that axis, but only
+                // the layer standing against it reaches the reservoir; keyed on
+                // the mask alone, every interior face along Z would run at
+                // `alpha_ex` while the matching face of its neighbour ran at
+                // `alpha`, the two would stop being exact negations, and the
+                // domain would gain or lose matter in its middle. That failure
+                // is not silent — the ledger says so at once — but it is not
+                // where anybody would look.
+                let a = if n == ghost { p.alpha_ex } else { p.alpha };
+                net += $flux(here, src[n as usize], a);
             }
 
             dst[idx as usize] = here + net;
@@ -244,8 +282,23 @@ fn step_up(coord: u32, extent: u32, periodic: bool) -> u32 {
 /// makes the face carry no flux without a branch, since `flux(a, a) == 0` for
 /// any antisymmetric flux. The same is true of an axis one voxel deep, periodic
 /// or not — the torus closes onto itself.
+///
+/// An **exchange** face returns `nx*ny*nz`, the ghost cell: the last element of
+/// the lane, holding the reservoir (ADR-059). The index is computed rather than
+/// carried in `Params`, so that it cannot drift away from the extents beside it.
+///
+/// The ghost cell itself is its own neighbour across all six faces, and the
+/// early return that makes it so is not tidiness: the decode below would read
+/// `nx*ny*nz` as a coordinate one past the end of Z, and [`index`] would fold it
+/// back into a number that depends on the extents — the ghost on some grids and a
+/// voxel in the middle of the domain on others.
 #[inline(always)]
 fn neighbour(p: &DiffuseParams, idx: u32, face: u32) -> u32 {
+    let ghost = p.nx * p.ny * p.nz;
+    if idx == ghost {
+        return ghost;
+    }
+
     let plane = p.nx * p.ny;
     let z = idx / plane;
     let within_plane = idx - z * plane;
@@ -253,6 +306,34 @@ fn neighbour(p: &DiffuseParams, idx: u32, face: u32) -> u32 {
     let x = within_plane - y * p.nx;
 
     let periodic = (p.periodic_mask >> face) & 1 == 1;
+    let exchanging = (p.exchange_mask >> face) & 1 == 1;
+
+    // Whether this voxel stands against the face. Taken from the coordinate and
+    // not from the result of a step: across a closed face "there is no
+    // neighbour" and "the neighbour is me" are the same number, and only one of
+    // the two reaches the reservoir.
+    let coord = if face < 2 {
+        x
+    } else if face < 4 {
+        y
+    } else {
+        z
+    };
+    let extent = if face < 2 {
+        p.nx
+    } else if face < 4 {
+        p.ny
+    } else {
+        p.nz
+    };
+    let against_the_face = if face.is_multiple_of(2) {
+        coord == 0
+    } else {
+        coord + 1 == extent
+    };
+    if exchanging && against_the_face {
+        return ghost;
+    }
 
     let mut nbx = x;
     let mut nby = y;
@@ -298,9 +379,15 @@ mod tests {
             ny: NY,
             nz: NZ,
             periodic_mask,
+            exchange_mask: 0,
             alpha: Q::from_f64(alpha),
+            alpha_ex: Q::ZERO,
         }
     }
+
+    /// The eco-regime default of SPEC section 1.6 in full: `z_max` vents.
+    const VENTED: u32 = 0b00_1111;
+    const VENTED_EXCHANGE: u32 = 1 << (Face::ZPlus as u32);
 
     /// A value that depends on the index in a way no symmetry of the stencil can
     /// cancel by accident.
@@ -396,11 +483,25 @@ mod tests {
                 ],
             ),
             (0, [Boundary::Closed; 6]),
+            // The face of exchange, where the third copy of the neighbourhood
+            // has to answer with the ghost cell and not with the voxel (ADR-059).
+            (
+                VENTED,
+                [
+                    Boundary::Periodic,
+                    Boundary::Periodic,
+                    Boundary::Periodic,
+                    Boundary::Periodic,
+                    Boundary::Closed,
+                    Boundary::Exchange,
+                ],
+            ),
         ];
 
         for (mask, boundary) in cases {
             let grid = Grid::new(NX, NY, NZ, boundary).unwrap();
-            let p = params(mask, 1.0 / 6.0);
+            let mut p = params(mask, 1.0 / 6.0);
+            p.exchange_mask = grid.exchange_mask();
             assert_eq!(grid.n_voxels(), N_VOXELS);
 
             for idx in 0..N_VOXELS {
@@ -414,7 +515,61 @@ mod tests {
                     );
                 }
             }
+
+            // And the ghost cell, which `0..n_voxels` above never visits: it is
+            // its own neighbour across all six, in both copies.
+            for face in Face::ALL {
+                assert_eq!(
+                    neighbour(&p, grid.ghost_index(), face as u32),
+                    grid.neighbour(grid.ghost_index(), face),
+                    "the ghost across {face:?}, mask {mask:#08b}"
+                );
+                assert_eq!(
+                    neighbour(&p, grid.ghost_index(), face as u32),
+                    grid.ghost_index()
+                );
+            }
         }
+    }
+
+    /// The face of exchange runs on `alpha_ex` and every other face on `alpha`,
+    /// and the two are told apart by the mask alone.
+    ///
+    /// The failure this denies is the quiet one named on
+    /// [`DiffuseParams::alpha_ex`]: a lid venting at the speed of the substance's
+    /// own diffusion, with `k_ex` ignored, the config loading and the residual
+    /// closing over whatever left.
+    #[test]
+    fn the_face_of_exchange_runs_on_its_own_coefficient() {
+        let mut p = params(VENTED, 1.0 / 6.0);
+        p.exchange_mask = VENTED_EXCHANGE;
+        p.alpha_ex = Q::from_f64(1.0 / 64.0);
+        assert_ne!(p.alpha, p.alpha_ex);
+
+        // A lane of `n_voxels + 1`: the voxels, then the reservoir.
+        let mut src = vec![M32::new(1_000_000); (N_VOXELS + 1) as usize];
+        src[N_VOXELS as usize] = M32::new(0);
+        let mut dst = vec![M32::ZERO; (N_VOXELS + 1) as usize];
+        for idx in 0..N_VOXELS {
+            diffuse_voxel_32(&src, &mut dst, &p, idx);
+        }
+
+        // The domain is uniform, so every face but the lid carries nothing and
+        // the whole change of a top voxel is the one exchanging face.
+        let lid = index(&p, 1, 2, NZ - 1) as usize;
+        assert_eq!(
+            dst[lid] - src[lid],
+            flux_32(src[lid], M32::ZERO, p.alpha_ex),
+            "the lid vented at some other coefficient"
+        );
+        assert_ne!(
+            dst[lid] - src[lid],
+            flux_32(src[lid], M32::ZERO, p.alpha),
+            "the lid vented at the substance's own alpha"
+        );
+        // And nothing below the top layer moved at all.
+        let inside = index(&p, 1, 2, NZ - 2) as usize;
+        assert_eq!(dst[inside], src[inside]);
     }
 
     /// A degenerate axis is its own neighbour in both directions even when
@@ -427,7 +582,9 @@ mod tests {
             ny: 4,
             nz: 1,
             periodic_mask: TORUS,
+            exchange_mask: 0,
             alpha: Q::from_f64(1.0 / 6.0),
+            alpha_ex: Q::ZERO,
         };
         for idx in 0..16u32 {
             assert_eq!(neighbour(&p, idx, 4), idx);

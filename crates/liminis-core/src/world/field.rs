@@ -166,13 +166,19 @@ impl ParitySplit {
     /// report that lies, and the report exists precisely because a calibration
     /// nudge to a diffusivity carries a lane across the parity threshold without
     /// saying a word.
+    ///
+    /// The argument is the **lane length** and not the voxel count, and the two
+    /// differ by the ghost cell since ADR-059. One element in `2^21` at 128^3, so
+    /// the reported megabytes do not move — but ADR-057's own words are that "two
+    /// numbers computed by two rules is a report that lies", and
+    /// [`Field::restore_lane`] copies the whole lane, ghost included.
     #[must_use]
-    pub fn bytes_per_tick(&self, n_voxels: u32, width: Width) -> u64 {
+    pub fn bytes_per_tick(&self, lane_len: u32, width: Width) -> u64 {
         let per_element = match width {
             Width::Bits32 => 4u64,
             Width::Bits64 => 8,
         };
-        2 * self.copy.len() as u64 * u64::from(n_voxels) * per_element
+        2 * self.copy.len() as u64 * u64::from(lane_len) * per_element
     }
 }
 
@@ -183,14 +189,39 @@ impl ParitySplit {
 /// One flat array per buffer, addressed **substance-major** (ADR-041):
 ///
 /// ```text
-/// buffer[lane * n_voxels + idx]
+/// buffer[lane * lane_len + idx]
 /// ```
 ///
 /// with `idx = x + y*NX + z*NX*NY` inside a lane (SPEC section 1.1). A lane is
-/// therefore a contiguous run of `n_voxels` entries, which is what
+/// therefore a contiguous run of `lane_len` entries, which is what
 /// [`Field::lane_pair_mut`] hands to a transport kernel: from inside such a
 /// kernel the lane is the whole world and the index is a plain `idx`, exactly
 /// the `src: &[M]` of the skeleton in `ARCHITECTURE.md`.
+///
+/// # The last element of a lane is the ghost cell
+///
+/// `lane_len == n_voxels + 1` (ADR-059). The extra element holds the outside
+/// reservoir in storage units, and `Grid::neighbour` hands its index back for
+/// every `exchange` face — so the boundary condition arrives at a kernel as an
+/// address and never as a `Boundary`.
+///
+/// Which accessor sees it is the whole of the safety here, and the two groups
+/// point opposite ways:
+///
+/// - [`Field::lane`] and [`Field::lane_write`] are **narrowed to `n_voxels`**.
+///   Everything that reduces over the domain goes through them — the ledger, the
+///   undershoot bound, the volume export, the floor/peak band of worldgen — and
+///   a reduction that swallowed the ghost would report the reservoir as part of
+///   the world. That failure is invisible to both residuals: the ghost is
+///   constant, so it cancels in `after - before`, and only the absolute sums
+///   lie;
+/// - [`Field::lane_pair_mut`] and [`Field::lane_pair_dir_mut`] are **widened to
+///   `lane_len`**, because a kernel has to be able to read the address the grid
+///   gave it. Forgetting the widening is loud: the kernel indexes one past the
+///   end of the slice and panics.
+///
+/// [`Field::set_ghost`] is the only way to write it, and it writes **both**
+/// buffers — see the note there for what a single-buffer seeding does.
 ///
 /// ADR-041 chose this orientation over the voxel-major one with the reason
 /// spelled out: transport reads one substance and would rather have it
@@ -237,6 +268,10 @@ impl ParitySplit {
 pub struct Field<T> {
     lanes: u32,
     n_voxels: u32,
+    /// `n_voxels + 1`: the voxels of one lane and the ghost cell after them
+    /// (ADR-059). Stored rather than recomputed so that there is one place the
+    /// stride of the flat buffer comes from.
+    lane_len: u32,
     /// State `N`.
     front: Vec<T>,
     /// State `N+1`, under construction.
@@ -256,10 +291,10 @@ impl<T: Copy + Default> Field<T> {
     ///
     /// # Errors
     ///
-    /// Returns an error if `lanes` is zero, or if `lanes * n_voxels` does not
+    /// Returns an error if `lanes` is zero, or if `lanes * lane_len` does not
     /// fit a `u32`. The second bound is not about this crate's `Vec`s, which are
     /// indexed by `usize`: it is about the kernels, which compute
-    /// `lane * n_voxels + idx` in `u32` because that is what WGSL gives them
+    /// `lane * lane_len + idx` in `u32` because that is what WGSL gives them
     /// (ADR-041). A buffer that only a 64-bit host can address is a buffer the
     /// GPU path cannot use.
     pub fn new(grid: &Grid, lanes: u32) -> Result<Self> {
@@ -267,16 +302,22 @@ impl<T: Copy + Default> Field<T> {
             bail!("a field with no lanes holds nothing");
         }
         let n_voxels = grid.n_voxels();
-        let Some(total) = lanes.checked_mul(n_voxels) else {
+        // The lane length and not the voxel count: the ghost cell of ADR-059 is
+        // an element of every lane, so it is part of the stride and part of the
+        // bound.
+        let lane_len = grid.lane_len();
+        let Some(total) = lanes.checked_mul(lane_len) else {
             bail!(
-                "a field of {lanes} lanes over {n_voxels} voxels is longer than a \
-                 u32 index can address, and kernels address it in u32 (ADR-041)"
+                "a field of {lanes} lanes over {n_voxels} voxels and a ghost cell \
+                 each is longer than a u32 index can address, and kernels address \
+                 it in u32 (ADR-041, ADR-059)"
             );
         };
 
         Ok(Self {
             lanes,
             n_voxels,
+            lane_len,
             front: vec![T::default(); total as usize],
             back: vec![T::default(); total as usize],
         })
@@ -299,7 +340,19 @@ impl<T> Field<T> {
         self.n_voxels
     }
 
-    /// State `N`: the whole flat buffer, every lane, `lane * n_voxels + idx`.
+    /// Elements per lane: `n_voxels + 1`, the voxels and the ghost cell
+    /// (ADR-059). The stride of the flat buffer.
+    #[inline]
+    #[must_use]
+    pub fn lane_len(&self) -> u32 {
+        self.lane_len
+    }
+
+    /// State `N`: the whole flat buffer, every lane, `lane * lane_len + idx`.
+    ///
+    /// **Ghost cells included**, because this is the buffer a kernel is pointed
+    /// at rather than a view of the domain. Anything summing over the world
+    /// wants [`Field::lane`], which is narrowed.
     #[inline]
     #[must_use]
     pub fn read(&self) -> &[T] {
@@ -321,11 +374,23 @@ impl<T> Field<T> {
         (&self.front, &mut self.back)
     }
 
-    /// State `N` of one lane: `n_voxels` entries, indexed by plain `idx`.
+    /// State `N` of one lane: the **`n_voxels` voxels**, indexed by plain `idx`.
+    ///
+    /// Narrowed, and the narrowing is the point. A lane is `n_voxels + 1`
+    /// elements long since ADR-059 and the last of them is the outside
+    /// reservoir; every reduction over the domain comes through here, and one
+    /// that swallowed the ghost would count the reservoir as part of the world.
+    ///
+    /// That mistake survives both residuals. The ghost is constant, so it
+    /// cancels in `after - before` and `ledger_residual_is_zero_over_1e6_ticks`
+    /// stays green; what lies is the absolute sum, and with it the volume export
+    /// and the floor/peak band of worldgen. `a_domain_reduction_skips_the_ghost_
+    /// element` is the only thing that sees it, which is why it is a test of its
+    /// own rather than a corollary of a conservation test.
     #[inline]
     #[must_use]
     pub fn lane(&self, lane: u32) -> &[T] {
-        &self.front[self.lane_range(lane)]
+        &self.front[self.voxel_range(lane)]
     }
 
     /// State `N+1` of one lane, read only.
@@ -340,10 +405,12 @@ impl<T> Field<T> {
     /// Not for a kernel. A kernel that read the buffer it writes would break the
     /// gather form of ADR-034, and the two accessors above are how it gets its
     /// slices; this returns state `N+1` to a reader that is not in a tick at all.
+    ///
+    /// Narrowed to the voxels, like [`Field::lane`], and for the same reason.
     #[inline]
     #[must_use]
     pub fn lane_write(&self, lane: u32) -> &[T] {
-        &self.back[self.lane_range(lane)]
+        &self.back[self.voxel_range(lane)]
     }
 
     /// One lane of each buffer, `(state N, state N+1)`.
@@ -394,23 +461,81 @@ impl<T> Field<T> {
         core::mem::swap(&mut self.front, &mut self.back);
     }
 
-    /// Where a lane lives in a buffer. The one place the layout formula is
-    /// written down.
+    /// Where a lane lives in a buffer, ghost cell included. The one place the
+    /// layout formula is written down.
     #[inline]
     fn lane_range(&self, lane: u32) -> core::ops::Range<usize> {
+        let start = self.lane_start(lane);
+        start..start + self.lane_len as usize
+    }
+
+    /// The voxels of a lane, without the ghost cell. What a reduction over the
+    /// domain gets.
+    #[inline]
+    fn voxel_range(&self, lane: u32) -> core::ops::Range<usize> {
+        let start = self.lane_start(lane);
+        start..start + self.n_voxels as usize
+    }
+
+    #[inline]
+    fn lane_start(&self, lane: u32) -> usize {
         debug_assert!(
             lane < self.lanes,
             "lane {lane} of a field with {} lanes",
             self.lanes
         );
-        // No overflow: `lanes * n_voxels` was checked to fit a u32 at
+        // No overflow: `lanes * lane_len` was checked to fit a u32 at
         // construction, and `lane < lanes`.
-        let start = (lane * self.n_voxels) as usize;
-        start..start + self.n_voxels as usize
+        (lane * self.lane_len) as usize
+    }
+
+    /// The index of one lane's ghost cell in the flat buffer.
+    #[inline]
+    fn ghost_at(&self, lane: u32) -> usize {
+        self.lane_start(lane) + self.n_voxels as usize
     }
 }
 
 impl<T: Copy> Field<T> {
+    /// Seed the ghost cell of one lane with the reservoir, **in both buffers**.
+    ///
+    /// # Both, and this is the whole function
+    ///
+    /// A run of substeps alternates direction rather than swapping (ADR-057),
+    /// so substep 0 reads `front` and substep 1 reads `back`. A ghost seeded
+    /// into `front` alone therefore holds the reservoir on even substeps and a
+    /// zero on odd ones, and the lid becomes an infinite sink every other
+    /// substep.
+    ///
+    /// Nothing else in the project can notice that. Zero is a legal amount; the
+    /// flux stays antisymmetric against whatever the ghost holds; the channel
+    /// counter records exactly what left, because it is computed from the same
+    /// buffer the kernel read; and both residuals close to the unit. The same
+    /// applies after [`Field::restore_lane`], which copies the lane whole — an
+    /// unseeded `back` would overwrite a correctly seeded `front`.
+    ///
+    /// # Panics
+    ///
+    /// In debug builds, if `lane` is not one of this field's lanes.
+    pub fn set_ghost(&mut self, lane: u32, value: T) {
+        let at = self.ghost_at(lane);
+        self.front[at] = value;
+        self.back[at] = value;
+    }
+
+    /// What the ghost cell of one lane holds, out of the front buffer.
+    ///
+    /// [`Field::set_ghost`] keeps the two buffers equal, so which one this reads
+    /// is not a choice a caller has to make.
+    ///
+    /// # Panics
+    ///
+    /// In debug builds, if `lane` is not one of this field's lanes.
+    #[must_use]
+    pub fn ghost(&self, lane: u32) -> T {
+        self.front[self.ghost_at(lane)]
+    }
+
     /// Copy one lane `back -> front`, so that the front buffer holds it.
     ///
     /// **Always in that direction**, and after whatever swap the caller has
@@ -485,11 +610,12 @@ mod tests {
 
     fn fill_write_buffer(field: &mut Field32) {
         let n_voxels = field.n_voxels();
+        let lane_len = field.lane_len();
         let lanes = field.lanes();
         let buffer = field.write_mut();
         for lane in 0..lanes {
             for idx in 0..n_voxels {
-                buffer[(lane * n_voxels + idx) as usize] = pattern(lane, idx);
+                buffer[(lane * lane_len + idx) as usize] = pattern(lane, idx);
             }
         }
     }
@@ -499,9 +625,13 @@ mod tests {
         let field = field();
         assert_eq!(field.lanes(), LANES);
         assert_eq!(field.n_voxels(), NX * NY * NZ);
-        assert_eq!(field.read().len(), (LANES * NX * NY * NZ) as usize);
+        // The buffer carries a ghost cell per lane and the lane view does not
+        // (ADR-059).
+        assert_eq!(field.lane_len(), NX * NY * NZ + 1);
+        assert_eq!(field.read().len(), (LANES * (NX * NY * NZ + 1)) as usize);
         assert!(field.read().iter().all(|&v| v == M32::ZERO));
         assert_eq!(field.lane(0).len(), (NX * NY * NZ) as usize);
+        assert_eq!(field.lane_write(0).len(), (NX * NY * NZ) as usize);
     }
 
     #[test]
@@ -516,7 +646,7 @@ mod tests {
         for lane in 0..LANES {
             for idx in 0..field.n_voxels() {
                 assert_eq!(
-                    field.read()[(lane * field.n_voxels() + idx) as usize],
+                    field.read()[(lane * field.lane_len() + idx) as usize],
                     pattern(lane, idx),
                     "lane {lane}, voxel {idx} did not survive the swap"
                 );
@@ -545,10 +675,12 @@ mod tests {
         assert!(!core::ptr::eq(src.as_ptr(), dst.as_ptr()));
         assert_eq!(src.len(), dst.len());
 
+        // Widened to the ghost cell, because the address `Grid::neighbour`
+        // hands a kernel for an `exchange` face is `n_voxels` (ADR-059).
         let (src, dst) = field.lane_pair_mut(1);
         assert!(!core::ptr::eq(src.as_ptr(), dst.as_ptr()));
-        assert_eq!(src.len(), (NX * NY * NZ) as usize);
-        assert_eq!(dst.len(), (NX * NY * NZ) as usize);
+        assert_eq!(src.len(), (NX * NY * NZ + 1) as usize);
+        assert_eq!(dst.len(), (NX * NY * NZ + 1) as usize);
     }
 
     #[test]
@@ -567,7 +699,7 @@ mod tests {
                 assert_eq!(slice[idx as usize], pattern(lane, idx));
                 assert_eq!(
                     slice[idx as usize],
-                    field.read()[(lane * field.n_voxels() + idx) as usize]
+                    field.read()[(lane * field.lane_len() + idx) as usize]
                 );
             }
         }
@@ -660,6 +792,7 @@ mod tests {
         assert_eq!(narrow.read().len(), wide.read().len());
         for lane in 0..LANES {
             assert_eq!(narrow.lane(lane).len(), wide.lane(lane).len());
+            assert_eq!(narrow.lane_len(), wide.lane_len());
         }
     }
 
@@ -744,15 +877,27 @@ mod tests {
         substeps[9] = 2;
         let split = ParitySplit::from_substeps(&substeps);
 
-        let traffic = split.bytes_per_tick(N_VOXELS, Width::Bits32);
-        assert_eq!(traffic, 2 * 3 * u64::from(N_VOXELS) * 4);
-        assert_eq!(traffic, 50_331_648);
+        // The number ADR-057 prices, over the voxels.
+        let priced = split.bytes_per_tick(N_VOXELS, Width::Bits32);
+        assert_eq!(priced, 2 * 3 * u64::from(N_VOXELS) * 4);
+        assert_eq!(priced, 50_331_648);
+
+        // And the number actually paid, over the lane. `restore_lane` copies the
+        // lane whole, ghost cell included (ADR-059), so this is what the loader
+        // has to print: one element per copied lane more, twenty-four bytes at
+        // this width, and the argument for taking it from the same rule as the
+        // copy is ADR-057's own — two numbers computed by two rules is a report
+        // that lies.
+        const LANE_LEN: u32 = N_VOXELS + 1;
+        let traffic = split.bytes_per_tick(LANE_LEN, Width::Bits32);
+        assert_eq!(traffic, 2 * 3 * u64::from(LANE_LEN) * 4);
+        assert_eq!(traffic - priced, 2 * 3 * 4);
 
         // The same three lanes at the other width cost twice as much, which is
         // the whole reason the parity of the *water* lane is the expensive one.
-        assert_eq!(split.bytes_per_tick(N_VOXELS, Width::Bits64), 2 * traffic);
+        assert_eq!(split.bytes_per_tick(LANE_LEN, Width::Bits64), 2 * traffic);
         assert_eq!(
-            ParitySplit::from_substeps(&[2, 2]).bytes_per_tick(N_VOXELS, Width::Bits64),
+            ParitySplit::from_substeps(&[2, 2]).bytes_per_tick(LANE_LEN, Width::Bits64),
             0
         );
     }
@@ -770,14 +915,14 @@ mod tests {
         let mut field = field();
         for lane in 0..LANES {
             for idx in 0..field.n_voxels() {
-                let at = (lane * field.n_voxels() + idx) as usize;
+                let at = (lane * field.lane_len() + idx) as usize;
                 field.write_mut()[at] = pattern(lane, idx);
             }
         }
         field.swap();
         for lane in 0..LANES {
             for idx in 0..field.n_voxels() {
-                let at = (lane * field.n_voxels() + idx) as usize;
+                let at = (lane * field.lane_len() + idx) as usize;
                 field.write_mut()[at] = -pattern(lane, idx);
             }
         }
@@ -809,11 +954,12 @@ mod tests {
         // differs, and that is `the_restoration_copies_the_smaller_parity_group`.
         let seed = |field: &mut Field32, sign: i32| {
             let n_voxels = field.n_voxels();
+            let lane_len = field.lane_len();
             let lanes = field.lanes();
             let buffer = field.write_mut();
             for lane in 0..lanes {
                 for idx in 0..n_voxels {
-                    buffer[(lane * n_voxels + idx) as usize] =
+                    buffer[(lane * lane_len + idx) as usize] =
                         M32::new(sign * pattern(lane, idx).to_i64() as i32);
                 }
             }

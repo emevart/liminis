@@ -219,6 +219,7 @@ impl Pressure {
                 ny: grid.ny(),
                 nz: grid.nz(),
                 n_voxels: grid.n_voxels(),
+                lane_len: grid.lane_len(),
                 n_occupants: occupants.len() as u32,
                 width_mask,
                 periodic_mask: periodic_mask(grid)?,
@@ -420,9 +421,16 @@ fn periodic_mask(grid: &Grid) -> Result<u32> {
             // "closed", and quietly sealing a face that is supposed to vent is
             // exactly the error the refusal upstream exists to prevent.
             Boundary::Exchange => bail!(
-                "face {face:?} is an exchange face: matter crossing it belongs in \
-                 the BOUNDARY_EXCHANGE channel (ADR-059), and this process credits \
-                 no channel at all"
+                "face {face:?} is an exchange face, and this process has no \
+                 behaviour on one. The counters exist and the ghost cell exists \
+                 (ADR-059) — what does not exist is a decision about what this \
+                 operator does at the face of the domain: `settling_out_of_the_\
+                 top_face_appears_in_boundary_exchange` (`ACCEPTANCE.md`) names \
+                 an outcome for settling and no mechanism, and pressure and the \
+                 velocity field are named by nothing at all. Refused rather than \
+                 treated as closed, because a lid sealed for one operator and \
+                 vented for the others is a difference in the flux that reads as \
+                 physics"
             ),
         }
     }
@@ -502,8 +510,8 @@ mod tests {
         // assertion would be blind to exactly the lane whose net flux is zero.
         let pressure = built();
         let (mut narrow, mut wide) = state();
-        let before_32: Vec<M32> = narrow.read().to_vec();
-        let before_64: Vec<M64> = wide.read().to_vec();
+        let before_32: Vec<M32> = narrow.lane(0).to_vec();
+        let before_64: Vec<M64> = wide.lane(0).to_vec();
 
         let mut overflow = vec![Q::ZERO; N_VOXELS as usize];
         pressure.overflow(&before_32, &before_64, &mut overflow);
@@ -529,10 +537,10 @@ mod tests {
         let mut scratch = vec![Q::ZERO; N_VOXELS as usize];
         pressure.apply(Some(&mut narrow), Some(&mut wide), &mut scratch);
 
-        assert_eq!(narrow.read(), &expected_32[..]);
-        assert_eq!(wide.read(), &expected_64[..]);
+        assert_eq!(narrow.lane(0), &expected_32[..]);
+        assert_eq!(wide.lane(0), &expected_64[..]);
         // And the state moved, or the equality above holds over a no-op.
-        assert_ne!(narrow.read(), &before_32[..]);
+        assert_ne!(narrow.lane(0), &before_32[..]);
 
         // The repair is a swap and nothing else: one substep per lane is odd, and
         // the even group is empty.
@@ -552,11 +560,11 @@ mod tests {
         }];
         let pressure = Pressure::new(&floored(), THETA_MAX, &narrow_only, V_VOXEL).unwrap();
         let (mut narrow, _) = state();
-        let before: Vec<M32> = narrow.read().to_vec();
+        let before: Vec<M32> = narrow.lane(0).to_vec();
 
         let mut overflow = vec![Q::ZERO; N_VOXELS as usize];
         pressure.apply(Some(&mut narrow), None, &mut overflow);
-        assert_ne!(narrow.read(), &before[..]);
+        assert_ne!(narrow.lane(0), &before[..]);
         assert_eq!(pressure.params().width_mask, 0);
     }
 

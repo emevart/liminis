@@ -85,13 +85,13 @@
 //!
 //! | step | what is missing |
 //! |---|---|
-//! | `a` light | `i_surface` is declared by no key, and the fold it feeds cannot be built |
-//! | `b` velocity | the heat capacity field `C_cell` of ADR-062 is named in `world/world.rs` and not allocated |
+//! | `a` light | a lit scenario is refused by two locks at once: energy has no sink, and the width of a channel counter is A-20 (A-19 in ADR-075 and ADR-076, drafted while that number was free) |
+//! | `b` velocity | `Scratch` holds none of the three potential buffers `VelocityField::apply` writes |
 //! | `e` pressure | `theta_max` is declared nowhere (`TODO(theta-max)`) |
 //! | `f` settling | `g` and `rho_medium` are named by no document (ADR-067, ADR-069) |
-//! | `h` reactions | no operator turns enthalpy into a temperature field (ADR-062) |
-//! | `i'` fold | `joules_per_intensity`, and what the fold owes the ledger (A-16) |
-//! | `j` channels | the exchange face is not buildable and there are no events |
+//! | `h` reactions | both arches of the invariant under chemistry, and step `i'` with it |
+//! | `i'` fold | step `h`, which it is dispatched with or not at all |
+//! | `j` channels | there are no events, and no emissivity or vent composition |
 //!
 //! A refusal rather than a skip, because a skipped step is a different world that
 //! looks like the same one. The one thing a refusal costs is that the roster's
@@ -124,6 +124,36 @@
 //! on to move nothing, and
 //! `a_disabled_process_leaves_every_buffer_bit_for_bit` staying green because
 //! asserting exactly that is what it is for.
+//!
+//! # Where the temperature is recomputed, and why it is a decision
+//!
+//! `process::Temperature` is a step of this tick and not a process of the roster
+//! (ADR-065 closed the roster at nine; `process/mod.rs` says why), so no
+//! `[[process]]` record can move it and this file is where its place in the order
+//! is written down. **It runs immediately before step `h`.**
+//!
+//! No document named the step and ADR-079 does. `T` has two consumers and they
+//! stand on opposite
+//! sides of the transport: step `b` reads the heat capacity `C_cell` — the same
+//! sum, before advection and diffusion have moved anything — and step `h` reads
+//! `T` after all four transport steps. One recomputation a tick serves exactly
+//! one of them correctly, and ADR-044 allows only one ("the composition changes
+//! once per tick, so recomputing once per tick *is* recomputing", ADR-062).
+//!
+//! Recomputing before `h` gives the chemistry the composition it is actually
+//! running on, and leaves step `b` with the previous tick's capacity — which is
+//! what ADR-069 asks for in as many words, "out of last tick's enthalpy". The
+//! other placement, at the top of the tick, would serve `b` and hand `h` a
+//! temperature four transport steps stale. Neither is visible from any test that
+//! is not this sentence: `T` is class `Q`, it enters no invariant, and both
+//! halves of the ledger close exactly under either.
+//!
+//! That makes the placement world semantics of the same standing as the order of
+//! the operators (ADR-036), and it moves `WORLD_FORMAT_VERSION` with them
+//! (ADR-020). It is not in [`STEP_ORDER`] and ADR-079 says it stays out: that
+//! array is the nine letters SPEC section 8 prints and is guarded by a test that
+//! spells them out, and this operator is a step of the tick rather than a letter
+//! of the spec. Nothing dispatches it today, because step `h` does not dispatch.
 //!
 //! # The stale accumulator, said out loud
 //!
@@ -302,6 +332,16 @@ pub struct Tick {
     /// of another world's width — `Ledger::residual_matter` catches the narrow
     /// case loudly and the wide case not at all.
     n_substances: u32,
+    /// The substance each lane of the narrow field carries, in **lane** order.
+    ///
+    /// Built once through `World::lane_of`, which is the one door from a
+    /// substance to a buffer address (ADR-056), and handed to both transport
+    /// phases so that what crosses the lid is credited to the right substance. A
+    /// substance-indexed table here would be right for lane 0 and off by one
+    /// from there on, and the ledger would close against somebody else's flow.
+    substance_of_lane_32: Vec<u32>,
+    /// The same for the wide field.
+    substance_of_lane_64: Vec<u32>,
     /// Voxels of the fine grid, for the shape of the Courant buffer.
     n_voxels: u32,
     /// Cells of the enthalpy grid, for the shape of the other one.
@@ -353,8 +393,10 @@ impl Scratch {
             // the roster would change length when a process is switched off, and
             // `a_disabled_process_leaves_every_buffer_bit_for_bit` compares
             // buffers.
-            face_courant: vec![Q::ZERO; 3 * n_voxels],
-            enthalpy_courant: vec![Q::ZERO; 3 * world.enthalpy_grid().n_voxels() as usize],
+            // `lane_len` per axis and not `n_voxels`: the ghost cell owns the
+            // Courant number of the face of the domain (ADR-059).
+            face_courant: vec![Q::ZERO; 3 * (n_voxels + 1)],
+            enthalpy_courant: vec![Q::ZERO; 3 * (world.enthalpy_grid().n_voxels() as usize + 1)],
             before: DomainSums::new(tick.n_substances).context("the domain sums before a tick")?,
             after: DomainSums::new(tick.n_substances).context("the domain sums after a tick")?,
         })
@@ -517,6 +559,11 @@ impl Tick {
             (None, None, None)
         };
 
+        // One exchange velocity per reservoir, and zero when the scenario
+        // declares none — which the validator ties to "no face is `exchange`"
+        // in both directions, so a grid that vents always has a number here.
+        let k_ex = derived.reservoir().map_or(0.0, |r| r.k_ex);
+
         let (diffuse_32, diffuse_64, diffuse_h) = if enabled[row(ProcessId::Diffusion)] {
             // Per lane and never per substance: on the registry the project
             // carries, water is first and takes lane 0, so a substance-indexed
@@ -525,10 +572,10 @@ impl Tick {
             let d64 = diffusivity_by_lane(world, derived, Width::Bits64);
             (
                 fold_per_width(lanes_32, |lanes| {
-                    DiffusePhase::new_32(grid, lanes, &d32, dt, dx)
+                    DiffusePhase::new_32(grid, lanes, &d32, dt, dx, k_ex)
                 })?,
                 fold_per_width(lanes_64, |lanes| {
-                    DiffusePhase::new_64(grid, lanes, &d64, dt, dx)
+                    DiffusePhase::new_64(grid, lanes, &d64, dt, dx, k_ex)
                 })?,
                 Some(DiffusePhase::new_64(
                     enthalpy_grid,
@@ -536,6 +583,7 @@ impl Tick {
                     &[enthalpy.diffusivity],
                     dt,
                     enthalpy.coarse_dx,
+                    k_ex,
                 )?),
             )
         } else {
@@ -551,6 +599,8 @@ impl Tick {
             diffuse_h,
             enabled,
             every_n,
+            substance_of_lane_32: substance_by_lane(world, Width::Bits32),
+            substance_of_lane_64: substance_by_lane(world, Width::Bits64),
             n_substances: registry.n_substances(),
             n_voxels: grid.n_voxels(),
             n_enthalpy_cells: enthalpy_grid.n_voxels(),
@@ -625,12 +675,12 @@ impl Tick {
         );
         assert_eq!(
             scratch.face_courant.len(),
-            3 * self.n_voxels as usize,
+            3 * (self.n_voxels as usize + 1),
             "the Courant buffer does not have the shape this tick was folded for"
         );
         assert_eq!(
             scratch.enthalpy_courant.len(),
-            3 * self.n_enthalpy_cells as usize,
+            3 * (self.n_enthalpy_cells as usize + 1),
             "the enthalpy Courant buffer does not have the shape this tick was \
              folded for"
         );
@@ -683,23 +733,28 @@ impl Tick {
                     // from the applications the phase *ran* (ADR-057).
                     let courant = &scratch.face_courant;
                     if let (Some(phase), Some(field)) = (&self.advect_32, world.amounts_32_mut()) {
-                        phase.apply_32(field, courant);
+                        phase.apply_32(field, courant, &self.substance_of_lane_32, ledger);
                     }
                     if let (Some(phase), Some(field)) = (&self.advect_64, world.amounts_64_mut()) {
-                        phase.apply_64(field, courant);
+                        phase.apply_64(field, courant, &self.substance_of_lane_64, ledger);
                     }
                     // The enthalpy, which SPEC section 8 names on this line
-                    // beside the substances. Its own grid, so its own buffer.
+                    // beside the substances. Its own grid, so its own buffer,
+                    // and its own half of the ledger (ADR-028, ADR-067).
                     if let Some(phase) = &self.advect_h {
-                        phase.apply_64(world.enthalpy_mut(), &scratch.enthalpy_courant);
+                        phase.apply_enthalpy(
+                            world.enthalpy_mut(),
+                            &scratch.enthalpy_courant,
+                            ledger,
+                        );
                     }
                 }
                 Step::Diffusion => {
                     if let (Some(phase), Some(field)) = (&self.diffuse_32, world.amounts_32_mut()) {
-                        phase.apply_32(field);
+                        phase.apply_32(field, &self.substance_of_lane_32, ledger);
                     }
                     if let (Some(phase), Some(field)) = (&self.diffuse_64, world.amounts_64_mut()) {
-                        phase.apply_64(field);
+                        phase.apply_64(field, &self.substance_of_lane_64, ledger);
                     }
                     // "энтальпия на 32³ — шесть": the six substeps of ADR-062 are
                     // the record's own, derived from `thermal_diffusivity` at the
@@ -707,7 +762,7 @@ impl Tick {
                     // diffusion is the fastest transport in the system (ADR-028),
                     // and this is the one line that performs it.
                     if let Some(phase) = &self.diffuse_h {
-                        phase.apply_64(world.enthalpy_mut());
+                        phase.apply_enthalpy(world.enthalpy_mut(), ledger);
                     }
                 }
             }
@@ -781,7 +836,11 @@ impl Tick {
         // Energy: the enthalpy field, and nothing else in S0. `i64` since
         // ADR-062; the narrow door of `ledger/mod.rs` is the one that predates
         // that record.
-        out.add_enthalpy_lane_64(world.enthalpy().read());
+        // `lane(0)` and not `read()`: the second carries the ghost cell, which
+        // is the reservoir and not part of the domain (ADR-059, ADR-068). The
+        // residual cannot see the difference — a constant cancels in
+        // `after - before` — so only the absolute sum would lie.
+        out.add_enthalpy_lane_64(world.enthalpy().lane(0));
 
         // The doors S0 has no data for. Three empty constants, and two of them
         // behind a lookup that answers `None` on every registry that exists — so
@@ -843,6 +902,27 @@ fn fold_per_width<T>(lanes: u32, fold: impl FnOnce(u32) -> Result<T>) -> Result<
     fold(lanes).map(Some)
 }
 
+/// The substance index behind every lane of one width class, in lane order.
+///
+/// Through `World::lane_of`, which is the one door (ADR-056). What it feeds is
+/// the channel credit of steps `c` and `d`: a table built the other way round
+/// would post the lid's flow of one substance against another's counter, and
+/// `Ledger::assert_closed` would then fail on **two** substances at once with
+/// nothing pointing at the mapping.
+fn substance_by_lane(world: &World, width: Width) -> Vec<u32> {
+    let lanes = world.registry().lanes(width) as usize;
+    let mut by_lane = vec![0u32; lanes];
+    for s in 0..world.registry().n_substances() {
+        match (world.lane_of(s), width) {
+            (LaneRef::Narrow(lane), Width::Bits32) | (LaneRef::Wide(lane), Width::Bits64) => {
+                by_lane[lane as usize] = s;
+            }
+            _ => {}
+        }
+    }
+    by_lane
+}
+
 /// The diffusivity of every lane of one width class, in lane order.
 ///
 /// Indexed by lane and filled through `World::lane_of`, which is the one door
@@ -878,23 +958,37 @@ fn refuse_if_blocked(id: ProcessId) -> Result<()> {
     match id {
         ProcessId::Advection | ProcessId::Diffusion => Ok(()),
         ProcessId::Light => bail!(
-            "process `{}` is enabled and step `a` cannot be dispatched: \
-             `Light::new` wants the irradiance on the top face, and no key \
-             declares it — `LightParams::i_surface` and `FoldParams::i_surface` \
-             have to be the same number folded by the host (ADR-049), the fold \
-             of step `i'` cannot be built either (`TODO(joules-per-intensity)` in \
-             `kernels/fold.rs`), and light computed but never folded is a field \
-             that no ledger ever reads. Its default is \
-             enabled = {} (`process/light.rs`)",
+            "process `{}` is enabled and step `a` cannot be dispatched, and what \
+             blocks it is no longer a missing number: ADR-076 declares `i_surface` \
+             and derives `units_per_intensity`, and ADR-075 settles what the fold \
+             owes the ledger. What blocks it is a **pair** of open questions, and \
+             neither is enough on its own. Energy has no sink in any scenario — \
+             `RADIATIVE_OUT` is unimplemented and step `j` has nothing to write — \
+             so absorbed light accumulates without bound and crosses the declared \
+             temperature range in about 42 ticks at full sun, taking the Courant \
+             bound proved at load with it. And the width of a channel counter is \
+             open question A-20 — A-19 in ADR-075 and ADR-076, which were drafted \
+             while that number was free — and an i64 `SOLAR_IN` holds \
+             2^63/2^k_E = 62.5 mJ at k_E = 67, against 0.16384 J for one lit tick \
+             of a 128^3 domain — 2.62 ceilings in a tick, so lifting the sink \
+             alone would trade a \
+             silent overflow of the field for a loud panic in the ledger. \
+             `config/validate.rs` refuses a scenario with i_surface > 0 by the \
+             same two locks; a dark box, i_surface = 0, is legal there and \
+             pointless here. Its default is enabled = {} (`process/light.rs`, \
+             ADR-076)",
             id.id(),
             light::ENABLED_BY_DEFAULT
         ),
         ProcessId::VelocityField => bail!(
             "process `{}` is enabled and step `b` cannot be dispatched: \
-             `VelocityField::apply` reads the heat capacity field `C_cell` on the \
-             enthalpy grid (ADR-062), and `world::World` names that buffer without \
-             allocating it — see the header of `world/world.rs`. Its default is \
-             enabled = {} (ADR-069)",
+             `VelocityField::apply` writes three buffers `Scratch` does not hold \
+             — the coarse potential on the enthalpy grid, the potential \
+             interpolated onto the velocity grid, and the stirred copy of it \
+             (ADR-069) — and nothing in this crate allocates them. The heat \
+             capacity `C_cell` this step reads is no longer among the blockers: \
+             `process/temperature.rs` fills it and `world::World` owns the buffer. \
+             Its default is enabled = {} (ADR-069)",
             id.id(),
             velocity::VELOCITY_FIELD_ENABLED_BY_DEFAULT
         ),
@@ -928,22 +1022,39 @@ fn refuse_if_blocked(id: ProcessId) -> Result<()> {
             super::phase::ENABLED_BY_DEFAULT
         ),
         ProcessId::Reactions => bail!(
-            "process `{}` is enabled and step `h` cannot be dispatched: \
-             `React::apply` reads a temperature field on the enthalpy grid, and \
-             no operator derives it from enthalpy and C_cell — ADR-062 gives the \
-             scale and the grid, not the operator, and `world::World` allocates no \
-             buffer for it. Steps `h` and `i'` are dispatched together or not at \
-             all (ADR-045: the reaction kernel overwrites its cell, so a fold over \
-             a stale accumulator credits last tick's energy again). Its default is \
+            "process `{}` is enabled and step `h` cannot be dispatched, and the \
+             temperature is no longer what blocks it — `process/temperature.rs` \
+             derives `T` from enthalpy and the actual composition (ADR-044, \
+             ADR-062) and `world::World` owns both coarse buffers. What is left is \
+             both arches of the invariant. Matter: `ledger::residual_matter` is \
+             taken per substance and chemistry turns substances into one another, \
+             so `Ledger::assert_closed` panics on the first tick with any reaction \
+             in it, and the statement chemistry does satisfy is an arm of \
+             `process::Conservation` that no record has worded. Energy: \
+             `Tick::domain_sums` counts the enthalpy field alone, there is no door \
+             for the chemical energy of the substances, and the sign of the \
+             increment — `nu_E` or `-nu_E`, that is, whether an exothermic \
+             reaction warms the cell — is chosen by nothing. Step `i'` is no longer \
+             blocked in its own right — ADR-076 derives `units_per_intensity` and \
+             ADR-075 settles what the fold owes the ledger (A-16 closed) — but \
+             the two are dispatched together or not at all \
+             (ADR-045: the reaction kernel overwrites its cell, so a fold over a \
+             stale accumulator credits last tick's energy again). Its default is \
              enabled = {} (`process/react.rs`)",
             id.id(),
             react::ENABLED_BY_DEFAULT
         ),
         ProcessId::ExternalChannels => bail!(
-            "process `{}` is enabled and step `j` has nothing to write: the \
-             exchange face is refused by every transport process, there are no \
-             events, and both of the heat channels ADR-059 assigns to this step \
-             need a temperature field that does not exist. Its default is \
+            "process `{}` is enabled and step `j` has nothing to write: there are \
+             no events — `IMPACT` and `VENT_BURST` are described by no schedule, \
+             key or type anywhere. `BOUNDARY_EXCHANGE` is not among the blockers \
+             and never was this step's to write: steps `c` and `d` credit it on \
+             every substep (ADR-059). The temperature field is no longer among \
+             them either, but the two heat channels ADR-059 does assign here \
+             are: \
+             `RADIATIVE_OUT` wants an emissivity nothing declares, `GEOTHERMAL_IN` \
+             a heat flux and a vent composition, and the sign convention of a \
+             counter is `TODO(counter-sign)` in `ledger/mod.rs`. Its default is \
              enabled = {} (`process/channels.rs`)",
             id.id(),
             super::channels::ENABLED_BY_DEFAULT

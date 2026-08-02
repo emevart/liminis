@@ -4,6 +4,11 @@
 //! same_seed_gives_the_same_initial_state
 //! different_seed_gives_a_different_initial_state
 //! worldgen_respects_declared_max_conc
+//! layer_sides_are_anticorrelated_across_the_boundary
+//! the_layer_side_does_not_change_with_the_seed
+//! a_substance_declared_uniform_has_no_layer_step
+//! the_initial_band_keeps_every_substance_strictly_above_zero
+//! the_written_default_and_the_omitted_section_give_one_world
 //! ```
 //!
 //! Plus three that no record names and that nothing else can see: that the front
@@ -46,7 +51,7 @@
 use liminis_core::config;
 use liminis_core::numeric::run_key;
 use liminis_core::world::{Boundary, Grid, LaneRef, Registry, SubstanceDecl, World, WorldLayout};
-use liminis_core::worldgen::generate;
+use liminis_core::worldgen::{WorldgenReport, generate};
 
 /// Substance indices of the fixture, in declaration order.
 const H2S: u32 = 0;
@@ -193,9 +198,29 @@ t_max = 323.15
 
 /// Parse, validate and derive the fixture.
 fn derived() -> config::Derived {
-    let config = config::parse(SCENARIO).expect("the fixture must parse");
+    derived_from(SCENARIO)
+}
+
+/// The same for a scenario the caller has rewritten.
+fn derived_from(text: &str) -> config::Derived {
+    let config = config::parse(text).expect("the fixture must parse");
     config::validate(&config).expect("the fixture must validate")
 }
+
+/// The fixture with an `[initial.layer]` table appended (ADR-077).
+///
+/// Appended and not woven in: the section is a root table, so it may stand after
+/// the last `[[field]]` record, and a fixture that spelled it into the middle
+/// would have to be moved again every time the scenario grows.
+fn with_layers(sides: &str) -> String {
+    format!("{SCENARIO}\n[initial.layer]\n{sides}")
+}
+
+/// The run key ADR-077 measured the two branches of `amount_at` on.
+///
+/// A run key and not a seed: `generate` takes the fourth counter already folded
+/// (ADR-058), so the number that identifies a world here is this one.
+const LAYER_KEY: u32 = 99;
 
 /// A world on the fixture's registry: periodic in X and Y, closed floor and lid.
 ///
@@ -254,7 +279,7 @@ fn front(world: &World, s: u32) -> Vec<i128> {
 }
 
 /// Both bounds of the band a substance is filled inside, from the report.
-fn band(report: &liminis_core::worldgen::WorldgenReport, s: u32) -> (i128, i128) {
+fn band(report: &WorldgenReport, s: u32) -> (i128, i128) {
     let fill = &report.per_substance[s as usize];
     (
         fill.amount_at_typical - fill.excursion,
@@ -440,21 +465,421 @@ fn worldgen_respects_declared_max_conc() {
         );
 
         // (c) And the ceiling is not merely missed by the width of a rounding.
-        // The rule that makes this true is not stated here and must not be:
-        // `TODO(worldgen-excursion)` in `worldgen/mod.rs` carries it, together
-        // with the reason it is a `TODO` — no `[initial]` section declares how far
-        // an initial condition may wander (`CONFIG_SCHEMA.md` section 13). What is
-        // asserted here is the weaker consequence any such rule owes: a quarter of
-        // the headroom of clearance, so that "inside the ceiling" cannot be
-        // satisfied by landing next to it.
+        // The clearance is half of the headroom rather than a quarter, and it is
+        // the ratified rule rather than a threshold chosen here: ADR-077 turns
+        // `excursion = min(typical, max - typical)/2` into a consequence, and out
+        // of the single inequality `2*excursion <= min(typical, max - typical)`
+        // the peak obeys `2*(typical + excursion) <= typical + max` exactly. The
+        // quarter this line used to carry was written twice in the corpus and
+        // decided by nobody; the unit form of the same bound is
+        // `the_band_is_bounded_by_both_headrooms`.
         let headroom = fill.amount_at_max - fill.amount_at_typical;
         assert!(
-            highest <= fill.amount_at_typical + headroom * 3 / 4,
+            highest <= fill.amount_at_typical + headroom / 2,
             "{}: {highest} is within a rounding of the ceiling {}",
             fill.id,
             fill.amount_at_max
         );
     }
+}
+
+// ---------------------------------------------------------------------------
+// the layer side of a substance
+// ---------------------------------------------------------------------------
+
+/// How much more of substance `s` the water column holds than the sediment, in
+/// units, as the difference of the two group means.
+///
+/// The two groups are told apart by `H2S` and never by the relief, which is
+/// private to `worldgen/` — a test that recomputed it would agree with a wrong
+/// implementation by construction. For a substance on a side, the sign of
+/// `amount - amount_at_typical` **is** the sign of the layer term: the blend is
+/// `(layer + noise)/2` with a layer term of amplitude `UNIT` and `|noise| <=
+/// UNIT`, so a voxel above its typical amount cannot be a water voxel. The
+/// voxels sitting exactly on the typical amount are the ties that bound allows,
+/// and they belong to neither group.
+///
+/// Every fixture below therefore leaves `H2S` on the default side, and the
+/// caller that wants to know whether the partition means anything asks for the
+/// step of `H2S` itself.
+fn layer_step(world: &World, report: &WorldgenReport, s: u32) -> f64 {
+    let marker = front(world, H2S);
+    let typical = report.per_substance[H2S as usize].amount_at_typical;
+    let amounts = front(world, s);
+
+    let (mut sediment, mut n_sediment) = (0i128, 0i128);
+    let (mut water, mut n_water) = (0i128, 0i128);
+    for (idx, &here) in marker.iter().enumerate() {
+        match here.cmp(&typical) {
+            std::cmp::Ordering::Greater => {
+                sediment += amounts[idx];
+                n_sediment += 1;
+            }
+            std::cmp::Ordering::Less => {
+                water += amounts[idx];
+                n_water += 1;
+            }
+            std::cmp::Ordering::Equal => {}
+        }
+    }
+    assert!(
+        n_sediment > 0 && n_water > 0,
+        "the partition put every voxel on one side: {n_sediment} sediment, \
+         {n_water} water"
+    );
+    water as f64 / n_water as f64 - sediment as f64 / n_sediment as f64
+}
+
+/// The lowest and the highest amount of substance `s` over one plane of `z`.
+///
+/// A plane and not a group, because the two callers below want the one thing
+/// [`layer_step`] cannot give: a region of space named by the axis rather than by
+/// the field. Every measurement taken through the partition is relative — the
+/// groups are read off `H2S`'s own deviation — and relative measurements are
+/// invariant under swapping the two ends of the world.
+fn plane_extremes(world: &World, s: u32, plane: u32) -> (i128, i128) {
+    let grid = *world.grid();
+    let amounts = front(world, s);
+
+    let mut lowest = i128::MAX;
+    let mut highest = i128::MIN;
+    for (idx, &amount) in amounts.iter().enumerate() {
+        let (_, _, z) = grid.coords(idx as u32);
+        if z == plane {
+            lowest = lowest.min(amount);
+            highest = highest.max(amount);
+        }
+    }
+    assert!(lowest <= highest, "the plane z = {plane} is empty");
+    (lowest, highest)
+}
+
+/// The floor of the domain: the one plane that is sediment in every column, under
+/// every key, on every grid the generator accepts.
+///
+/// The relief is confined so that each of the two layers keeps at least a voxel
+/// of the domain — a boundary sitting on the floor or on the lid leaves one layer
+/// out of the world entirely, and `worldgen/` says so where it draws the surface.
+/// So the boundary is at height one or more and `z = 0` is under it, whatever the
+/// noise did. The weakest form of that promise on purpose: a test that assumed
+/// the two planes this fixture actually has to spare would go red on a change to
+/// the confinement that breaks nothing.
+const FLOOR_PLANE: u32 = 0;
+
+/// And the lid, by the same argument from the other end: the boundary is at
+/// `nz - 2` or lower, so the topmost plane is water in every column.
+const LID_PLANE: u32 = N - 1;
+
+/// A substance declared `uniform` has no layer term at all, and keeps its own
+/// noise at full amplitude (ADR-077).
+///
+/// Four assertions, and only the last one sees the rejected `blended = noise/2`
+/// — "the side is off, keep the amplitude". That form has no step across the
+/// boundary either, so (b) does not separate it from the accepted one; and it
+/// narrows the span exactly as removing the layer term does, so (c) is green
+/// under it too, a halved band still being narrower than a sided one. What
+/// separates them is (d), which compares the two branches where the layer term
+/// is present but *constant*, and there the accepted form is twice the other by
+/// construction.
+///
+/// No number of the fixture is written down here. ADR-077 refuses to print the
+/// four bounds it measured and says why: they depend on the truncation towards
+/// zero in `amount_at`, and a number printed from a model rather than from a run
+/// disagreed with the generator by units. Printed here it would become a
+/// blessing for today's code for ever. (d) is a ratio of two runs of the same
+/// generator for the same reason: the factor is the one the branch divides by,
+/// and neither spread is a number this file claims to know.
+#[test]
+fn a_substance_declared_uniform_has_no_layer_step() {
+    let derived = derived_from(&with_layers("O2 = \"uniform\"\n"));
+    let mut filled = world(&derived);
+    let report = generate(&mut filled, &derived, LAYER_KEY).expect("must generate");
+
+    // (a) The partition is worth something: the fixture's layered substance has
+    // a step across it, of the order of its own band.
+    let layered = layer_step(&filled, &report, H2S);
+    let band_h2s = report.per_substance[H2S as usize].excursion as f64;
+    assert!(
+        layered.abs() >= band_h2s / 2.0,
+        "H2S is layered and its step across the boundary is {layered}, under \
+         half of its excursion {band_h2s} — the partition is measuring noise"
+    );
+
+    // (b) Oxygen, declared `uniform`, has none.
+    //
+    // A quarter of the band and not zero, and the threshold is taken from (a)
+    // rather than fitted: a side has to show at least half of a band, so half of
+    // that floor separates the two by a factor of two and no layer term can hide
+    // under it. A substance without one still steps a little across this
+    // partition, and it is not a leftover layer — the groups are regions of
+    // space, the substance's own octaves carry structure at the scale of the
+    // domain, and the mean of a smooth field over half a domain is not its mean
+    // over the whole. What the assertion has to exclude is a term of the order
+    // of the band itself.
+    let flat = layer_step(&filled, &report, O2);
+    let band_o2 = report.per_substance[O2 as usize].excursion as f64;
+    assert!(
+        flat.abs() <= band_o2 / 4.0,
+        "O2 is declared uniform and still steps by {flat} across the boundary, \
+         over a quarter of its excursion {band_o2}"
+    );
+
+    // (c) And it takes a narrower part of its band than the same substance takes
+    // under a side, on the same key: the layer term is a square wave of
+    // amplitude `UNIT` and the substance's own noise is not.
+    let sided = derived_from(&with_layers("O2 = \"sediment\"\n"));
+    let mut other = world(&sided);
+    let with_side = generate(&mut other, &sided, LAYER_KEY).expect("must generate");
+    let span = |report: &WorldgenReport| {
+        let fill = &report.per_substance[O2 as usize];
+        fill.peak - fill.floor
+    };
+    assert!(
+        span(&report) < span(&with_side),
+        "O2 spans {} under `uniform` and {} under `sediment`; the uniform branch \
+         is supposed to take the smaller part of the band",
+        span(&report),
+        span(&with_side)
+    );
+
+    // (d) And the noise it is left with is the whole of its own, not half of it.
+    //
+    // Measured over the floor of the domain, where the two runs differ by exactly
+    // one thing: the layered one carries a layer term of `+UNIT` in every voxel
+    // of that plane and the uniform one carries no layer term at all. The
+    // substance's noise is the same field in both — `rand` is a hash of four
+    // counters, so the stream of a slot does not know which branch reads it, and
+    // the two runs share the key, the slot and the octave count. What is left
+    // varying is therefore the substance's own noise: halved in the layered run
+    // by the `/2` of the blend, whole in the uniform one, so the two spreads
+    // stand as two to one. Under the rejected `blended = noise/2` they stand as
+    // one to one, and this is the only measurement in the file that sees it.
+    let spread = |world: &World| {
+        let (low, high) = plane_extremes(world, O2, FLOOR_PLANE);
+        high - low
+    };
+    let sided_spread = spread(&other);
+    let flat_spread = spread(&filled);
+    assert!(
+        sided_spread > 0,
+        "the layered run is flat over the floor plane, which makes the ratio \
+         below vacuous"
+    );
+    // A bracket around two rather than an equality: the blend divides twice and
+    // both divisions truncate, which moves either spread by units out of
+    // millions. Three halves and four, so the rejected form — sitting at one —
+    // misses the lower end by half of itself.
+    assert!(
+        flat_spread >= 3 * sided_spread / 2 && flat_spread <= 4 * sided_spread,
+        "over the floor plane O2 spreads by {flat_spread} under `uniform` and by \
+         {sided_spread} under `sediment`; the layer term is constant there, so \
+         the uniform branch is supposed to carry twice the layered one, and a \
+         ratio of one is `blended = noise/2` (ADR-077, rejected)"
+    );
+}
+
+/// The two sides sit on opposite sides of the boundary, `uniform` on neither,
+/// and `sediment` is the floor of the world.
+///
+/// One fixture declares all three at once, which is the only way to see the
+/// failure this test exists for: a side resolved on the wrong substance index
+/// puts the oxycline somewhere else entirely, both ledgers close, and every
+/// other test in the corpus stays green.
+///
+/// The last assertion is against a failure of the same family and needs an
+/// argument of its own, because everything measured through [`layer_step`] is
+/// blind to it. That partition is read off `H2S`'s own deviation, so inverting
+/// the sides globally — `sediment` meaning rich *above* the relief — relabels the
+/// two groups along with the field, and every relative statement in this file
+/// stays green while the default world is stratified upside down: a scenario
+/// writing `O2 = "water"` would put its oxygen in the sediment, with both ledgers
+/// closing exactly. What that costs is named in ADR-077 by its two consequences,
+/// `oxidation_front_forms_at_predicted_depth` and
+/// `density_stratification_persists_without_forcing`, and both are statements
+/// about which end of the z axis is which.
+#[test]
+fn layer_sides_are_anticorrelated_across_the_boundary() {
+    let derived = derived_from(&with_layers(
+        "H2S = \"sediment\"\nO2 = \"water\"\nSO4 = \"uniform\"\n",
+    ));
+    let mut world = world(&derived);
+    let report = generate(&mut world, &derived, LAYER_KEY).expect("must generate");
+
+    let step = |s: u32| layer_step(&world, &report, s);
+    let excursion = |s: u32| report.per_substance[s as usize].excursion as f64;
+
+    let sediment = step(H2S);
+    assert!(
+        sediment <= -excursion(H2S) / 2.0,
+        "H2S is enriched in the sediment and the water column holds {sediment} \
+         more of it"
+    );
+    let water = step(O2);
+    assert!(
+        water >= excursion(O2) / 2.0,
+        "O2 is enriched in the water column and it holds {water} more of it"
+    );
+    // A quarter, on the same argument as in
+    // `a_substance_declared_uniform_has_no_layer_step`: half of what a declared
+    // side has to show, so the two cannot be confused, and above the residual a
+    // partition of space leaves in a field with structure at the scale of the
+    // domain.
+    let neither = step(SO4);
+    assert!(
+        neither.abs() <= excursion(SO4) / 4.0,
+        "SO4 is declared uniform and steps by {neither} across the boundary"
+    );
+
+    // And which end of the axis each side is, measured on the two planes the
+    // relief cannot cross. There the layer term is `+UNIT` or `-UNIT` with a
+    // sign the declaration fixes, and `|noise| <= UNIT` means the blend cannot
+    // carry a substance across its typical amount on the rich side or up to it
+    // on the poor one. So the bound is exact rather than statistical, and it is
+    // the declaration that is being read and not the field.
+    for (s, id, rich_at_the_floor) in [(H2S, "H2S", true), (O2, "O2", false)] {
+        let typical = report.per_substance[s as usize].amount_at_typical;
+        let (floor_low, floor_high) = plane_extremes(&world, s, FLOOR_PLANE);
+        let (lid_low, lid_high) = plane_extremes(&world, s, LID_PLANE);
+        let ((rich_low, rich_high), (poor_low, poor_high)) = if rich_at_the_floor {
+            ((floor_low, floor_high), (lid_low, lid_high))
+        } else {
+            ((lid_low, lid_high), (floor_low, floor_high))
+        };
+        let (rich, poor) = if rich_at_the_floor {
+            ("sediment, the floor", "the lid")
+        } else {
+            ("water, the lid", "the floor")
+        };
+        assert!(
+            rich_low >= typical,
+            "{id} is declared on the side of {rich}, and a voxel of that plane \
+             holds {rich_low}, under its typical {typical}"
+        );
+        assert!(
+            poor_high <= typical,
+            "{id} is declared on the side of {rich}, and a voxel of {poor} holds \
+             {poor_high}, over its typical {typical}"
+        );
+        // Or a substance sitting flat on its typical amount everywhere would
+        // satisfy both bounds and assert nothing about either end.
+        assert!(
+            rich_high > typical && poor_low < typical,
+            "{id} does not step across the domain at all: [{rich_low}, \
+             {rich_high}] on the rich plane and [{poor_low}, {poor_high}] on the \
+             poor one, around a typical of {typical}"
+        );
+    }
+}
+
+/// The side is a property of the scenario and not of the seed (ADR-077,
+/// ADR-058).
+///
+/// The rejected variant — a per-substance sign taken from the run key — makes
+/// `different_seed_gives_a_different_initial_state` *greener*: two runs of one
+/// scenario would differ not by their noise but by where the oxygen is, and the
+/// question "why is there no oxidation front at seed 7" would have no answer in
+/// the file. This is the only name that tells the two forms apart.
+#[test]
+fn the_layer_side_does_not_change_with_the_seed() {
+    let derived = derived_from(&with_layers("O2 = \"water\"\n"));
+
+    let mut first = world(&derived);
+    let a = generate(&mut first, &derived, run_key(3)).expect("must generate");
+    let mut second = world(&derived);
+    let b = generate(&mut second, &derived, run_key(4)).expect("must generate");
+
+    // Or the test is green on a build where the seed reaches nothing at all.
+    assert_ne!(
+        front(&first, H2S),
+        front(&second, H2S),
+        "the two keys gave one world"
+    );
+
+    for s in 0..N_SUBSTANCES {
+        let here = layer_step(&first, &a, s);
+        let there = layer_step(&second, &b, s);
+        assert_eq!(
+            here.signum(),
+            there.signum(),
+            "substance {s} steps by {here} under one key and by {there} under \
+             another: the side moved with the seed"
+        );
+    }
+}
+
+/// The floor of the band is positive for **every** substance of the registry
+/// (ADR-077).
+///
+/// Over all five and not over one: the rejected form of the band — a share of
+/// the headroom to the ceiling — is green on water, whose typical amount is 99%
+/// of its maximum, and red on oxygen, `SO4` and the proton, which are exactly
+/// the microcomponents the dynamic range of ADR-039 exists for.
+#[test]
+fn the_initial_band_keeps_every_substance_strictly_above_zero() {
+    let derived = derived();
+    let mut world = world(&derived);
+    let report = generate(&mut world, &derived, run_key(23)).expect("must generate");
+
+    for s in 0..N_SUBSTANCES {
+        let fill = &report.per_substance[s as usize];
+        let floor = fill.amount_at_typical - fill.excursion;
+        assert!(
+            floor > 0,
+            "{}: the band starts at {floor}, and a substance absent from part of \
+             the domain is indistinguishable from one the scenario declared away",
+            fill.id
+        );
+        // The identity, not merely the sign: `2*excursion <= typical` gives
+        // `2*(typical - excursion) >= typical`, which is what makes the floor
+        // positive rather than a rounding away from zero (ADR-077).
+        assert!(
+            2 * floor >= fill.amount_at_typical,
+            "{}: the floor {floor} is under half of the typical {}",
+            fill.id,
+            fill.amount_at_typical
+        );
+        // And what was written obeys the bound the construction promises.
+        assert!(
+            fill.floor > 0,
+            "{}: the lowest amount written is {}",
+            fill.id,
+            fill.floor
+        );
+    }
+}
+
+/// A scenario that omits `[initial]` and one that writes today's default out are
+/// one configuration and one world (ADR-077, ADR-065).
+///
+/// Both halves of version 14 at once: the default is applied before the hash, so
+/// the two files hash alike (`CONFIG_SCHEMA.md` section 11 item 2), and the
+/// arithmetic of `amount_at` under `sediment` is untouched, so the increment is
+/// one of identity rather than of dynamics — the claim the comment in
+/// `version.rs` makes and that nothing else in the repository can check, there
+/// being no recorded world hash anywhere in it.
+#[test]
+fn the_written_default_and_the_omitted_section_give_one_world() {
+    let written = with_layers(
+        "H2S = \"sediment\"\nWATER = \"sediment\"\nO2 = \"sediment\"\n\
+         SO4 = \"sediment\"\nH_ION = \"sediment\"\n",
+    );
+
+    let omitted_config = config::parse(SCENARIO).expect("the fixture must parse");
+    let written_config = config::parse(&written).expect("the fixture must parse");
+    assert_eq!(
+        config::config_hash(&omitted_config).expect("hashing config"),
+        config::config_hash(&written_config).expect("hashing config"),
+    );
+
+    let omitted = derived_from(SCENARIO);
+    let spelled_out = derived_from(&written);
+    let mut a = world(&omitted);
+    let mut b = world(&spelled_out);
+    generate(&mut a, &omitted, LAYER_KEY).expect("must generate");
+    generate(&mut b, &spelled_out, LAYER_KEY).expect("must generate");
+
+    assert_eq!(a.amounts_32(), b.amounts_32(), "the narrow amounts");
+    assert_eq!(a.amounts_64(), b.amounts_64(), "the wide amounts");
 }
 
 // ---------------------------------------------------------------------------

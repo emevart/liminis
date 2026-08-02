@@ -85,17 +85,24 @@
 //! `dt`" look equally like decisions — so this process reads the key not at all,
 //! and one [`React::apply`] is one tick.
 //!
-//! **The temperature.** No operator turns enthalpy into `T` (ADR-062 gives the
-//! scale and the grid, not the operator), so the field arrives as an argument
-//! and who fills it is undecided.
+//! **The temperature.** The field arrives as an argument, and who fills it is
+//! `process/temperature.rs`: `T = T_ref + H/C_cell` over the composition of the
+//! covering coarse cell (ADR-044, ADR-062), applied once a tick. What this file
+//! keeps out is the whole of that derivation — `T_ref`, `c_p` and `k_E` reach no
+//! table here, which is the structural half of ADR-048's rule that the reference
+//! temperature of a Q10 factor is `t_vmax` and never the zero of enthalpy
+//! storage.
 //!
 //! **The fold of step `i'`.** The increment stays on the fine grid; collecting
 //! it into enthalpy is `kernels/fold.rs` and a step of its own (ADR-045).
 
 use anyhow::{Context, Result, bail};
 
+use super::light::Light;
 use crate::config::{Config, Derived, Reaction};
+use crate::kernels::fold::FoldParams;
 use crate::kernels::react::{NO_CATALYST, R_MAX, ReactParams, Rx, S_MAX, react_voxel};
+use crate::ledger::{Channel, Ledger};
 use crate::numeric::{M32, M64, Q, run_key};
 use crate::world::{Field32, Field64, Grid, MAX_SUBSTANCES, Registry};
 
@@ -105,18 +112,36 @@ use crate::world::{Field32, Field64, Grid, MAX_SUBSTANCES, Registry};
 /// because ADR-050 merged three steps into one; ADR-065 then put the default
 /// beside the invariant, which is here, so this is where it went.
 ///
-/// `false`, and the reason is the temperature. [`React::apply`] wants `T` on the
-/// enthalpy grid, no operator derives it from enthalpy and `C_cell` (ADR-062
-/// gives the scale and the grid, not the operator), and `world::World` does not
-/// allocate the buffer. Step `h` cannot be dispatched at all, so `true` would
-/// make every scenario refuse to build a tick.
+/// `false`, and the temperature is no longer the reason.
+/// `process/temperature.rs` derives `T` from enthalpy and the actual composition
+/// now, and `world::World` allocates both coarse buffers. What is left are two
+/// arches of the invariant, and neither is a line of code:
 ///
-/// The mirror argument, and it is the strong one: a world with matter and no
-/// chemistry is not the world this project is for, so the day the temperature
-/// operator exists, `true` is the reading of SPEC section 8 — and it will be a
-/// change of semantics for every scenario, under the guard of ADR-020.
-// TODO(CONFIG_SCHEMA.md section 13 item 23): assigned by no record. It is
-// settled together with the temperature operator, in `DECISIONS.md`.
+/// - **the matter half.** `ledger::residual_matter` is taken per substance and a
+///   reaction turns substances into one another, so `Tick::advance` calls
+///   `Ledger::assert_closed` in debug and panics on the first tick with any
+///   chemistry in it. The statement chemistry actually satisfies — "every
+///   conserved quantity balances while the substances convert" — is worded by no
+///   record and is not an arm of [`super::Conservation`]. See the TODO on
+///   [`React`];
+/// - **the energy half.** `Tick::domain_sums` counts the enthalpy field and
+///   nothing else, and there is no door for the chemical energy of the
+///   substances, so the enthalpy a reaction releases is covered by no channel.
+///   Underneath that sits the sign nobody has chosen: `nu_E` is negative for an
+///   exothermic reaction, `fold_energy` adds it to the enthalpy, and by today's
+///   code an exothermic reaction therefore *cools* the cell — which was
+///   unobservable until the temperature operator existed and is now the whole of
+///   the thermal feedback through `q10`.
+///
+/// The mirror argument is unchanged and it is the strong one: a world with matter
+/// and no chemistry is not the world this project is for, so the day both arches
+/// close, `true` is the reading of SPEC section 8 — and it will be a change of
+/// semantics for every scenario, under the guard of ADR-020.
+// TODO(CONFIG_SCHEMA.md section 13 item 23): assigned by no record, and now
+// blocked by one open question rather than by the temperature — the second arm of
+// `process::Conservation` and the door for chemical energy in
+// `ledger::DomainSums`, together with the sign of the enthalpy increment, are
+// `OPEN_QUESTIONS.md` **A-19**. They are settled by a record, not here.
 pub const ENABLED_BY_DEFAULT: bool = false;
 
 /// The three extents of the world this process needs, and no fourth.
@@ -304,6 +329,7 @@ impl React {
                 nx: shape.grid.nx(),
                 ny: shape.grid.ny(),
                 n_voxels: shape.grid.n_voxels(),
+                lane_len: shape.grid.lane_len(),
                 n_substances: n_substances as u32,
                 n_reactions: n_reactions as u32,
                 // Filled per call by `params`. The template carries a zero so
@@ -645,52 +671,120 @@ fn check_undeclared(undeclared: &Undeclared<'_>, n_reactions: usize) -> Result<(
     Ok(())
 }
 
+/// The second half of step `i'`: reduce the fold's solar slice and credit
+/// `SOLAR_IN` with it (ADR-075).
+///
+/// Lives here rather than in `process/tick.rs` because ADR-075 puts the channel
+/// on the reaction process — the fold has no roster record of its own, ADR-065
+/// keeps it part of the reaction's energy path — and because
+/// `Advect::fold_courant` set the precedent for a door this crate does not yet
+/// call. **The place of the dispatch does not exist**, and after this wave the
+/// lock on it is a different one: ADR-076 declares the intensity multiplier the
+/// fold was missing, and what still blocks step `i'` is step `h` — `React::apply`
+/// reads a temperature no operator produces for it. The next reader should not go
+/// looking for the lock that was lifted.
+///
+/// **The whole slice, always.** The fold may not be dispatched over a subset of
+/// coarse cells and this may not be reduced over one: a partial reduction credits
+/// part of a tick and the residual is wrong for the *next* tick, naming nobody.
+///
+/// **`i128`, and the width is not decoration.** The exact sum over the declared
+/// span of the enthalpy field is `32 768 x 1.97e18 = 6.46e22` against an `i64`
+/// ceiling of `9.22e18`. An accumulator declared `i64` wraps into a plausible
+/// negative *before* the conversion, and the checked conversion in
+/// `Ledger::credit_energy_wide` sees nothing wrong with an already-wrapped number
+/// — the defence would introduce the fault it exists to catch.
+///
+/// One credit per tick, and `SOLAR_IN` has exactly one writer: crediting it from
+/// anywhere else would be a second reduction with a rounding of its own, which is
+/// the return into what ADR-075 rejected.
+pub fn credit_solar(solar: &[M64], ledger: &mut Ledger) {
+    ledger.credit_energy_wide(Channel::SolarIn, reduce_solar(solar));
+}
+
+/// The sum of the fold's solar slice, exactly, at any slice the type admits.
+///
+/// Private, and split out of [`credit_solar`] for one reason: at the declared
+/// span of the enthalpy field the sum does not fit the counter, so the whole
+/// point of the accumulator's width — that the number reaching
+/// `Ledger::credit_energy_wide` is the true one and not a wrapped one — is
+/// invisible from outside the panic that number then causes. Written `i64` and
+/// wrapping, this returns a plausible negative that the checked conversion
+/// accepts without a word, and every assertion about panics stays green. As a
+/// value it can simply be compared with the sum, which is what
+/// `the_solar_reduction_is_exact_at_the_full_declared_enthalpy_range` does.
+///
+/// It is not a second door to `SOLAR_IN`: it credits nothing, and the channel
+/// still has exactly one writer above.
+fn reduce_solar(solar: &[M64]) -> i128 {
+    let mut total: i128 = 0;
+    for cell in solar {
+        total += i128::from(cell.to_i64());
+    }
+    total
+}
+
+/// Fold the parameters of step `i'` on the host (ADR-015, ADR-076).
+///
+/// The one place `FoldParams::i_surface` is filled, and it takes the number from
+/// [`Light::i_surface`] or puts an exact `Q::ZERO` there when the process is off.
+///
+/// **The zero is the whole point and the form does not enforce it.**
+/// `FoldParams::i_surface` is a public field of a `Copy` struct — it mirrors a
+/// WGSL uniform (ADR-015), so it cannot become private — and the upper absorption
+/// term of the layer at `z = nz-1` is `i_surface - light[nz-1]`, which over a
+/// zeroed light field is `i_surface` entire. A nonzero value with the light off is
+/// therefore a perfect silent heater whose energy residual stays at exactly zero,
+/// because `SOLAR_IN` is credited the same number. What stands there is
+/// `the_top_layer_absorbs_nothing_when_the_light_is_off` and this function; saying
+/// the type prevents it would be untrue (ADR-076).
+///
+/// `units_per_intensity` comes from `Derived::light()` and is never folded again
+/// here: it is `dx^2 * 2^k_E`, and its two mistakes — the coarse face and a `dt`
+/// folded in — move the whole solar input while leaving the shape of `I(z)` and
+/// both residuals untouched.
+#[must_use]
+pub fn fold_params(
+    light: Option<&Light>,
+    units_per_intensity: Q,
+    dt: Q,
+    nx: u32,
+    ny: u32,
+    nz: u32,
+    lod: u32,
+) -> FoldParams {
+    FoldParams {
+        nx,
+        ny,
+        nz,
+        lod,
+        i_surface: light.map_or(Q::ZERO, Light::i_surface),
+        units_per_intensity,
+        dt,
+    }
+}
+
 /// The coarse grid of the shape is the fine one at the declared `lod`.
 ///
-/// The check exists because the mistake it catches is a *neighbouring* cell
-/// rather than an out-of-range one: a world has two coarse grids, and the
-/// velocity one is a binary order finer than the enthalpy one. Read with the
-/// wrong extents, `coarse_of` inside the kernel lands on a plausible cell, and
-/// temperature is class `Q` and enters no invariant (ADR-062).
+/// One line, because the refusal itself lives in `process/mod.rs` and is shared
+/// with `process/temperature.rs`. It was written here first, when the reaction
+/// step was the only consumer of the mapping; the operator that *fills* the
+/// temperature field is the second, and a refusal kept in two copies drifts in
+/// the direction nobody watches — one of them loosens, and the copy that stops
+/// saying "enthalpy" is the one nobody reads.
+///
+/// What it catches is a *neighbouring* cell rather than an out-of-range one: a
+/// world has two coarse grids, and the velocity one is a binary order finer than
+/// the enthalpy one. Read with the wrong extents, `coarse_of` inside the kernel
+/// lands on a plausible cell, and temperature is class `Q` and enters no
+/// invariant (ADR-062).
 fn check_shape(shape: &ReactShape<'_>) -> Result<()> {
-    if shape.enthalpy_lod >= u32::BITS {
-        bail!(
-            "an enthalpy lod of {} shifts a u32 extent out of existence; the \
-             declared range is 0..=2 (QUANTITIES.md section 1)",
-            shape.enthalpy_lod
-        );
-    }
-    let lod = shape.enthalpy_lod;
-    let expected = (
-        shape.grid.nx() >> lod,
-        shape.grid.ny() >> lod,
-        shape.grid.nz() >> lod,
-    );
-    let got = (
-        shape.enthalpy_grid.nx(),
-        shape.enthalpy_grid.ny(),
-        shape.enthalpy_grid.nz(),
-    );
-    if expected != got {
-        bail!(
-            "the coarse grid given for the temperature is {}x{}x{} while the fine \
-             grid {}x{}x{} at lod {lod} covers {}x{}x{}. A reaction reads the \
-             temperature of the covering *enthalpy* cell (ADR-062), and the \
-             extents of the velocity grid — the other coarse grid of a world — \
-             give it a plausible neighbouring cell instead, which appears in no \
-             invariant at all",
-            got.0,
-            got.1,
-            got.2,
-            shape.grid.nx(),
-            shape.grid.ny(),
-            shape.grid.nz(),
-            expected.0,
-            expected.1,
-            expected.2
-        );
-    }
-    Ok(())
+    super::coarse_shape_agrees(
+        shape.grid,
+        shape.enthalpy_grid,
+        shape.enthalpy_lod,
+        "the temperature a reaction reads",
+    )
 }
 
 /// The three keys that parse, validate, and reach a kernel implementing none of
@@ -1134,16 +1228,17 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         /// substance index to a buffer address (ADR-056).
         fn stage_everywhere(&mut self, s: u32, value: i64) {
             let n_voxels = self.n_voxels();
+            let lane_len = self.world.grid().lane_len();
             match self.world.lane_of(s) {
                 LaneRef::Narrow(lane) => {
                     let field = self.world.amounts_32_mut().expect("a narrow class");
-                    let at = (lane * n_voxels) as usize;
+                    let at = (lane * lane_len) as usize;
                     field.write_mut()[at..at + n_voxels as usize]
                         .fill(M32::new(i32::try_from(value).unwrap()));
                 }
                 LaneRef::Wide(lane) => {
                     let field = self.world.amounts_64_mut().expect("a wide class");
-                    let at = (lane * n_voxels) as usize;
+                    let at = (lane * lane_len) as usize;
                     field.write_mut()[at..at + n_voxels as usize].fill(M64::new(value));
                 }
             }
@@ -1168,15 +1263,16 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         /// Amounts by substance and voxel, out of state `N`.
         fn snapshot(&self) -> Vec<Vec<i64>> {
             let n_voxels = self.n_voxels();
+            let lane_len = self.world.grid().lane_len();
             let (narrow, wide) = self.world.amount_slices();
             (0..N_SUBSTANCES)
                 .map(|s| {
                     (0..n_voxels)
                         .map(|idx| match self.world.lane_of(s) {
                             LaneRef::Narrow(lane) => {
-                                narrow[(lane * n_voxels + idx) as usize].to_i64()
+                                narrow[(lane * lane_len + idx) as usize].to_i64()
                             }
-                            LaneRef::Wide(lane) => wide[(lane * n_voxels + idx) as usize].to_i64(),
+                            LaneRef::Wide(lane) => wide[(lane * lane_len + idx) as usize].to_i64(),
                         })
                         .collect()
                 })
@@ -1938,13 +2034,19 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
     /// A `requires` window and a named energy channel are refused, each with its
     /// own message.
     ///
-    /// Both parse and both validate, and both reach a kernel that implements
-    /// neither. A dropped `requires` is a reaction running outside the window it
-    /// declares — SPEC section 5 gives the windows and no record says whether the
-    /// gate is a hard cut-off or a factor. A dropped `energy_from` is energy taken
-    /// from a channel nobody counted: the non-empty branch is legal only for a
-    /// reaction whose enthalpy does not agree with the enthalpies of formation,
-    /// and ADR-044 does not load such a reaction (ADR-059).
+    /// Both parse, neither validates any longer, and both reach a kernel that
+    /// implements neither. A dropped `requires` is a reaction running outside the
+    /// window it declares — SPEC section 5 gives the windows and no record says
+    /// whether the gate is a hard cut-off or a factor. A dropped `energy_from` is
+    /// energy taken from a channel nobody counted: the non-empty branch is legal
+    /// only for a reaction whose enthalpy does not agree with the enthalpies of
+    /// formation, and ADR-044 does not load such a reaction (ADR-059).
+    ///
+    /// Both halves therefore go past the validator, and the claim is that the
+    /// refusal is **two-doored**: the validator at load (ADR-059 for the channel,
+    /// ADR-073 for the window) and `check_unimplemented_keys` at assembly.
+    /// Neither door is removed when the other is built — a scenario that reached
+    /// this process by any route has to hear about it in this process's words.
     #[test]
     fn a_requires_window_or_a_named_energy_channel_is_refused() {
         let km = format!("{{ ZED = {KM_NEGLIGIBLE}, ACE = {KM_NEGLIGIBLE} }}");
@@ -1954,7 +2056,15 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
             &km,
             "requires = [{ field = \"enthalpy\", min = 273.15, max = 323.15 }]",
         )]);
-        let refusal = format!("{:#}", Fixture::build(&gated, SEED).unwrap_err());
+        // Past the validator, which since ADR-073 refuses this one first and for
+        // its own reason — a window is a load error until the gate exists. The
+        // process has to refuse it in its own words as well, or the pair of doors
+        // becomes one: exactly what the `energy_from` half below has done since
+        // ADR-059.
+        let refusal = format!(
+            "{:#}",
+            Fixture::build_unvalidated(&gated, SEED).unwrap_err()
+        );
         assert!(
             refusal.contains("requires") && refusal.contains("amination"),
             "{refusal}"
@@ -2025,6 +2135,190 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
                 extent_at(&f, 0, ZEDACE, idx, &before, &after),
                 expected,
                 "voxel {idx} did not run at the temperature of enthalpy cell {cell}"
+            );
+        }
+    }
+
+    // --- the host halves of step `i'` (ADR-075, ADR-076) ---------------------
+
+    #[test]
+    fn the_solar_reduction_is_exact_at_the_full_declared_enthalpy_range() {
+        // The accumulator is `i128`, and the width is what this checks. One coarse
+        // cell of the enthalpy field spans `2*H_max = 1.97e18` units for a tick
+        // (ADR-062), and a 128 cubed world at `lod = 2` has 32 768 of them:
+        // `6.46e22`, against an `i64` ceiling of `9.22e18`.
+        //
+        // The claim is the **exact sum**, not the absence of a panic. Declared
+        // `i64`, the accumulator wraps into a plausible negative before any
+        // conversion happens, and the checked conversion inside `credit_energy_wide`
+        // is then perfectly happy with it — the defence introduces the fault it is
+        // there to catch, and no assertion about panics can see that.
+        const CELLS: usize = 32_768;
+        const SPAN: i64 = 1_970_000_000_000_000_000;
+
+        let solar = vec![M64::new(SPAN); CELLS];
+        let exact = i128::from(SPAN) * CELLS as i128;
+        assert!(i64::try_from(exact).is_err(), "the fixture fits an i64");
+
+        // The reduction itself, over the whole fixture, and not a sum written out
+        // again here: a test that adds the slice up in its own body checks that
+        // `i128` addition is exact and leaves the accumulator inside
+        // `reduce_solar` free to be anything. Credited whole this refuses — the
+        // counter is `i64` and open question A-20 is why, the one ADR-075 and
+        // ADR-076 call A-19 because the number was free when they were drafted —
+        // so the number is taken as a value first, and the credit below is
+        // checked on a slice the counter can hold.
+        assert_eq!(reduce_solar(&solar), exact);
+
+        // A width, not a saturation: one unit off the top of the same slice has
+        // to move the sum by exactly one. An accumulator that clamped, or one
+        // that widened only after adding, agrees with the assertion above on a
+        // fixture whose cells are all equal.
+        let mut lowered = solar.clone();
+        lowered[CELLS - 1] = M64::new(SPAN - 1);
+        assert_eq!(reduce_solar(&lowered), exact - 1);
+
+        let mut ledger = Ledger::new(1).unwrap();
+        let small = vec![M64::new(SPAN / 4); 4];
+        credit_solar(&small, &mut ledger);
+        assert_eq!(ledger.energy(Channel::SolarIn), SPAN);
+
+        // And the whole slice is read: a reduction over a prefix credits part of a
+        // tick, and the residual it breaks is the *next* tick's.
+        let mut ledger = Ledger::new(1).unwrap();
+        let mixed: Vec<M64> = (0..64).map(|c| M64::new(i64::from(c) - 32)).collect();
+        credit_solar(&mixed, &mut ledger);
+        assert_eq!(
+            ledger.energy(Channel::SolarIn),
+            (0..64i64).sum::<i64>() - 64 * 32
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "A-20")]
+    fn the_solar_credit_of_one_lit_tick_reaches_the_counter_through_the_checked_door() {
+        // The other half of the width, and the one the test above cannot state:
+        // that the exact number reaches `SOLAR_IN` through
+        // `Ledger::credit_energy_wide` rather than being narrowed on the way. A
+        // `credit_solar` written `credit_energy(ch, reduce_solar(solar) as i64)`
+        // keeps every assertion above green — the reduction is still exact — and
+        // the counter takes a wrapped negative in silence.
+        //
+        // The fixture is the real configuration of ADR-075 rather than a boundary
+        // substituted for it: the upper face of a 128 cubed domain at
+        // `dx = 1e-4 m` is `1.6384e-4 m^2`, full sun of `1e3 W/m^2` over one
+        // second is `0.16384 J`, and `k_E = 67` makes that `0.16384 * 2^67 =
+        // 2.4179e19` units — 2.62144 ceilings of an `i64` counter in a single
+        // tick. Spread over the 32 768 coarse cells of the enthalpy grid it is
+        // this much each. Unreachable for as long as ADR-076 refuses a lit
+        // scenario, and on the first lit tick after that, not the millionth.
+        const CELLS: usize = 32_768;
+        const PER_CELL: i64 = 737_869_762_948_382;
+
+        let solar = vec![M64::new(PER_CELL); CELLS];
+        assert!(
+            i64::try_from(reduce_solar(&solar)).is_err(),
+            "one lit tick fits an i64 after all; the arithmetic above has moved"
+        );
+
+        let mut ledger = Ledger::new(1).unwrap();
+        credit_solar(&solar, &mut ledger);
+    }
+
+    #[test]
+    fn the_top_layer_absorbs_nothing_when_the_light_is_off() {
+        // The hole no type can close (ADR-076). `FoldParams::i_surface` is a public
+        // field of a `Copy` struct — it mirrors a WGSL uniform — and the upper
+        // absorption term of the layer at `z = nz-1` is `i_surface - light[nz-1]`,
+        // which over a zeroed light field is `i_surface` entire. A nonzero value
+        // with the light switched off is a perfect silent heater: every tick the
+        // top layer is credited the whole incident flux, unattenuated, and the
+        // energy residual stays at exactly zero because `SOLAR_IN` is credited the
+        // same number.
+        //
+        // What stands there is the host fold, so that is what is tested: with the
+        // light off, `i_surface` is exactly `Q::ZERO`, and the dispatch over a
+        // zeroed light field credits nothing.
+        const NX: u32 = 4;
+        const NY: u32 = 4;
+        const NZ: u32 = 4;
+        const LOD: u32 = 1;
+        const N_FINE: usize = (NX * NY * NZ) as usize;
+        const N_COARSE: usize = ((NX >> LOD) * (NY >> LOD) * (NZ >> LOD)) as usize;
+
+        let p = fold_params(None, Q::from_f64(1024.0), Q::from_f64(1.0), NX, NY, NZ, LOD);
+        assert_eq!(p.i_surface, Q::ZERO);
+
+        let energy_delta = vec![M64::ZERO; N_FINE];
+        let light = vec![Q::ZERO; N_FINE];
+        let src_h = vec![M64::ZERO; N_COARSE];
+        let mut dst_h = vec![M64::ZERO; N_COARSE];
+        let mut solar = vec![M64::ZERO; N_COARSE];
+        for coarse in 0..N_COARSE as u32 {
+            crate::kernels::fold::fold_energy(
+                &energy_delta,
+                &light,
+                &src_h,
+                &mut dst_h,
+                &mut solar,
+                &p,
+                coarse,
+            );
+        }
+        assert_eq!(dst_h, src_h);
+        assert!(solar.iter().all(|c| c.to_i64() == 0));
+
+        let mut ledger = Ledger::new(1).unwrap();
+        credit_solar(&solar, &mut ledger);
+        assert_eq!(ledger.energy(Channel::SolarIn), 0);
+
+        // And the mirror, so that the zero above is not a fixture that could not
+        // have warmed anything: the same call with the light *on* does warm the
+        // top layer against `i_surface`, out of the same door.
+        let grid = Grid::new(NX, NY, NZ, [crate::world::Boundary::Closed; 6]).unwrap();
+        let lit = Light::new(
+            &grid,
+            &[],
+            137.0,
+            crate::process::light::Modulation::NONE,
+            1.0,
+        )
+        .unwrap();
+        let p = fold_params(
+            Some(&lit),
+            Q::from_f64(1024.0),
+            Q::from_f64(1.0),
+            NX,
+            NY,
+            NZ,
+            LOD,
+        );
+        assert_eq!(p.i_surface, lit.i_surface());
+
+        let mut dst_h = vec![M64::ZERO; N_COARSE];
+        let mut solar = vec![M64::ZERO; N_COARSE];
+        for coarse in 0..N_COARSE as u32 {
+            crate::kernels::fold::fold_energy(
+                &energy_delta,
+                &light,
+                &src_h,
+                &mut dst_h,
+                &mut solar,
+                &p,
+                coarse,
+            );
+        }
+        // Only the coarse layer covering `z = nz-1` warms, and it warms by exactly
+        // the whole incident flux: that is the silent heater, drawn once so that
+        // the zero above is a property and not an inert fixture.
+        let top_layer = ((NX >> LOD) * (NY >> LOD)) as usize;
+        for (coarse, credited) in solar.iter().enumerate() {
+            let want_warm = coarse >= N_COARSE - top_layer;
+            assert_eq!(
+                credited.to_i64() > 0,
+                want_warm,
+                "coarse cell {coarse} credited {}",
+                credited.to_i64()
             );
         }
     }

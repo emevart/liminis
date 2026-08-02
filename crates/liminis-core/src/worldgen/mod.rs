@@ -51,23 +51,35 @@
 //!
 //! # Where the numbers come from, and where they do not
 //!
-//! There is no `[initial]` section: its form is undecided (`CONFIG_SCHEMA.md`
-//! section 13, "Секции, форма которых ещё не решена"). So every quantity this
-//! module needs is taken from something that already exists — the derived
-//! `amount_at_typical` and `amount_at_max` of each substance (ADR-039) and the
-//! extents of the grid — and the two places where that is not enough carry a
-//! `TODO` naming what is undecided rather than a plausible number.
+//! The `[initial]` section exists and declares exactly one thing: the side of
+//! the sediment/water boundary each substance is enriched on (ADR-077). Of the
+//! four numbers this module is built out of, that is the one that is a property
+//! of a scenario. The band around `typical_conc` is a consequence and is
+//! ratified as a rule rather than as a key — see [`excursion_of`] — and the
+//! remaining two, the spectrum of the octaves and the base of the `purpose`
+//! counter, stay build-time boundaries with an open question against them: they
+//! were refused a key by name, and the `TODO`s below say by whom.
+//!
+//! Everything else comes from something that already exists: the derived
+//! `amount_at_typical` and `amount_at_max` of each substance (ADR-039), the
+//! declared side, and the extents of the grid. Nothing is recomputed here.
 
 use anyhow::{Result, bail};
 
-use crate::config::Derived;
+use crate::config::{Derived, Layer};
 use crate::numeric::{M32, M64, rand};
 use crate::world::{Grid, LaneRef, MAX_SUBSTANCES, World};
 
 /// Base of the `purpose` counter space.
-// TODO(worldgen-base): nobody has decided this number, and the question is not
-// this file's alone — it is `TODO(noise-base)` in `kernels/noise.rs`, one field
-// over. Filed as `OPEN_QUESTIONS.md` A-17.
+// TODO(worldgen-base): this number is a build-time boundary and not a key, and
+// that much *is* decided: ADR-077 refused it a place in `[initial]` by the
+// argument of ADR-058 — a constant of compile time would become a value of run
+// time in every kernel that wanted its own `purpose`, and the window
+// `[WORLDGEN_BASE, WORLDGEN_BASE + 256)` would stop being reservable against
+// anything, since it would move from scenario to scenario. What is *not*
+// decided is the value, and the question is not this file's alone — it is
+// `TODO(noise-base)` in `kernels/noise.rs`, one field over. Filed as
+// `OPEN_QUESTIONS.md` A-17, where only half of it is closed.
 // There is no registry of `purpose` in the corpus, `reaction_id` is taken from
 // the *name* of a reaction (ADR-027), and nothing keeps the two spaces apart. A
 // collision between an octave of this field and a reaction gives the two one
@@ -162,6 +174,13 @@ pub struct SubstanceFill {
     /// Units held by one voxel at `max_conc` (ADR-039).
     pub amount_at_max: i128,
     /// Whether the field came out constant.
+    ///
+    /// Not `config::Layer::Uniform`, which is one word away and a different
+    /// thing: that one says the substance has no layer term, this one says the
+    /// field has no variation at all. A substance declared `uniform` carries its
+    /// own octaves and is not constant. Reading the two as one disarms the only
+    /// alarm this report has — a world filled with a constant is a world in
+    /// which both invariants close exactly, for ever.
     pub uniform: bool,
     /// The half-width of the band the fill stays inside, around
     /// [`SubstanceFill::amount_at_typical`]. See [`excursion_of`].
@@ -256,7 +275,13 @@ pub fn generate(world: &mut World, derived: &Derived, run_key: u32) -> Result<Wo
             uniform: true,
         })
         .collect();
-    fill_world(world, &mut fills, octaves, run_key)?;
+    // The declared sides, in the order of the derivation and taken from the same
+    // slice as the fills in the same order — never from a table keyed by name a
+    // second time. The report does not grow a field for them: what prints the
+    // side of a substance is the canonical form of the config, which names every
+    // one of them (ADR-077).
+    let layers: Vec<Layer> = derived.substances().iter().map(|s| s.layer).collect();
+    fill_world(world, &mut fills, &layers, octaves, run_key)?;
 
     Ok(WorldgenReport {
         octaves,
@@ -269,30 +294,34 @@ pub fn generate(world: &mut World, derived: &Derived, run_key: u32) -> Result<Wo
 
 /// The half-width of the band a substance is filled inside.
 ///
-// TODO(worldgen-excursion): the *rule* is decided by nobody. There is no
-// `[initial]` section — `CONFIG_SCHEMA.md` section 13 leaves its form open — so
-// how far an initial condition may wander from `typical_conc` is not declared
-// anywhere, and no record in `docs/DECISIONS.md` sets it. What is written below
-// is the weakest rule that satisfies the two constraints the corpus *does*
-// state, and it is here rather than in a test comment so that the day `[initial]`
-// arrives, this is the line that is deleted.
-//
-// The two constraints:
-//
-//   - the peak stays clear of `amount_at_max`, which is a hard ceiling and not an
-//     estimate (ADR-041), and clear by a margin rather than by a rounding — a
-//     peak sitting *on* the limit is what a clamp looks like, and ADR-041 forbids
-//     clamping;
-//   - the floor stays positive, or a substance starts absent from part of the
-//     domain and the difference between "the scenario declared none here" and "the
-//     generator wandered below zero and was clamped" is invisible afterwards.
-//
-// Half of the smaller of the two headrooms satisfies both with the same slack on
-// each side, and is the only thing here that is a choice rather than a
-// consequence. Half of the headroom *to the ceiling* is the form that suggests
-// itself first and does not survive the corpus: the oxygen of the acceptance
-// fixture declares `typical_conc = 0.05` against `max_conc = 1.0`, and half of
-// that headroom puts the floor far below zero. Filed as `OPEN_QUESTIONS.md` A-17.
+/// `min(typical, max - typical) / 2`, by integer division towards zero, and
+/// ratified as a **rule** by ADR-077 rather than left to a key. The two
+/// constraints it satisfies are both named by the corpus:
+///
+///   - the peak stays clear of `amount_at_max`, which is a hard ceiling and not
+///     an estimate (ADR-041), and clear by a margin rather than by a rounding —
+///     a peak sitting *on* the limit is what a clamp looks like, and ADR-041
+///     forbids clamping;
+///   - the floor stays positive, or a substance starts absent from part of the
+///     domain and the difference between "the scenario declared none here" and
+///     "the generator wandered below zero and was clamped" is invisible
+///     afterwards.
+///
+/// Both are exact integer identities and not margins: from
+/// `2*excursion <= min(typical, max - typical)` follow
+/// `2*(typical - excursion) >= typical` and
+/// `2*(typical + excursion) <= typical + max`, which is what
+/// `the_band_is_bounded_by_both_headrooms` asserts in the unit and
+/// `worldgen_respects_declared_max_conc` on what was written.
+///
+/// Half of the headroom *to the ceiling* is the form that suggests itself first
+/// and does not survive the corpus: the oxygen of the acceptance fixture
+/// declares `typical_conc = 0.05` against `max_conc = 1.0`, and half of that
+/// headroom puts the floor 8.5 typical pools below zero — on three substances of
+/// five (ADR-077). A declared fraction was refused for a second reason worth
+/// keeping in sight here: a fraction is a float, the half-width has to be an
+/// integer, and no record assigns a rounding rule to `e*min(typ, H)` — while the
+/// division below is exact and truncates.
 ///
 /// Zero is a legal answer — a substance whose typical amount rounds to zero, or
 /// whose declared maximum is its typical, is filled with a constant, and
@@ -373,6 +402,7 @@ fn octave_count(grid: &Grid) -> u32 {
 fn fill_world(
     world: &mut World,
     fills: &mut [SubstanceFill],
+    layers: &[Layer],
     octaves: u32,
     run_key: u32,
 ) -> Result<()> {
@@ -381,10 +411,21 @@ fn fill_world(
     let grid = *world.grid();
     let n_voxels = grid.n_voxels();
 
+    // The sides arrive in the order the fills were built in, which is the order
+    // of the derivation, which `generate` has already checked against the
+    // registry. A `zip` would truncate on a mismatch instead of saying so, and
+    // the world would come out with the last substance on the default side.
+    assert_eq!(
+        fills.len(),
+        layers.len(),
+        "one declared side per substance filled"
+    );
+
     for (s, fill) in fills.iter_mut().enumerate() {
         let level = Level {
             typical: fill.amount_at_typical,
             excursion: fill.excursion,
+            layer: layers[s],
         };
         let slot = substance_slot(s as u32);
         let lane = world.lane_of(s as u32);
@@ -584,14 +625,22 @@ fn lattice_value(
 
 /// The octaves summed and normalised back into `[-UNIT, UNIT]`.
 ///
-// TODO(worldgen-spectrum): the *shape* of the spectrum is decided by nobody, and
-// the question is `TODO(noise-spectrum)`'s in `kernels/noise.rs`, one field over:
-// `1/f` is a choice made in code here and there, and no record in
-// `docs/DECISIONS.md` states it. What it decides here is how much of the initial
-// structure sits at the scale of a voxel and how much at the scale of the domain,
-// which is what `the_initial_field_has_structure_larger_than_a_voxel` measures —
-// so a different spectrum moves the world version. Filed as `OPEN_QUESTIONS.md`
-// A-17.
+// TODO(worldgen-spectrum): the *shape* of the spectrum is still decided by
+// nobody, but it is no longer unmentioned: ADR-077 refused it a key in
+// `[initial]`, and by measurement rather than by preference. The justification a
+// key would have had — "it decides how much structure sits at the scale of a
+// voxel", that is
+// `the_initial_field_has_structure_larger_than_a_voxel` — is false. The mean
+// step between neighbours over a span runs 0.0566 -> 0.0366 for exponents from 0
+// to 3 on the layered branch and 0.0714 -> 0.0437 on the uniform one, against a
+// threshold of 0.125: what guarantees structure larger than a voxel is the
+// ladder of octaves, whose finest lattice never steps under two voxels and whose
+// zero count is a load error. Two further reasons are recorded there: a declared
+// exponent would be quantised in `derive.rs` while the raw value is hashed, so
+// `1.00` and `1.01` would give one world under two identities; and the question
+// is half of `TODO(noise-spectrum)` in `kernels/noise.rs`, which a kernel cannot
+// read without a new `Params` field (ADR-015). The value stays a build-time
+// boundary. Filed as `OPEN_QUESTIONS.md` A-17.
 ///
 /// The normalisation is by the sum of the weights and not by the number of
 /// octaves: octave `k` is weighted `2^-k` and the divisor is `sum_k 2^-k`, so the
@@ -650,13 +699,22 @@ fn relief_height(grid: &Grid, x: u32, y: u32, octaves: u32, run_key: u32) -> i64
     base + (scaled + scaled.signum() * (UNIT / 2)) / UNIT
 }
 
-/// The level a substance is filled around, and how far it may wander from it.
+/// The level a substance is filled around, how far it may wander from it, and
+/// which side of the boundary it is enriched on.
+///
+/// The side rides here rather than arriving as a seventh argument of
+/// [`amount_at`]: it belongs to the same substance as the two numbers beside it,
+/// and a parameter list is where two things that belong together fall out of
+/// step.
 #[derive(Clone, Copy, Debug)]
 struct Level {
     /// Units held by one voxel at `typical_conc` (ADR-039).
     typical: i128,
     /// The half-width of the band, from [`excursion_of`].
     excursion: i128,
+    /// The declared side (ADR-077), carried through from
+    /// `DerivedSubstance::layer`.
+    layer: Layer,
 }
 
 /// What one voxel holds of one substance.
@@ -665,37 +723,67 @@ struct Level {
 /// `rand(voxel_idx, ...)`:
 ///
 /// - the **layer**: below the relief is sediment and above it is water, and the
-///   two sit on opposite sides of the declared typical amount. White noise passes
-///   both seed tests, passes the ceiling, looks like a filled world, and leaves
-///   stratification, the oxycline and the oxidation front with no initial
+///   two sit on opposite sides of the declared typical amount. Which end of the
+///   z axis is which is not a detail of this line: swap the two and every
+///   measurement taken across the boundary still agrees with itself, because a
+///   partition read off a substance's own deviation is relabelled along with the
+///   field — the default world comes out stratified upside down with both
+///   ledgers closing. What holds the orientation is the floor and the lid of the
+///   domain, the two planes the relief cannot cross, and
+///   `layer_sides_are_anticorrelated_across_the_boundary` reads them. Which side
+///   a substance is rich on is the scenario's to say — `[initial.layer]`, ADR-077 —
+///   and a substance may say `uniform` and have no layer term at all. White noise
+///   passes both seed tests, passes the ceiling, looks like a filled world, and
+///   leaves stratification, the oxycline and the oxidation front with no initial
 ///   condition at all — a failure that would surface waves later and in another
 ///   file;
 /// - the **octaves**: the substance's own noise stack, on its own slot of the
 ///   `purpose` space, so that two substances are not one field under two names.
 ///
-// TODO(worldgen-layers): *which* substances are enriched in the sediment and
-// which in the water column is a property of a scenario, and there is no
-// `[initial]` section to declare it in (`CONFIG_SCHEMA.md` section 13). Until
-// there is, every substance takes the same side — the sediment is the rich half —
-// which is the choice that asserts the least. A per-substance sign taken from the
-// run key would be a plausible invention and would make the oxycline a property
-// of the seed. Filed as `OPEN_QUESTIONS.md` A-17.
+/// The side comes from the config and never from `run_key`. A per-substance sign
+/// taken from the key costs nothing and separates the worlds of two seeds for
+/// free — and it would make the oxycline a property of the seed, so that "why is
+/// there no oxidation front at seed 7" has no answer in any file (ADR-058,
+/// ADR-077). `the_layer_side_does_not_change_with_the_seed` is the only thing
+/// that tells the two apart, because the rejected form makes
+/// `different_seed_gives_a_different_initial_state` greener rather than red.
 ///
 /// The result is inside `[typical - excursion, typical + excursion]` by
-/// construction: both terms are inside `[-UNIT, UNIT]`, their mean is, and the
-/// last division truncates towards zero.
+/// construction, on both branches: the noise alone is inside `[-UNIT, UNIT]`,
+/// the mean of it with a term of amplitude `UNIT` is too, and the last division
+/// truncates towards zero.
+///
+/// Truncation and not a shift. `>> UNIT_SHIFT` is arithmetically a floor, so for
+/// a negative blend the two differ by one unit — that is, in every voxel of one
+/// half of the world. No invariant sees the difference: it shows up only as
+/// another world under the same seed and the same version, and there is no
+/// recorded world hash in the repository to disagree with (NUMERIC.md, ADR-034,
+/// ADR-077).
 fn amount_at(grid: &Grid, level: Level, slot: u32, octaves: u32, idx: u32, run_key: u32) -> i128 {
     if level.excursion == 0 {
         return level.typical;
     }
     let (x, y, z) = grid.coords(idx);
-    let layer = if i64::from(z) < relief_height(grid, x, y, octaves, run_key) {
-        UNIT
-    } else {
-        -UNIT
-    };
     let noise = summed_noise(grid, x, y, z, slot, octaves, run_key);
-    let blended = (layer + noise) / 2;
+    let blended = match level.layer {
+        // No layer term at all, and the substance's own noise at full amplitude
+        // — not halved. `blended = noise/2` would keep today's spread and make
+        // one key govern two things at once, the side and the width of the
+        // actual scatter: a substance declared `uniform` would take half the band
+        // of its layered neighbour under an identical declaration (ADR-077,
+        // rejected by name). No declaration is compared against a width to catch
+        // that; what catches it is the ratio of the two branches over the floor
+        // plane, where the layer term is present and constant, so the halved form
+        // stands at one to one instead of two to one
+        // (`a_substance_declared_uniform_has_no_layer_step`, (d)).
+        Layer::Uniform => noise,
+        Layer::Sediment | Layer::Water => {
+            let below = i64::from(z) < relief_height(grid, x, y, octaves, run_key);
+            let rich_below = matches!(level.layer, Layer::Sediment);
+            let layer = if below == rich_below { UNIT } else { -UNIT };
+            (layer + noise) / 2
+        }
+    };
     level.typical + (level.excursion * i128::from(blended)) / i128::from(UNIT)
 }
 
@@ -750,6 +838,16 @@ mod tests {
         Level {
             typical: 1_000_000,
             excursion: 500_000,
+            layer: Layer::Sediment,
+        }
+    }
+
+    /// The same band with no layer term, which is the other branch of
+    /// [`amount_at`] and half of what this module can be asked to produce.
+    fn flat_level() -> Level {
+        Level {
+            layer: Layer::Uniform,
+            ..level()
         }
     }
 
@@ -894,51 +992,64 @@ mod tests {
         // ceiling, and looks like a filled world — and leaves stratification, the
         // oxycline and the oxidation front with no initial condition at all. The
         // failure would surface waves later and in another file.
+        //
+        // Over **both** branches of `amount_at`, because ADR-077 refused the
+        // `spectrum` key by measuring this very statistic on both of them (0.0566
+        // layered and 0.0714 uniform against the threshold of 0.125). A test left
+        // on one branch would leave half the claim unchecked exactly where the
+        // record measured it. What guarantees structure larger than a voxel is
+        // the ladder of octaves — the lattice spacing is never under two voxels
+        // and a count of zero is a load error — and not the weights, so the
+        // threshold has to stay coarse: sharpened, it would become a blessing for
+        // an exponent nobody decided.
         let grid = grid(N, N, N);
         let octaves = octave_count(&grid);
         let key = 99;
 
-        let at = |x: u32, y: u32, z: u32| -> i128 {
-            let idx = x + y * N + z * N * N;
-            amount_at(&grid, level(), substance_slot(0), octaves, idx, key)
-        };
+        for level in [level(), flat_level()] {
+            let at = |x: u32, y: u32, z: u32| -> i128 {
+                let idx = x + y * N + z * N * N;
+                amount_at(&grid, level, substance_slot(0), octaves, idx, key)
+            };
 
-        let mut lowest = i128::MAX;
-        let mut highest = i128::MIN;
-        let mut steps: i128 = 0;
-        let mut pairs: i128 = 0;
-        for z in 0..N {
-            for y in 0..N {
-                for x in 0..N {
-                    let here = at(x, y, z);
-                    lowest = lowest.min(here);
-                    highest = highest.max(here);
-                    if x + 1 < N {
-                        steps += (at(x + 1, y, z) - here).abs();
-                        pairs += 1;
-                    }
-                    if y + 1 < N {
-                        steps += (at(x, y + 1, z) - here).abs();
-                        pairs += 1;
-                    }
-                    if z + 1 < N {
-                        steps += (at(x, y, z + 1) - here).abs();
-                        pairs += 1;
+            let mut lowest = i128::MAX;
+            let mut highest = i128::MIN;
+            let mut steps: i128 = 0;
+            let mut pairs: i128 = 0;
+            for z in 0..N {
+                for y in 0..N {
+                    for x in 0..N {
+                        let here = at(x, y, z);
+                        lowest = lowest.min(here);
+                        highest = highest.max(here);
+                        if x + 1 < N {
+                            steps += (at(x + 1, y, z) - here).abs();
+                            pairs += 1;
+                        }
+                        if y + 1 < N {
+                            steps += (at(x, y + 1, z) - here).abs();
+                            pairs += 1;
+                        }
+                        if z + 1 < N {
+                            steps += (at(x, y, z + 1) - here).abs();
+                            pairs += 1;
+                        }
                     }
                 }
             }
-        }
 
-        let span = highest - lowest;
-        assert!(span > 0, "the field is constant");
-        // A coarse threshold, an eighth of the span. White noise over the same
-        // band lands near a third of it.
-        assert!(
-            steps * 8 <= span * pairs,
-            "the mean step between neighbours is {} of a span of {span}, which is \
-             white noise rather than a field",
-            steps as f64 / pairs as f64
-        );
+            let span = highest - lowest;
+            assert!(span > 0, "the field is constant on {:?}", level.layer);
+            // A coarse threshold, an eighth of the span. White noise over the same
+            // band lands near a third of it.
+            assert!(
+                steps * 8 <= span * pairs,
+                "on {:?} the mean step between neighbours is {} of a span of \
+                 {span}, which is white noise rather than a field",
+                level.layer,
+                steps as f64 / pairs as f64
+            );
+        }
     }
 
     #[test]
@@ -994,13 +1105,17 @@ mod tests {
                 uniform: false,
             },
         ];
-        fill_world(&mut world, &mut fills, octaves, key).expect("the fill");
+        // One on a side and one without, so that neither branch of `amount_at`
+        // is the only one the walk is checked over.
+        let layers = [Layer::Water, Layer::Uniform];
+        fill_world(&mut world, &mut fills, &layers, octaves, key).expect("the fill");
 
         let n_voxels = grid.n_voxels();
         for (s, fill) in fills.iter().enumerate() {
             let level = Level {
                 typical: fill.amount_at_typical,
                 excursion: fill.excursion,
+                layer: layers[s],
             };
             let slot = substance_slot(s as u32);
             // Backwards, and compared to the buffer the forward walk produced.
@@ -1091,12 +1206,29 @@ mod tests {
         assert_eq!(excursion_of(100, 100), 0, "no headroom at all");
         assert_eq!(excursion_of(0, 100), 0, "nothing to fill");
 
-        for (typical, max) in [(100i128, 200i128), (100, 1000), (1000, 1100), (7, 9)] {
+        // Both bounds in the form ADR-077 ratified them, as exact integer
+        // identities rather than as margins chosen here. From the single
+        // inequality `2*excursion <= min(typical, max - typical)` follow
+        // `2*(typical - excursion) >= typical` and
+        // `2*(typical + excursion) <= typical + max`, and the quarter that used
+        // to stand on the second line was decided by nobody. The pair `(0, 100)`
+        // is the degenerate case: no band at all, and both identities still hold.
+        for (typical, max) in [
+            (100i128, 200i128),
+            (100, 1000),
+            (1000, 1100),
+            (7, 9),
+            (0, 100),
+        ] {
             let excursion = excursion_of(typical, max);
-            assert!(typical - excursion >= 0, "the floor of ({typical}, {max})");
             assert!(
-                typical + excursion <= max - (max - typical) / 4,
-                "the peak of ({typical}, {max}) is within a rounding of the ceiling"
+                2 * (typical - excursion) >= typical,
+                "the floor of ({typical}, {max}) is under half of the typical"
+            );
+            assert!(
+                2 * (typical + excursion) <= typical + max,
+                "the peak of ({typical}, {max}) is over the midpoint between the \
+                 typical and the ceiling"
             );
         }
     }

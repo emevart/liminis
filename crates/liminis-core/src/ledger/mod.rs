@@ -46,14 +46,17 @@
 //!
 //! # What is deliberately not here
 //!
-//! ADR-059 decides more than this module implements. The `exchange` face — the
-//! ghost cell that makes a field lane `n_voxels + 1` long, the
-//! `[boundary.reservoir]` section and its validator, `alpha_ex = k_ex*dt/dx` —
-//! needs `world::Field` and a loader, and is a wave of its own;
-//! `world::Grid::new` still refuses the face. The second arm of
-//! `process::Conservation`, `ChangedThrough(Channel)`, becomes writable the
-//! moment [`Channel`] exists, but `process/**` is under the guard of ADR-020 and
-//! the version cannot move in this wave.
+//! Nothing of ADR-059 is left outside this module and its two callers now. The
+//! `exchange` face is built — the ghost cell that makes a field lane
+//! `n_voxels + 1` long, `[boundary.reservoir]` and `alpha_ex = k_ex*dt/dx` — and
+//! `process::Conservation::ChangedThrough(Channel)` is the arm the transport
+//! processes declare when the grid they were folded for vents.
+//!
+//! What is still open here is the **sign**, and it is open in the record rather
+//! than in the code: `TODO(counter-sign)` below. It stopped being untestable
+//! with the face: `boundary_outflow_appears_in_channel_counter` is the one place
+//! where the other convention can fail, because on a closed domain both give
+//! zero.
 
 use anyhow::{Context, Result, bail};
 
@@ -95,7 +98,8 @@ pub enum Channel {
     /// `sigma*T^4` off the top layer.
     RadiativeOut = 2,
     /// Two-way exchange with the outside reservoir, through the `exchange`
-    /// face. The face itself is not built yet — see the module header.
+    /// face. Credited by steps `c` and `d`, on **every** substep, and by nothing
+    /// else (ADR-059).
     BoundaryExchange = 3,
     /// A rare event: matter, energy, a crater.
     Impact = 4,
@@ -517,6 +521,56 @@ impl Ledger {
         self.energy[channel.row()] = sum;
     }
 
+    /// Credit an energy flow that was accumulated in `i128`, narrowing it back
+    /// through a checked conversion.
+    ///
+    /// The one caller today is the solar reduction of ADR-075, and the width is
+    /// its accumulator's rather than this counter's. The exact sum of the fold's
+    /// solar slice does not fit an `i64` at the declared span of the enthalpy
+    /// field — `32 768 x 1.97e18 = 6.46e22` against `9.22e18` — so a reduction
+    /// that accumulated in `i64` would wrap into a plausible negative *before*
+    /// any conversion, and a `try_from` over an already-wrapped number is silent.
+    /// Hence: widen, add, and narrow exactly once, here.
+    ///
+    /// Outside every `cfg`, like [`Ledger::credit_energy`]. The counters tick in
+    /// both build profiles, and a release build that quietly skipped a credit
+    /// would give a diverging ledger with no panic anywhere — the rare thing that
+    /// is worse than a wrong debug build.
+    ///
+    /// # Panics
+    ///
+    /// If `units` does not fit an `i64` — naming the channel, the number and
+    /// open question A-20 — and on overflow of the counter itself, in both build
+    /// profiles.
+    ///
+    /// This is a refusal and not a loss of account: saturating or wrapping here
+    /// would leave the ledger closing against a right-hand side that is no longer
+    /// the truth. Whether an `i64` counter is the right width at all is open
+    /// question A-20 (A-19 in ADR-075 and ADR-076, which were drafted while that
+    /// number was free), and at `k_E = 67` the answer is visibly "no" — the
+    /// counter holds `2^63/2^67 = 62.5 mJ` against the `0.16384 J` one lit tick
+    /// of a 128 cubed domain delivers (ADR-075, ADR-076). Until A-20 is answered
+    /// no scenario may declare `i_surface > 0`, which is what keeps this panic
+    /// unreachable rather than imminent.
+    #[track_caller]
+    pub fn credit_energy_wide(&mut self, channel: Channel, units: i128) {
+        let Ok(narrow) = i64::try_from(units) else {
+            panic!(
+                "ledger credit does not fit the counter: channel {}, energy, \
+                 {units} units against an i64 counter. The width of a channel \
+                 counter is open question A-20 — A-19 in ADR-075 and ADR-076, \
+                 which were drafted while that number was free — and at k_E = 67 \
+                 an i64 holds 2^63/2^67 = 62.5 mJ, while one lit tick of a 128^3 \
+                 domain is 0.16384 J, which is 2.62 ceilings (ADR-075, ADR-076). \
+                 Wrapping or saturating here would keep the run going with a \
+                 ledger that closes against a right-hand side that is no longer \
+                 the truth",
+                channel.name()
+            );
+        };
+        self.credit_energy(channel, narrow);
+    }
+
     /// The running net flow of `substance` through `channel` over the whole run.
     #[track_caller]
     pub fn matter(&self, channel: Channel, substance: u32) -> i64 {
@@ -686,6 +740,32 @@ impl Ledger {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The refusal `f` panicked with, or `None` if it returned.
+    ///
+    /// `#[should_panic(expected = ...)]` takes one substring and ends the test
+    /// where the panic is, and the three claims about this refusal are not of
+    /// that shape: one is a conjunction (the message names the channel *and* the
+    /// number *and* the question), one is a pair (accepted here, refused one
+    /// past here), and one is about the state the ledger is left in — which a
+    /// test that ends at the panic cannot look at, and which is the whole
+    /// difference between a refusal and a wrap.
+    ///
+    /// The panic hook is left alone deliberately: silencing it is global state
+    /// shared with every other test in this binary, and libtest already discards
+    /// the captured output of a test that passes.
+    fn refusal_of(f: impl FnOnce()) -> Option<String> {
+        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(f)) {
+            Ok(()) => None,
+            Err(payload) => Some(
+                payload
+                    .downcast_ref::<String>()
+                    .cloned()
+                    .or_else(|| payload.downcast_ref::<&str>().map(|s| (*s).to_owned()))
+                    .unwrap_or_else(|| "a panic carrying no message at all".to_owned()),
+            ),
+        }
+    }
 
     #[test]
     fn the_channel_numbering_is_the_one_metrics_and_configs_will_name() {
@@ -1104,5 +1184,111 @@ mod tests {
         let mut narrow = DomainSums::new(1).unwrap();
         narrow.add_field_lane_32(0, &[M32::MAX; 4]);
         assert_eq!(narrow.matter(0), 4 * i128::from(i32::MAX));
+    }
+
+    #[test]
+    fn crediting_more_solar_than_the_counter_holds_is_refused_not_wrapped() {
+        // `ACCEPTANCE.md`, and the configuration that will actually reach it is
+        // not this one. The solar reduction of ADR-075 accumulates in `i128`
+        // because the exact sum of the slice does not fit an `i64` at the
+        // declared span of the enthalpy field, and the counter it pays into is
+        // `i64` (ADR-059). At `k_E = 67` the counter tops out at
+        // `2^63/2^67 = 62.5 mJ`, while the upper face of a 128 cubed domain at
+        // `dx = 1e-4 m` takes `0.16384 J` of full sun in one second — **2.62144
+        // ceilings in a single tick** (ADR-076). So the real configuration of
+        // this test is the first lit tick of the first lit scenario, and it is
+        // unreachable for exactly as long as ADR-076's refusal stands: no
+        // scenario may declare `i_surface > 0` until energy has a sink *and*
+        // A-20 has an answer.
+        //
+        // Substituted here rather than reached, the way
+        // `channel_counters_do_not_overflow_at_1e7_ticks` substitutes instead of
+        // running ten million ticks. What is on trial is the conversion: written
+        // `as i64` this wraps to a plausible negative and the ledger goes on
+        // closing against a right-hand side that is no longer the truth.
+        //
+        // **"Not wrapped" is the half a `#[should_panic]` cannot state.** A
+        // conversion written `as i64` does not panic at all, so the absence of a
+        // panic is one failure; a conversion that panicked *after* touching the
+        // counter would be the other, and it is the one a test ending at the
+        // panic cannot see. Hence the counter is read afterwards and has to be
+        // exactly where it started.
+        let mut ledger = Ledger::new(1).unwrap();
+        let refusal = refusal_of(|| {
+            ledger.credit_energy_wide(Channel::SolarIn, i128::from(i64::MAX) + 1);
+        });
+        let message = refusal.expect("one unit past i64::MAX was credited instead of refused");
+        assert!(message.contains("A-20"), "the refusal says: {message}");
+        assert_eq!(
+            ledger.energy(Channel::SolarIn),
+            0,
+            "the counter moved on a credit that was refused"
+        );
+    }
+
+    #[test]
+    fn the_wide_credit_takes_the_boundary_and_refuses_past_it() {
+        // The boundary itself, not its neighbourhood: `i64::MAX` is a legal
+        // credit and `i64::MAX + 1` is not. A conversion written with `>` where
+        // it wanted `>=`, or one that reserved a unit of headroom it was never
+        // asked for, is caught by the pair and by nothing else.
+        //
+        // **Both sides here rather than one side each side of the file.** The
+        // accepting half alone leaves the name a promise the body does not keep,
+        // and a conversion that refused every credit would pass it; the refusing
+        // half alone is the test above. Two tests that only mean something read
+        // together are one test whose halves can be deleted separately.
+        let mut ledger = Ledger::new(1).unwrap();
+        ledger.credit_energy_wide(Channel::SolarIn, i128::from(i64::MAX));
+        assert_eq!(ledger.energy(Channel::SolarIn), i64::MAX);
+
+        let mut past = Ledger::new(1).unwrap();
+        assert!(
+            refusal_of(|| {
+                past.credit_energy_wide(Channel::SolarIn, i128::from(i64::MAX) + 1);
+            })
+            .is_some(),
+            "one unit past i64::MAX was accepted"
+        );
+
+        // And the sign travels: the same pair on the other end of the type.
+        let mut ledger = Ledger::new(1).unwrap();
+        ledger.credit_energy_wide(Channel::SolarIn, i128::from(i64::MIN));
+        assert_eq!(ledger.energy(Channel::SolarIn), i64::MIN);
+
+        let mut past = Ledger::new(1).unwrap();
+        assert!(
+            refusal_of(|| {
+                past.credit_energy_wide(Channel::SolarIn, i128::from(i64::MIN) - 1);
+            })
+            .is_some(),
+            "one unit past i64::MIN was accepted"
+        );
+    }
+
+    #[test]
+    fn the_wide_credit_names_the_channel_it_refused() {
+        // The message has to carry the channel and the number as well as A-20:
+        // a panic that says only "does not fit" sends the reader to look for the
+        // overflow in six counters, and one that names only the question sends
+        // him to a record instead of to the credit that broke.
+        //
+        // All three substrings in one assertion, which is why the panic is caught
+        // rather than expected: `#[should_panic(expected = ...)]` takes one of
+        // them, and the two it does not take are exactly the two that can be
+        // deleted from the format string without any test noticing.
+        let units = i128::from(i64::MIN) - 1;
+        let mut ledger = Ledger::new(1).unwrap();
+        let message = refusal_of(|| {
+            ledger.credit_energy_wide(Channel::SolarIn, units);
+        })
+        .expect("a credit past i64::MIN was accepted");
+
+        for expected in [Channel::SolarIn.name(), units.to_string().as_str(), "A-20"] {
+            assert!(
+                message.contains(expected),
+                "the refusal has to name `{expected}`, and says: {message}"
+            );
+        }
     }
 }

@@ -5,12 +5,20 @@
 //! `GEOTHERMAL_IN`, `RADIATIVE_OUT`, `IMPACT` and `VENT_BURST` — and the other
 //! two go elsewhere: `BOUNDARY_EXCHANGE` is credited by steps `c` and `d` on
 //! every substep, `SOLAR_IN` by the fold of step `i'`. So the counters this step
-//! would write already exist. What does not exist is anything to write into
-//! them:
+//! would write already exist.
 //!
-//! - the exchange face is not buildable. `world::Grid::new` accepts
-//!   `Boundary::Exchange`, and every process that has to look at a face —
-//!   `advect`, `diffuse`, `settle` — refuses one, naming `BOUNDARY_EXCHANGE`;
+//! **`BOUNDARY_EXCHANGE` is not among the four and no longer among the empty
+//! ones.** The exchanging face is built (ADR-059): `world::Grid::new` accepts it,
+//! `Grid::neighbour` answers with the ghost cell, and `process::DiffusePhase` and
+//! `process::AdvectPhase` credit what crosses it on every substep of their own
+//! steps. Nothing is left for this step to do about it, and that is the shape
+//! ADR-059 chose deliberately — it rejected "treat the exchange as a separate
+//! process at step `j`" by name, because the exchange would then be applied over
+//! a full `dt` after diffusion had already run `n` substeps, and the flux would
+//! be computed from `dst` rather than from `src`.
+//!
+//! What does not exist is anything to write into the four that are left:
+//!
 //! - there are no events. `IMPACT` and `VENT_BURST` are described as rare events
 //!   in SPEC section 7 and by no schedule, key or type anywhere;
 //! - `GEOTHERMAL_IN` and `RADIATIVE_OUT` are boundary conditions on the enthalpy
@@ -30,10 +38,19 @@
 //!
 //! The shape of every one of the four. `GEOTHERMAL_IN` needs a heat flux and a
 //! composition at the vents (SPEC section 7 names the substances and no
-//! numbers), `RADIATIVE_OUT` needs an emissivity and a temperature field derived
-//! from enthalpy (ADR-062, and that operator is unwritten), and both events need
-//! a schedule that `CONFIG_SCHEMA.md` does not declare. The sign convention of a
-//! counter is open too — `TODO(counter-sign)` in `ledger/mod.rs`.
+//! numbers), `RADIATIVE_OUT` needs an emissivity, and both events need a schedule
+//! that `CONFIG_SCHEMA.md` does not declare. The sign convention of a counter is
+//! open too — `TODO(counter-sign)` in `ledger/mod.rs` — although it is no longer
+//! untested: `boundary_outflow_appears_in_channel_counter` is the one place in
+//! the project where getting it backwards can fail, and it now runs.
+//!
+//! The temperature `sigma*T^4` is taken over is **not** on that list any more:
+//! `process/temperature.rs` derives it from enthalpy and the composition of the
+//! coarse cell (ADR-044, ADR-062) and `world::World` owns the buffer. What has to
+//! be said instead is that the field is on the enthalpy grid and the radiating
+//! surface is the top layer of the *fine* one, so `RADIATIVE_OUT` needs a rule
+//! for which cells of a `32^3` field face the sky — and that rule is one more
+//! thing no record writes.
 
 use super::{Conservation, Invariant};
 
@@ -55,9 +72,10 @@ pub const ENABLED_BY_DEFAULT: bool = false;
 ///
 /// Both `Conserved` today, and both wrong the moment the step does anything: the
 /// whole purpose of a channel is that matter or energy crosses the boundary of
-/// the domain, which is the second arm of [`Conservation`] — the arm that names
-/// a channel and that `process/mod.rs` explains is still missing. This is the
-/// process that will need it first.
+/// the domain, which is the second arm of [`Conservation`] — the arm that names a
+/// channel. That arm exists now (ADR-059) and the two transport steps already use
+/// it; this step will name a different channel of the six on the day it has an
+/// operator, and it has none, so what it does to both ledgers is nothing.
 #[inline]
 #[must_use]
 pub fn invariant() -> Invariant {

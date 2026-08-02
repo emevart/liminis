@@ -206,8 +206,7 @@ pub fn run(port: u16, config: &Path, seed: u64) -> Result<()> {
 /// # Errors
 ///
 /// Returns an error if the scenario does not validate, if its faces cannot be
-/// built into a grid — `exchange` is nameable and not runnable — or if a process
-/// it enables cannot be dispatched.
+/// built into a grid, or if a process it enables cannot be dispatched.
 fn build(scenario: &Config, seed: u64) -> Result<Sim> {
     let derived = config::validate(scenario).context("validating the scenario")?;
     let config_hash = config::config_hash(scenario).context("hashing the scenario")?;
@@ -232,6 +231,25 @@ fn build(scenario: &Config, seed: u64) -> Result<Sim> {
     .context("allocating the world")?;
 
     worldgen::generate(&mut world, &derived, run_key(seed)).context("the initial conditions")?;
+
+    // The ghost cell of every lane, out of `[boundary.reservoir]` (ADR-059).
+    //
+    // **After worldgen and not before**, because worldgen writes voxels and this
+    // writes the element past them; the order does not matter today and saying
+    // which is which does. What matters is that it happens at all: an unseeded
+    // ghost is a reservoir of nothing, so a lid declared to trade with an
+    // atmosphere-saturated ocean would be an infinite sink instead — and every
+    // check in the project would stay green over it, because the counter records
+    // whatever actually left.
+    //
+    // A restart re-seeds it the same way rather than reading it back out of a
+    // snapshot: the reservoir is a boundary condition of the config and not
+    // state (`observe/snapshot.rs`, ADR-059).
+    if let Some(reservoir) = derived.reservoir() {
+        world
+            .seed_ghosts(&reservoir.amount_out, M64::new(reservoir.enthalpy_out))
+            .context("seeding the outside reservoir")?;
+    }
 
     let tick = Tick::new(
         &world,
@@ -271,9 +289,10 @@ fn build(scenario: &Config, seed: u64) -> Result<Sim> {
 /// The grid of a scenario: extents and one boundary per face.
 ///
 /// The translation between the spelling a scenario writes and the one the world
-/// runs is here and not in `config/`, because it is `Grid::new` that refuses an
-/// `exchange` face, and the refusal is worth arriving with the context that a
-/// viewer run needs every face closed or periodic.
+/// runs is here and not in `config/`, because it is `Grid::new` that judges the
+/// set of faces — a half-periodic axis, and an `exchange` face opposite a
+/// periodic one (ADR-034, ADR-059) — and the refusal is worth arriving with the
+/// context of which scenario asked for it.
 fn grid_of(scenario: &Config) -> Result<Grid> {
     let face = |declared: config::Face| match declared {
         config::Face::Periodic => Boundary::Periodic,
@@ -444,9 +463,10 @@ fn run_loop(shared: &Arc<Mutex<Sim>>) {
 /// cannot: every process S0 dispatches conserves each substance exactly, so the
 /// two sums are equal on every tick this build can produce, and telling them
 /// apart would need a tick whose domain total moves — which needs a channel that
-/// credits, which needs the `exchange` face. The day `Channel::BoundaryExchange`
-/// credits anything is the day this becomes testable. Until then it is held by
-/// reading, and saying so is cheaper than a test that passes for another reason.
+/// credits. The `exchange` face credits one now (ADR-059), so a scenario whose
+/// lid vents is exactly the case that can tell the two orders apart, and this
+/// stops being held by reading alone the moment such a scenario is run under a
+/// debug build.
 fn advance_one(sim: &mut Sim) {
     {
         let Sim {
@@ -1199,6 +1219,7 @@ mod tests {
     /// is a legal amount, so nothing falls over.
     fn paint(sim: &mut Sim, amount: impl Fn(u32, u32) -> i64) {
         let n_voxels = sim.world.grid().n_voxels();
+        let lane_len = sim.world.grid().lane_len();
         let n_substances = sim.world.registry().n_substances();
         for s in 0..n_substances {
             match sim.world.lane_of(s) {
@@ -1206,7 +1227,7 @@ mod tests {
                     let field = sim.world.amounts_32_mut().expect("a narrow field");
                     let buffer = field.write_mut();
                     for idx in 0..n_voxels {
-                        buffer[(lane * n_voxels + idx) as usize] =
+                        buffer[(lane * lane_len + idx) as usize] =
                             M32::from_i64_clamping(amount(s, idx));
                     }
                 }
@@ -1214,7 +1235,7 @@ mod tests {
                     let field = sim.world.amounts_64_mut().expect("a wide field");
                     let buffer = field.write_mut();
                     for idx in 0..n_voxels {
-                        buffer[(lane * n_voxels + idx) as usize] = M64::new(amount(s, idx));
+                        buffer[(lane * lane_len + idx) as usize] = M64::new(amount(s, idx));
                     }
                 }
             }

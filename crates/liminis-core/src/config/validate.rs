@@ -97,6 +97,18 @@ const VELOCITY_FIELD_PROCESS: &str = ProcessId::VelocityField.id();
 /// `hello.toml` first. The argument is written out at the definition.
 use crate::process::velocity::VELOCITY_FIELD_ENABLED_BY_DEFAULT;
 
+/// The process id of the light, from the same closed roster and for the same
+/// reason as [`VELOCITY_FIELD_PROCESS`].
+const LIGHT_PROCESS: &str = ProcessId::Light.id();
+
+/// The default of `enabled` for the light, taken from the process (ADR-065).
+///
+/// `false`, and assigned by ADR-076 rather than left over: light on by default
+/// would put an energy input into every scenario in the repository, and that
+/// input has no sink and a counter that does not hold one tick of it — so every
+/// scenario would be refused by the rule two functions down.
+use crate::process::light::ENABLED_BY_DEFAULT as LIGHT_ENABLED_BY_DEFAULT;
+
 /// One transport operator and the speed bound that belongs to it.
 ///
 /// A sequence of these rather than one number, and the type is a sequence so
@@ -177,6 +189,21 @@ fn referential_integrity(config: &Config) -> Result<()> {
         }
     }
 
+    for id in config.initial.layer.keys() {
+        if !config.substance.iter().any(|s| s.id == *id) {
+            bail!(
+                "`[initial.layer]` declares a side for `{id}`, which is not a \
+                 declared substance (declared: {}). The keys of this table are \
+                 data, so `deny_unknown_fields` does not see them (section 11 \
+                 item 1), and a skipped key would be worse than a refusal: the \
+                 scenario would load, the canonical form would look right, and \
+                 the substance the author meant to lift into the water column \
+                 would stay in the sediment with both ledgers closing (ADR-077)",
+                names(config.substance.iter().map(|s| &s.id))
+            );
+        }
+    }
+
     for reaction in &config.reaction {
         for (side, table) in [("inputs", &reaction.inputs), ("outputs", &reaction.outputs)] {
             for id in table.keys() {
@@ -229,16 +256,39 @@ fn referential_integrity(config: &Config) -> Result<()> {
         }
 
         catalyst_form(&reaction.catalyst, &reaction.id)?;
-    }
 
-    // TODO(field-roster): `requires.field` belongs to referential integrity by
-    // `CONFIG_SCHEMA.md` section 10, and there is nothing to resolve it against.
-    // Field identifiers are a schema choice (section 7) and a `[[field]]` record
-    // is optional — `lod` has a default — so a field can legally exist without a
-    // record, and checking against the declared records would refuse legal
-    // scenarios. What is needed is a decision about a closed set of field
-    // identifiers; `requires_naming_an_unknown_field_is_rejected` is `#[ignore]`
-    // until there is one.
+        // A non-empty `requires` is a load error until the gate exists (ADR-073),
+        // and the refusal is here rather than only in `process/react.rs` because
+        // section 10 is the register of *load* refusals: a refusal arriving after
+        // `derive` and after the roster is assembled leaves the section naming a
+        // rule it does not perform, and hands a config with both a window and an
+        // overflowing scale a message about the scale.
+        //
+        // Nothing is resolved and nothing is enumerated. ADR-073 assigns no
+        // roster of field identifiers, no unit for their bounds and no case for
+        // their spelling — the single number the corpus prints, `min = 0.02`, is
+        // three orders apart between its two readings and there is nothing to
+        // calibrate it against — so this refuses every window, at every spelling,
+        // which is what makes the missing roster harmless rather than urgent.
+        //
+        // The door in `process/react.rs` stays: the pair is the one ADR-059
+        // already built for `energy_from`, a validator at load and the process in
+        // its own words for anybody who came past it.
+        if !reaction.requires.is_empty() {
+            bail!(
+                "reaction `{}` declares {} `requires` window(s), and no gate \
+                 exists to satisfy them: the reaction kernel implements none, and \
+                 no record says whether a gate is a hard cut-off or a factor, \
+                 which fields it reads, in what unit, or how it behaves at the \
+                 edge of a window (ADR-073). Accepted and ignored, a window is a \
+                 reaction running outside the conditions it declares, with \
+                 nothing to fail. Write `requires = []` until the record that \
+                 writes the gate arrives",
+                reaction.id,
+                reaction.requires.len()
+            );
+        }
+    }
 
     if let Some(reservoir) = &config.boundary.reservoir {
         for id in reservoir.conc_out.keys() {
@@ -471,7 +521,37 @@ fn domains(config: &Config) -> Result<()> {
                 process.stir_fraction
             );
         }
+        // The five light keys of ADR-076, checked on every record and not only on
+        // the light's: a `daily_fraction` written on the pressure process is a
+        // number nobody reads, and the domain rules above are all written this way.
+        // The keys that depend on the process being *on* are the next function's.
+        for (key, fraction) in [
+            ("daily_fraction", process.daily_fraction),
+            ("seasonal_fraction", process.seasonal_fraction),
+        ] {
+            if !(fraction.is_finite() && (0.0..=1.0).contains(&fraction)) {
+                bail!(
+                    "{owner} declares {key} = {fraction}, and the rule is \
+                     {key} in [0, 1]: it is a fraction of the declared mean \
+                     irradiance i_surface (ADR-076)"
+                );
+            }
+        }
+        for (key, period) in [
+            ("daily_period", process.daily_period),
+            ("seasonal_period", process.seasonal_period),
+        ] {
+            if let Some(period) = period {
+                demand_positive(period, key, &owner)?;
+                modulation_period(period, config.dt, key, &owner)?;
+            }
+        }
+        if let Some(i_surface) = process.i_surface {
+            demand_non_negative(i_surface, "i_surface", &owner)?;
+        }
     }
+
+    light(config)?;
 
     if let Some(reservoir) = &config.boundary.reservoir {
         let owner = "[boundary.reservoir]";
@@ -486,6 +566,117 @@ fn domains(config: &Config) -> Result<()> {
         let owner = format!("[[calibration]] `{}`", entry.path);
         demand_finite(entry.min, "min", &owner)?;
         demand_finite(entry.max, "max", &owner)?;
+    }
+
+    Ok(())
+}
+
+/// A modulation period is a whole number of ticks, and at least three of them
+/// (ADR-076).
+///
+/// Both halves are arithmetic rather than taste. The exactness of "`i_surface` is
+/// the mean over a period" stands on an integer `N`, because the normalisation
+/// `A_N` is a sum over the `N` samples the run takes; at a fractional `N` it stops
+/// normalising anything and the key quietly means something else. And at `N = 2`
+/// the two samples of `max(0, sin)` are taken at phases `0` and `pi`, both exactly
+/// zero: the sum is zero, `A_N` divides by it, and the day is dark for ever at any
+/// nonzero amplitude. Three is the shortest period that is degenerate and alive.
+fn modulation_period(period: f64, dt: f64, key: &str, owner: &str) -> Result<()> {
+    let ticks = period / dt;
+    if ticks.fract() != 0.0 {
+        bail!(
+            "{owner} declares {key} = {period} s at dt = {dt} s, which is {ticks} \
+             ticks, and the rule is a whole number of ticks: the normalisation A_N \
+             is a sum over the N samples a period is actually sampled at, so a \
+             fractional N stops normalising and i_surface stops meaning the mean \
+             irradiance over a period (ADR-076)"
+        );
+    }
+    if ticks < 3.0 {
+        bail!(
+            "{owner} declares {key} = {period} s at dt = {dt} s, which is {ticks} \
+             ticks, and the rule is at least three ticks: at two the samples of \
+             max(0, sin) fall on phases 0 and pi, both zero, so their sum is zero \
+             and the normalisation A_N divides by it — the day would be dark for \
+             ever at any nonzero amplitude (ADR-076)"
+        );
+    }
+    Ok(())
+}
+
+/// The rules that hold only when the light process is on (ADR-076).
+///
+/// **The predicate is "enabled", not "wrote `enabled = true`" and not "has a
+/// record".** ADR-065 makes an absent record mean the process's own default and
+/// has the loader materialise the whole roster before the hash, so
+/// `enabled == Some(true)` lets a scenario relying on the default through and a
+/// check for the record's presence refuses a legal dark box. The default is read
+/// from the process itself, never copied here.
+fn light(config: &Config) -> Result<()> {
+    let Some(process) = config.process.iter().find(|p| p.id == LIGHT_PROCESS) else {
+        return Ok(());
+    };
+    if !process.enabled.unwrap_or(LIGHT_ENABLED_BY_DEFAULT) {
+        return Ok(());
+    }
+
+    let Some(i_surface) = process.i_surface else {
+        bail!(
+            "process `{LIGHT_PROCESS}` is enabled and declares no i_surface: the \
+             irradiance on the top face of the domain, W/m^2, is required when the \
+             process is on and has no default (ADR-076, on the precedent of \
+             u_conv_max). Write i_surface = 0.0 for a closed box, or the mean \
+             irradiance over a modulation period"
+        );
+    };
+
+    // A period is owed exactly when its amplitude is nonzero — the shape
+    // `stir_fraction`/`stir_period` already has (ADR-069).
+    for (fraction, fraction_key, period, period_key) in [
+        (
+            process.daily_fraction,
+            "daily_fraction",
+            process.daily_period,
+            "daily_period",
+        ),
+        (
+            process.seasonal_fraction,
+            "seasonal_fraction",
+            process.seasonal_period,
+            "seasonal_period",
+        ),
+    ] {
+        if fraction > 0.0 && period.is_none() {
+            bail!(
+                "process `{LIGHT_PROCESS}` declares {fraction_key} = {fraction} and \
+                 no {period_key}: an amplitude without a period is a modulation \
+                 with no clock (ADR-076)"
+            );
+        }
+    }
+
+    if i_surface > 0.0 {
+        // Temporary, and **two locks at once**. Naming only one of them would
+        // teach the next reader that the other is not there: the counter fills at
+        // `i_surface = 381.5 W/m^2`, eighteen times below the threshold the field
+        // itself imposes, so lifting the sink alone trades a silent overflow of
+        // the field for a loud panic in the ledger. The precedent for the shape is
+        // `a_settling_substance_is_refused_until_g_and_the_medium_density_are_named`.
+        bail!(
+            "process `{LIGHT_PROCESS}` declares i_surface = {i_surface} W/m^2, and \
+             a lit scenario is refused for now by two locks at once (ADR-076). \
+             First: energy has no sink in any scenario — RADIATIVE_OUT is not \
+             implemented and step `j` has nothing to write — so absorbed light \
+             accumulates without bound and crosses the declared temperature range \
+             in about 42 ticks at full sun, taking the Courant bound proved at \
+             load with it. Second: the width of a channel counter is open question \
+             A-20 — A-19 in ADR-075 and ADR-076, which were drafted while that \
+             number was free — and an i64 SOLAR_IN does not hold even one lit \
+             tick: the ceiling is 2^63/2^k_E = 62.5 mJ at k_E = 67 against \
+             0.16384 J a tick at 128^3, that is 2.62 ceilings. Neither lock is \
+             enough on its own. \
+             Write i_surface = 0.0 for a closed box"
+        );
     }
 
     Ok(())
@@ -2509,6 +2700,171 @@ composition = { C = 106, N = 16, P = 1 }
         validated(&disabled);
     }
 
+    /// A `[[process]]` record for the light, with whatever keys a case needs.
+    fn light_record(body: &str) -> String {
+        format!("\n[[process]]\nid = \"light\"\n{body}\n")
+    }
+
+    /// The worked example with a light record appended.
+    fn with_light(body: &str) -> String {
+        format!("{WORKED_EXAMPLE}{}", light_record(body))
+    }
+
+    #[test]
+    fn light_enabled_without_an_irradiance_is_rejected() {
+        // The precedent is `velocity_field_without_u_conv_max_is_rejected`
+        // (ADR-069): a parameter with no default, required exactly when its
+        // process is on.
+        assert_names(
+            &refusal(&with_light("enabled = true")),
+            &["light", "i_surface"],
+        );
+
+        // **Three cases, because the predicate is "enabled", not "wrote
+        // `enabled = true`".** ADR-065: an absent record means the process's own
+        // default, not an absent process, and the loader materialises the whole
+        // roster before the hash. A check written as `enabled == Some(true)` lets
+        // through a scenario relying on the default; a check written as "is there
+        // a record" refuses a legal dark box.
+        //
+        // A record with no `enabled` and no record at all both take the light's
+        // default, which is `false` (ADR-076), so both are legal here — and the
+        // day that default changes, this test is what turns red rather than a
+        // scenario.
+        const { assert!(!LIGHT_ENABLED_BY_DEFAULT) };
+        validated(&with_light("k_w = 0.04"));
+        validated(WORKED_EXAMPLE);
+
+        // Enabled *with* the key is legal as far as this rule goes; the lit
+        // scenario meets its own refusal below.
+        validated(&with_light("enabled = true\ni_surface = 0.0"));
+    }
+
+    #[test]
+    fn a_negative_surface_irradiance_is_rejected() {
+        // Not tidiness. A negative irradiance gives a negative absorption in every
+        // voxel and so *removes* energy through a channel SPEC section 7 declares
+        // an input — and the residual stays at zero while it happens, because the
+        // counter and the enthalpy move together. The same class as
+        // `a_negative_amount_amplifies_the_beam_rather_than_being_clamped`, except
+        // that this one is preventable at load.
+        for bad in ["-1.0", "nan", "inf"] {
+            let text = with_light(&format!("enabled = true\ni_surface = {bad}"));
+            assert_names(&refusal(&text), &["i_surface"]);
+        }
+
+        // Zero stays legal: it is the closed-box scenario, and it costs no branch
+        // in any kernel (ADR-076).
+        validated(&with_light("enabled = true\ni_surface = 0.0"));
+    }
+
+    #[test]
+    fn a_modulation_fraction_outside_the_unit_interval_is_rejected() {
+        // Both fractions, not one: a check written for the day and copied nowhere
+        // is green and silent about the season.
+        for key in ["daily_fraction", "seasonal_fraction"] {
+            for bad in ["-0.1", "1.5", "nan"] {
+                let text = with_light(&format!(
+                    "enabled = true\ni_surface = 0.0\n{key} = {bad}\n{key_period} = 4.0",
+                    key_period = if key == "daily_fraction" {
+                        "daily_period"
+                    } else {
+                        "seasonal_period"
+                    }
+                ));
+                assert_names(&refusal(&text), &[key]);
+            }
+        }
+
+        // The boundaries themselves are legal, on the model of `stir_fraction`.
+        validated(&with_light(
+            "enabled = true\ni_surface = 0.0\ndaily_fraction = 1.0\ndaily_period = 4.0\n\
+             seasonal_fraction = 0.0",
+        ));
+    }
+
+    #[test]
+    fn a_modulation_period_that_is_not_a_whole_number_of_ticks_is_rejected() {
+        // The exactness of the period mean stands on an integer `N`: at a
+        // fractional one `A_N` stops normalising and `i_surface` quietly stops
+        // meaning "the mean irradiance over a period".
+        //
+        // **At `dt != 1`**, or the test checks that the period is a whole number
+        // of *seconds* and not that the quotient is a whole number of ticks. The
+        // whole corpus runs at `dt = 1`, so that mistake would be invisible
+        // everywhere else.
+        // `u_conv_max` moves with `dt`: doubling the tick doubles every Courant
+        // number, and without this the fixture is refused for the transport
+        // rather than for the period.
+        let text = swap(WORKED_EXAMPLE, "dt = 1.0", "dt = 2.0");
+        let text = swap(&text, "u_conv_max = 1.0e-5", "u_conv_max = 5.0e-6");
+        let text = format!(
+            "{text}{}",
+            light_record(
+                "enabled = true\ni_surface = 0.0\ndaily_fraction = 0.5\ndaily_period = 9.0"
+            )
+        );
+        assert_names(&refusal(&text), &["daily_period", "9", "2", "4.5"]);
+
+        // The same period at the same `dt`, made whole: eight seconds is four
+        // ticks.
+        let text = swap(WORKED_EXAMPLE, "dt = 1.0", "dt = 2.0");
+        let text = swap(&text, "u_conv_max = 1.0e-5", "u_conv_max = 5.0e-6");
+        validated(&format!(
+            "{text}{}",
+            light_record(
+                "enabled = true\ni_surface = 0.0\ndaily_fraction = 0.5\ndaily_period = 8.0"
+            )
+        ));
+    }
+
+    #[test]
+    fn a_modulation_period_under_three_ticks_is_rejected() {
+        // Three, and not the natural "at least two". At `N = 2` the samples of
+        // `max(0, sin)` are taken at phases `0` and `pi`, both exactly zero: the
+        // sum is zero, `A_N` divides by it, and the day is dark for ever at any
+        // `f_d > 0`. At `N = 3` the pattern is degenerate but alive,
+        // `A_3 = 3.464`.
+        let two =
+            with_light("enabled = true\ni_surface = 0.0\ndaily_fraction = 1.0\ndaily_period = 2.0");
+        assert_names(&refusal(&two), &["daily_period", "2", "three"]);
+
+        let three =
+            with_light("enabled = true\ni_surface = 0.0\ndaily_fraction = 1.0\ndaily_period = 3.0");
+        validated(&three);
+
+        // And the seasonal half by the same rule.
+        let two = with_light(
+            "enabled = true\ni_surface = 0.0\nseasonal_fraction = 1.0\nseasonal_period = 2.0",
+        );
+        assert_names(&refusal(&two), &["seasonal_period", "three"]);
+    }
+
+    #[test]
+    fn a_lit_scenario_is_refused_until_an_energy_sink_exists() {
+        // Temporary and **two-locked**, on the precedent of
+        // `a_settling_substance_is_refused_until_g_and_the_medium_density_are_named`.
+        // The claim is about the two substrings and not about the refusal: a
+        // message naming only the missing sink teaches the next reader that a sink
+        // is enough, and the day one lock is lifted becomes the day a silent
+        // overflow of the field is traded for a loud panic in the ledger — the
+        // counter fills at `i_surface = 381.5 W/m^2`, eighteen times below the
+        // threshold the field itself imposes (ADR-076).
+        //
+        // `A-20` is the question the second lock sends the reader to, and the
+        // number is asserted because it is the one part of the message that is
+        // an address rather than an argument: ADR-075 and ADR-076 both call it
+        // A-19 — free when they were drafted, taken by the chemistry question by
+        // the time they were applied — so a reader who follows the record instead
+        // of the code lands on the sign of a reaction enthalpy and finds nothing
+        // about counter widths there.
+        let message = refusal(&with_light("enabled = true\ni_surface = 1.0e3"));
+        assert_names(&message, &["i_surface", "sink", "A-20"]);
+
+        // The mirror: the dark box loads.
+        validated(&with_light("enabled = true\ni_surface = 0.0"));
+    }
+
     #[test]
     fn structure_length_below_the_temperature_cell_is_rejected() {
         // The same `l_c` at two coarsenings, with different outcomes: `dx_coarse`
@@ -2710,6 +3066,38 @@ composition = { C = 106, N = 16, P = 1 }
     }
 
     #[test]
+    fn initial_layer_naming_an_unknown_substance_is_rejected() {
+        // The fifth "name -> value" table of the schema, and the newest
+        // (ADR-077). `deny_unknown_fields` sees the fields of a struct and the
+        // keys here are data, so the misspelling is referential integrity —
+        // stage 1 — and not serde's business.
+        let text = format!("{WORKED_EXAMPLE}\n[initial.layer]\nO_2 = \"water\"\n");
+        assert_names(&refusal(&text), &["O_2", "initial.layer", "O2", "H2S"]);
+
+        // The stage matters as much as the refusal. A typo in a substance name
+        // caught by the scales is reported as an error of the scales, and the
+        // author is sent to look for it in another section entirely — which is
+        // what `the_validator_refuses_before_it_derives` is about.
+        let with_a_broken_scale = swap(&text, "typical_conc = 0.1", "typical_conc = 1.0e31");
+        let with_a_broken_scale =
+            swap(&with_a_broken_scale, "max_conc = 10.0", "max_conc = 1.0e31");
+        let message = refusal(&with_a_broken_scale);
+        assert_names(&message, &["O_2"]);
+        assert!(
+            !message.contains("ceiling"),
+            "referential integrity comes before the derivation; it said:\n{message}"
+        );
+
+        // And the materialisation did not quietly drop the unknown key on the
+        // way: if it rebuilt the table from the registry instead of filling in
+        // what the file left out, this refusal would be unreachable, the
+        // canonical form would look correct, and the world would simply have no
+        // oxycline in it.
+        let spelled_right = format!("{WORKED_EXAMPLE}\n[initial.layer]\nO2 = \"water\"\n");
+        validated(&spelled_right);
+    }
+
+    #[test]
     fn a_catalyst_outside_the_declared_forms_is_rejected() {
         assert_names(
             &refusal(&swap(
@@ -2743,21 +3131,49 @@ composition = { C = 106, N = 16, P = 1 }
         ));
     }
 
+    /// A window on a field is a load error until the gate exists (ADR-073).
+    ///
+    /// **Both bounds, or the test checks serde instead of the rule.**
+    /// `schema::Requirement` declares `max: f64` with no `serde(default)`, so
+    /// the one-sided `{ field = "LIGHT", min = 0.02 }` of SPEC section 5 dies in
+    /// `parse` with "missing field `max`" and never reaches a validator at all —
+    /// which is the second half of the divergence ADR-073 records against the
+    /// frozen spec, and this record does not repair it.
+    ///
+    /// The field name is deliberately a plausible one. ADR-073 assigns no roster
+    /// of field identifiers, no unit and no case: the refusal is the same for
+    /// every spelling, which is precisely why no roster was worth freezing ahead
+    /// of the kernel that would read it.
     #[test]
-    #[ignore = "CONFIG_SCHEMA.md section 10 keeps requires.field in referential \
-                integrity and there is nothing to resolve it against: field \
-                identifiers are a schema choice (section 7) and a [[field]] \
-                record is optional, because `lod` has a default, so a field can \
-                legally exist without a record and checking against the declared \
-                records would refuse legal scenarios. A decision about a closed \
-                set of field identifiers is needed and does not exist"]
-    fn requires_naming_an_unknown_field_is_rejected() {
+    fn a_requires_window_is_rejected_until_the_gate_exists() {
+        let window = "requires = [{ field = \"enthalpy\", min = 273.15, max = 323.15 }]";
         let text = swap(
             WORKED_EXAMPLE,
             "catalyst = \"\"",
-            "catalyst = \"\"\nrequires = [{ field = \"nope\", min = 0.0, max = 1.0 }]",
+            &format!("catalyst = \"\"\n{window}"),
         );
-        assert_names(&refusal(&text), &["nope"]);
+
+        // It parses. The refusal has to come from the validator and be about the
+        // window — not from serde and about a missing key.
+        parse(&text).expect("a two-sided window parses; the refusal is the validator's");
+
+        assert_names(
+            &refusal(&text),
+            &["h2s_oxidation", "requires", "1", "requires = []"],
+        );
+
+        // And it comes before `derive`: a config with both a window and a scale
+        // that overflows is refused for the window. Section 10 is the register of
+        // *load* refusals, and `the_validator_refuses_before_it_derives` pins
+        // that order for the whole corpus.
+        let text = swap(&text, "typical_conc = 0.1", "typical_conc = 1.0e31");
+        let text = swap(&text, "max_conc = 10.0", "max_conc = 1.0e31");
+        let message = refusal(&text);
+        assert_names(&message, &["requires"]);
+        assert!(
+            !message.contains("ceiling"),
+            "the window is refused before the scales are derived; it said:\n{message}"
+        );
     }
 
     #[test]

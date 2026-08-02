@@ -499,9 +499,10 @@ impl VelocityField {
         assert_eq!(velocity.len(), potential.len(), "the velocity field");
         assert_eq!(
             face_courant.len(),
-            (COMPONENTS * self.n_voxels) as usize,
-            "the face Courant buffer is three numbers per **fine** voxel, in the \
-             layout kernels/advect.rs reads"
+            (COMPONENTS * (self.n_voxels + 1)) as usize,
+            "the face Courant buffer is three numbers per **lane** of the fine \
+             grid, in the layout kernels/advect.rs reads: `n_voxels` faces and \
+             the face of the domain, which belongs to the ghost cell (ADR-059)"
         );
 
         for idx in 0..self.n_coarse {
@@ -753,9 +754,16 @@ fn periodic_mask(grid: &Grid) -> Result<u32> {
             Boundary::Periodic => mask |= 1 << (face as u32),
             Boundary::Closed => {}
             Boundary::Exchange => bail!(
-                "face {face:?} is an exchange face: matter crossing it belongs in \
-                 the BOUNDARY_EXCHANGE channel (ADR-059), and this process credits \
-                 no channel at all"
+                "face {face:?} is an exchange face, and this process has no \
+                 behaviour on one. The counters exist and the ghost cell exists \
+                 (ADR-059) — what does not exist is a decision about what this \
+                 operator does at the face of the domain: `settling_out_of_the_\
+                 top_face_appears_in_boundary_exchange` (`ACCEPTANCE.md`) names \
+                 an outcome for settling and no mechanism, and pressure and the \
+                 velocity field are named by nothing at all. Refused rather than \
+                 treated as closed, because a lid sealed for one operator and \
+                 vented for the others is a difference in the flux that reads as \
+                 physics"
             ),
         }
     }

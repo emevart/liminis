@@ -22,6 +22,24 @@ use liminis_core::numeric::{M32, M64};
 use liminis_core::process::DiffusePhase;
 use liminis_core::world::{Boundary, Field, Field32, Field64, Grid};
 
+/// A grid with no exchanging face: `k_ex` multiplies a flux nobody gathers.
+///
+/// The venting cases are the outside view of ADR-059 and live in
+/// `tests/acceptance_boundary.rs`.
+const SEALED: f64 = 0.0;
+
+/// One substance per lane, and a scratch ledger. On a sealed grid no counter is
+/// ever touched, so which substance a lane stands for cannot matter here.
+fn run_diffusion_32(phase: &DiffusePhase, field: &mut Field32) {
+    let table: Vec<u32> = (0..field.lanes()).collect();
+    phase.apply_32(field, &table, &mut Ledger::new(32).unwrap());
+}
+
+fn run_diffusion_64(phase: &DiffusePhase, field: &mut Field64) {
+    let table: Vec<u32> = (0..field.lanes()).collect();
+    phase.apply_64(field, &table, &mut Ledger::new(32).unwrap());
+}
+
 // ---------------------------------------------------------------------------
 // channel_counters_do_not_overflow_at_1e7_ticks
 // ---------------------------------------------------------------------------
@@ -155,8 +173,8 @@ fn a_closed_domain_leaves_every_channel_counter_at_zero() {
 
     let grid = torus(L, L, L);
     let n_voxels = i128::from(grid.n_voxels());
-    let phase = DiffusePhase::new_32(&grid, 1, &[D_PROTON], DT, DX).unwrap();
-    let wide_phase = DiffusePhase::new_64(&grid, 1, &[D_PROTON], DT, DX).unwrap();
+    let phase = DiffusePhase::new_32(&grid, 1, &[D_PROTON], DT, DX, SEALED).unwrap();
+    let wide_phase = DiffusePhase::new_64(&grid, 1, &[D_PROTON], DT, DX, SEALED).unwrap();
 
     // The checkerboard, with a pool dropped into one voxel of it.
     //
@@ -217,15 +235,15 @@ fn a_closed_domain_leaves_every_channel_counter_at_zero() {
         i128::from(WIDE_BACKGROUND) * n_voxels + 198_912
     );
     assert_eq!(before.energy(), i128::from(ENTHALPY_PER_VOXEL) * n_voxels);
-    let narrow_at_start = narrow.read().to_vec();
+    let narrow_at_start = narrow.lane(0).to_vec();
     let wide_total = before.matter(WIDE);
 
     for tick in 0..TICKS {
         reduce(&mut before, &narrow, &wide);
 
         ledger.begin_tick();
-        phase.apply_32(&mut narrow);
-        wide_phase.apply_64(&mut wide);
+        run_diffusion_32(&phase, &mut narrow);
+        run_diffusion_64(&wide_phase, &mut wide);
 
         reduce(&mut after, &narrow, &wide);
 
@@ -275,7 +293,7 @@ fn a_closed_domain_leaves_every_channel_counter_at_zero() {
     // been a hundred ticks of nothing moving, and every zero would be honest
     // and empty.
     assert_ne!(
-        narrow.read(),
+        narrow.lane(0),
         narrow_at_start.as_slice(),
         "the field never moved, so the residuals proved nothing"
     );

@@ -82,32 +82,37 @@ nz = 48
 dx = 1.0e-4                 # 100 um, the eco regime. V_voxel = 1e-12 m^3
 
 [boundary]
-# x and y stay periodic; the floor is solid.
+# x and y stay periodic; the floor is solid; the lid vents (ADR-059).
 #
-# The lid is CLOSED, and it should not be. ADR-059 gives the exchange face a
-# ghost cell filled from the reservoir below, and that ghost cell is not built:
-# `Grid::new` refuses an exchange face outright rather than treating it as a
-# wall, because quietly sealing a world that is supposed to vent is the class of
-# error this project refuses by construction.
-#
-# So this scenario is a sealed box, and the sealing is visible in what it does:
-# nothing replenishes the oxygen, the reaction consumes it, and the world runs
-# down instead of holding an oxycline. That is a true picture of a closed box
-# rather than a false picture of an open one, which is the trade being made.
-# Restore `z_max = "exchange"` the day the ghost cell lands; the reservoir below
-# is already declared and already validated.
+# The lid is the whole difference between this scenario and a sealed box. With
+# it closed nothing replenishes the oxygen, the reaction consumes it, and the
+# world runs down; with it open the domain trades with an atmosphere-saturated
+# reservoir and an oxycline is a state it can hold.
 z_min = "closed"
-z_max = "closed"
+z_max = "exchange"
 
-# NO [boundary.reservoir] SECTION, and its absence is the point.
+# The reservoir the lid trades with. Required exactly when some face is
+# `exchange`, in both directions, and it stands after the six scalar keys
+# because it is a table and TOML cannot write a bare key after a table header
+# (CONFIG_SCHEMA.md section 4, item 3 of section 11).
 #
-# The validator refuses a declared reservoir that no face uses, in both
-# directions, and it is right to: a reservoir touching nothing reads as a
-# working boundary to everyone who opens the file, and it is the only part of
-# the scenario nobody would think to check. The section belongs here the day the
-# lid opens, and not one commit sooner. What it will say is written out in
-# CONFIG_SCHEMA.md section 4 and in ADR-059 — an outside concentration for every
-# substance of the registry, a temperature, and one exchange velocity.
+# EVERY NUMBER HERE IS CALIBRATION BAIT AND NOT A MEASUREMENT. ADR-059 assigns
+# none of them: it gives the order of `k_ex` (the piston velocity of oxygen at
+# the surface of the sea, about 1e-5 m/s, against a limit of 1e-4 at this dx and
+# dt) and no value at all for the composition or the temperature. What is
+# written below is the shallow oxic sea this scenario is about, chosen so that
+# the lid is a source of oxygen and a sink of everything the vents produce; it
+# is the first thing to move when the run does not look like an oxycline
+# (ADR-038).
+#
+# `conc_out` is required for every substance of the registry and there is no
+# default, because a missing entry would mean zero and a zero outside is an
+# infinite sink — a statement about the physics that has to be printed rather
+# than inherited (ADR-059).
+[boundary.reservoir]
+t_out = 288.15              # 15 C, a temperate surface ocean
+k_ex = 1.0e-5               # m/s; alpha_ex = k_ex*dt/dx = 0.1, a tenth of the limit
+conc_out = { WATER = 55500.0, H2S = 0.0, O2 = 0.25, SO4 = 28.0, H_ION = 1.0e-4 }
 
 # --- substances ------------------------------------------------------------
 
@@ -234,30 +239,74 @@ t_max = 323.15
 id = "diffusion"
 enabled = true
 
-# OFF, and not by choice. Step `h` needs a temperature field on the enthalpy
-# grid, and no operator derives it: ADR-044 gives the formula
-# `T = T_ref + H / sum(n_i * c_p_i)` and ADR-062 gives the scale and the grid,
-# but nobody has built the fold that produces it and `world::World` allocates no
-# buffer for it. The process refuses to dispatch rather than reading a buffer
-# that is not there, and steps `h` and `i'` go together or not at all (ADR-045).
+# OFF, and not by choice. The temperature is no longer the reason: the operator
+# exists — `T = T_ref + H / sum(n_i * c_p_i)` over the composition of the coarse
+# cell (ADR-044, ADR-062) — and the world allocates the buffers it writes. This
+# is the scenario that pays for the c_p note at the top of this file: WATER,
+# SO4 at -293 J/(mol K) and H_ION at exactly zero all reach that denominator, and
+# they reach it with their signs.
 #
-# Turn this on the day the temperature operator lands. Everything else the
-# reaction needs is already here and already validated: the stoichiometry
-# balances by element and by mass, the declared enthalpy agrees with the
-# formation enthalpies to a part in a million, and the scales resolve.
+# What blocks step `h` now is the ledger, on both axes, and neither is a line of
+# code. Matter: the residual is taken per substance and chemistry turns
+# substances into one another, so a debug run panics in `Ledger::assert_closed`
+# on the first tick — the statement chemistry does satisfy, "every conserved
+# quantity balances while the substances convert", is worded by no record.
+# Energy: the left-hand side counts the enthalpy field alone, so the heat this
+# reaction releases is covered by no channel, and underneath that sits a sign
+# nobody has chosen — nu_E is negative for an exothermic reaction and the fold
+# adds it, so by today's code burning sulfide would *cool* the water.
+#
+# Both are one open question — A-19 in OPEN_QUESTIONS.md — and turning this on
+# before it is answered does not start the chemistry: the process refuses to
+# build a tick at all. Turn it on the day A-19 is closed by a record, and not
+# before: the flag is a change of world semantics under the guard of ADR-020,
+# not a convenience.
+# Everything else the reaction needs is already here and already validated: the
+# stoichiometry balances by element and by mass, the declared enthalpy agrees
+# with the formation enthalpies to a part in a million, and the scales resolve.
 [[process]]
 id = "reactions"
 enabled = false
 
 # OFF for the same reason one layer along: step `j` has nothing to write. The
 # exchange face is refused (see [boundary] above), there are no events in this
-# scenario, and both heat channels ADR-059 assigns here — GEOTHERMAL_IN at the
-# floor, RADIATIVE_OUT at the lid — want the temperature field that does not
-# exist yet. A process with nothing to write refuses rather than running empty,
-# which is what keeps an idle channel from looking like a closed one.
+# scenario, and the two heat channels ADR-059 assigns here — GEOTHERMAL_IN at the
+# floor, RADIATIVE_OUT at the lid — have a temperature field to read now and
+# still no emissivity, no vent flux and no rule for which cells of the coarse
+# enthalpy grid face the sky. A process with nothing to write refuses rather than
+# running empty, which is what keeps an idle channel from looking like a closed
+# one.
 [[process]]
 id = "external_channels"
 enabled = false
+
+# --- initial state ---------------------------------------------------------
+#
+# One key, and it is the one that draws the oxycline. Of the four numbers the
+# generator builds the zeroth tick out of, exactly one is a property of the
+# scenario (ADR-077): which side of the sediment/water boundary each substance is
+# enriched on. The band an initial condition wanders in — half of the smaller of
+# the two headrooms — is a derived rule and not a key, and the weighting of the
+# octaves is a build-time boundary with an open question over it.
+#
+# Oxygen comes down and sulfide comes up: that is the picture at the top of this
+# file, and without this line the world starts as its opposite. Every substance
+# would take the default and be enriched in the sediment, so the two reagents
+# would be high in the same voxels — the one arrangement in which no front forms
+# anywhere, whatever the chemistry does. The four substances not named below keep
+# `sediment`, and the loader writes their side out for them before hashing, so
+# the canonical form of this file names the side of all five (ADR-065).
+#
+# It moves no number in the paragraph on H_ION.max_conc above: that estimate was
+# taken over the worst voxel of a world where the sulfide and the oxygen sit on
+# top of each other, which is what the default gives and what this line undoes.
+# Separating them can only make the proton arrive later.
+
+[initial.layer]
+O2 = "water"                # sediment | water | uniform, and the only side in
+                            # this repository that is not the default. It is what
+                            # gives oxidation_front_forms_at_predicted_depth an
+                            # initial condition capable of producing a front.
 
 # --- calibration -----------------------------------------------------------
 # Not part of config_hash (ADR-038): the search driver reads this section, the

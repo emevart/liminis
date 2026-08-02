@@ -75,6 +75,25 @@
 //! process is a plain type with an `apply` that takes exactly the fields it
 //! touches — which is the half of ADR-034 that matters anyway: a process cannot
 //! reach a buffer it did not name.
+//!
+//! # One file here is not a process
+//!
+//! [`temperature`] folds an operator and has **no** entry in [`ProcessId`], and
+//! that is deliberate rather than pending. ADR-065 closed the roster at nine and
+//! counted them out one line at a time; a tenth record would be materialised into
+//! every scenario and would move `config_hash` for every config that exists, so
+//! adding one is an overturning of that record and not a convenience. The
+//! precedent is already in the tick: step `i'`, the energy fold, is a step of
+//! [`tick::STEP_ORDER`] with no roster entry, which ADR-065 keeps out on purpose
+//! because it belongs to the energy path of the reactions.
+//!
+//! The temperature operator is the same kind of thing seen from the other side.
+//! It has no `enabled`, because a run with the chemistry on and the temperature
+//! off is not a cheaper world but an undefined one — `T` is an input of the Q10
+//! factor of every reaction (ADR-048) — and it has no `every_n_ticks`, because
+//! ADR-044 says the denominator is recomputed rather than cached and ADR-062
+//! prices that at exactly one recomputation per tick.
+//! `the_temperature_operator_is_not_a_roster_process` holds the count at nine.
 
 // Public modules rather than one private module per process re-exported here,
 // for the reason `kernels/mod.rs` gives: these files are written in parallel,
@@ -89,13 +108,74 @@ pub mod phase;
 pub mod pressure;
 pub mod react;
 pub mod settle;
+pub mod temperature;
 pub mod tick;
 pub mod velocity;
 
 pub use advect::{Advect, AdvectPhase};
 pub use diffuse::{Diffuse, DiffusePhase, N_MAX, substeps_and_alpha, substeps_for};
 pub use settle::{Grain, Medium, Settle, SettlePhase};
+pub use temperature::Temperature;
 pub use tick::{STEP_ORDER, Scratch, Step, Tick};
+
+/// A coarse grid is the fine one at the declared `lod` — checked once, for every
+/// caller that hands a kernel both.
+///
+/// The check exists because the mistake it catches is a **neighbouring** cell
+/// rather than an out-of-range one. A world has two coarse grids and they differ:
+/// the enthalpy field is `32^3` and the prescribed velocity field is `64^3` over
+/// the same `128^3` base (ADR-062, ADR-069). Read with the extents of the wrong
+/// one, the per-axis shift of SPEC section 1.5 lands on a plausible cell — and
+/// what travels on that grid is temperature, which is class `Q` and enters no
+/// invariant at all, so no residual can ever be nonzero because of it.
+///
+/// One copy and not one per caller. It was `check_shape` inside
+/// `process/react.rs` when the reaction step was the only consumer; the
+/// temperature operator is the second, and two copies of a refusal drift in the
+/// direction that matters — one of them loosens, and the message that stops
+/// saying "enthalpy" is the one nobody reads.
+///
+/// `role` names the field whose grid this is, so that a reader who meets the
+/// refusal knows which of the two is at fault.
+///
+/// # Errors
+///
+/// Returns an error naming both shapes and the `lod` if they do not agree, and if
+/// `lod` is past the width of a `u32` index.
+pub(crate) fn coarse_shape_agrees(
+    fine: &crate::world::Grid,
+    coarse: &crate::world::Grid,
+    lod: u32,
+    role: &str,
+) -> anyhow::Result<()> {
+    if lod >= u32::BITS {
+        anyhow::bail!(
+            "a lod of {lod} shifts a u32 extent out of existence; the declared \
+             range is 0..=2 (QUANTITIES.md section 1)"
+        );
+    }
+    let expected = (fine.nx() >> lod, fine.ny() >> lod, fine.nz() >> lod);
+    let got = (coarse.nx(), coarse.ny(), coarse.nz());
+    if expected != got {
+        anyhow::bail!(
+            "the coarse grid given for {role} is {}x{}x{} while the fine grid \
+             {}x{}x{} at lod {lod} covers {}x{}x{}. Temperature is a quantity of \
+             the covering *enthalpy* cell (ADR-062), and the extents of the \
+             velocity grid — the other coarse grid of a world — give a plausible \
+             neighbouring cell instead, which appears in no invariant at all",
+            got.0,
+            got.1,
+            got.2,
+            fine.nx(),
+            fine.ny(),
+            fine.nz(),
+            expected.0,
+            expected.1,
+            expected.2
+        );
+    }
+    Ok(())
+}
 
 /// What a process does to one of the two ledgers over one tick.
 ///
@@ -104,17 +184,22 @@ pub use tick::{STEP_ORDER, Scratch, Step, Tick};
 /// for bit equal — not "equal to within a tolerance": ADR-003 makes the per-tick
 /// residual an exact integer comparison, and transport conserves by construction
 /// rather than by accuracy (ADR-005).
-// TODO(channels): the other arm, `ChangedThrough(channel)`, is missing because
-// the channel registry is not in code. SPEC section 7 names the channels in
-// prose, `ledger/` does not exist, and `CONFIG_SCHEMA.md` section 13 item 7
-// records that the legal set of channel names is not even fixed. A process that
-// needs it — light, boundary exchange, maintenance upkeep — cannot be written
-// until then anyway, so an invented enum would have no user and every chance of
-// being wrong by the time it had one.
+///
+/// The second arm names a channel, and it is what a process that vents declares
+/// (ADR-028, ADR-059). Nothing in the corpus compares the declaration against
+/// the behaviour, so both mistakes are quiet — but they are not equally bad.
+/// Over-declaring costs a reader's trust; **under**-declaring, `Conserved` on a
+/// grid whose lid trades with the reservoir, makes the promise of closed
+/// accounting false while every test in the project is green. That is why the
+/// transport processes take the arm from `Grid::has_exchange` rather than from a
+/// constant.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Conservation {
     /// The quantity is neither created nor destroyed by this process.
     Conserved,
+    /// The quantity crosses the boundary of the domain, and every unit of it is
+    /// counted into this channel (ADR-003, ADR-059).
+    ChangedThrough(crate::ledger::Channel),
 }
 
 /// The invariant of a process: what it does to matter, and separately what it

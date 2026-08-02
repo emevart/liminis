@@ -115,6 +115,18 @@ pub struct LightParams {
     /// knows it, and a product of three `u32` inside a shader is one more place
     /// for an overflow that shows up only on the largest grid anybody runs.
     pub n_voxels: u32,
+    /// The stride of an amount lane. On a `world::Field` it is `n_voxels + 1`
+    /// — the voxels and the ghost cell after them (ADR-059) — and the host is
+    /// the only place that knows so; this kernel is handed the number.
+    ///
+    /// Separate from [`LightParams::n_voxels`] because the two mean different things
+    /// and only one of them is an address. A dispatch runs over `0..n_voxels`;
+    /// an amount lives at `lane[s] * lane_len + idx`. Using the voxel count as
+    /// the stride reads one lane short of where the substance is, and on the
+    /// registry the project carries that is **right** for the first lane of a
+    /// width class and wrong by one element per lane after it — which is the
+    /// same silent shape ADR-056 warns about for `s * n_voxels + idx`.
+    pub lane_len: u32,
     /// How many entries of [`Attenuators`] to sum. The table may be longer; the
     /// scenario decides how many substances darken the water.
     pub n_attenuators: u32,
@@ -326,7 +338,7 @@ fn optical_depth(src32: &[M32], src64: &[M64], att: &Attenuators, p: &LightParam
     for a in 0..p.n_attenuators {
         // ADR-056, not the stale `s * n_voxels + idx` of the skeleton: the lane
         // is an index inside a width class and the host resolved it.
-        let cell = (att.lane[a as usize] * p.n_voxels + at) as usize;
+        let cell = (att.lane[a as usize] * p.lane_len + at) as usize;
 
         // The branch is on the table entry, the same value for every column of
         // the dispatch, so on the GPU it is a uniform jump and the warp holds
@@ -395,6 +407,7 @@ mod tests {
 
     fn params() -> LightParams {
         LightParams {
+            lane_len: N_VOXELS,
             nx: NX,
             ny: NY,
             nz: NZ,

@@ -20,7 +20,7 @@
 
 ### Валидатор отказывается грузить
 
-Пятьдесят пять отказов. Каждый — класс ошибки, который иначе проявится как
+Шестьдесят один отказ. Каждый — класс ошибки, который иначе проявится как
 странная динамика через сто тысяч тиков. Порядок тот же, что в таблице §10
 `CONFIG_SCHEMA.md`, и число получено пересчётом обоих перечней, а не сложением
 дельт из записей журнала: каждая из ADR-056 … ADR-069 берёт базой одно и то же
@@ -30,6 +30,13 @@
 было: ссылочная целостность, область определения и делимость сетки. Правила эти
 не новые и не решения — каждое следует из уже принятого, — новыми у них были
 только имена, а правило без имени теста по правилу этого документа не критерий.
+
+**Строк в таблице §10 на две больше, чем имён здесь, и это намеренно.**
+`initial_layer_naming_an_unknown_substance_is_rejected` и
+`initial_layer_side_outside_the_enumeration_is_rejected` пришли с ADR-077 и стоят
+ниже, в «Начальных условиях», рядом с остальными именами про сторону слоя: там
+они читаются вместе с тем, что стерегут. §10 после них насчитывает шестьдесят
+три строки.
 
 ```
 reaction_unbalanced_by_element_is_rejected
@@ -76,7 +83,13 @@ a_reaction_naming_an_unknown_substance_is_rejected
 km_missing_for_a_reaction_input_is_rejected
 km_naming_a_substance_outside_the_inputs_is_rejected
 a_catalyst_outside_the_declared_forms_is_rejected
-requires_naming_an_unknown_field_is_rejected
+a_requires_window_is_rejected_until_the_gate_exists
+light_enabled_without_an_irradiance_is_rejected
+a_negative_surface_irradiance_is_rejected
+a_modulation_fraction_outside_the_unit_interval_is_rejected
+a_modulation_period_that_is_not_a_whole_number_of_ticks_is_rejected
+a_modulation_period_under_three_ticks_is_rejected
+a_lit_scenario_is_refused_until_an_energy_sink_exists
 a_duplicate_id_in_any_section_is_refused
 a_reservoir_naming_an_unknown_substance_is_rejected
 every_domain_rule_refuses_its_own_violation
@@ -103,20 +116,18 @@ ADR-039 требует пару), обе стороны нарушенного �
 отвергнутая не тем сообщением», а `derive`, вызванный первым, регулярно даёт
 именно его.
 
-**Четыре имени перечня стоят `#[ignore]`, и причина у каждого записана в самом
-атрибуте.** `reaction_without_t_vmax_is_rejected` — ключа `t_vmax` §6 не
-объявляет, правка ADR-048 не применена, тип и обязательность не решены (§10
-`CONFIG_SCHEMA.md`, ADR-048). `scale_underflow_is_rejected` — правило за этим
-именем пережило свою причину: после ADR-039 разрешение от `dx` не зависит вовсе,
-и осмысленным остаётся окно `dx` из ADR-002, которое §13 п. 17 велит либо
-записать решением, либо снять имя — но не молча.
-`an_unknown_process_id_is_rejected` — замкнутый реестр процессов живёт под
-`process/` и не написан (ADR-065), умолчания `enabled` восьми процессов из
-девяти не назначены ничем (§13 п. 23), и написать проверку сейчас значит выписать
-реестр имён самому. `requires_naming_an_unknown_field_is_rejected` — §10 держит
-`requires.field` в ссылочной целостности, а разрешать его не во что:
-идентификаторы полей — выбор схемы (§7), запись `[[field]]` необязательна, поэтому
-поле может законно существовать без записи.
+**Одно имя перечня стоит `#[ignore]`, и причина записана в самом атрибуте.**
+`scale_underflow_is_rejected` — правило за этим именем пережило свою причину:
+после ADR-039 разрешение от `dx` не зависит вовсе, и осмысленным остаётся окно
+`dx` из ADR-002, которое §13 п. 17 велит либо записать решением, либо снять имя —
+но не молча. Три имени, стоявшие тут рядом с ним, ушли:
+`reaction_without_t_vmax_is_rejected` и `an_unknown_process_id_is_rejected`
+атрибут уже не носят, а `requires_naming_an_unknown_field_is_rejected` снято
+записью ADR-073 вместе с правилом — непустой `requires` стал ошибкой загрузки,
+поэтому разрешать имя больше не во что, и на его месте стоит
+`a_requires_window_is_rejected_until_the_gate_exists`. Умолчания `enabled` семи
+процессов из девяти по-прежнему не назначены ничем (§13 п. 23); свет и поле
+скоростей — те два, у которых умолчание назначено решением (ADR-069, ADR-076).
 
 `courant_violation_is_rejected` и `outflow_bound_violation_is_rejected` — разные проверки. Первая про линейную устойчивость, `max(|u|·dt/dx) ≤ 1`. Вторая про неотрицательность: воксель с расходящимся течением отдаёт сумму по исходящим граням, а не максимум, и условие там строже (SPEC §4.2). Конфиг, проходящий первую и валящий вторую, существует, и он даёт отрицательные количества.
 
@@ -284,6 +295,19 @@ a_lane_no_process_touched_is_not_left_a_tick_stale
 energy_fold_from_fine_to_coarse_conserves_exactly
 diffusing_matter_does_not_move_enthalpy
 absorbed_light_appears_in_enthalpy
+solar_in_is_credited_the_same_integer_the_fold_added_to_enthalpy
+the_solar_slice_is_overwritten_not_accumulated
+the_fold_writes_only_its_own_coarse_index_in_every_output
+a_tick_without_the_fold_leaves_solar_in_untouched
+the_solar_reduction_is_exact_at_the_full_declared_enthalpy_range
+crediting_more_solar_than_the_counter_holds_is_refused_not_wrapped
+load_reports_the_energy_counter_ceiling_in_joules
+the_solar_term_does_not_depend_on_the_enthalpy_lod
+the_solar_term_scales_with_the_tick
+a_dark_scenario_moves_no_enthalpy
+the_top_layer_absorbs_nothing_when_the_light_is_off
+daily_modulation_preserves_the_period_mean_irradiance_exactly
+load_reports_the_ticks_to_the_declared_temperature_ceiling
 all_reactions_share_one_competition_coefficient
 cell_contributions_are_gathered_not_scattered
 cell_energy_ledger_closes_over_apoptosis
@@ -297,6 +321,11 @@ sedimentation_conserves_exactly
 settling_out_of_the_top_face_appears_in_boundary_exchange
 boundary_outflow_appears_in_channel_counter
 exchange_face_carries_enthalpy_into_the_energy_counter
+the_ghost_cell_is_the_same_value_in_both_buffers
+a_domain_reduction_skips_the_ghost_element
+an_exchange_face_returns_the_ghost_and_the_ghost_is_its_own_neighbour
+an_exchange_axis_paired_with_periodic_is_refused
+the_undershoot_bound_counts_the_exchange_face_as_open
 ledger_residual_is_zero_over_1e6_ticks
 energy_ledger_residual_is_zero_over_1e6_ticks
 channel_counters_do_not_overflow_at_1e7_ticks
@@ -353,8 +382,31 @@ flux-form схемы. Ограничитель ван Леера этого не
 против двадцати пяти за четыре тика.
 
 `channel_counters_do_not_overflow_at_1e7_ticks` не гоняет десять миллионов
-тиков. Он проверяет тип счётчика и подставляет граничное значение: `i32`
-переполняется внутри заявленного горизонта, `i64` нет.
+тиков. Он проверяет тип счётчика и подставляет граничное значение. **Ни одна из
+двух ветвей при этом не доказана, и прежняя формулировка — «`i32`
+переполняется внутри заявленного горизонта, `i64` нет» — по обеим неверна.** По
+энергии: при `k_E = 67` потолок счётчика есть `2⁶³/2⁶⁷ = 62.5 мДж`, а один
+освещённый тик 128³ при полном солнце даёт `0.16384 Дж` — 2.62 потолка **за
+тик** (ADR-075, ADR-076). По веществу: `i64`-счётчик терпит `9.22·10¹¹` единиц
+за тик, то есть при 128³ около `5.63·10⁷` на воксель грани обмена, `0.011 %`
+его собственного пула воды, — постоянный градиент такого порядка исчерпывает
+счётчик внутри объявленного горизонта. Корпусное «10⁶ тиков по тысяче единиц
+дают 10⁹» из `QUANTITIES.md` §3 — заглушка, а не худший случай. Разрядность
+счётчиков каналов — открытый вопрос A-20 (в ADR-075 и ADR-076 он назван A-19:
+номер был свободен, когда их писали), и операционная форма, делающая потолок
+видимым вместо красного, — строка отчёта загрузки
+`load_reports_the_energy_counter_ceiling_in_joules`.
+
+**`a_tick_without_the_fold_leaves_solar_in_untouched` носит `#[ignore]`, и
+причина записана в атрибуте.** ADR-075 называл его конфигурацию достижимой —
+реестр с выключенными реакциями не идёт ни шагом `h`, ни шагом `i′`, — и той же
+записью сказал, что места диспетча шага `i′` не создаёт: `process::credit_solar`
+приезжает без вызывающего. Значит `SOLAR_IN` не пополняет ни один реестр, срез
+`World::solar_in` не пишет никто, и обе половины теста держатся при любой
+реализации — в том числе при редукции, унесённой в фазу 5, то есть при ровно том
+варианте, который тест заведён отличать. Имя возвращается в строй в тот день,
+когда шаг `i′` попадает в диспетч; ослабить его формулировку значило бы оставить
+на этом месте видимость живого сторожа.
 
 Последние два пришли из ADR-059 и, по его же словам, самые дешёвые и самые злые.
 `a_closed_domain_leaves_every_channel_counter_at_zero` гоняет настоящий транспорт
@@ -386,6 +438,26 @@ flux-form схемы. Ограничитель ван Леера этого не
 всплывающее вещество (`ρ̄ᵢ < ρ_среды`, та же формула с обратным знаком) покидает
 домен через `z_max` и обязано быть дебетовано каналом против ghost-ячейки
 резервуара.
+
+Пять имён вокруг `boundary_outflow_appears_in_channel_counter` — про механизм
+ghost-ячейки ADR-059, и каждое ловит ошибку, которую **ни одна невязка не видит**.
+`the_ghost_cell_is_the_same_value_in_both_buffers`: подшаги чередуют направление
+(ADR-057), поэтому ghost, засеянный в один буфер, делает крышку бесконечным
+стоком через подшаг — ноль есть законное количество, поток остаётся
+антисимметричным, счётчик записывает ровно то, что утекло, и обе невязки сходятся
+точно. `a_domain_reduction_skips_the_ghost_element`: резервуар постоянен и
+сокращается в разности `after − before`, поэтому врут только абсолютные суммы, а
+вместе с ними экспорт объёма и полоса floor/peak worldgen.
+`an_exchange_face_returns_the_ghost_and_the_ghost_is_its_own_neighbour`: без
+раннего возврата `Grid::coords` декодирует `n_voxels` как координату за концом Z,
+и в release ответ зависит от экстентов сетки.
+`an_exchange_axis_paired_with_periodic_is_refused` — тот же довод, что у
+полупериодической оси, на шаг дальше: у периодической половины сосед за гранью
+есть, у обменной он ghost. `the_undershoot_bound_counts_the_exchange_face_as_open`:
+у вокселя верхнего слоя при `z_max = exchange` шесть **открытых** граней, а не
+пять, и граница ADR-068 для него на единицу шире; имя
+`a_voxel_on_a_closed_boundary_stays_within_the_five_face_bound` этого не видит,
+оно про закрытую крышку.
 
 `charge_is_tracked_as_a_conserved_quantity_of_zero_mass` пришпиливает тестом
 обещание ADR-025, которое до ADR-064 было прозой: `charge = 0.0` в `conserved` и
@@ -548,6 +620,13 @@ the_canonical_form_names_every_process_in_the_roster
 same_seed_gives_the_same_initial_state
 different_seed_gives_a_different_initial_state
 worldgen_respects_declared_max_conc
+layer_sides_are_anticorrelated_across_the_boundary
+the_layer_side_does_not_change_with_the_seed
+a_substance_declared_uniform_has_no_layer_step
+the_canonical_form_names_the_layer_side_of_every_substance
+initial_layer_naming_an_unknown_substance_is_rejected
+initial_layer_side_outside_the_enumeration_is_rejected
+the_initial_band_keeps_every_substance_strictly_above_zero
 ```
 
 Процедурная генерация из шума (SPEC §12.4, ADR-021, ADR-058). Первые два имени —
@@ -581,12 +660,63 @@ worldgen_respects_declared_max_conc
 на нём есть подпись клампа, а ADR-041 запрещает кламп прямым текстом), и потолок
 промахнут не на ширину округления.
 
-Полосу, внутри которой блуждает начальное условие, не назначает ни один ключ:
-секции `[initial]` нет, и её форма не решена (`CONFIG_SCHEMA.md` §13, «Секции,
-форма которых ещё не решена»). Правило, стоящее вместо ключа, живёт в
-`TODO(worldgen-excursion)` — половина меньшего из двух запасов, до потолка и до
-нуля, — и это единственное место, где его можно прочесть; в тесте его быть не
-должно, иначе оно окажется решением, которого никто не принимал.
+Полоса, внутри которой блуждает начальное условие, ключом не является и
+ратифицирована выводом: `excursion = min(typical, max − typical)/2`, целочисленным
+делением к нулю (ADR-077). Из одного неравенства `2·excursion ≤ min(typical, H)`
+следуют обе границы, обе точные — пол `2·(typical − excursion) ≥ typical` и
+потолок `2·(typical + excursion) ≤ typical + max`, — и потому им место в тесте:
+это вывод записи, а не константа, выбранная автором теста.
+`the_initial_band_keeps_every_substance_strictly_above_zero` гоняет пол по
+**всему** реестру фикстуры, а не по одному веществу: отвергнутая форма — доля
+запаса до потолка — зелена на воде, у которой типичная концентрация есть 99%
+предельной, и красна на кислороде, `SO4` и протоне, то есть ровно на
+микрокомпонентах, ради которых заведён динамический диапазон ADR-039. Единичная
+форма того же правила живёт в `the_band_is_bounded_by_both_headrooms`, вместе с
+вырожденным случаем `typical = 0`.
+
+Три имени про сторону слоя проверяют разное, и подменять одно другим нельзя.
+`layer_sides_are_anticorrelated_across_the_boundary` — единственное, что ловит
+сторону, разрешённую не на том индексе вещества: оксиклин формируется в другом
+месте, оба ledger'а сходятся, и все прочие тесты остаются зелёными. Он же
+единственный, кто держит **ориентацию**. Всё, что меряется через границу,
+относительно — разбиение читается по собственному отклонению H₂S, — поэтому
+глобальная инверсия сторон переименовывает группы вместе с полем и не краснеет
+нигде, оставляя мир умолчания стратифицированным вверх ногами. Держат
+ориентацию пол и крышка домена, две плоскости, которых рельеф не достаёт: там
+слоевой член имеет знак, назначенный объявлением, а `|noise| ≤ UNIT` не даёт
+бленду перевести вещество через типичное количество.
+
+`a_substance_declared_uniform_has_no_layer_step` меряет и **ступень** через
+границу, и **амплитуду**, и одной ступени мало. Отвергнутая форма
+`blended = noise/2` ступени тоже не имеет, а разброс сужает ровно так же, как
+снятие слоевого члена, — то есть проходит обе проверки, и ту, что смотрит на
+ступень, и ту, что сравнивает ширины. Отличает её отношение двух ветвей на
+плоскости пола, где слоевой член присутствует и постоянен: принятая форма даёт
+два к одному, отвергнутая — один к одному. Числовых границ заливки в этом тесте
+нет и быть не должно: ADR-077 отказывается их печатать, потому что они зависят
+от усечения к нулю в `amount_at`, и напечатанное число стало бы благословением
+сегодняшнего кода навсегда — а отношение двух прогонов одного генератора числом
+фикстуры не является. `the_layer_side_does_not_change_with_the_seed`
+отделяет принятую форму от отвергнутого знака слоя по `run_key` — и он
+единственный, кто это делает, потому что отвергнутая форма делает
+`different_seed_gives_a_different_initial_state` только зеленее.
+
+`the_canonical_form_names_the_layer_side_of_every_substance` — прецедент ADR-065
+одной секцией в сторону: умолчание печатается, а не подразумевается, иначе
+идентичность прогона несёт утверждение, которого нет ни в одном файле.
+
+**Расхождение с замороженной SPEC §12.4, три места** (ADR-032: спека не
+правится). Первое: §12.4 называет три слоя — осадок, вода, воздух, — а
+перечисление знает две стороны и «однородно»; воздуха в мире нет ни полем, ни
+границей, и слой, которого не считает ни один процесс, был бы значением без
+адресата. Второе: §12.4 обещает «всё параметризуемо», а секция параметризует
+одну величину и языка генераторов не заводит — шум Уорли, поровая структура и
+жерла остаются за её пределами. Третье: §12.4 требует симплекс-шума, а
+`worldgen/` реализует решётчатый value noise со smoothstep-затуханием. От шума
+здесь требуются **свойства** — `the_lattice_wraps_without_a_seam_in_x_and_y` и
+`the_initial_field_has_structure_larger_than_a_voxel`, — а не имя алгоритма;
+второе из этих имён гоняется обоими путями, слоевым и однородным, потому что
+ADR-077 отверг ключ спектра измерением ровно этой статистики на обоих.
 
 ### Наблюдаемое поведение
 
@@ -613,7 +743,11 @@ substance_with_zero_settling_radius_does_not_move_vertically
 `Pe^{1/2}` и составляет 1.8× диффузии — порог «на порядок» не берётся не потому,
 что механизм не работает. `density_stratification_persists_without_forcing`
 ставится с `stir_fraction = 0`, устойчивой стратификацией и **ненулевым**
-начальным горизонтальным возмущением `T`, и провалиться он может: возмущение
+начальным горизонтальным возмущением `T`. Устойчивая стратификация на нулевом
+тике берётся из умолчания `[initial.layer] = "sediment"` (ADR-077): каждое
+вещество обогащено в осадке, и это единственный источник вертикального градиента
+в корпусе — сценарий, объявивший все вещества `uniform`, лишает это имя
+начального условия. Провалиться он может: возмущение
 рассасывается кондукцией за `H²/α = 1170 с`, а опрокинуть столб течение успевает
 за 768 с. Прежняя форма — «`stir_fraction = 0` и горизонтально однородная `T`» —
 была нефальсифицируема: её прошло бы ядро, возвращающее нули.

@@ -37,11 +37,18 @@
 //!
 //! # What is not in the file, and why not
 //!
-//! The `Q`-valued buffers — light, velocity, the velocity potential. `Q` has a
-//! private representation and no byte door: the only way out of it is
-//! `debug_f64`, documented as a debug door, whose value is *mode dependent*.
-//! Writing it would make the format silently different under `FIXED`, in a file
-//! that records no numeric mode.
+//! The `Q`-valued buffers — light, velocity, the velocity potential, the heat
+//! capacity `C_cell` and the temperature. `Q` has a private representation and no
+//! byte door: the only way out of it is `debug_f64`, documented as a debug door,
+//! whose value is *mode dependent*. Writing it would make the format silently
+//! different under `FIXED`, in a file that records no numeric mode.
+//!
+//! The last two joined that list without changing the format, and for the reason
+//! already stated for the light: they are derived and are rewritten in full
+//! before anything reads them. `process::Temperature` recomputes both once a tick
+//! out of the enthalpy field and the amounts, which the file *does* hold, and
+//! ADR-044 requires exactly that — the denominator is recomputed and never
+//! cached, so storing it would be storing a cache the record forbids.
 // TODO(snapshot-q): three things have to be decided together — a
 // mode-independent byte door for `Q`, a numeric-mode field in the snapshot
 // header, and whether the derived fields need storing at all (light is
@@ -424,18 +431,41 @@ fn get_m64<R: Read>(src: &mut R, lane: &mut [M64]) -> Result<()> {
 /// `lane_pair_dir_mut` hands out `(state N, state N+1)` in the direction asked
 /// for, so `Backward` is how the front buffer is written without a swap — and
 /// without a swap there is no order to get wrong between the two halves.
+/// Read both buffers of one lane back, **voxels only**.
+///
+/// The file holds `n_voxels` per buffer and not `lane_len`, and the difference is
+/// the ghost cell of ADR-059. It is left out on purpose and the reason is
+/// ADR-059's own: the reservoir is not state. That record rejects a depleting
+/// reservoir because a finite outside "is a state, and `delta(fields + cells)`
+/// gets a third term that is neither a field nor a cell"; a ghost cell written
+/// into a snapshot is that same third term arriving through the file. So the
+/// composition of the outside comes from `[boundary.reservoir]` on every load,
+/// and a restart that changed the reservoir changes it — which is what a
+/// boundary condition in a config is for.
+///
+/// The slicing is what makes the two halves agree: `lane_pair_dir_mut` hands out
+/// the whole lane, so the ghost is skipped by taking the first `n_voxels` of it
+/// and never by writing a shorter buffer somewhere else.
+// TODO(snapshot-ghost): ADR-037 does not say which of the two lengths belongs in
+// the file, and ADR-056 only fixes the order the lanes are written in. The
+// choice above follows from ADR-059's refusal of a stateful reservoir rather
+// than from a record that names it, and the day a scenario wants a reservoir
+// that drifts over a run it becomes a decision in `DECISIONS.md`.
 fn get_field_32<R: Read>(src: &mut R, field: &mut Field<M32>, lane: u32) -> Result<()> {
+    let voxels = field.n_voxels() as usize;
     let (_, front) = field.lane_pair_dir_mut(lane, Direction::Backward);
-    get_m32(src, front)?;
+    get_m32(src, &mut front[..voxels])?;
     let (_, back) = field.lane_pair_dir_mut(lane, Direction::Forward);
-    get_m32(src, back)
+    get_m32(src, &mut back[..voxels])
 }
 
+/// See [`get_field_32`].
 fn get_field_64<R: Read>(src: &mut R, field: &mut Field<M64>, lane: u32) -> Result<()> {
+    let voxels = field.n_voxels() as usize;
     let (_, front) = field.lane_pair_dir_mut(lane, Direction::Backward);
-    get_m64(src, front)?;
+    get_m64(src, &mut front[..voxels])?;
     let (_, back) = field.lane_pair_dir_mut(lane, Direction::Forward);
-    get_m64(src, back)
+    get_m64(src, &mut back[..voxels])
 }
 
 #[cfg(test)]
@@ -480,36 +510,50 @@ mod tests {
 
     /// Fill every buffer with values that differ between the two buffers and
     /// between lanes, so that a swapped, shared or dropped buffer shows up.
+    ///
+    /// **The voxels only.** A ghost cell is not state — the file does not carry
+    /// it and a load re-seeds it from `[boundary.reservoir]` (see
+    /// [`get_field_32`]) — so a fixture that seeded it would be asserting that a
+    /// snapshot round-trips something it deliberately drops.
     fn fill(world: &mut World) {
         let narrow = world.amounts_32_mut().unwrap();
-        for (i, value) in narrow.write_mut().iter_mut().enumerate() {
-            *value = M32::new(-1_000 - i as i32);
-        }
+        fill_voxels_32(narrow, |i| -1_000 - i as i32);
         narrow.swap();
-        for (i, value) in narrow.write_mut().iter_mut().enumerate() {
-            *value = M32::new(7_000 + i as i32);
-        }
+        fill_voxels_32(narrow, |i| 7_000 + i as i32);
 
         let wide = world.amounts_64_mut().unwrap();
-        for (i, value) in wide.write_mut().iter_mut().enumerate() {
-            *value = M64::new(5_000_000_000 + i as i64);
-        }
+        fill_voxels_64(wide, |i| 5_000_000_000 + i as i64);
         wide.swap();
-        for (i, value) in wide.write_mut().iter_mut().enumerate() {
-            *value = M64::new(-9_000_000_000 - i as i64);
-        }
+        fill_voxels_64(wide, |i| -9_000_000_000 - i as i64);
 
         let enthalpy = world.enthalpy_mut();
-        for (i, value) in enthalpy.write_mut().iter_mut().enumerate() {
-            *value = M64::new(11 + i as i64);
-        }
+        fill_voxels_64(enthalpy, |i| 11 + i as i64);
         enthalpy.swap();
-        for (i, value) in enthalpy.write_mut().iter_mut().enumerate() {
-            *value = M64::new(-22 - i as i64);
-        }
+        fill_voxels_64(enthalpy, |i| -22 - i as i64);
 
         for (i, value) in world.energy_delta_mut().iter_mut().enumerate() {
             *value = M64::new(333 + i as i64);
+        }
+    }
+
+    /// Write every voxel of every lane of the back buffer, skipping the ghost.
+    fn fill_voxels_32(field: &mut Field<M32>, value: impl Fn(usize) -> i32) {
+        let (n_voxels, lanes) = (field.n_voxels(), field.lanes());
+        for lane in 0..lanes {
+            let (_, dst) = field.lane_pair_mut(lane);
+            for (idx, cell) in dst.iter_mut().take(n_voxels as usize).enumerate() {
+                *cell = M32::new(value((lane * n_voxels) as usize + idx));
+            }
+        }
+    }
+
+    fn fill_voxels_64(field: &mut Field<M64>, value: impl Fn(usize) -> i64) {
+        let (n_voxels, lanes) = (field.n_voxels(), field.lanes());
+        for lane in 0..lanes {
+            let (_, dst) = field.lane_pair_mut(lane);
+            for (idx, cell) in dst.iter_mut().take(n_voxels as usize).enumerate() {
+                *cell = M64::new(value((lane * n_voxels) as usize + idx));
+            }
         }
     }
 

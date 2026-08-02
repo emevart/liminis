@@ -51,7 +51,7 @@ use std::collections::BTreeMap;
 
 /// A scenario configuration, after defaults have been applied.
 ///
-/// Twelve root keys. `seed` is not among them and cannot be: the seed is a run
+/// Thirteen root keys. `seed` is not among them and cannot be: the seed is a run
 /// parameter (`--seed`), reaches the generator as the fourth counter of the
 /// mixer, and stays out of `config_hash` so that the identity triple does not
 /// degenerate (ADR-058, `CONFIG_SCHEMA.md` section 2). A `seed` line in a
@@ -103,6 +103,15 @@ pub struct Config {
     pub field: Vec<Field>,
     #[serde(default)]
     pub process: Vec<Process>,
+    /// What the world holds before tick zero (ADR-077).
+    ///
+    /// Not an `Option`, and for the reason `calibration` gives just below: an
+    /// absent section and an empty one would become two configurations with one
+    /// hash. The `#[serde(default)]` is what lets a scenario omit it — every
+    /// substance then takes [`Layer::DEFAULT`], written out by
+    /// `config::materialise` before the hash rather than assumed by a reader.
+    #[serde(default)]
+    pub initial: Initial,
     /// Calibration coordinates. The one section outside `config_hash`
     /// (ADR-038); see `NOT_HASHED` in `config/hash.rs`.
     ///
@@ -485,6 +494,123 @@ pub struct Process {
     pub k_b: Option<f64>,
     pub k_d: Option<f64>,
     pub k_m: Option<f64>,
+    /// Irradiance on the top face of the domain, **W/m^2** (ADR-076). Required
+    /// when the light process is on, with no default — the precedent is
+    /// `u_conv_max` (ADR-069).
+    ///
+    /// Per square metre and never per voxel face. SPEC section 10: no parameter
+    /// in a config has a voxel in its units, and the same rule kept
+    /// `typical_enthalpy` out of joules per cell (ADR-062). Declared on a face,
+    /// halving `dx` would quarter the physical flux in silence: the shape of
+    /// `I(z)` would not move, both residuals would stay closed, and only the
+    /// absolute solar input — the one number with nothing to compare it against —
+    /// would change.
+    ///
+    /// The **mean over a modulation period**, not the instantaneous value. The
+    /// discrete normalisation `A_N` of ADR-076 is what makes that exact rather
+    /// than approximate.
+    ///
+    /// Zero is legal and is the closed-box scenario. Anything above zero is
+    /// refused for now, and by two locks at once (ADR-076): energy has no sink in
+    /// any scenario, and the width of a channel counter is open question A-20
+    /// (A-19 in ADR-075 and ADR-076, which were drafted while that number was
+    /// free).
+    pub i_surface: Option<f64>,
+    /// Amplitude of the daily modulation as a fraction of `i_surface`, in
+    /// `[0, 1]`. Default `0` (ADR-076), on the model of `stir_fraction`.
+    ///
+    /// Zero is a declared branch and not "unset": at zero the multiplier is
+    /// identically one and no period is owed.
+    #[serde(default)]
+    pub daily_fraction: f64,
+    /// Daily period, seconds. Required when `daily_fraction > 0`, and required to
+    /// be a whole number of ticks and at least three of them.
+    ///
+    /// Three, not two, and the reason is the normalisation rather than taste: at
+    /// `N = 2` the samples of `max(0, sin)` are taken at phases `0` and `pi`,
+    /// both zero, so `A_N` divides by zero and the day is dark for ever at any
+    /// `f_d > 0`.
+    pub daily_period: Option<f64>,
+    /// Amplitude of the seasonal modulation as a fraction of `i_surface`, in
+    /// `[0, 1]`. Default `0`.
+    #[serde(default)]
+    pub seasonal_fraction: f64,
+    /// Seasonal period, seconds. Same two rules as `daily_period`.
+    ///
+    /// Its mean needs no normalisation: `sum sin` over a whole number of ticks is
+    /// an exact zero, so `1 + f_s*sin` averages to exactly one.
+    pub seasonal_period: Option<f64>,
+}
+
+/// The initial state, as far as a scenario declares it (ADR-077).
+///
+/// One key, and the record that opened the section says why it is one rather
+/// than three. Of the four numbers `worldgen/` is built out of, exactly one is a
+/// property of the scenario: which substances are enriched in the sediment and
+/// which in the water column. The band is a consequence —
+/// `excursion = min(typical, max - typical)/2`, ratified as a rule and not as a
+/// key — while the spectrum of the octaves and the base of the `purpose` counter
+/// stay build-time boundaries with an open question against them
+/// (`OPEN_QUESTIONS.md` A-17).
+///
+/// The section parameterises one quantity and is not a language for generators:
+/// SPEC section 12.4 says "everything is parameterisable", and Worley noise, pore
+/// structure and vents are outside it. That divergence from a frozen document is
+/// recorded in ADR-077 and in `ACCEPTANCE.md`, not by editing the spec
+/// (ADR-032).
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Initial {
+    /// Substance id to the side of the boundary it is enriched on.
+    ///
+    /// A table whose keys are *data*, so `deny_unknown_fields` does not reach
+    /// them: a key naming no declared substance is referential integrity and is
+    /// refused by the validator (`CONFIG_SCHEMA.md` section 10, section 11
+    /// item 1).
+    ///
+    /// Materialised onto every substance of the registry before the hash
+    /// (ADR-065, ADR-077), so what a run is identified by says the side of each
+    /// one out loud rather than inheriting it.
+    #[serde(default)]
+    pub layer: BTreeMap<String, Layer>,
+}
+
+/// Which side of the sediment/water boundary a substance is enriched on.
+///
+/// Two sides and "neither", where SPEC section 12.4 names three layers —
+/// sediment, water and air. There is no air in this world, by a field or by a
+/// boundary, and a layer no process reads would be a value with no addressee
+/// (ADR-077); the divergence is recorded rather than spelled into the schema.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase", deny_unknown_fields)]
+pub enum Layer {
+    /// Rich below the boundary, poor above it.
+    Sediment,
+    /// Rich above the boundary, poor below it.
+    Water,
+    /// No layer term at all: the substance carries its own noise and nothing
+    /// else. Not the same thing as `SubstanceFill::uniform` in
+    /// `worldgen/mod.rs`, which means "the field came out constant" — a
+    /// substance declared here is not constant.
+    Uniform,
+}
+
+impl Layer {
+    /// The side a substance that says nothing takes.
+    ///
+    /// A named constant and deliberately **not** `impl Default for Layer`: any
+    /// `#[derive(Default)]` or `unwrap_or_default()` on a reading path would
+    /// start supplying `sediment` around the materialisation, and the side would
+    /// be applied without the canonical form naming it — which cancels the
+    /// guarantee of ADR-065 without turning a single test red.
+    ///
+    /// `sediment` and not `uniform`, which asserts less: under a uniform default
+    /// stratification becomes opt-in, and
+    /// `density_stratification_persists_without_forcing` loses the only source
+    /// of stable stratification in the corpus (ADR-077). The price is named
+    /// rather than hidden — "every substance is enriched in the sediment" is a
+    /// physical claim no scenario wrote — and one line of TOML overrides it.
+    pub const DEFAULT: Layer = Layer::Sediment;
 }
 
 /// One coordinate of the search vector (ADR-038).

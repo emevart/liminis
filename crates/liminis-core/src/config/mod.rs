@@ -15,9 +15,9 @@
 //! error, not a silently ignored line that changes nothing and hashes the same.
 //!
 //! A third property joined the two above with ADR-065: the loader materialises
-//! the whole process roster — see [`materialise`] — so a section whose full
-//! membership is not in the file gets its defaults applied before the hash like
-//! any other key.
+//! the whole process roster and, since ADR-077, the layer side of every
+//! substance — see [`materialise`] — so a section whose full membership is not
+//! in the file gets its defaults applied before the hash like any other key.
 //!
 //! The module splits three ways. [`schema`] holds the serde types — the shape of
 //! a scenario file, section by section of `CONFIG_SCHEMA.md`. [`hash`] holds the
@@ -32,12 +32,13 @@ mod schema;
 mod validate;
 
 pub use derive::{
-    Derived, DerivedEnergy, DerivedField, DerivedReaction, DerivedSubstance, Nu, derive,
+    Derived, DerivedEnergy, DerivedField, DerivedLight, DerivedReaction, DerivedSubstance, Nu,
+    derive,
 };
 pub use hash::{NOT_HASHED, canonical, config_hash};
 pub use schema::{
-    Boundary, Calibration, Config, Face, Field, Grid, Process, Rate, Reaction, Requirement,
-    Reservoir, Scale, Substance,
+    Boundary, Calibration, Config, Face, Field, Grid, Initial, Layer, Process, Rate, Reaction,
+    Requirement, Reservoir, Scale, Substance,
 };
 pub use validate::validate;
 
@@ -108,8 +109,9 @@ pub fn parse(text: &str) -> Result<Config> {
     Ok(config)
 }
 
-/// Fill in the process roster: every process of [`ProcessId::ALL`], each with the
-/// `enabled` its own module declares, in the order of SPEC section 8.
+/// Fill in the process roster — every process of [`ProcessId::ALL`], each with
+/// the `enabled` its own module declares, in the order of SPEC section 8 — and
+/// the layer side of every declared substance (ADR-077).
 ///
 /// **Called from [`parse`] and therefore before the hash, which is the whole
 /// decision.** ADR-065 rejected the cheaper variant — hash what was written,
@@ -195,6 +197,25 @@ pub fn materialise(config: &mut Config) -> Result<()> {
         roster_row(ProcessId::from_id(&record.id).expect("checked in the first loop"))
     });
 
+    // The layer table, filled in on the same terms and for the same reason
+    // (ADR-077, ADR-065). Every substance of the registry gets a record, so the
+    // canonical form — and with it the identity of the run — names the side of
+    // each one instead of carrying a claim that is in no file.
+    //
+    // **Filled in and never rebuilt.** A version of this loop that assembled the
+    // table from the registry would swallow the misspelling `O_2 = "water"`
+    // whole: the load would pass, the canonical form would look right, the world
+    // would have no oxycline in it, and
+    // `initial_layer_naming_an_unknown_substance_is_rejected` would have nothing
+    // left to reach. An unknown key survives to the validator on purpose.
+    for substance in &config.substance {
+        config
+            .initial
+            .layer
+            .entry(substance.id.clone())
+            .or_insert(Layer::DEFAULT);
+    }
+
     Ok(())
 }
 
@@ -204,7 +225,10 @@ pub fn materialise(config: &mut Config) -> Result<()> {
 /// and a default invented here would be a number in the hash of every scenario
 /// that nobody decided. `stir_fraction` is the exception the schema already
 /// names — ADR-069 assigns it `0` — and it comes from serde's default rather
-/// than from this function.
+/// than from this function. `daily_fraction` and `seasonal_fraction` join it on
+/// the same terms and for the same reason (ADR-076 assigns them `0`): a zero
+/// amplitude is a declared branch, not an unset key, and their periods stay
+/// `Option` because a period is owed only when the amplitude is nonzero.
 fn default_record(id: ProcessId) -> Process {
     Process {
         id: id.id().to_string(),
@@ -219,6 +243,11 @@ fn default_record(id: ProcessId) -> Process {
         k_b: None,
         k_d: None,
         k_m: None,
+        i_surface: None,
+        daily_fraction: 0.0,
+        daily_period: None,
+        seasonal_fraction: 0.0,
+        seasonal_period: None,
     }
 }
 
@@ -237,6 +266,40 @@ mod tests {
 
     /// The minimum a scenario has to write.
     const BARE: &str = "name = \"roster\"\nT_ref = 298.15\n\n[grid]\n";
+
+    /// The same with two substances, because the layer table is materialised per
+    /// substance and `BARE` declares none.
+    ///
+    /// Enough keys to parse and no more: nothing here is derived or validated,
+    /// and the numbers are the schema's requirements rather than physics.
+    const TWO_SUBSTANCES: &str = r#"
+name = "layers"
+T_ref = 298.15
+
+[grid]
+
+[[substance]]
+id = "H2S"
+molar_mass = 34.08088
+typical_conc = 0.1
+max_conc = 0.2
+partial_molar_volume = 3.5e-5
+settling_radius = 0.0
+diffusivity = 1.6e-9
+c_p = 100.0
+enthalpy_formation = 0.0
+
+[[substance]]
+id = "O2"
+molar_mass = 31.99880
+typical_conc = 0.05
+max_conc = 1.0
+partial_molar_volume = 3.1e-5
+settling_radius = 0.0
+diffusivity = 2.1e-9
+c_p = 101.0
+enthalpy_formation = 0.0
+"#;
 
     #[test]
     fn an_omitted_process_section_materialises_the_whole_roster() {
@@ -278,6 +341,49 @@ mod tests {
         materialise(&mut once).expect("materialising again");
         assert_eq!(once, twice);
         assert_eq!(once.process.len(), ROSTER_LEN);
+    }
+
+    #[test]
+    fn an_omitted_initial_section_names_every_substance() {
+        // The other half of ADR-065's rule, applied to the table ADR-077 adds:
+        // a scenario that wrote nothing about the layers gets one record per
+        // substance, before the hash, so that the identity of the run carries no
+        // claim that is missing from the canonical form.
+        let config = parse(TWO_SUBSTANCES).expect("parsing");
+        assert_eq!(config.initial.layer.len(), config.substance.len());
+        for substance in &config.substance {
+            assert_eq!(
+                config.initial.layer.get(&substance.id),
+                Some(&Layer::DEFAULT),
+                "the side of `{}` was not filled in",
+                substance.id
+            );
+        }
+
+        // A written side survives the materialisation. The table can only be
+        // *filled in*: rebuilt from the registry it would swallow a misspelt key
+        // as well, and `initial_layer_naming_an_unknown_substance_is_rejected`
+        // would have nothing left to refuse.
+        let written = parse(&format!(
+            "{TWO_SUBSTANCES}\n[initial.layer]\nO2 = \"water\"\n"
+        ))
+        .expect("parsing");
+        assert_eq!(written.initial.layer.get("O2"), Some(&Layer::Water));
+        assert_eq!(written.initial.layer.get("H2S"), Some(&Layer::DEFAULT));
+
+        // Idempotent, or the canonical form — which carries the whole table —
+        // would not reload to the same hash.
+        let mut again = written.clone();
+        materialise(&mut again).expect("materialising again");
+        assert_eq!(again, written);
+
+        // And the degenerate case a scenario in the repository actually is:
+        // `hello.toml` declares no substance, so the table is empty and has to
+        // serialize and read back as one.
+        let bare = parse(BARE).expect("parsing");
+        assert!(bare.initial.layer.is_empty());
+        let canonical = canonical(&bare).expect("canonical form");
+        assert!(parse(&canonical).is_ok(), "the empty table does not reload");
     }
 
     #[test]

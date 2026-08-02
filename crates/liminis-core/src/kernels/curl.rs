@@ -180,9 +180,13 @@ pub struct SampleParams {
 
 /// The Courant numbers on the three lower faces of one fine voxel.
 ///
-/// `idx` runs over `0..nx*ny*nz`. Writes `dst[axis*n_voxels + idx]` for the three
+/// `idx` runs over `0..nx*ny*nz`. Writes `dst[axis*lane_len + idx]` for the three
 /// axes and nothing else — exactly the layout and exactly the meaning
-/// `advect_voxel_32` reads.
+/// `advect_voxel_32` reads, with `lane_len = nx*ny*nz + 1` because the ghost cell
+/// of ADR-059 owns the Courant number of the face of the domain. This kernel
+/// never writes that cell: it is a face of the *domain* and not of a voxel, and
+/// what belongs in it is undecided (`TODO(exchange-courant)` in
+/// `kernels/advect.rs`).
 ///
 /// # Where the sample is taken
 ///
@@ -284,7 +288,7 @@ pub fn face_courant_voxel(u: &[Q], dst: &mut [Q], p: &SampleParams, idx: u32) {
         // `kernel-lint` hook reads a multiplication by `n_voxels` next to an
         // identifier as lane-index addressing (ADR-056) — which this is not, the
         // stride here being an **axis** and not a substance.
-        let base = axis * n_voxels;
+        let base = axis * (n_voxels + 1);
         dst[(base + idx) as usize] = qmul(p.courant_gain, sampled);
     }
 }
@@ -663,14 +667,15 @@ mod tests {
                 ratio_log2: RATIO_LOG2,
                 courant_gain: Q::from_f64(0.5),
             };
-            let mut courant = vec![Q::ZERO; (3 * n_voxels) as usize];
+            let lane_len = n_voxels + 1;
+            let mut courant = vec![Q::ZERO; (3 * lane_len) as usize];
             for idx in 0..n_voxels {
                 face_courant_voxel(&u, &mut courant, &sample, idx);
             }
 
             // `u*dt/dx` on every face of the declared axis, and nothing at all on
             // the other two.
-            let base = axis * n_voxels;
+            let base = axis * lane_len;
             for idx in 0..n_voxels {
                 assert_eq!(
                     courant[(base + idx) as usize],
@@ -679,7 +684,7 @@ mod tests {
                 );
                 for other in 0..3u32 {
                     if other != axis {
-                        let elsewhere = other * n_voxels;
+                        let elsewhere = other * lane_len;
                         assert_eq!(courant[(elsewhere + idx) as usize], Q::ZERO);
                     }
                 }
@@ -688,16 +693,17 @@ mod tests {
             // And a tracer really does move along that axis and toward the larger
             // index, which is what the sign convention of `advect.rs` means.
             let advect = AdvectParams {
+                exchange_mask: 0,
                 nx: fine_nx,
                 ny: fine_ny,
                 nz: fine_nz,
                 periodic_mask: TORUS,
                 axis,
             };
-            let mut src = vec![M32::ZERO; n_voxels as usize];
+            let mut src = vec![M32::ZERO; lane_len as usize];
             let start = 2 + 3 * fine_nx + fine_nx * fine_ny;
             src[start as usize] = M32::new(1024);
-            let mut dst = vec![M32::ZERO; n_voxels as usize];
+            let mut dst = vec![M32::ZERO; lane_len as usize];
             for idx in 0..n_voxels {
                 advect_voxel_32(&src, &courant, &mut dst, &advect, idx);
             }

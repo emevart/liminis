@@ -61,8 +61,9 @@
 use anyhow::{Result, bail};
 
 use super::{Conservation, Invariant};
-use crate::kernels::advect::{AdvectParams, advect_voxel_32, advect_voxel_64};
-use crate::numeric::{Q, qadd, qsub};
+use crate::kernels::advect::{AdvectParams, advect_voxel_32, advect_voxel_64, flux_32, flux_64};
+use crate::ledger::{Channel, Ledger};
+use crate::numeric::{M32, M64, Q, qadd, qsub};
 use crate::world::{Boundary, Direction, Face, Field32, Field64, Grid, ParitySplit, Width};
 
 /// The order the three axes are applied in: X, then Y, then Z.
@@ -125,6 +126,9 @@ pub struct Advect {
     /// would double the admissible speed with no basis (ADR-069).
     dx: f64,
     n_voxels: u32,
+    /// Whether the grid has an exchanging face. What the declared invariant
+    /// turns on — see [`super::Conservation`].
+    vents: bool,
 }
 
 impl Advect {
@@ -134,9 +138,7 @@ impl Advect {
     ///
     /// # Errors
     ///
-    /// Returns an error if `dt` or `dx` is not finite and positive, or if the
-    /// grid has an `exchange` face — which cannot be built today for a reason of
-    /// its own (`world::Grid::new`).
+    /// Returns an error if `dt` or `dx` is not finite and positive.
     pub fn new(grid: &Grid, dt: f64, dx: f64) -> Result<Self> {
         if !dt.is_finite() || dt <= 0.0 {
             bail!("dt {dt} s is not a usable timestep");
@@ -147,11 +149,13 @@ impl Advect {
 
         // One mask for all three applications: the boundary is a property of the
         // grid, not of the axis being swept.
+        let (periodic_mask, exchange_mask) = boundary_masks(grid);
         let base = AdvectParams {
             nx: grid.nx(),
             ny: grid.ny(),
             nz: grid.nz(),
-            periodic_mask: periodic_mask(grid)?,
+            periodic_mask,
+            exchange_mask,
             axis: AXIS_ORDER[0],
         };
         let params = [
@@ -172,6 +176,7 @@ impl Advect {
             dt,
             dx,
             n_voxels: grid.n_voxels(),
+            vents: grid.has_exchange(),
         })
     }
 
@@ -198,10 +203,16 @@ impl Advect {
     // their own traffic without it, and `world::World` allocates no such buffer.
     // It is a length here rather than a `Vec` for exactly that reason — a
     // process that owned it would be answering a question nobody has asked.
+    ///
+    /// `lane_len` and not `n_voxels`, because the upper face of the last voxel
+    /// of an axis is the ghost cell's *lower* face and is read at
+    /// `axis*lane_len + ghost` (ADR-059, `kernels/advect.rs`). Three cells more
+    /// per run, one per axis, and without them the face of the domain has no
+    /// Courant number at all.
     #[inline]
     #[must_use]
     pub fn courant_len(&self) -> usize {
-        3 * self.n_voxels as usize
+        3 * (self.n_voxels as usize + 1)
     }
 
     /// Fold face velocities in m/s into the Courant numbers the kernel reads.
@@ -295,9 +306,12 @@ impl Advect {
             );
         }
 
+        let lane_len = self.n_voxels + 1;
         for axis in 0..3u32 {
-            for idx in 0..self.n_voxels {
-                let cell = (axis * self.n_voxels + idx) as usize;
+            // `0..lane_len`, so the ghost's cell — the face of the domain on
+            // this axis — goes through the same refusal as every other face.
+            for idx in 0..lane_len {
+                let cell = (axis * lane_len + idx) as usize;
                 let u = u_face_mps[cell];
                 if !u.is_finite() {
                     bail!(
@@ -350,8 +364,8 @@ impl Advect {
                 // upper one when it is positive. Anything else is an inflow, and
                 // an inflow is not credit against an outflow: the matter arrives
                 // in the same application it leaves in, from state `N`.
-                let lower = out[(axis * self.n_voxels + idx) as usize];
-                let upper = out[(axis * self.n_voxels + up) as usize];
+                let lower = out[(axis * lane_len + idx) as usize];
+                let upper = out[(axis * lane_len + up) as usize];
                 let mut outflow = Q::ZERO;
                 if down != idx && lower < Q::ZERO {
                     outflow = qsub(outflow, lower);
@@ -396,17 +410,20 @@ impl Advect {
     /// writes one lane of one amount field. Enthalpy is a field of its own on
     /// its own grid, and no transport process in the project carries it along
     /// with the matter (ADR-062, ADR-067).
-    // TODO(channels): matter is `Conserved` only because `world::Grid::new`
-    // refuses an `exchange` face today, so nothing can leave the domain at all.
-    // The moment that face exists this becomes "conserved except through
-    // BOUNDARY_EXCHANGE" (ADR-028, ADR-059), and `Conservation` has no arm to
-    // say it with. The caveat belongs in the code rather than in a plan, because
-    // on the day the arm arrives nothing else will point at this line.
+    ///
+    /// **Unless the grid vents**, in which case matter crosses the lid on every
+    /// axis application and the arm names the channel it lands in (ADR-028,
+    /// ADR-059). Taken from the grid, because `Conserved` on a venting grid is a
+    /// false promise nothing else in the corpus can catch.
     #[inline]
     #[must_use]
     pub fn invariant(&self) -> Invariant {
         Invariant {
-            matter: Conservation::Conserved,
+            matter: if self.vents {
+                Conservation::ChangedThrough(Channel::BoundaryExchange)
+            } else {
+                Conservation::Conserved
+            },
             energy: Conservation::Conserved,
         }
     }
@@ -419,7 +436,7 @@ impl Advect {
 /// and two hand-written copies drift — here they would drift in the alternation,
 /// which is the one place a difference looks like physics.
 macro_rules! define_advance {
-    ($name:ident, $field:ty, $voxel:ident) => {
+    ($name:ident, $inner:ident, $field:ty, $voxel:ident, $boundary:ident) => {
         #[doc = concat!("Run one tick of advection — three axes — on one lane of a `", stringify!($field), "`.")]
         ///
         /// **The applications compose.** Each reads what the previous wrote,
@@ -444,7 +461,31 @@ macro_rules! define_advance {
         /// is not [`Advect::courant_len`] long. All three are programming errors
         /// rather than bad scenarios, and all three would otherwise surface as a
         /// quietly wrong world.
-        pub fn $name(&self, field: &mut $field, lane: u32, courant: &[Q]) {
+        pub fn $name(
+            &self,
+            field: &mut $field,
+            lane: u32,
+            courant: &[Q],
+            substance: u32,
+            ledger: &mut Ledger,
+        ) {
+            self.$inner(field, lane, courant, |units| {
+                ledger.credit_matter(Channel::BoundaryExchange, substance, units);
+            });
+        }
+
+        #[doc = concat!("[`Advect::", stringify!($name), "`] against an arbitrary counter.")]
+        ///
+        /// Private, and for the reason `process/diffuse.rs` gives on its twin:
+        /// the enthalpy field is a `Field64` like a wide amount field and is
+        /// counted into the energy half of the ledger instead (ADR-028).
+        fn $inner(
+            &self,
+            field: &mut $field,
+            lane: u32,
+            courant: &[Q],
+            mut credit: impl FnMut(i64),
+        ) {
             let n_voxels = field.n_voxels();
             assert_eq!(
                 n_voxels, self.n_voxels,
@@ -479,15 +520,96 @@ macro_rules! define_advance {
                 for idx in 0..n_voxels {
                     $voxel(src, courant, dst, params, idx);
                 }
+                // The faces of the domain on **this** axis, off this
+                // application's `src`. Once per axis and not once per tick:
+                // three applications move matter across the lid three times, and
+                // the counter has to see each of them (ADR-059).
+                if params.exchange_mask != 0 {
+                    credit($boundary(src, courant, &self.grid, params));
+                }
             }
         }
     };
 }
 
 impl Advect {
-    define_advance!(advance_lane_32, Field32, advect_voxel_32);
-    define_advance!(advance_lane_64, Field64, advect_voxel_64);
+    define_advance!(
+        advance_lane_32,
+        advance_lane_crediting_32,
+        Field32,
+        advect_voxel_32,
+        boundary_net_32
+    );
+    define_advance!(
+        advance_lane_64,
+        advance_lane_crediting_64,
+        Field64,
+        advect_voxel_64,
+        boundary_net_64
+    );
 }
+
+/// Generates the per-width boundary pass of step `c`: what crossed the faces of
+/// the domain on one axis during one application, positive when it entered.
+///
+/// On the host, because a pass that walks a plane and adds into a counter is not
+/// the `(src, dst, p, idx)` of ADR-034. It calls the kernel's own `flux_*` with
+/// the kernel's own four-cell stencil rather than a simplified expression for the
+/// boundary: ADR-054 says the fallback at an undefined `r` is a *consequence* of
+/// the orientation and not a second measure, so the boundary face has to go
+/// through the same function and reach `phi = 0` by the shape of its arguments.
+macro_rules! define_boundary_net {
+    ($name:ident, $m:ty, $flux:ident) => {
+        fn $name(src: &[$m], courant: &[Q], grid: &Grid, p: &AdvectParams) -> i64 {
+            let lane_len = grid.lane_len();
+            let ghost = grid.ghost_index();
+            let base = p.axis * lane_len;
+            let (below, above) = match p.axis {
+                0 => (Face::XMinus, Face::XPlus),
+                1 => (Face::YMinus, Face::YPlus),
+                _ => (Face::ZMinus, Face::ZPlus),
+            };
+
+            let mut net = 0i64;
+            for idx in 0..grid.n_voxels() {
+                let down = grid.neighbour(idx, below);
+                let up = grid.neighbour(idx, above);
+                let here = src[idx as usize];
+
+                // A voxel gathers the flux of its lower face and gives away the
+                // flux of its upper one, because a positive flux points toward
+                // the larger index (`kernels/advect.rs`). Both signs are copied
+                // from the kernel rather than reasoned about again.
+                if down == ghost {
+                    let far_down = grid.neighbour(down, below);
+                    net += $flux(
+                        src[far_down as usize],
+                        src[down as usize],
+                        here,
+                        src[up as usize],
+                        courant[(base + idx) as usize],
+                    )
+                    .to_i64();
+                }
+                if up == ghost {
+                    let far_up = grid.neighbour(up, above);
+                    net -= $flux(
+                        src[down as usize],
+                        here,
+                        src[up as usize],
+                        src[far_up as usize],
+                        courant[(base + up) as usize],
+                    )
+                    .to_i64();
+                }
+            }
+            net
+        }
+    };
+}
+
+define_boundary_net!(boundary_net_32, M32, flux_32);
+define_boundary_net!(boundary_net_64, M64, flux_64);
 
 /// One advection phase over a whole field: every lane advanced by three axis
 /// applications, the process-boundary invariant restored once.
@@ -566,7 +688,9 @@ impl AdvectPhase {
     #[inline]
     #[must_use]
     pub fn restoration_bytes_per_tick(&self) -> u64 {
-        self.split.bytes_per_tick(self.n_voxels, self.width)
+        // The lane and not the voxels: `restore_lane` copies the ghost cell too
+        // (ADR-057, ADR-059).
+        self.split.bytes_per_tick(self.n_voxels + 1, self.width)
     }
 
     /// Advection conserves matter and does not touch energy — see
@@ -594,10 +718,24 @@ macro_rules! define_phase_apply {
         ///
         /// If the field's lane count or shape is not the one this phase was
         /// folded for, or if the Courant buffer is the wrong length.
-        pub fn $name(&self, field: &mut $field, courant: &[Q]) {
+        pub fn $name(
+            &self,
+            field: &mut $field,
+            courant: &[Q],
+            substance_of_lane: &[u32],
+            ledger: &mut Ledger,
+        ) {
             assert_eq!(
                 self.width, $width,
                 "this phase was folded for the other storage width"
+            );
+            assert_eq!(
+                substance_of_lane.len(),
+                self.lanes as usize,
+                "the substance table holds {} entries and this phase has {} lanes: \
+                 the array is indexed by lane, not by substance (ADR-056)",
+                substance_of_lane.len(),
+                self.lanes
             );
             assert_eq!(
                 field.lanes(),
@@ -613,7 +751,13 @@ macro_rules! define_phase_apply {
             );
 
             for lane in 0..self.lanes {
-                self.advect.$advance(field, lane, courant);
+                self.advect.$advance(
+                    field,
+                    lane,
+                    courant,
+                    substance_of_lane[lane as usize],
+                    ledger,
+                );
             }
             field.restore_boundary(&self.split);
         }
@@ -623,6 +767,40 @@ macro_rules! define_phase_apply {
 impl AdvectPhase {
     define_phase_apply!(apply_32, Field32, advance_lane_32, Width::Bits32);
     define_phase_apply!(apply_64, Field64, advance_lane_64, Width::Bits64);
+
+    /// Run one tick of advection over the enthalpy field.
+    ///
+    /// The same three applications and a different counter: joules cross the lid
+    /// on their own account and drag no matter with them (ADR-067), so this
+    /// credits `Ledger::credit_energy` and moves no substance's counter.
+    ///
+    /// # Panics
+    ///
+    /// If the field is not the single-lane `Field64` this phase was folded for,
+    /// or if the Courant buffer is the wrong length.
+    pub fn apply_enthalpy(&self, field: &mut Field64, courant: &[Q], ledger: &mut Ledger) {
+        assert_eq!(
+            self.width,
+            Width::Bits64,
+            "the enthalpy field is 64-bit (ADR-062)"
+        );
+        assert_eq!(
+            self.lanes, 1,
+            "the enthalpy field has one lane and this phase was folded for {}",
+            self.lanes
+        );
+        assert_eq!(
+            field.n_voxels(),
+            self.n_voxels,
+            "the field does not have the shape this phase was folded for"
+        );
+
+        self.advect
+            .advance_lane_crediting_64(field, 0, courant, |joules| {
+                ledger.credit_energy(Channel::BoundaryExchange, joules);
+            });
+        field.restore_boundary(&self.split);
+    }
 }
 
 fn courant_is_within_one(courant: Q) -> bool {
@@ -634,20 +812,23 @@ fn courant_is_within_one(courant: Q) -> bool {
     magnitude <= Q::ONE
 }
 
-fn periodic_mask(grid: &Grid) -> Result<u32> {
-    let mut mask = 0u32;
+/// The six boundary conditions of the grid, as the two masks the kernel reads:
+/// `(periodic, exchange)`.
+///
+/// Three states, for the reason `process/diffuse.rs` gives at length: folded
+/// into two, an exchanging face becomes a closed one, and step `c` seals a lid
+/// that step `d` vents — a difference in the flux that reads as physics.
+fn boundary_masks(grid: &Grid) -> (u32, u32) {
+    let mut periodic = 0u32;
+    let mut exchange = 0u32;
     for face in Face::ALL {
         match grid.boundary(face) {
-            Boundary::Periodic => mask |= 1 << (face as u32),
+            Boundary::Periodic => periodic |= 1 << (face as u32),
+            Boundary::Exchange => exchange |= 1 << (face as u32),
             Boundary::Closed => {}
-            Boundary::Exchange => bail!(
-                "face {face:?} is an exchange face: matter crossing it belongs \
-                 in the BOUNDARY_EXCHANGE channel (SPEC section 7), and there \
-                 are no channel counters yet"
-            ),
         }
     }
-    Ok(mask)
+    (periodic, exchange)
 }
 
 #[cfg(test)]
@@ -659,6 +840,35 @@ mod tests {
     /// The eco regime of SPEC section 1.7: a one-second tick and a 100 um voxel.
     const DT: f64 = 1.0;
     const DX: f64 = 1.0e-4;
+
+    /// Wide enough for every lane count in this module.
+    const MAX_SUBSTANCES: u32 = 32;
+
+    /// [`AdvectPhase::apply_32`] on a fixture with no exchanging face.
+    ///
+    /// The substance table is the identity on the lanes — nothing here vents, so
+    /// no counter is touched and which substance a lane stands for cannot matter
+    /// — and the ledger is a scratch one. The venting cases are the outside view
+    /// of ADR-059 and live in `tests/acceptance_boundary.rs`.
+    fn run_32(phase: &AdvectPhase, field: &mut Field32, courant: &[Q]) {
+        let table: Vec<u32> = (0..field.lanes()).collect();
+        phase.apply_32(
+            field,
+            courant,
+            &table,
+            &mut Ledger::new(MAX_SUBSTANCES).unwrap(),
+        );
+    }
+
+    fn run_64(phase: &AdvectPhase, field: &mut Field64, courant: &[Q]) {
+        let table: Vec<u32> = (0..field.lanes()).collect();
+        phase.apply_64(
+            field,
+            courant,
+            &table,
+            &mut Ledger::new(MAX_SUBSTANCES).unwrap(),
+        );
+    }
 
     fn torus(nx: u32, ny: u32, nz: u32) -> Grid {
         Grid::new(nx, ny, nz, [Boundary::Periodic; 6]).unwrap()
@@ -702,11 +912,14 @@ mod tests {
     /// through the fold rather than around it.
     fn courant_for(grid: &Grid, u: impl Fn(u32, u32) -> f64) -> Vec<Q> {
         let advect = Advect::new(grid, DT, DX).unwrap();
-        let n_voxels = grid.n_voxels();
+        // `lane_len` per axis: the ghost cell owns the Courant number of the
+        // face of the domain (ADR-059). It is fed too, so that a fixture cannot
+        // leave it out and then be surprised by a zero there.
+        let lane_len = grid.lane_len();
         let mut velocities = vec![0.0f64; advect.courant_len()];
         for axis in 0..3u32 {
-            for idx in 0..n_voxels {
-                velocities[(axis * n_voxels + idx) as usize] = u(axis, idx);
+            for idx in 0..lane_len {
+                velocities[(axis * lane_len + idx) as usize] = u(axis, idx);
             }
         }
         let mut courant = vec![Q::ZERO; advect.courant_len()];
@@ -724,26 +937,28 @@ mod tests {
 
     fn seed_lane_32(field: &mut Field32, lane: u32, amounts: impl Fn(u32) -> i32) {
         let n_voxels = field.n_voxels();
+        let lane_len = field.lane_len();
         let buffer = field.write_mut();
         for idx in 0..n_voxels {
-            buffer[(lane * n_voxels + idx) as usize] = M32::new(amounts(idx));
+            buffer[(lane * lane_len + idx) as usize] = M32::new(amounts(idx));
         }
     }
 
     fn seed_lane_64(field: &mut Field64, lane: u32, amounts: impl Fn(u32) -> i64) {
         let n_voxels = field.n_voxels();
+        let lane_len = field.lane_len();
         let buffer = field.write_mut();
         for idx in 0..n_voxels {
-            buffer[(lane * n_voxels + idx) as usize] = M64::new(amounts(idx));
+            buffer[(lane * lane_len + idx) as usize] = M64::new(amounts(idx));
         }
     }
 
     fn total_32(field: &Field32) -> i64 {
-        field.read().iter().map(|v| v.to_i64()).sum()
+        field.lane(0).iter().map(|v| v.to_i64()).sum()
     }
 
     fn total_64(field: &Field64) -> i64 {
-        field.read().iter().map(|v| v.to_i64()).sum()
+        field.lane(0).iter().map(|v| v.to_i64()).sum()
     }
 
     /// A pattern that varies along all three axes, so that dropping one axis
@@ -785,14 +1000,14 @@ mod tests {
                 seed_lane_32(&mut field, 0, |idx| (idx as i32 * 7919) % 100_000);
                 field.swap();
                 let before = total_32(&field);
-                let seeded = field.read().to_vec();
+                let seeded = field.lane(0).to_vec();
 
                 for tick in 0..8 {
-                    phase.apply_32(&mut field, &courant);
+                    run_32(&phase, &mut field, &courant);
                     assert_eq!(total_32(&field), before, "tick {tick} moved the total");
                 }
                 assert_ne!(
-                    field.read(),
+                    field.lane(0),
                     seeded.as_slice(),
                     "nothing moved, and a conserving no-op would pass every \
                      assertion above"
@@ -822,12 +1037,12 @@ mod tests {
         field.swap();
 
         let before = total_64(&field);
-        let seeded = field.read().to_vec();
+        let seeded = field.lane(0).to_vec();
         for _ in 0..8 {
-            phase.apply_64(&mut field, &courant);
+            run_64(&phase, &mut field, &courant);
             assert_eq!(total_64(&field), before);
         }
-        assert_ne!(field.read(), seeded.as_slice());
+        assert_ne!(field.lane(0), seeded.as_slice());
     }
 
     /// The composition of the three axes, and the one failure no conservation
@@ -876,8 +1091,8 @@ mod tests {
         let mut field: Field32 = Field::new(&grid, 1).unwrap();
         seed_lane_32(&mut field, 0, |idx| pattern(&grid, idx));
         field.swap();
-        phase.apply_32(&mut field, &courant);
-        assert_eq!(field.read(), sequential.as_slice());
+        run_32(&phase, &mut field, &courant);
+        assert_eq!(field.lane(0), sequential.as_slice());
 
         // And it is not any of the three single-axis results, which is what a
         // parallel composition collapses to.
@@ -893,7 +1108,7 @@ mod tests {
                 );
             }
             assert_ne!(
-                field.read(),
+                field.lane(0),
                 alone.as_slice(),
                 "the tick equals application {application} applied to state N \
                  alone: the axes overwrote each other instead of composing"
@@ -965,10 +1180,10 @@ mod tests {
             let mut field: Field32 = Field::new(&grid, 1).unwrap();
             seed_lane_32(&mut field, 0, |_| 1_000);
             field.swap();
-            phase.apply_32(&mut field, &courant);
+            run_32(&phase, &mut field, &courant);
 
             let moved: Vec<u32> = (0..n_voxels)
-                .filter(|&idx| field.read()[idx as usize] != M32::new(1_000))
+                .filter(|&idx| field.lane(0)[idx as usize] != M32::new(1_000))
                 .collect();
             assert_eq!(
                 moved,
@@ -977,11 +1192,11 @@ mod tests {
                  the wrong pair of voxels"
             );
             assert!(
-                field.read()[acceptor as usize].to_i64() > 1_000,
+                field.lane(0)[acceptor as usize].to_i64() > 1_000,
                 "axis {axis}: a positive Courant number sent matter to the \
                  smaller index"
             );
-            assert!(field.read()[donor as usize].to_i64() < 1_000);
+            assert!(field.lane(0)[donor as usize].to_i64() < 1_000);
         }
     }
 
@@ -1005,14 +1220,14 @@ mod tests {
     fn the_courant_fold_refuses_a_face_over_one_and_compares_it_as_a_q() {
         let grid = torus(3, 3, 3);
         let advect = Advect::new(&grid, DT, DX).unwrap();
-        let n_voxels = grid.n_voxels();
+        let lane_len = grid.lane_len();
         let bad = grid.index(1, 2, 0);
         let mut out = vec![Q::ZERO; advect.courant_len()];
 
         // Axis 1, so that the refusal has an axis to name that is not the one a
         // flat `idx` would report.
         let mut velocities = vec![0.0f64; advect.courant_len()];
-        velocities[(n_voxels + bad) as usize] = velocity_for(1.5);
+        velocities[(lane_len + bad) as usize] = velocity_for(1.5);
         let error = advect.fold_courant(&velocities, &mut out).unwrap_err();
         let message = error.to_string();
         assert!(message.contains("axis 1"), "{message}");
@@ -1096,13 +1311,13 @@ mod tests {
         seed_lane_32(&mut field, 0, |_| 1_000);
         field.swap();
         let before = total_32(&field);
-        phase.apply_32(&mut field, &courant);
+        run_32(&phase, &mut field, &courant);
 
         assert_eq!(total_32(&field), before, "the matter is in the neighbours");
-        assert_eq!(field.read()[2].to_i64(), -800);
+        assert_eq!(field.lane(0)[2].to_i64(), -800);
         // ADR-068's floor for this voxel: the stencil minimum, less one for the
         // two open faces, less nothing at all for a pool this far below 2^24.
-        assert!(field.read()[2].to_i64() < 1_000 - 1);
+        assert!(field.lane(0)[2].to_i64() < 1_000 - 1);
 
         // Exactly one is the bound and it is inclusive: the voxel empties and
         // stops there.
@@ -1113,8 +1328,8 @@ mod tests {
         let mut field: Field32 = Field::new(&grid, 1).unwrap();
         seed_lane_32(&mut field, 0, |_| 1_000);
         field.swap();
-        phase.apply_32(&mut field, &out);
-        assert_eq!(field.read()[2].to_i64(), 0);
+        run_32(&phase, &mut field, &out);
+        assert_eq!(field.lane(0)[2].to_i64(), 0);
     }
 
     /// `ACCEPTANCE.md`, section "Conservation", from ADR-057.
@@ -1171,7 +1386,7 @@ mod tests {
             seed_lane_32(&mut field, lane, |idx| seed(lane, idx));
         }
         field.swap();
-        phase.apply_32(&mut field, &courant);
+        run_32(&phase, &mut field, &courant);
 
         for lane in 0..lanes {
             // By hand, out of this lane's own seed: three applications, and the
@@ -1210,16 +1425,14 @@ mod tests {
 
     /// The mask this process folds is the one the grid declares, face by face.
     ///
-    /// The `exchange` arm cannot be reached from here: `world::Grid::new`
-    /// refuses to build such a grid at all. The refusal in `periodic_mask`
-    /// stands anyway, for the same reason `process/diffuse.rs` keeps its own —
-    /// the nearest neighbour of "exchange" is "closed", and a face quietly
-    /// sealed is exactly the failure nobody would see.
+    /// Three states and two masks: the `exchange` arm has one of its own, and
+    /// keeping it out of the periodic mask is what stops a venting lid from
+    /// arriving at the kernel as a closed one — the failure nobody would see.
     #[test]
     fn the_boundary_mask_says_what_the_grid_says() {
-        assert_eq!(periodic_mask(&torus(3, 3, 3)).unwrap(), 0b11_1111);
-        assert_eq!(periodic_mask(&floored(3, 3, 3)).unwrap(), 0b00_1111);
-        assert_eq!(periodic_mask(&boxed(3, 3, 3)).unwrap(), 0);
+        assert_eq!(boundary_masks(&torus(3, 3, 3)), (0b11_1111, 0));
+        assert_eq!(boundary_masks(&floored(3, 3, 3)), (0b00_1111, 0));
+        assert_eq!(boundary_masks(&boxed(3, 3, 3)), (0, 0));
 
         for grid in [torus(3, 3, 3), floored(3, 3, 3), boxed(3, 3, 3)] {
             let advect = Advect::new(&grid, DT, DX).unwrap();

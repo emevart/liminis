@@ -96,6 +96,7 @@ fn light_attenuation_matches_beer_lambert() {
     const N_LANES_64: u32 = 1;
 
     let p = LightParams {
+        lane_len: N_VOXELS,
         nx: NX,
         ny: NY,
         nz: NZ,

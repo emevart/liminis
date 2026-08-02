@@ -44,12 +44,31 @@
 
 use liminis_core::kernels::fold::{FoldParams, fold_energy};
 use liminis_core::kernels::react::{NO_CATALYST, ReactParams, Rx, react_voxel};
+use liminis_core::ledger::Ledger;
 use liminis_core::numeric::{M32, M64, Q, run_key};
 use liminis_core::process::DiffusePhase;
 use liminis_core::world::{
     Boundary, Face, Field32, Field64, Grid, LaneRef, Registry, SubstanceDecl, Width, World,
     WorldLayout,
 };
+
+/// A grid with no exchanging face: `k_ex` multiplies a flux nobody gathers.
+///
+/// The venting cases are the outside view of ADR-059 and live in
+/// `tests/acceptance_boundary.rs`.
+const SEALED: f64 = 0.0;
+
+/// One substance per lane, and a scratch ledger. On a sealed grid no counter is
+/// ever touched, so which substance a lane stands for cannot matter here.
+fn run_diffusion_32(phase: &DiffusePhase, field: &mut Field32) {
+    let table: Vec<u32> = (0..field.lanes()).collect();
+    phase.apply_32(field, &table, &mut Ledger::new(32).unwrap());
+}
+
+fn run_diffusion_64(phase: &DiffusePhase, field: &mut Field64) {
+    let table: Vec<u32> = (0..field.lanes()).collect();
+    phase.apply_64(field, &table, &mut Ledger::new(32).unwrap());
+}
 
 /// The eco regime of SPEC section 1.7: a one-second tick and a 100 um voxel.
 const DT: f64 = 1.0;
@@ -136,9 +155,9 @@ fn diffused_alone_32(grid: &Grid, diffusivity: f64, lane: u32, ticks: u32) -> Fi
     }
     field.swap();
 
-    let phase = DiffusePhase::new_32(grid, 1, &[diffusivity], DT, DX).unwrap();
+    let phase = DiffusePhase::new_32(grid, 1, &[diffusivity], DT, DX, SEALED).unwrap();
     for _ in 0..ticks {
-        phase.apply_32(&mut field);
+        run_diffusion_32(&phase, &mut field);
     }
     field
 }
@@ -167,7 +186,7 @@ fn every_lane_is_state_n_at_a_process_boundary() {
 
     for diffusivities in [&SUBSTEPS_MINORITY_EVEN[..], &SUBSTEPS_MINORITY_ODD[..]] {
         let lanes = diffusivities.len() as u32;
-        let phase = DiffusePhase::new_32(&grid, lanes, diffusivities, DT, DX).unwrap();
+        let phase = DiffusePhase::new_32(&grid, lanes, diffusivities, DT, DX, SEALED).unwrap();
         if phase.parity_split().swaps() {
             swapped += 1;
         } else {
@@ -177,24 +196,25 @@ fn every_lane_is_state_n_at_a_process_boundary() {
         let mut field = Field32::new(&grid, lanes).unwrap();
         {
             let n_voxels = field.n_voxels();
+            let lane_len = field.lane_len();
             let buffer = field.write_mut();
             for lane in 0..lanes {
                 for idx in 0..n_voxels {
-                    buffer[(lane * n_voxels + idx) as usize] = M32::new(pattern(lane, idx));
+                    buffer[(lane * lane_len + idx) as usize] = M32::new(pattern(lane, idx));
                 }
             }
         }
         field.swap();
 
         for _ in 0..TICKS {
-            phase.apply_32(&mut field);
+            run_diffusion_32(&phase, &mut field);
         }
 
         for lane in 0..lanes {
             let reference = diffused_alone_32(&grid, diffusivities[lane as usize], lane, TICKS);
             assert_eq!(
                 field.lane(lane),
-                reference.read(),
+                reference.lane(0),
                 "lane {lane} of {lanes} is not state N in the front buffer"
             );
         }
@@ -209,7 +229,7 @@ fn every_lane_is_state_n_at_a_process_boundary() {
     // The wide field of the same world, one lane, at the width where the copy is
     // twice as expensive (ADR-057: the one 64-bit lane stands on the odd side of
     // the corpus registry).
-    let wide_phase = DiffusePhase::new_64(&grid, 1, &[9.3e-9], DT, DX).unwrap();
+    let wide_phase = DiffusePhase::new_64(&grid, 1, &[9.3e-9], DT, DX, SEALED).unwrap();
     let mut wide = Field64::new(&grid, 1).unwrap();
     {
         let n_voxels = wide.n_voxels();
@@ -219,19 +239,19 @@ fn every_lane_is_state_n_at_a_process_boundary() {
         }
     }
     wide.swap();
-    let before: i64 = wide.read().iter().map(|v| v.to_i64()).sum();
+    let before: i64 = wide.lane(0).iter().map(|v| v.to_i64()).sum();
 
     for _ in 0..TICKS {
-        wide_phase.apply_64(&mut wide);
+        run_diffusion_64(&wide_phase, &mut wide);
         assert_eq!(
-            wide.read().iter().map(|v| v.to_i64()).sum::<i64>(),
+            wide.lane(0).iter().map(|v| v.to_i64()).sum::<i64>(),
             before,
             "the wide lane moved its total"
         );
     }
     // Six substeps is an even number of them, so this lane is in the front
     // buffer without a copy — and it had better hold something that moved.
-    assert!(wide.read().windows(2).any(|w| w[0] != w[1]));
+    assert!(wide.lane(0).windows(2).any(|w| w[0] != w[1]));
 }
 
 // ---------------------------------------------------------------------------
@@ -345,7 +365,7 @@ fn a_coarse_cell_covers_exactly_its_fine_cells() {
         // A flat light field at the incident irradiance absorbs nothing, so the
         // only thing this dispatch moves is the reaction increment.
         i_surface: Q::from_f64(128.0),
-        joules_per_intensity: Q::from_f64(1024.0),
+        units_per_intensity: Q::from_f64(1024.0),
         dt: Q::from_f64(1.0),
     };
     let light = vec![Q::from_f64(128.0); (NX * NY * NZ) as usize];
@@ -356,8 +376,17 @@ fn a_coarse_cell_covers_exactly_its_fine_cells() {
         energy_delta[fine_idx as usize] = M64::new(1);
 
         let mut dst_h = vec![M64::ZERO; n_coarse as usize];
+        let mut solar = vec![M64::ZERO; n_coarse as usize];
         for coarse in 0..n_coarse {
-            fold_energy(&energy_delta, &light, &src_h, &mut dst_h, &fold, coarse);
+            fold_energy(
+                &energy_delta,
+                &light,
+                &src_h,
+                &mut dst_h,
+                &mut solar,
+                &fold,
+                coarse,
+            );
         }
 
         let expected = world.enthalpy_cell_of(fine_idx);
@@ -438,27 +467,27 @@ fn mixed_registry() -> Registry {
 /// `s`, by substance index. This is the line the whole test is about, and
 /// [`LaneRef`] is what stops it from being written with `s` where a lane goes.
 fn seed(world: &mut World, s: u32, idx: u32, value: i64) {
-    let n_voxels = world.grid().n_voxels();
+    let lane_len = world.grid().lane_len();
     match world.lane_of(s) {
         LaneRef::Narrow(lane) => {
             let field = world.amounts_32_mut().expect("a narrow class was declared");
-            field.write_mut()[(lane * n_voxels + idx) as usize] =
+            field.write_mut()[(lane * lane_len + idx) as usize] =
                 M32::new(i32::try_from(value).unwrap());
         }
         LaneRef::Wide(lane) => {
             let field = world.amounts_64_mut().expect("a wide class was declared");
-            field.write_mut()[(lane * n_voxels + idx) as usize] = M64::new(value);
+            field.write_mut()[(lane * lane_len + idx) as usize] = M64::new(value);
         }
     }
 }
 
 /// Read an amount back out of state `N`, by substance index.
 fn amount_of(world: &World, s: u32, idx: u32) -> i64 {
-    let n_voxels = world.grid().n_voxels();
+    let lane_len = world.grid().lane_len();
     let (narrow, wide) = world.amount_slices();
     match world.lane_of(s) {
-        LaneRef::Narrow(lane) => narrow[(lane * n_voxels + idx) as usize].to_i64(),
-        LaneRef::Wide(lane) => wide[(lane * n_voxels + idx) as usize].to_i64(),
+        LaneRef::Narrow(lane) => narrow[(lane * lane_len + idx) as usize].to_i64(),
+        LaneRef::Wide(lane) => wide[(lane * lane_len + idx) as usize].to_i64(),
     }
 }
 
@@ -573,15 +602,17 @@ fn run_a_tick(world: &mut World) {
 
     if let Some(field) = world.amounts_32_mut() {
         let lanes = field.lanes();
-        DiffusePhase::new_32(&grid, lanes, &narrow_by_lane, DT, DX)
-            .unwrap()
-            .apply_32(field);
+        run_diffusion_32(
+            &DiffusePhase::new_32(&grid, lanes, &narrow_by_lane, DT, DX, SEALED).unwrap(),
+            field,
+        );
     }
     if let Some(field) = world.amounts_64_mut() {
         let lanes = field.lanes();
-        DiffusePhase::new_64(&grid, lanes, &wide_by_lane, DT, DX)
-            .unwrap()
-            .apply_64(field);
+        run_diffusion_64(
+            &DiffusePhase::new_64(&grid, lanes, &wide_by_lane, DT, DX, SEALED).unwrap(),
+            field,
+        );
     }
 
     let tables = Tables::for_world(world);
@@ -589,6 +620,7 @@ fn run_a_tick(world: &mut World) {
         nx: grid.nx(),
         ny: grid.ny(),
         n_voxels,
+        lane_len: grid.lane_len(),
         n_substances: N_SUBSTANCES,
         n_reactions: 1,
         tick: 7,

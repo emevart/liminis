@@ -38,6 +38,23 @@
 //! of the topmost voxel and only that voxel, and `SOLAR_IN` is computed by the
 //! same fold out of the same number, so the energy ledger closes exactly while
 //! the two disagree.
+//!
+//! Modulation (ADR-076) makes that a statement about the **tick** and not only
+//! about the constructor. [`Light::set_tick`] is the one place the day and the
+//! season are evaluated: it rewrites `params.i_surface`, and both consumers read
+//! it from there. The tick number has to reach step `a` and step `i'` and both
+//! have to take one number — a disagreement of one tick lands on the absorption
+//! of the topmost voxel and nowhere else, with `SOLAR_IN` credited by the same
+//! fold out of the same number, so the residual stays at zero while they drift.
+//! `the_incident_irradiance_has_one_source` is what stands there, and it is a
+//! statement about a sequence of ticks for that reason.
+//!
+//! The multiplier is normalised to unit mean **over the samples the run actually
+//! takes**, not over the continuous envelope, so that `i_surface` means "the mean
+//! irradiance over a period" exactly rather than approximately. The continuous
+//! `1/pi` would run 5.19% low at a period of eight ticks and 0.574% low at
+//! twenty-four — the choice of period would move the energy budget of the world
+//! by percent, with the profile staying a plausible sine (ADR-076).
 
 use anyhow::{Result, bail};
 
@@ -46,25 +63,123 @@ use crate::kernels::light::{Attenuators, LightParams, light_column};
 use crate::numeric::{M32, M64, Q};
 use crate::world::{Grid, LaneRef};
 
-/// The default of `enabled` for the light, and it is `false` (ADR-065).
+/// The default of `enabled` for the light, and it is `false` (ADR-065, ADR-076).
 ///
-/// Not a statement about how interesting a dark world is. Step `a` computes the
-/// field and step `i'` folds it into enthalpy and credits `SOLAR_IN` — and the
-/// fold cannot be dispatched: `FoldParams::i_surface` and
-/// `FoldParams::joules_per_intensity` are named by no key and no record
-/// (`TODO(joules-per-intensity)` in `kernels/fold.rs`), and what the fold owes
-/// the ledger is open question A-16. A default of `true` would put light into
-/// the enthalpy of every scenario at a scale nobody chose, and calibrating `k`
-/// against it would hide the invention for good.
-///
-/// The mirror argument is worth stating, because it is the one that will
-/// overturn this value: `LightParams::i_surface` and `FoldParams::i_surface`
-/// have to be the *same number* folded by the host, and the day they are, light
-/// on by default is the natural reading of SPEC section 4.6.
-// TODO(CONFIG_SCHEMA.md section 13 item 23): assigned by no record. See the
-// module header of `kernels/fold.rs` for what has to be decided first, and
-// `DECISIONS.md` for where the answer goes.
+/// **Assigned by a record, and not a placeholder.** ADR-076 declares `i_surface`
+/// and derives the multiplier the fold wanted, so the reason this value used to
+/// carry — "the fold cannot be built" — is gone. The reason that replaces it
+/// outlives the wave that wrote it: light on by default would put an energy input
+/// into every scenario in the repository, and that input has no sink anywhere and
+/// a counter that does not hold one tick of it (ADR-075: `2^63/2^k_E = 62.5 mJ`
+/// against `0.16384 J` a tick at 128 cubed). Every scenario would then be refused
+/// by `a_lit_scenario_is_refused_until_an_energy_sink_exists`, and the obvious
+/// repair — crediting `SOLAR_IN` inside this process — would reverse ADR-049,
+/// which `the_light_process_credits_nothing` exists to prevent.
 pub const ENABLED_BY_DEFAULT: bool = false;
+
+/// The daily sample of the modulation at a tick: `max(0, sin(2*pi*n/N))`.
+///
+/// **One implementation, two callers**, and that is the point of it being here
+/// rather than inside either. `config/derive.rs` sums these to get the discrete
+/// normalisation `A_N` at load; [`Modulation`] takes one of them per tick. Two
+/// transcriptions of one formula would put the normalisation and the multiplier
+/// slightly out of step, and the symptom would be an `i_surface` that no longer
+/// means "the mean over a period" — by a hair rather than by a percent, and so
+/// invisible.
+///
+/// Exact at the quarter turns, and that is not decoration: `f64::sin` of the
+/// argument that stands for `pi` returns `1.22e-16`, not zero. Left as it comes,
+/// the normalisation would depend on the noise of the library — and at `N = 2`,
+/// where both samples are meant to be zero, the sum would be `1.22e-16` instead
+/// of zero and `A_2` would come out at `1.6e16` rather than dividing by zero.
+/// A silently enormous multiplier is worse than a division that fails loudly, and
+/// the minimum period of three ticks is argued from the division (ADR-076).
+///
+/// Zero at `period_ticks == 0`, which is the no-modulation case: the fraction is
+/// then zero as well and the multiplier is identically one.
+#[must_use]
+pub fn daily_sample(tick: u32, period_ticks: u32) -> f64 {
+    sample(tick, period_ticks).max(0.0)
+}
+
+/// The seasonal sample at a tick: `sin(2*pi*n/N)`, signed.
+///
+/// It needs no normalisation of its own — `sum sin` over a whole number of ticks
+/// is an exact zero, so `1 + f_s*sin` has unit mean by construction — which is
+/// why the daily half has an `A_N` and this one has none.
+#[must_use]
+pub fn seasonal_sample(tick: u32, period_ticks: u32) -> f64 {
+    sample(tick, period_ticks)
+}
+
+/// `sin(2*pi*(tick mod period)/period)`, exact at the quarter turns.
+fn sample(tick: u32, period_ticks: u32) -> f64 {
+    if period_ticks == 0 {
+        return 0.0;
+    }
+    let step = tick % period_ticks;
+    // The quarter turns, written out: `sin` of the nearest `f64` to a multiple of
+    // `pi/2` is not the exact value, and the two that matter here are the zeros.
+    let quarters = 4 * u64::from(step);
+    if quarters % u64::from(period_ticks) == 0 {
+        return match (quarters / u64::from(period_ticks)) % 4 {
+            0 | 2 => 0.0,
+            1 => 1.0,
+            _ => -1.0,
+        };
+    }
+    (std::f64::consts::TAU * f64::from(step) / f64::from(period_ticks)).sin()
+}
+
+/// The daily and seasonal modulation of the incident irradiance (ADR-076).
+///
+/// Folded by the loader, never by this process: `daily_norm` is the discrete
+/// `A_N = N / sum_{n<N} max(0, sin(2*pi*n/N))`, and recomputing it here would be
+/// the second construction of a number whose whole purpose is to make one
+/// statement exact.
+///
+/// Phase zero — dawn at tick zero — and there is no phase key: a phase is
+/// equivalent to starting the scenario earlier, and a key for it would be a
+/// second way to spell one world.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Modulation {
+    /// Amplitude of the daily term as a fraction of the mean, `[0, 1]`.
+    pub daily_fraction: f64,
+    /// The daily period in whole ticks, or zero for no daily modulation.
+    pub daily_period_ticks: u32,
+    /// `A_N`, computed by the loader. One when there is no daily modulation.
+    pub daily_norm: f64,
+    /// Amplitude of the seasonal term as a fraction of the mean, `[0, 1]`.
+    pub seasonal_fraction: f64,
+    /// The seasonal period in whole ticks, or zero for no seasonal modulation.
+    pub seasonal_period_ticks: u32,
+}
+
+impl Modulation {
+    /// A world with neither a day nor a season: the multiplier is identically
+    /// one.
+    pub const NONE: Self = Self {
+        daily_fraction: 0.0,
+        daily_period_ticks: 0,
+        daily_norm: 1.0,
+        seasonal_fraction: 0.0,
+        seasonal_period_ticks: 0,
+    };
+
+    /// `m_d(n) * m_s(n)` at a tick — the factor the declared mean irradiance is
+    /// multiplied by.
+    ///
+    /// `m_d(n) = 1 - f_d + f_d*A_N*max(0, sin(2*pi*n/N))` and
+    /// `m_s(n) = 1 + f_s*sin(2*pi*n/N_s)`, both with unit mean over their period.
+    #[must_use]
+    pub fn multiplier(&self, tick: u32) -> f64 {
+        let daily = 1.0 - self.daily_fraction
+            + self.daily_fraction * self.daily_norm * daily_sample(tick, self.daily_period_ticks);
+        let seasonal =
+            1.0 + self.seasonal_fraction * seasonal_sample(tick, self.seasonal_period_ticks);
+        daily * seasonal
+    }
+}
 
 /// One substance that darkens the water, as the scenario declares it.
 ///
@@ -101,14 +216,20 @@ pub struct Light {
     params: LightParams,
     lane: Vec<u32>,
     coeff: Vec<Q>,
+    /// The declared **mean** irradiance, W/m^2, kept unmodulated so that
+    /// [`Light::set_tick`] can refold it. Folding the modulated value back into
+    /// itself would drift the mean over a run.
+    i_surface_mean: f64,
+    modulation: Modulation,
 }
 
 impl Light {
     /// Fold the attenuator table and the incident irradiance.
     ///
-    /// `i_surface` is the irradiance on the top face of the topmost voxel, W/m^2,
-    /// already modulated by the day and the season by the caller; `dz` is the
-    /// voxel edge along Z, in metres.
+    /// `i_surface_mean` is the irradiance on the top face of the topmost voxel,
+    /// W/m^2, and it is the **mean over a modulation period** rather than an
+    /// instantaneous value: the day and the season are applied here, once per
+    /// tick, by [`Light::set_tick`]. `dz` is the voxel edge along Z, in metres.
     ///
     /// `dz` is an argument rather than being assumed to be one, and it is the
     /// factor whose absence is invisible: at the eco regime's `dx = 1e-4 m` the
@@ -121,15 +242,29 @@ impl Light {
     /// Returns an error if a coefficient or the irradiance is not a usable
     /// number, or if the table is longer than the `width_mask` of the kernel can
     /// address.
-    // TODO(i-surface): the incident irradiance is a key of nothing.
-    // `CONFIG_SCHEMA.md` section 7 lists exactly `k_w`, `k_b`, `k_d` and `k_m`;
-    // `QUANTITIES.md` section 5 has a row for `I` and none for `I0`, an amplitude
-    // or a period. So it arrives as an argument rather than being read from a
-    // config that has no place for it, and a plausible number invented here would
-    // be indistinguishable from a decision.
-    pub fn new(grid: &Grid, attenuators: &[Attenuator], i_surface: f64, dz: f64) -> Result<Self> {
-        if !i_surface.is_finite() {
-            bail!("the incident irradiance {i_surface} W/m^2 is not a usable number");
+    /// The irradiance is the scenario's now (ADR-076: `i_surface`, W/m^2, on the
+    /// light process), and the modulation is the loader's: `Modulation::daily_norm`
+    /// is the discrete `A_N` and is never recomputed here.
+    pub fn new(
+        grid: &Grid,
+        attenuators: &[Attenuator],
+        i_surface_mean: f64,
+        modulation: Modulation,
+        dz: f64,
+    ) -> Result<Self> {
+        if !i_surface_mean.is_finite() {
+            bail!("the incident irradiance {i_surface_mean} W/m^2 is not a usable number");
+        }
+        if !modulation.daily_norm.is_finite() || !modulation.multiplier(0).is_finite() {
+            bail!(
+                "the modulation folds to an unusable multiplier: A_N = {}, \
+                 f_d = {} over {} ticks, f_s = {} over {} ticks",
+                modulation.daily_norm,
+                modulation.daily_fraction,
+                modulation.daily_period_ticks,
+                modulation.seasonal_fraction,
+                modulation.seasonal_period_ticks
+            );
         }
         if !dz.is_finite() || dz <= 0.0 {
             bail!("dz {dz} m is not a usable voxel edge");
@@ -177,25 +312,60 @@ impl Light {
                 ny: grid.ny(),
                 nz: grid.nz(),
                 n_voxels: grid.n_voxels(),
+                lane_len: grid.lane_len(),
                 n_attenuators: attenuators.len() as u32,
                 width_mask,
-                i_surface: Q::from_f64(i_surface),
+                // Tick zero, through the one door: `set_tick` below is the only
+                // place the multiplier is ever evaluated, and the constructor is
+                // not allowed to be a second one.
+                i_surface: Q::from_f64(i_surface_mean * modulation.multiplier(0)),
             },
             lane,
             coeff,
+            i_surface_mean,
+            modulation,
         })
     }
 
-    /// The irradiance on the top face of the topmost voxel, as the kernel has it.
+    /// Move the process to a tick, refolding the incident irradiance.
+    ///
+    /// **The one place the modulation is evaluated.** Both consumers — the kernel
+    /// through `LightParams` and the fold of step `i'` through
+    /// [`Light::i_surface`] — read the number this writes, so there is no second
+    /// path along which they could take different ticks or different last bits.
+    /// ADR-076 rejected the alternative in as many words: a kernel handed the tick
+    /// number and the period would compute the modulation twice, and the
+    /// disagreement would land on the absorption of the topmost voxel alone, with
+    /// the energy residual staying at zero throughout.
+    ///
+    /// Refolded from the declared **mean** every time, never from the previous
+    /// tick's value: a multiplier applied to an already-modulated number would
+    /// compound, and the run's mean would drift away from the declared one while
+    /// every profile still looked like a day.
+    pub fn set_tick(&mut self, tick: u32) {
+        self.params.i_surface = Q::from_f64(self.i_surface_mean * self.modulation.multiplier(tick));
+    }
+
+    /// The irradiance on the top face of the topmost voxel **at the current
+    /// tick**, as the kernel has it.
     ///
     /// **The same `Q` has to reach `FoldParams::i_surface`.** It is the one term
     /// of the absorption of the topmost voxel that is not in the field (ADR-049),
     /// so a second folding of the same physical number puts a last-bit difference
-    /// into that voxel and nowhere else.
+    /// into that voxel and nowhere else. Since ADR-076 the number depends on the
+    /// tick as well as on the scenario, so "the same number" is a claim about a
+    /// sequence and not about a constructor.
     #[inline]
     #[must_use]
     pub fn i_surface(&self) -> Q {
         self.params.i_surface
+    }
+
+    /// The modulation this process was folded with.
+    #[inline]
+    #[must_use]
+    pub fn modulation(&self) -> Modulation {
+        self.modulation
     }
 
     /// How many invocations one application costs: `nx*ny`, one per column.
@@ -304,11 +474,15 @@ mod tests {
         ]
     }
 
+    /// The lane stride of a `world::Field` over this grid: the voxels and the
+    /// ghost cell after them (ADR-059).
+    const LANE_LEN: u32 = N_VOXELS + 1;
+
     fn amounts() -> (Vec<M32>, Vec<M64>) {
-        let mut src32 = vec![M32::ZERO; (2 * N_VOXELS) as usize];
-        let mut src64 = vec![M64::ZERO; N_VOXELS as usize];
+        let mut src32 = vec![M32::ZERO; (2 * LANE_LEN) as usize];
+        let mut src64 = vec![M64::ZERO; LANE_LEN as usize];
         for at in 0..N_VOXELS as usize {
-            src32[N_VOXELS as usize + at] = M32::new(12_000_000);
+            src32[LANE_LEN as usize + at] = M32::new(12_000_000);
             src64[at] = M64::new(2_000_000_000);
         }
         (src32, src64)
@@ -321,7 +495,7 @@ mod tests {
         // off the end of the field), and dispatching per column while decoding
         // `idx` as a voxel index gives the **identical** field, because the first
         // `nx*ny` voxel indices are exactly the plane `z = 0`.
-        let light = Light::new(&grid(), &table(), INCIDENT, DZ).unwrap();
+        let light = Light::new(&grid(), &table(), INCIDENT, Modulation::NONE, DZ).unwrap();
         assert_eq!(light.columns(), NX * NY);
         assert_ne!(light.columns(), N_VOXELS);
 
@@ -342,7 +516,7 @@ mod tests {
         // out of this same field. A counter incremented here would credit the same
         // joules twice, and the energy residual would stay at zero while it
         // happened, because the counter and the enthalpy move together.
-        let light = Light::new(&grid(), &table(), INCIDENT, DZ).unwrap();
+        let light = Light::new(&grid(), &table(), INCIDENT, Modulation::NONE, DZ).unwrap();
         let (src32, src64) = amounts();
         let before_32 = src32.clone();
         let before_64 = src64.clone();
@@ -370,6 +544,21 @@ mod tests {
         );
     }
 
+    /// A day of four ticks at full amplitude: `A_4 = 4`, samples `0, 1, 0, 0`.
+    ///
+    /// Four rather than something rounder because it is the sharpest legal case —
+    /// the peak is exactly `4.0`, 27% above `pi` — and because three quarters of
+    /// its ticks are dark, so a modulation that never ran is not mistakable for
+    /// one that did.
+    fn four_tick_day() -> Modulation {
+        Modulation {
+            daily_fraction: 1.0,
+            daily_period_ticks: 4,
+            daily_norm: 4.0,
+            ..Modulation::NONE
+        }
+    }
+
     #[test]
     fn the_incident_irradiance_has_one_source() {
         // The same `Q` reaches the kernel and whoever folds step `i'`. Two
@@ -377,9 +566,160 @@ mod tests {
         // difference lands on the absorption of the topmost voxel and nowhere
         // else — with `SOLAR_IN` computed by the same fold out of the same number,
         // so the energy ledger closes exactly.
-        let light = Light::new(&grid(), &table(), INCIDENT, DZ).unwrap();
-        assert_eq!(light.i_surface(), light.params().i_surface);
-        assert_eq!(light.i_surface(), Q::from_f64(INCIDENT));
+        //
+        // A statement about a **sequence of ticks** since ADR-076, not about the
+        // constructor: modulation adds a second way for the two to come apart,
+        // because the tick number has to travel to step `a` and to step `i'` and
+        // both have to take one number. A disagreement of one tick is invisible in
+        // both residuals for exactly the reason above.
+        let mut light = Light::new(&grid(), &table(), INCIDENT, four_tick_day(), DZ).unwrap();
+
+        let mut seen = Vec::new();
+        for tick in 0..12 {
+            light.set_tick(tick);
+            // The kernel's copy and the fold's copy, at the same tick.
+            assert_eq!(light.i_surface(), light.params().i_surface, "tick {tick}");
+            seen.push(light.i_surface());
+        }
+
+        // And the sequence is not a constant, or the equality above would hold on
+        // a process that ignored the tick entirely.
+        assert!(
+            seen.iter().any(|q| *q != seen[0]),
+            "the irradiance never moved; the claim is vacuous"
+        );
+
+        // The period is the period: tick `n` and tick `n + N` agree exactly.
+        for tick in 0..8 {
+            assert_eq!(
+                seen[tick],
+                seen[tick + 4],
+                "tick {tick} against tick {}",
+                tick + 4
+            );
+        }
+    }
+
+    #[test]
+    fn the_modulation_is_evaluated_in_one_place() {
+        // `set_tick` is the only door, and the constructor goes through it too:
+        // a freshly built process is at tick zero and not at the unmodulated mean.
+        // The two differ whenever tick zero is not a mean sample — at a four-tick
+        // day, dawn is dark, and a constructor that folded the bare mean would
+        // hand the first tick four times too much light.
+        let mut light = Light::new(&grid(), &table(), INCIDENT, four_tick_day(), DZ).unwrap();
+        let built = light.i_surface();
+        light.set_tick(0);
+        assert_eq!(built, light.i_surface());
+        assert_ne!(built, Q::from_f64(INCIDENT));
+
+        // Refolded from the declared mean each time, never compounded: coming back
+        // to a tick gives the same number however many ticks were visited between.
+        light.set_tick(1);
+        let peak = light.i_surface();
+        for tick in [2, 3, 7, 100, 1] {
+            light.set_tick(tick);
+        }
+        assert_eq!(peak, light.i_surface());
+        assert_eq!(light.modulation(), four_tick_day());
+    }
+
+    #[test]
+    fn daily_modulation_preserves_the_period_mean_irradiance_exactly() {
+        // `ACCEPTANCE.md`, ADR-076. The mean of the multiplier over one period is
+        // one, which is what makes `i_surface` mean "the mean irradiance over a
+        // period" rather than "roughly that". Only the **discrete** normalisation
+        // `A_N` gives it: with the continuous `1/pi` the mean runs 5.19% low at a
+        // period of eight ticks and 0.574% low at twenty-four — the choice of
+        // period would move the energy budget of the world by percent.
+        //
+        // Short periods, deliberately: at 86 400 ticks the continuous
+        // normalisation is off by `4.4e-10` and any tolerance swallows it. Three
+        // is the shortest legal period, four is the sharpest.
+        //
+        // **Named honestly: this is not a bit-exact equality, and it cannot be.**
+        // `A_N` is `N/sum` in `f64` and the mean multiplies it back by `sum/N`, so
+        // the round trip is exact only when the two roundings cancel; and the
+        // process hands the result to `Q`, which is `f32` in FLOAT mode. What the
+        // tolerance below has to do is separate the discrete normalisation from
+        // the continuous one, and `1e-12` is nine orders below the smallest
+        // deviation `1/pi` produces at these periods.
+        const TOLERANCE: f64 = 1e-12;
+
+        for period in [3u32, 4, 8, 24] {
+            let norm = discrete_norm(period);
+            let modulation = Modulation {
+                daily_fraction: 1.0,
+                daily_period_ticks: period,
+                daily_norm: norm,
+                ..Modulation::NONE
+            };
+            let mean: f64 =
+                (0..period).map(|n| modulation.multiplier(n)).sum::<f64>() / f64::from(period);
+            assert!(
+                (mean - 1.0).abs() < TOLERANCE,
+                "a day of {period} ticks has period mean {mean}, not 1"
+            );
+
+            // And the continuous normalisation would fail this by percent, which
+            // is what the tolerance above is there to tell apart.
+            let continuous = Modulation {
+                daily_norm: std::f64::consts::PI,
+                ..modulation
+            };
+            let off: f64 =
+                (0..period).map(|n| continuous.multiplier(n)).sum::<f64>() / f64::from(period);
+            assert!(
+                (off - 1.0).abs() > 1e-3,
+                "1/pi is indistinguishable from A_N at {period} ticks, so this \
+                 test proves nothing there"
+            );
+        }
+    }
+
+    #[test]
+    fn the_seasonal_mean_needs_no_normalisation() {
+        // `sum sin` over a whole number of ticks is an exact zero, so
+        // `1 + f_s*sin` has unit mean by construction. That asymmetry with the
+        // daily half is the reason only one of them carries an `A_N`.
+        for period in [3u32, 4, 8, 24] {
+            let modulation = Modulation {
+                seasonal_fraction: 1.0,
+                seasonal_period_ticks: period,
+                ..Modulation::NONE
+            };
+            let mean: f64 =
+                (0..period).map(|n| modulation.multiplier(n)).sum::<f64>() / f64::from(period);
+            assert!(
+                (mean - 1.0).abs() < 1e-12,
+                "a season of {period} ticks: {mean}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_two_tick_day_has_no_normalisation_at_all() {
+        // The arithmetic behind the three-tick minimum, checked rather than
+        // asserted in prose: at `N = 2` the samples are taken at phases `0` and
+        // `pi`, both exactly zero, so the sum is zero and `A_2` divides by it.
+        //
+        // Exactly zero matters. `f64::sin` of the argument standing for `pi`
+        // returns `1.22e-16`, and taken as it comes the sum would be that instead
+        // — `A_2` would be `1.6e16` rather than an infinity, and a silently
+        // enormous multiplier is worse than a division that fails loudly.
+        assert_eq!(daily_sample(0, 2), 0.0);
+        assert_eq!(daily_sample(1, 2), 0.0);
+        assert!(!discrete_norm(2).is_finite());
+
+        // Three ticks is degenerate and alive: `A_3 = 3/0.8660 = 3.464`.
+        assert!((discrete_norm(3) - 3.4641016151377544).abs() < 1e-12);
+    }
+
+    /// `A_N` the way the loader computes it, reproduced here from the definition
+    /// so that these tests do not agree with `config/derive.rs` by construction.
+    fn discrete_norm(period: u32) -> f64 {
+        let sum: f64 = (0..period).map(|n| daily_sample(n, period)).sum();
+        f64::from(period) / sum
     }
 
     #[test]
@@ -387,8 +727,8 @@ mod tests {
         // `dz` is the factor a hand-folded coefficient loses, and losing it is
         // invisible in the shape of the profile: only the total optical depth
         // moves, which reads as an uncalibrated `k`.
-        let shallow = Light::new(&grid(), &table(), INCIDENT, DZ).unwrap();
-        let deep = Light::new(&grid(), &table(), INCIDENT, 2.0 * DZ).unwrap();
+        let shallow = Light::new(&grid(), &table(), INCIDENT, Modulation::NONE, DZ).unwrap();
+        let deep = Light::new(&grid(), &table(), INCIDENT, Modulation::NONE, 2.0 * DZ).unwrap();
         let (src32, src64) = amounts();
 
         let mut thin = vec![Q::ZERO; N_VOXELS as usize];
@@ -406,7 +746,7 @@ mod tests {
         // instead, the mask points at the wrong entry and the kernel attenuates by
         // whatever the other slice holds — with `I(z)` staying monotone and
         // entirely plausible.
-        let light = Light::new(&grid(), &table(), INCIDENT, DZ).unwrap();
+        let light = Light::new(&grid(), &table(), INCIDENT, Modulation::NONE, DZ).unwrap();
         assert_eq!(light.params().width_mask, 0b10);
         assert_eq!(light.params().n_attenuators, 2);
     }
@@ -418,8 +758,8 @@ mod tests {
             k: f64::NAN,
             conc_per_unit: 1.0,
         }];
-        assert!(Light::new(&grid(), &bad, INCIDENT, DZ).is_err());
-        assert!(Light::new(&grid(), &table(), INCIDENT, 0.0).is_err());
-        assert!(Light::new(&grid(), &table(), f64::INFINITY, DZ).is_err());
+        assert!(Light::new(&grid(), &bad, INCIDENT, Modulation::NONE, DZ).is_err());
+        assert!(Light::new(&grid(), &table(), INCIDENT, Modulation::NONE, 0.0).is_err());
+        assert!(Light::new(&grid(), &table(), f64::INFINITY, Modulation::NONE, DZ).is_err());
     }
 }

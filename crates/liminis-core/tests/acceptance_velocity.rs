@@ -28,6 +28,9 @@ use liminis_core::world::{Boundary, Grid};
 /// `lod = 1`, enthalpy at `lod = 2`.
 const NX: u32 = 16;
 const N_VOXELS: u32 = NX * NX * NX;
+/// The stride of a lane and of one axis of a Courant buffer: the voxels and the
+/// ghost cell after them (ADR-059).
+const LANE_LEN: u32 = N_VOXELS + 1;
 const VN: u32 = NX / 2;
 const CN: u32 = NX / 4;
 const N_COARSE: u32 = CN * CN * CN;
@@ -179,7 +182,7 @@ fn face_courant_of(field: &VelocityField, enthalpy: &[M64], tick: u32, seed: u64
     let mut potential = vec![Q::ZERO; (3 * VN * VN * VN) as usize];
     let mut stirred = vec![Q::ZERO; potential.len()];
     let mut velocity = vec![Q::ZERO; potential.len()];
-    let mut face_courant = vec![Q::ZERO; (3 * N_VOXELS) as usize];
+    let mut face_courant = vec![Q::ZERO; (3 * LANE_LEN) as usize];
 
     field.apply(
         enthalpy,
@@ -202,7 +205,7 @@ fn velocity_of(field: &VelocityField, enthalpy: &[M64], tick: u32, seed: u64) ->
     let mut potential = vec![Q::ZERO; (3 * VN * VN * VN) as usize];
     let mut stirred = vec![Q::ZERO; potential.len()];
     let mut velocity = vec![Q::ZERO; potential.len()];
-    let mut face_courant = vec![Q::ZERO; (3 * N_VOXELS) as usize];
+    let mut face_courant = vec![Q::ZERO; (3 * LANE_LEN) as usize];
 
     field.apply(
         enthalpy,
@@ -250,11 +253,17 @@ fn total_mass(tracer: &[M32]) -> i64 {
 /// `ticks` ticks of advection: three axis applications a tick, in a fixed order,
 /// which is world semantics in its own right (ADR-036).
 fn advect(tracer: &[M32], face_courant: &[Q], ticks: u32) -> Vec<M32> {
+    // A lane and not the voxels: the kernel is handed the address the grid gives
+    // it, and on a grid with an exchanging face that address is the ghost cell
+    // one past the last voxel (ADR-059). Nothing here vents, so the extra element
+    // is never read.
     let mut src = tracer.to_vec();
-    let mut dst = vec![M32::ZERO; N_VOXELS as usize];
+    src.resize(LANE_LEN as usize, M32::ZERO);
+    let mut dst = vec![M32::ZERO; LANE_LEN as usize];
     for _ in 0..ticks {
         for axis in 0..3u32 {
             let params = AdvectParams {
+                exchange_mask: 0,
                 nx: NX,
                 ny: NX,
                 nz: NX,
@@ -267,6 +276,7 @@ fn advect(tracer: &[M32], face_courant: &[Q], ticks: u32) -> Vec<M32> {
             std::mem::swap(&mut src, &mut dst);
         }
     }
+    src.truncate(N_VOXELS as usize);
     src
 }
 
@@ -274,6 +284,8 @@ fn advect(tracer: &[M32], face_courant: &[Q], ticks: u32) -> Vec<M32> {
 fn diffuse(tracer: &[M32], ticks: u32) -> Vec<M32> {
     let (substeps, alpha) = substeps_and_alpha(D_OXYGEN, DT, DX).unwrap();
     let params = DiffuseParams {
+        exchange_mask: 0,
+        alpha_ex: Q::ZERO,
         nx: NX,
         ny: NX,
         nz: NX,
@@ -448,7 +460,7 @@ fn the_noise_kernel_is_not_dispatched_at_zero_stir_fraction() {
     let mut potential = vec![Q::ZERO; (3 * VN * VN * VN) as usize];
     let mut stirred = vec![sentinel; potential.len()];
     let mut velocity = vec![Q::ZERO; potential.len()];
-    let mut face_courant = vec![Q::ZERO; (3 * N_VOXELS) as usize];
+    let mut face_courant = vec![Q::ZERO; (3 * LANE_LEN) as usize];
 
     field.apply(
         &heated_bottom(),

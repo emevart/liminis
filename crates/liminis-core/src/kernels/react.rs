@@ -165,6 +165,18 @@ pub struct ReactParams {
     pub ny: u32,
     /// How many voxels the fine grid holds; the stride between lanes.
     pub n_voxels: u32,
+    /// The stride of an amount lane. On a `world::Field` it is `n_voxels + 1`
+    /// — the voxels and the ghost cell after them (ADR-059) — and the host is
+    /// the only place that knows so; this kernel is handed the number.
+    ///
+    /// Separate from [`ReactParams::n_voxels`] because the two mean different things
+    /// and only one of them is an address. A dispatch runs over `0..n_voxels`;
+    /// an amount lives at `lane[s] * lane_len + idx`. Using the voxel count as
+    /// the stride reads one lane short of where the substance is, and on the
+    /// registry the project carries that is **right** for the first lane of a
+    /// width class and wrong by one element per lane after it — which is the
+    /// same silent shape ADR-056 warns about for `s * n_voxels + idx`.
+    pub lane_len: u32,
     /// How many substances the registry holds. The loop bound of the write-back,
     /// and never [`S_MAX`]: the lane table is exactly this long (ADR-056).
     pub n_substances: u32,
@@ -346,7 +358,7 @@ pub fn react_voxel(
 /// `s == 0` and off by one after it.
 #[inline(always)]
 fn amount_get(src32: &[M32], src64: &[M64], rx: &Rx, p: &ReactParams, idx: u32, s: u32) -> i64 {
-    let at = (rx.lane[s as usize] * p.n_voxels + idx) as usize;
+    let at = (rx.lane[s as usize] * p.lane_len + idx) as usize;
     if p.width_mask & (1 << s) != 0 {
         src64[at].to_i64()
     } else {
@@ -371,7 +383,7 @@ fn amount_store(
     s: u32,
     value: i64,
 ) {
-    let at = (rx.lane[s as usize] * p.n_voxels + idx) as usize;
+    let at = (rx.lane[s as usize] * p.lane_len + idx) as usize;
     if p.width_mask & (1 << s) != 0 {
         dst64[at] = M64::from_i64_clamping(value);
     } else {
@@ -475,7 +487,7 @@ fn rate_of(
         // fold sits on the host here. The numbering of the columns —
         // `guild:` against `expr:` — and the table that resolves it are undecided
         // in the same way.
-        rate = qmul(rate, catalyst[(rx.cat[r] * p.n_voxels + idx) as usize]);
+        rate = qmul(rate, catalyst[(rx.cat[r] * p.lane_len + idx) as usize]);
     }
     rate
 }
@@ -925,6 +937,7 @@ mod tests {
 
     fn params(n_reactions: u32) -> ReactParams {
         ReactParams {
+            lane_len: N_VOXELS,
             nx: NX,
             ny: NY,
             n_voxels: N_VOXELS,

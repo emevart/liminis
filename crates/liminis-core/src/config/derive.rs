@@ -95,7 +95,7 @@
 
 use anyhow::{Context, Result, bail};
 
-use super::{Config, Field as FieldRecord, Reaction, Substance};
+use super::{Config, Field as FieldRecord, Layer, Reaction, Substance};
 use crate::process::{N_MAX, ProcessId, substeps_and_alpha};
 use crate::world::{MAX_SUBSTANCES, R_MAX, SubstanceDecl, Width};
 
@@ -151,6 +151,18 @@ const CARRIED_ENTHALPY_LIMIT: f64 = 0.05;
 // over them instead of a comparison against one id.
 const DIFFUSION_PROCESS: &str = ProcessId::Diffusion.id();
 
+/// The process that carries the five light keys, taken from the closed roster
+/// (ADR-065) rather than spelled out here.
+const LIGHT_PROCESS: &str = ProcessId::Light.id();
+
+/// The default of `enabled` for the light, taken from the process itself.
+///
+/// `false`, and by decision rather than by omission since ADR-076: light on by
+/// default would put an energy input into every scenario in the repository that
+/// has no sink and whose counter does not hold one tick of it — so every
+/// scenario would be refused by the very record that declared the key.
+use crate::process::light::{ENABLED_BY_DEFAULT as LIGHT_ENABLED_BY_DEFAULT, daily_sample};
+
 /// Everything derived at load, in one value.
 ///
 /// Opaque: the fields are private and the accessors hand out slices. What a
@@ -164,6 +176,64 @@ pub struct Derived {
     reactions: Vec<DerivedReaction>,
     energy: DerivedEnergy,
     fields: Vec<DerivedField>,
+    /// `None` when no face is `exchange` — and then no `[boundary.reservoir]`
+    /// section exists either, in both directions (`config/validate.rs`).
+    reservoir: Option<DerivedReservoir>,
+    /// `None` on a scenario whose light process is off, or on which is on and
+    /// declares no `i_surface` — the second of which the validator refuses.
+    light: Option<DerivedLight>,
+}
+
+/// The outside reservoir, folded once at load (ADR-059).
+///
+/// Three numbers, and all three are rounded here and never in a tick: ADR-059
+/// says so about the composition in as many words — "the rounding happens once
+/// at load, as `nu_E` does in ADR-041, and never at run time".
+#[derive(Clone, Debug, PartialEq)]
+pub struct DerivedReservoir {
+    /// `k_ex*dt/dx` over a whole tick, dimensionless. The stability bound of the
+    /// exchanging face is `alpha_ex <= 1`, over `dx` and not over `dx^2`: it is
+    /// a Courant-shaped condition and not a diffusive one (ADR-059).
+    ///
+    /// Over the **fine** `dx`. What the enthalpy field's coarser step does with
+    /// the same `k_ex` is not settled — see the note on
+    /// [`Derived::reservoir`].
+    pub alpha_ex: f64,
+    /// The declared exchange velocity, m/s, carried through unchanged.
+    ///
+    /// Beside the folded number rather than instead of it, and for the reason
+    /// [`DerivedSubstance::diffusivity`] gives about its own: the host that folds
+    /// a transport phase needs the **input**, because it folds `k_ex*dt/dx` at
+    /// the `dx` of whichever grid the field lives on — the fine one for the
+    /// amounts, `dx*2^lod` for the enthalpy — and dividing it again by the
+    /// substep count. Handing it `alpha_ex` instead would be a second
+    /// construction of one coefficient, at a `dx` that is not the one it will
+    /// run at.
+    pub k_ex: f64,
+    /// `round(conc_out_i * units_per_mol_i * V_voxel)` per substance, in that
+    /// substance's storage units, in declaration order.
+    ///
+    /// Per **substance** and not per lane, because that is the order a scenario
+    /// declares and the order `World::seed_ghosts` narrows from (ADR-056).
+    pub amount_out: Vec<i128>,
+    /// The enthalpy of one **coarse** cell of the reservoir at `t_out`, in the
+    /// storage units of the energy scale:
+    /// `round((t_out - T_ref) * sum_i(conc_out_i * c_p,i) * V_cell * 2^k_E)`.
+    ///
+    /// Two things here are easy to get wrong and neither is loud.
+    ///
+    /// `T_ref` is the scenario's, not the thermochemical 298.15 K. ADR-044 keeps
+    /// the two reference states apart precisely because one word made both
+    /// questions unanswerable, and `h2s-oxidation.toml` sets `T_ref = 298.15`
+    /// "out of convenience and not by requirement" — so on the corpus the two
+    /// are the same number and only a fixture that separates them can tell.
+    ///
+    /// `V_cell` is the volume of a cell of the **enthalpy** grid,
+    /// `(dx*2^lod)^3`, and not `V_voxel`. At `lod = 2` the miss is a factor of
+    /// sixty-four: `t_out` stays inside its declared range, the load passes, the
+    /// sign of the flux is right and the energy residual closes — the counter
+    /// records whatever moved. Only the magnitude lies.
+    pub enthalpy_out: i64,
 }
 
 /// One substance after the derivation (ADR-039, ADR-040).
@@ -207,6 +277,19 @@ pub struct DerivedSubstance {
     /// the substance order of a `Config` and the substance order of a `Derived`
     /// agree only because nothing has yet had a reason to reorder either.
     pub diffusivity: f64,
+    /// The side of the sediment/water boundary this substance is enriched on
+    /// (ADR-077).
+    ///
+    /// A field of the record and not a `[Layer; MAX_SUBSTANCES]` beside it. The
+    /// array is cheaper to write and carries a failure nothing sees: it is a
+    /// second index of a substance next to `substances()`, the guard in
+    /// `worldgen::generate` — which compares `derived.substances()[s].id`
+    /// against `registry.id_of(s)` — does not cover it, and a side landing one
+    /// row off puts the oxidation front somewhere else entirely while both
+    /// ledgers close. Its tail past `n_substances` is the second half of the
+    /// same trap: it answers `sediment` for any index at all instead of
+    /// panicking.
+    pub layer: Layer,
 }
 
 /// One reaction after the derivation (ADR-039, ADR-041, ADR-043).
@@ -295,6 +378,88 @@ pub struct DerivedEnergy {
     pub worst_relative_error: f64,
     /// Which reaction that error belongs to.
     pub worst_reaction: usize,
+    /// What one energy channel counter holds before it overflows, in joules:
+    /// `2^63 / 2^k_E` (ADR-075).
+    ///
+    /// Reported rather than refused, because whether an `i64` counter is the
+    /// right width at all is open question A-20 (A-19 in ADR-075 and ADR-076,
+    /// which were drafted while that number was free). At `k_E = 67` this is
+    /// `2^-4 J = 62.5 mJ`, and one lit tick of a 128 cubed domain at full sun
+    /// delivers `0.16384 J` — 2.62 ceilings in a single tick (ADR-076). That is
+    /// the second of the two locks holding the refusal of a lit scenario shut,
+    /// and the number is printed so that whoever opens the first one sees it.
+    pub counter_ceiling_joules: f64,
+}
+
+/// The light process after the derivation (ADR-076).
+///
+/// Present exactly when the process is enabled — by its own record or by the
+/// default its module declares (ADR-065) — and `i_surface` is written. The
+/// second half is not a rule: a scenario that enables the light and omits the
+/// irradiance is refused by `config/validate.rs`, and this module stays derivable
+/// on a config nobody validated.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DerivedLight {
+    /// The declared irradiance on the top face of the domain, W/m^2 — and the
+    /// **mean over a modulation period**, not the instantaneous value. The
+    /// discrete normalisation below is what makes that exact.
+    pub i_surface: f64,
+    /// `dx^2 * units_per_joule`: what one unit of stored intensity is worth as
+    /// storage units per second, folded for `FoldParams::units_per_intensity`.
+    ///
+    /// The area of a **fine** face, because the fold sums over the fine voxels of
+    /// a coarse cell and each term already carries one. The coarse face
+    /// `(dx*2^lod)^2` would multiply the entire solar input by `2^(2*lod)` —
+    /// sixteen at `lod = 2` — with the shape of `I(z)` unchanged and both halves
+    /// of the invariant closing (`kernels/fold.rs`). `dt` is **not** in here: it
+    /// is the second argument of `m_delta_64`.
+    pub units_per_intensity: f64,
+    /// Amplitude of the daily modulation as a fraction of the mean, `[0, 1]`.
+    pub daily_fraction: f64,
+    /// The daily period in whole ticks, `N = P_d/dt`; zero when there is no
+    /// daily modulation.
+    pub daily_period_ticks: u32,
+    /// `A_N = N / sum_{n<N} max(0, sin(2*pi*n/N))`, the **discrete** normalisation
+    /// that gives the multiplier unit mean; one when there is no daily
+    /// modulation.
+    ///
+    /// Discrete and not the continuous `1/pi`, and the difference is percent, not
+    /// rounding: at a period of eight ticks the mean would run 5.19% low and at
+    /// twenty-four 0.574% low, so the choice of period would silently move the
+    /// energy budget of the world (ADR-076). Computed here, once, and never
+    /// recomputed by the process.
+    pub daily_norm: f64,
+    /// Amplitude of the seasonal modulation as a fraction of the mean, `[0, 1]`.
+    ///
+    /// Needs no normalisation of its own: `sum sin` over a whole number of ticks
+    /// is an exact zero.
+    pub seasonal_fraction: f64,
+    /// The seasonal period in whole ticks; zero when there is no seasonal
+    /// modulation.
+    pub seasonal_period_ticks: u32,
+    /// The peak instantaneous multiplier of the two modulations together,
+    /// relative to the mean.
+    ///
+    /// Taken over the **samples**, `A_N * max_{n<N} max(0, sin(2*pi*n/N))` times
+    /// `(1 + f_s)`, and never against `pi`: at `N = 4` — legal under the
+    /// three-tick minimum — the samples are `0, 1, 0, 0`, `A_4 = 4` and the peak
+    /// is exactly 4.0, which is 27% above `pi`.
+    pub peak_multiplier: f64,
+    /// How many ticks the declared **mean** irradiance takes to carry one coarse
+    /// cell across `H_max`, if it is absorbed whole there:
+    /// `H_max / (i_surface * (dx*2^lod)^2 * dt)`.
+    ///
+    /// Printed apart from [`DerivedLight::peak_multiplier`], and the separation is
+    /// the decision: the multiplier has unit mean by construction, so the crossing
+    /// takes the same number of ticks whatever the modulation is. Dividing one by
+    /// the other gives a ratio of instantaneous rates wearing the units of a time,
+    /// and in a report it reads as a conservative estimate.
+    // TODO(dark-ceiling): what this prints at `i_surface = 0` — the legal
+    // closed-box scenario — is decided by nothing. `f64::INFINITY` is what the
+    // arithmetic gives and what is printed; a dash, or dropping the line, would
+    // make the report look complete while being less so, which is why the
+    // infinity is left visible rather than special-cased here.
+    pub ticks_to_ceiling: f64,
 }
 
 /// One field record after the derivation (ADR-030, ADR-061, ADR-062).
@@ -361,6 +526,39 @@ impl Derived {
     #[must_use]
     pub fn fields(&self) -> &[DerivedField] {
         &self.fields
+    }
+
+    /// The folded reservoir, or `None` on a scenario with no exchanging face.
+    ///
+    /// The two go together in both directions: `config/validate.rs` refuses an
+    /// `exchange` face with no `[boundary.reservoir]` and a `[boundary.reservoir]`
+    /// no face uses, because a declared reservoir touching nothing reads as a
+    /// working boundary to everybody who opens the file.
+    // TODO(exchange-on-a-coarse-grid): `alpha_ex` is folded at the **fine** `dx`,
+    // which is the one the validator bounds `k_ex` against. The enthalpy field
+    // lives on `dx*2^lod`, where the same `k_ex` gives an `alpha_ex` smaller by
+    // `2^lod`; whether the lid of the enthalpy field trades at `k_ex*dt/dx_coarse`
+    // or at an exchange velocity of its own is written in no record, and there is
+    // no number for the second. `process::Diffuse::new` folds whatever `dx` it is
+    // handed, so today the coarse field exchanges at the coarse rate.
+    #[inline]
+    #[must_use]
+    pub fn reservoir(&self) -> Option<&DerivedReservoir> {
+        self.reservoir.as_ref()
+    }
+
+    /// The folded light, or `None` on a scenario whose light process is off or
+    /// which declares no `i_surface` (ADR-076).
+    ///
+    /// The one door to `units_per_intensity`. `FoldParams::units_per_intensity`
+    /// has to come from here and from nowhere else: a host that folded
+    /// `dx^2 * 2^k_E` for itself would be a second construction of a number whose
+    /// two mistakes — the coarse face and the forgotten `dt` — are invisible in
+    /// every residual and in the shape of the profile.
+    #[inline]
+    #[must_use]
+    pub fn light(&self) -> Option<&DerivedLight> {
+        self.light.as_ref()
     }
 
     /// The one record every scenario has: the enthalpy field (ADR-062).
@@ -455,6 +653,46 @@ impl Derived {
             self.energy.h_max,
             self.energy.worst_relative_error
         ));
+        // The ceiling of an energy channel counter, in joules (ADR-075). Printed
+        // rather than refused, because the width of a counter is open question
+        // A-20 — A-19 in ADR-075 and ADR-076, which were drafted while that
+        // number was free — and printed at all because at `k_E = 67` it is
+        // 62.5 mJ, which is less than one lit tick of a 128 cubed domain
+        // delivers.
+        out.push_str(&format!(
+            "energy: channel counter ceiling {:e} J (2^63/2^k_E, A-20)\n",
+            self.energy.counter_ceiling_joules
+        ));
+        if let Some(light) = &self.light {
+            out.push_str(&format!(
+                "light: i_surface = {:e} W/m^2 (period mean), units_per_intensity = {:e} \
+                 units per (W/m^2)/s\n",
+                light.i_surface, light.units_per_intensity
+            ));
+            // Two numbers, on two lines, and the separation is the decision
+            // (ADR-076). The multiplier has unit mean by construction, so the
+            // crossing takes the same number of ticks whatever the modulation is;
+            // dividing one by the other yields a ratio of instantaneous rates
+            // wearing the units of a time, and in a report that reads as a
+            // conservative estimate.
+            out.push_str(&format!(
+                "light: {:e} ticks to the declared temperature ceiling at the mean\n",
+                light.ticks_to_ceiling
+            ));
+            out.push_str(&format!(
+                "light: peak instantaneous multiplier {:e} x the mean (over the \
+                 samples, A_N = {:e}, not pi)\n",
+                light.peak_multiplier, light.daily_norm
+            ));
+            // TODO(minimum-tau): ADR-076 also asks the loader to print the
+            // smallest optical depth a fine voxel can have under the declared
+            // attenuators, as the input to a runtime precision budget for the
+            // energy — the relative error of an absorption is `~2^-24/tau`, not
+            // `2^-24`. It cannot be computed here: an attenuator is `k` times a
+            // dimensionless measure per storage unit, and which measure that is is
+            // settled by no document (`TODO(attenuation-measure)` in
+            // `process/light.rs`), while `k_w … k_m` reach no table at all.
+        }
         // Not a derived quantity anybody uses, and printed anyway: ADR-062 calls
         // `alpha*C_v` the cross-check by which a `thermal_diffusivity` declared
         // an order of magnitude wrong is visible to the eye. An inequality is
@@ -531,9 +769,25 @@ pub fn derive(config: &Config) -> Result<Derived> {
     //    either loop above would make the answer depend on the order.
     let mut substances = Vec::with_capacity(config.substance.len());
     for (s, substance) in config.substance.iter().enumerate() {
+        // The side comes out of the same pass as the scales and lands on the same
+        // record, so that there is one index of a substance and not two
+        // (ADR-077). After `parse` the entry is always there — `materialise`
+        // fills the table onto every substance before the hash — and the fallback
+        // is what a `Config` assembled by hand would get. It is the same named
+        // constant and never a `Default`, and the thing that keeps it honest is
+        // `the_canonical_form_names_the_layer_side_of_every_substance`: a
+        // materialisation that stopped filling the table would leave the side
+        // applied and unprinted, and that test is what goes red.
+        let layer = config
+            .initial
+            .layer
+            .get(&substance.id)
+            .copied()
+            .unwrap_or(Layer::DEFAULT);
         substances.push(
             resolve_substance(
                 substance,
+                layer,
                 ceilings[s],
                 demand_of(&pending, s as u32),
                 v_voxel,
@@ -604,13 +858,207 @@ pub fn derive(config: &Config) -> Result<Derived> {
     }
     check_every_n_ticks(config, &fields)?;
 
+    // 10. The outside reservoir, rounded once (ADR-059). After the scales,
+    //     because a composition in storage units needs every `k_i`, and after
+    //     the energy scale, because a temperature in storage units needs `k_E`.
+    let reservoir = resolve_reservoir(config, &substances, &energy, v_voxel)?;
+
+    // 11. The light, after the energy scale for the same reason the reservoir is:
+    //     `units_per_intensity` is `dx^2 * 2^k_E` (ADR-076).
+    let light = resolve_light(config, field, &energy)?;
+
     Ok(Derived {
         v_voxel,
         substances,
         reactions,
         energy,
         fields,
+        reservoir,
+        light,
     })
+}
+
+/// Fold the five light keys into what the host and the report need (ADR-076).
+///
+/// Returns `None` when the process is off, or on and silent about `i_surface`.
+/// The second case is a refusal of `config/validate.rs` and not of this function:
+/// `derive` is public and defined on configs nobody validated, so it describes
+/// what it was given rather than judging it — the same division of labour the
+/// duplicate-id checks here keep.
+///
+/// What it does refuse is its own domain: a modulation whose period is not a
+/// whole number of ticks, or is under three of them, has no `A_N` at all — at
+/// `N = 2` the two samples of `max(0, sin)` are both zero, the sum is zero and
+/// the normalisation divides by it. That is arithmetic and not policy, and the
+/// message here is short because the validator's is the one an author reads.
+fn resolve_light(
+    config: &Config,
+    field: &FieldRecord,
+    energy: &DerivedEnergy,
+) -> Result<Option<DerivedLight>> {
+    let Some(process) = config.process.iter().find(|p| p.id == LIGHT_PROCESS) else {
+        return Ok(None);
+    };
+    // The default belongs to the process and is read from it (ADR-065): absence
+    // of a record means the process's own default, not the absence of the
+    // process, and a second copy of the value here would be a second thing to
+    // keep in step.
+    if !process.enabled.unwrap_or(LIGHT_ENABLED_BY_DEFAULT) {
+        return Ok(None);
+    }
+    let Some(i_surface) = process.i_surface else {
+        return Ok(None);
+    };
+
+    let units_per_joule = exp2_exact(i32::from(energy.k_e))?;
+    // The area of a **fine** face. See `DerivedLight::units_per_intensity` for
+    // what the coarse one would cost, and for why `dt` is not in here.
+    let units_per_intensity = config.grid.dx * config.grid.dx * units_per_joule;
+
+    let daily_period_ticks = period_in_ticks(process.daily_period, config.dt, "daily")?;
+    let seasonal_period_ticks = period_in_ticks(process.seasonal_period, config.dt, "seasonal")?;
+    let (daily_norm, daily_peak_sample) = daily_normalisation(daily_period_ticks);
+
+    // The peak of `m_d(n) * m_s(n)` over the samples. The two maxima are taken
+    // independently, which is an upper bound rather than an attained value unless
+    // the periods happen to align — and an upper bound is what a report about a
+    // ceiling owes the reader.
+    let daily_peak =
+        1.0 - process.daily_fraction + process.daily_fraction * daily_norm * daily_peak_sample;
+    let peak_multiplier = daily_peak * (1.0 + process.seasonal_fraction);
+
+    let coarse_dx = config.grid.dx * exp2_exact(i32::from(field.lod))?;
+    // `H_max` joules against what the mean irradiance delivers to one coarse cell
+    // in a tick. Infinite at `i_surface = 0`; see `TODO(dark-ceiling)`.
+    let per_tick = i_surface * coarse_dx * coarse_dx * config.dt;
+    let ticks_to_ceiling = energy.h_max / per_tick;
+
+    Ok(Some(DerivedLight {
+        i_surface,
+        units_per_intensity,
+        daily_fraction: process.daily_fraction,
+        daily_period_ticks,
+        daily_norm,
+        seasonal_fraction: process.seasonal_fraction,
+        seasonal_period_ticks,
+        peak_multiplier,
+        ticks_to_ceiling,
+    }))
+}
+
+/// A modulation period in seconds as a whole number of ticks, or zero when the
+/// key is absent.
+fn period_in_ticks(period: Option<f64>, dt: f64, which: &str) -> Result<u32> {
+    let Some(period) = period else {
+        return Ok(0);
+    };
+    let ticks = period / dt;
+    if !ticks.is_finite() || ticks.fract() != 0.0 || ticks < 3.0 || ticks > f64::from(u32::MAX) {
+        bail!(
+            "the {which} period {period} s is {ticks} ticks at dt = {dt} s, and \
+             the rule is a whole number of ticks and at least three: the exactness \
+             of the period mean stands on an integer N, and at N = 2 the discrete \
+             normalisation divides by zero (ADR-076)"
+        );
+    }
+    Ok(ticks as u32)
+}
+
+/// `(A_N, max_n max(0, sin(2*pi*n/N)))` for a daily period of `n_ticks`.
+///
+/// `(1, 0)` at `n_ticks == 0`, which is the no-modulation case: the fraction is
+/// then zero as well and the multiplier is identically one.
+///
+/// The samples come from `process::light::daily_sample` and are not recomputed
+/// here. They are the samples the run will actually take, at the phase it will
+/// take them (zero; ADR-076 declares no phase key) — a normalisation taken off
+/// the continuous envelope instead is the `1/pi` that record rejects, and a
+/// second transcription of the same formula would put the normalisation and the
+/// multiplier out of step by a hair, which is invisible in a way a percent is
+/// not.
+fn daily_normalisation(n_ticks: u32) -> (f64, f64) {
+    if n_ticks == 0 {
+        return (1.0, 0.0);
+    }
+    let mut sum = 0.0;
+    let mut peak: f64 = 0.0;
+    for step in 0..n_ticks {
+        let sample = daily_sample(step, n_ticks);
+        sum += sample;
+        peak = peak.max(sample);
+    }
+    (f64::from(n_ticks) / sum, peak)
+}
+
+/// Fold `[boundary.reservoir]` into the three numbers a run needs (ADR-059).
+///
+/// Every refusal a scenario can meet here — a missing substance, a concentration
+/// over `max_conc`, `t_out` outside the field's range, `k_ex` over the Courant
+/// bound — is `config/validate.rs`'s and has already happened. What is left is
+/// arithmetic and the two ways it overflows.
+fn resolve_reservoir(
+    config: &Config,
+    substances: &[DerivedSubstance],
+    energy: &DerivedEnergy,
+    v_voxel: f64,
+) -> Result<Option<DerivedReservoir>> {
+    let Some(reservoir) = &config.boundary.reservoir else {
+        return Ok(None);
+    };
+
+    let mut amount_out = Vec::with_capacity(config.substance.len());
+    for (s, substance) in config.substance.iter().enumerate() {
+        let conc = *reservoir.conc_out.get(&substance.id).with_context(|| {
+            format!(
+                "[boundary.reservoir] names no conc_out for substance `{}`",
+                substance.id
+            )
+        })?;
+        amount_out.push(
+            amount_in_units(conc, v_voxel, substances[s].k)
+                .with_context(|| format!("the reservoir concentration of `{}`", substance.id))?,
+        );
+    }
+
+    // `V_cell` of the **enthalpy** grid and never `V_voxel`: the ghost cell of
+    // that field is a coarse cell, and at `lod = 2` the two differ by
+    // sixty-four with nothing downstream noticing.
+    let field = enthalpy_field(config)?;
+    let coarse_dx = config.grid.dx * exp2_exact(i32::from(field.lod))?;
+    let v_cell = coarse_dx * coarse_dx * coarse_dx;
+    let c_cell_out: f64 = config
+        .substance
+        .iter()
+        .map(|substance| reservoir.conc_out[&substance.id] * substance.c_p * v_cell)
+        .sum();
+
+    // `T_ref` of the scenario, and not the thermochemical reference of the
+    // enthalpies of formation (ADR-044).
+    let joules = (reservoir.t_out - config.t_ref) * c_cell_out;
+    let scaled = joules * exp2_exact(i32::from(energy.k_e))?;
+    if !scaled.is_finite() {
+        bail!(
+            "[boundary.reservoir] at t_out = {} K gives an enthalpy of {joules} J              for one coarse cell, which does not fit the energy scale k_E = {}              (ADR-059, ADR-062)",
+            reservoir.t_out,
+            energy.k_e
+        );
+    }
+    // `f64::round` is the rounding rule of the system: halves away from zero
+    // (`NUMERIC.md` section 3), the same one `amount_in_units` above uses.
+    let rounded = scaled.round();
+    let Some(enthalpy_out) = (rounded.abs() <= i64::MAX as f64).then_some(rounded as i64) else {
+        bail!(
+            "[boundary.reservoir] at t_out = {} K gives {rounded} storage units of              enthalpy for one coarse cell, past what the field can hold (ADR-062)",
+            reservoir.t_out
+        );
+    };
+
+    Ok(Some(DerivedReservoir {
+        alpha_ex: reservoir.k_ex * config.dt / config.grid.dx,
+        k_ex: reservoir.k_ex,
+        amount_out,
+        enthalpy_out,
+    }))
 }
 
 /// `dx^3`, with the two ways it can fail to be a volume ruled out.
@@ -873,9 +1321,11 @@ fn demand_of(pending: &[Pending], s: u32) -> Option<(u8, &str)> {
         .max_by_key(|&(e_r, _)| e_r)
 }
 
-/// Steps 3 and 4 for one substance: the raise, and the width it forces.
+/// Steps 3 and 4 for one substance: the raise, the width it forces, and the side
+/// of the boundary the scenario put it on.
 fn resolve_substance(
     substance: &Substance,
+    layer: Layer,
     ceiling: i32,
     demand: Option<(u8, &str)>,
     v_voxel: f64,
@@ -943,6 +1393,7 @@ fn resolve_substance(
         amount_at_max,
         amount_at_typical,
         diffusivity: substance.diffusivity,
+        layer,
     })
 }
 
@@ -1404,6 +1855,10 @@ fn energy_window(
             window_upper_set_by,
             worst_relative_error,
             worst_reaction,
+            // `2^63/2^k_E`, and `2^63` rather than `i64::MAX` because the
+            // difference of one unit is invisible at this scale and the power of
+            // two is the number ADR-075 states.
+            counter_ceiling_joules: exp2_exact(63 - i32::from(k_e))?,
         });
     }
 
@@ -1863,6 +2318,57 @@ t_max = 3.2315e2
                     106 * m,
                     13 * m
                 )
+            ),
+            enthalpy_record(2, 1.4e-7)
+        )
+    }
+
+    /// A registry whose energy scale fits `i32`: concentrations two orders above
+    /// the worked example's and an enthalpy an order larger, which lifts the
+    /// bottom of the `k_E` window until the whole of it sits inside 32 bits.
+    ///
+    /// Extracted so that two tests can use it. The second one needs a scenario
+    /// with a `k_E` that is **not** 67, or a report line checked against a
+    /// literal would pass on a hard-coded constant.
+    fn narrow_energy_scale() -> String {
+        format!(
+            "{HEADER}{}{}{}",
+            [
+                substance(
+                    "H2S",
+                    34.08088,
+                    28.0,
+                    100.0,
+                    1.6e-9,
+                    C_P_PLACEHOLDER,
+                    "{ S = 1 }"
+                ),
+                substance("O2", 31.99880, 28.0, 100.0, 2.1e-9, C_P_PLACEHOLDER, "{}"),
+                substance(
+                    "SO4",
+                    96.06260,
+                    28.0,
+                    100.0,
+                    1.0e-9,
+                    C_P_PLACEHOLDER,
+                    "{ S = 1 }"
+                ),
+                substance(
+                    "H_ION",
+                    1.007940,
+                    28.0,
+                    100.0,
+                    9.3e-9,
+                    C_P_PLACEHOLDER,
+                    "{}"
+                ),
+            ]
+            .concat(),
+            reaction(
+                "h2s_oxidation",
+                -8.46e6,
+                "{ H2S = 1, O2 = 2 }",
+                "{ SO4 = 1, H_ION = 2 }"
             ),
             enthalpy_record(2, 1.4e-7)
         )
@@ -2410,48 +2916,7 @@ t_max = 3.2315e2
 
         // A config that fits w = 32 stays at w = 32 — otherwise the test above
         // would pass on a derivation that answers i64 to everything.
-        let narrow = format!(
-            "{HEADER}{}{}{}",
-            [
-                substance(
-                    "H2S",
-                    34.08088,
-                    28.0,
-                    100.0,
-                    1.6e-9,
-                    C_P_PLACEHOLDER,
-                    "{ S = 1 }"
-                ),
-                substance("O2", 31.99880, 28.0, 100.0, 2.1e-9, C_P_PLACEHOLDER, "{}"),
-                substance(
-                    "SO4",
-                    96.06260,
-                    28.0,
-                    100.0,
-                    1.0e-9,
-                    C_P_PLACEHOLDER,
-                    "{ S = 1 }"
-                ),
-                substance(
-                    "H_ION",
-                    1.007940,
-                    28.0,
-                    100.0,
-                    9.3e-9,
-                    C_P_PLACEHOLDER,
-                    "{}"
-                ),
-            ]
-            .concat(),
-            reaction(
-                "h2s_oxidation",
-                -8.46e6,
-                "{ H2S = 1, O2 = 2 }",
-                "{ SO4 = 1, H_ION = 2 }"
-            ),
-            enthalpy_record(2, 1.4e-7)
-        );
-        let d = derived(&narrow);
+        let d = derived(&narrow_energy_scale());
         assert_eq!(d.energy().width, Width::Bits32);
         assert_eq!(d.energy().k_e, 43);
         assert_eq!(d.energy().window, (39, 43));
@@ -2889,6 +3354,103 @@ t_max = 3.2315e2
         ] {
             assert!(report.contains(expected), "missing `{expected}`:\n{report}");
         }
+    }
+
+    #[test]
+    fn load_reports_the_energy_counter_ceiling_in_joules() {
+        // ADR-075: the ceiling of an energy channel counter is `2^63/2^k_E`, and
+        // at `k_E = 67` that is 62.5 mJ — less than one lit tick of a 128 cubed
+        // domain delivers. The number is printed rather than turned into a
+        // refusal, because whether an `i64` counter is the right width at all is
+        // open question A-20 (A-19 in ADR-075 and ADR-076, which were drafted
+        // while that number was free); what the report owes the reader is the
+        // number, in joules, beside the substep counts.
+        //
+        // Two scenarios with **different** `k_E`, and the expectation computed
+        // rather than written down: `k_E` is derived and depends on the scenario,
+        // so a test on one fixture is green on a hard-coded `0.0625`.
+        let wide = derived(&two_reactions());
+        let narrow = derived(&narrow_energy_scale());
+        assert_ne!(
+            wide.energy().k_e,
+            narrow.energy().k_e,
+            "both fixtures derive the same k_E; the claim below is a constant"
+        );
+
+        for d in [&wide, &narrow] {
+            let k_e = i32::from(d.energy().k_e);
+            let expected = 2.0f64.powi(63 - k_e);
+            assert_eq!(d.energy().counter_ceiling_joules, expected);
+            let printed = format!("{expected:e}");
+            assert!(
+                d.report().contains(&printed),
+                "the report has to print the counter ceiling `{printed}` J at \
+                 k_E = {k_e}:\n{}",
+                d.report()
+            );
+        }
+    }
+
+    #[test]
+    fn load_reports_the_ticks_to_the_declared_temperature_ceiling() {
+        // ADR-076. Two numbers, **printed apart**: how many ticks the declared
+        // *mean* irradiance takes to cross the declared temperature range if it
+        // is absorbed whole in one coarse cell, and how many times the peak
+        // instantaneous multiplier exceeds the mean.
+        //
+        // Apart, and that is the point of the name. Dividing the first by the
+        // second reads as a conservative estimate and is not one: the peak is a
+        // ratio of instantaneous rates and not a time, and the multiplier has
+        // unit mean by construction, so the crossing takes the same number of
+        // ticks whatever the modulation is.
+        //
+        // Called through `derive` directly, because `validate` refuses any
+        // scenario with `i_surface > 0` (ADR-076, two locks) and this line would
+        // otherwise be unreachable from every loadable config.
+        //
+        // The peak is specified against `A_N * max_n max(0, sin(2*pi*n/N))` and
+        // not against `pi`: at `N = 4` — legal under this record's own minimum of
+        // three ticks — the samples are `0, 1, 0, 0`, `A_4 = 4`, and the peak is
+        // exactly 4.0, which is 27% above `pi`.
+        let text = swap(
+            &two_reactions(),
+            "[[field]]",
+            "[[process]]\nid = \"light\"\nenabled = true\ni_surface = 1.0e3\n\
+             daily_fraction = 1.0\ndaily_period = 4.0\n\n[[field]]",
+        );
+        let d = derived(&text);
+        let light = d.light().expect("an enabled, declared light derives");
+
+        // `A_4 = 4 / (0 + 1 + 0 + 0) = 4`, and the peak of the samples is
+        // `4 * 1 = 4`.
+        assert_eq!(light.daily_period_ticks, 4);
+        assert_eq!(light.daily_norm, 4.0);
+        assert_eq!(light.peak_multiplier, 4.0);
+        assert!(
+            light.peak_multiplier > std::f64::consts::PI,
+            "the peak is taken over the samples, not over the envelope"
+        );
+
+        // The crossing, from already-derived quantities: `H_max` joules against
+        // `i_surface * (dx*2^lod)^2 * dt` joules a tick.
+        let coarse_dx = d.enthalpy_field().coarse_dx;
+        let per_tick = light.i_surface * coarse_dx * coarse_dx * 1.0;
+        assert_eq!(light.ticks_to_ceiling, d.energy().h_max / per_tick);
+
+        let report = d.report();
+        for expected in ["ticks to", "peak", "units_per_intensity"] {
+            assert!(report.contains(expected), "missing `{expected}`:\n{report}");
+        }
+
+        // Printed apart: the two numbers are not one product.
+        assert!(
+            !report.contains(&format!(
+                "{:e}",
+                light.ticks_to_ceiling / light.peak_multiplier
+            )),
+            "the report divides the crossing by the peak, which is a ratio of \
+             rates and not a time:\n{report}"
+        );
     }
 
     #[test]
