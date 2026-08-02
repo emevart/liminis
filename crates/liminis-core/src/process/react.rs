@@ -955,6 +955,7 @@ outputs = {{ ZEDACE = 1 }}
 
 [reaction.rate]
 vmax = {vmax}
+t_vmax = 300.0
 q10 = {Q10}
 km = {km}
 "#,
@@ -985,6 +986,7 @@ outputs = {{ DIACE = 1 }}
 
 [reaction.rate]
 vmax = {vmax}
+t_vmax = 300.0
 q10 = 2.0
 km = {{ ACE = {KM_NEGLIGIBLE} }}
 "#
@@ -1004,6 +1006,7 @@ outputs = {{ ZEDX = 1 }}
 
 [reaction.rate]
 vmax = {vmax}
+t_vmax = 300.0
 q10 = 2.0
 km = {{ ZED = {KM_NEGLIGIBLE} }}
 "#
@@ -1023,6 +1026,7 @@ outputs = {{ ZED = 1, ACE = 1 }}
 
 [reaction.rate]
 vmax = {VMAX_FOUR_QUANTA}
+t_vmax = 300.0
 q10 = 2.0
 km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
 "#

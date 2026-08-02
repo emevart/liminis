@@ -1136,21 +1136,37 @@
         // these hues sit below 3:1 — identity must not rest on colour alone.
         ctx.font = "11px ui-sans-serif, -apple-system, sans-serif";
         ctx.textAlign = "left";
-        const placed = [];
-        shown.forEach((f) => {
+        // At the depth where each series is at its own maximum, not at the
+        // surface: every curve starts at the surface, so labelling there stacks
+        // them in one corner. A peak is where a profile is most itself.
+        //
+        // But peaks collide too — in a near-uniform world every series peaks at
+        // the same depth — so the wanted positions are laid out as a set rather
+        // than nudged one at a time. Nudging in iteration order pushes the whole
+        // pile past the axis and then clamps it back onto itself, which is
+        // exactly the collision it was meant to avoid, only harder to read.
+        const wanted = shown.map((f) => {
           const p = view.profiles.get(f.id);
-          // At the depth where this series is at its own maximum, not at the
-          // surface. Every curve starts at the surface, so labelling there
-          // stacks them all in one corner and the collision nudge turns the
-          // label position into a function of iteration order. A peak is where
-          // a profile is most itself, and different profiles peak at different
-          // depths — which is the thing the reader is here to see.
           let z = 0;
           for (let i = 1; i < p.mean.length; i++) if (p.mean[i] > p.mean[z]) z = i;
-          let y = yOf(z);
-          while (placed.some((o) => Math.abs(o - y) < 15)) y += 15;
-          y = Math.max(y0 + 5, Math.min(y1 - 14, y));
-          placed.push(y);
+          return { f, y: yOf(z) };
+        });
+        wanted.sort((a, b) => a.y - b.y);
+
+        const GAP = 15;
+        const top = y0 + 5;
+        const bottom = y1 - 14;
+        // One pass down to enforce the gap, one pass up to pull the tail back
+        // inside the plot. Two passes settle it because the constraint is a
+        // chain, not a graph.
+        for (let i = 0; i < wanted.length; i++) {
+          wanted[i].y = Math.max(wanted[i].y, top + i * GAP);
+        }
+        for (let i = wanted.length - 1; i >= 0; i--) {
+          wanted[i].y = Math.min(wanted[i].y, bottom - (wanted.length - 1 - i) * GAP);
+        }
+
+        wanted.forEach(({ f, y }) => {
           ctx.fillStyle = css(f.slot);
           ctx.fillRect(x1 + 4, y - 4, 8, 8);
           ctx.fillStyle = css("--ink-2");
@@ -1263,13 +1279,24 @@
         // arrived there is no check to report, and printing zero would be the
         // exact thing ADR-037 warns about — a number indistinguishable from a
         // check that was switched off. So: an em dash, and say why.
-        const reported = s.residual && typeof s.residual.matter === "number";
-        const m = reported ? s.residual.matter : null;
-        const e = reported ? s.residual.energy : null;
-        el("res-matter").textContent = reported ? m : "—";
-        el("res-energy").textContent = reported ? e : "—";
+        //
+        // The two halves are read apart (ADR-071). They are three-valued and
+        // they are not in step: matter is a number from the first finished
+        // tick, energy stays null until step i' has a source to prove anything
+        // against. Folded into one test, `m === 0 && e === 0` paints a
+        // perfectly closed world red and can only be quieted by a fabricated
+        // zero on the energy side.
+        const half = (v) => (typeof v === "number" ? v : null);
+        const m = s.residual ? half(s.residual.matter) : null;
+        const e = s.residual ? half(s.residual.energy) : null;
+        const reported = m !== null || e !== null;
+        el("res-matter").textContent = m !== null ? m : "—";
+        el("res-energy").textContent = e !== null ? e : "—";
 
-        const state = !reported ? "unreported" : m === 0 && e === 0 ? "closed" : "broken";
+        // "broken" if any *reported* half is non-zero, "unreported" if neither
+        // half was reported. An unreported half is never evidence of anything.
+        const broken = (m !== null && m !== 0) || (e !== null && e !== 0);
+        const state = !reported ? "unreported" : broken ? "broken" : "closed";
         el("residual").dataset.state = state;
         el("res-note").textContent = {
           unreported:

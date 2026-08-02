@@ -593,4 +593,41 @@
 /// that existed: nothing built a `World` from a config under version 10 and
 /// nothing advanced one, so there is no version-10 run for a version-11 run to
 /// differ from. What changed is the identity every future run is compared under.
-pub const WORLD_FORMAT_VERSION: u32 = 11;
+/// # Version 12: the initial state stops being zero
+///
+/// `worldgen/` fills the world from the run key: layered noise sets the
+/// sediment/water boundary and one octave stack per substance sets what that
+/// substance holds around its derived `amount_at_typical` (SPEC section 12.4,
+/// ADR-021, ADR-058). Under version 11 a `World` came out of `World::new` zeroed
+/// and nothing filled it, so the increment does not change the trajectory of any
+/// run that existed — there was no run. What it changes is the identity every
+/// future run is compared under, and it changes it completely: the initial state
+/// determines every subsequent tick, so two builds that disagree here agree about
+/// nothing afterwards.
+///
+/// Three things inside it are semantics in their own right, and each would move
+/// this number on its own:
+///
+/// - **the `purpose` window.** Every draw is `rand(node, 0, purpose, run_key)`
+///   with `purpose = WORLDGEN_BASE + WORLDGEN_SLOTS*octave + slot`; the base, the
+///   stride and the slot of a substance all enter the stream, so moving any of
+///   them gives a different world under the same seed and the same scenario;
+/// - **the spectrum.** The octaves are weighted `2^-k` and normalised by the sum
+///   of the weights. Nobody decided that — `TODO(worldgen-spectrum)` says so, and
+///   points at its twin `TODO(noise-spectrum)` in `kernels/noise.rs` — and it
+///   decides how much of the initial structure sits at the scale of a voxel and
+///   how much at the scale of the domain;
+/// - **the band.** How far an initial condition may wander from `typical_conc` is
+///   declared by no key: there is no `[initial]` section and `CONFIG_SCHEMA.md`
+///   section 13 leaves its form open. `TODO(worldgen-excursion)` carries the rule
+///   that stands in for it — half of the smaller of the two headrooms — and the
+///   day the section arrives, that rule is deleted and this number moves again.
+///
+/// **The ADR-020 guard moved with it.** `worldgen/**` was outside the pattern in
+/// `.github/workflows/ci.yml`, which is the same blind spot ADR-058 closed for
+/// `numeric/rng.rs` by widening the regex, and for the same reason: a file that
+/// decides every run of the project was invisible to the check that exists to
+/// notice exactly that. The pattern now reads `(kernels|process|worldgen)/`, so
+/// the next edit under `worldgen/` fails a pull request that forgets this
+/// constant instead of passing quietly.
+pub const WORLD_FORMAT_VERSION: u32 = 12;

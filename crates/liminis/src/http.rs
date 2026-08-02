@@ -64,21 +64,6 @@ impl Response {
     }
 
     /// The shape `/api/state` and `/api/profile/<field>` answer in.
-    // `expect` rather than `allow`, and the difference is the point: an
-    // unfulfilled expectation is itself a warning, so the day a route starts
-    // returning JSON the compiler asks for this attribute back. `allow` would
-    // sit here forever.
-    //
-    // Alive under `cfg(test)` — the tests below build both shapes — so the
-    // expectation has to be scoped to the build where the lint actually fires,
-    // or it is itself an unfulfilled expectation and therefore a warning.
-    #[cfg_attr(
-        not(test),
-        expect(
-            dead_code,
-            reason = "the data routes answer 503 until the tick loop exists (wave 6 of the S0 plan)"
-        )
-    )]
     pub fn json(body: String) -> Self {
         Self {
             status: 200,
@@ -89,16 +74,6 @@ impl Response {
 
     /// The shape `/api/volume/<field>` answers in: a self-describing header and
     /// one byte per voxel.
-    // Alive under `cfg(test)` — the tests below build both shapes — so the
-    // expectation has to be scoped to the build where the lint actually fires,
-    // or it is itself an unfulfilled expectation and therefore a warning.
-    #[cfg_attr(
-        not(test),
-        expect(
-            dead_code,
-            reason = "the data routes answer 503 until the tick loop exists (wave 6 of the S0 plan)"
-        )
-    )]
     pub fn bytes(body: Vec<u8>) -> Self {
         Self {
             status: 200,

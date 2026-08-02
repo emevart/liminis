@@ -328,6 +328,24 @@ impl<T> Field<T> {
         &self.front[self.lane_range(lane)]
     }
 
+    /// State `N+1` of one lane, read only.
+    ///
+    /// The door a snapshot needs and the only one that was missing: the file
+    /// holds **both** buffers of every field (ADR-037, ADR-057) and is written
+    /// in substance order (ADR-056), so it walks lane by lane over a `&World`,
+    /// and every other way to see the second buffer — [`Field::write_mut`],
+    /// [`Field::pair_mut`] — takes `&mut self` in order to hand out a slice to
+    /// write into. This one writes nothing.
+    ///
+    /// Not for a kernel. A kernel that read the buffer it writes would break the
+    /// gather form of ADR-034, and the two accessors above are how it gets its
+    /// slices; this returns state `N+1` to a reader that is not in a tick at all.
+    #[inline]
+    #[must_use]
+    pub fn lane_write(&self, lane: u32) -> &[T] {
+        &self.back[self.lane_range(lane)]
+    }
+
     /// One lane of each buffer, `(state N, state N+1)`.
     ///
     /// The transport kernel's view of the world, and the `world.pair_mut(s)` of

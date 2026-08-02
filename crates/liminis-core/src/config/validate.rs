@@ -1368,6 +1368,7 @@ outputs = { SO4 = 1, H_ION = 2 }
 
 [reaction.rate]
 vmax = 1.0e-6
+t_vmax = 298.15
 q10 = 2.0
 km = { H2S = 0.01, O2 = 0.01 }
 
@@ -1519,6 +1520,7 @@ outputs = {{ H_ION = {s_proton} }}
 
 [reaction.rate]
 vmax = 1.0e-6
+t_vmax = 298.15
 q10 = 2.0
 km = {{ WATER = 0.01 }}
 
@@ -1604,6 +1606,7 @@ outputs = { H_ION = 200000000 }
 
 [reaction.rate]
 vmax = 1.0e-6
+t_vmax = 298.15
 q10 = 2.0
 km = { WATER = 0.01 }
 
@@ -1615,6 +1618,7 @@ outputs = { BRINE = 1 }
 
 [reaction.rate]
 vmax = 1.0e-6
+t_vmax = 298.15
 q10 = 2.0
 km = { WATER = 0.01 }
 
@@ -1659,6 +1663,7 @@ outputs = {{ B = 1 }}
 
 [reaction.rate]
 vmax = 1.0e-6
+t_vmax = 298.15
 q10 = 2.0
 km = {{ A = 0.01 }}
 "#
@@ -2756,12 +2761,15 @@ composition = { C = 106, N = 16, P = 1 }
     }
 
     #[test]
-    #[ignore = "the key `t_vmax` is not declared by CONFIG_SCHEMA.md section 6: \
-                the edit ADR-048 asks for is not applied, and neither its type \
-                nor its requiredness is decided. Writing the key here would \
-                decide that on the journal's behalf (section 10, section 13)"]
     fn reaction_without_t_vmax_is_rejected() {
-        assert_names(&refusal(WORKED_EXAMPLE), &["t_vmax"]);
+        // The key is mandatory with no default (ADR-048), so the refusal comes
+        // from the schema rather than from a rule of section 10 — and it has to
+        // name `t_vmax` rather than the reaction, because the author's next move
+        // is to look for a temperature and there are three in the corpus.
+        assert_names(
+            &refusal(&swap(WORKED_EXAMPLE, "t_vmax = 298.15\n", "")),
+            &["t_vmax"],
+        );
     }
 
     #[test]

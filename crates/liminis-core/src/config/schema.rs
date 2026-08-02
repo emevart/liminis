@@ -364,6 +364,25 @@ pub struct Rate {
     /// legal and no refusal follows from the fork — which is exactly why it
     /// costs discipline and has nowhere to be checked.
     pub vmax: f64,
+    /// The temperature `vmax` was measured at, kelvin. Mandatory, no default
+    /// (ADR-048).
+    ///
+    /// `vmax` and `t_vmax` are one measurement rather than two parameters —
+    /// `vmax` is by definition the rate at `t_vmax` — so holding them apart is
+    /// what would let them fall out of step. A legal consequence worth knowing
+    /// when reading someone else's scenario: two `vmax` in one config may refer
+    /// to different temperatures, and that is not an error.
+    ///
+    /// Not `T_ref`, and the distinction is the whole reason ADR-048 exists.
+    /// `T_ref` is an arbitrary per-scenario zero for *storing* enthalpy
+    /// (ADR-044); whoever searched the corpus for a reference temperature would
+    /// have found it first, and tying kinetics to it would make the speed of
+    /// all chemistry depend on where enthalpy is counted from — a shift with no
+    /// physical meaning, caught by neither the ledger nor any balance.
+    ///
+    /// The validator checks that the key is present. It cannot check that the
+    /// number is the temperature the rate was actually measured at.
+    pub t_vmax: f64,
     pub q10: f64,
     /// Half-saturation constant per input, mol/m^3. Unaffected by the size of a
     /// turnover: it is in substrate concentrations. A table, so it goes last.

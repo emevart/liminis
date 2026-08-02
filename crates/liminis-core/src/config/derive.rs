@@ -1658,6 +1658,7 @@ outputs = {outputs}
 
 [reaction.rate]
 vmax = 1e-6
+t_vmax = 298.15
 q10 = 2e0
 km = {{ }}
 "

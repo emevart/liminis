@@ -181,6 +181,7 @@ max = 323.15
 
 [reaction.rate]
 vmax = 1.0e-6
+t_vmax = 298.15
 q10 = 2.0
 km  = { H2S = 0.01, O2 = 0.01 }
 

@@ -167,10 +167,10 @@ jobs:
 
           changed="$(git diff --name-only "$BASE_SHA" HEAD)"
           sensitive="$(printf '%s\n' "$changed" \
-            | grep -E '^(configs/|crates/liminis-core/src/((kernels|process)/|numeric/rng\.rs$))' || true)"
+            | grep -E '^(configs/|crates/liminis-core/src/((kernels|process|worldgen)/|numeric/rng\.rs$))' || true)"
 
           if [ -z "$sensitive" ]; then
-            echo "No configs/**, kernels/**, process/** or numeric/rng.rs changes here."
+            echo "No configs/**, kernels/**, process/**, worldgen/** or numeric/rng.rs changes here."
             exit 0
           fi
 
@@ -183,8 +183,9 @@ jobs:
           if [ "$bumped" -eq 0 ]; then
             echo
             echo "::error::WORLD_FORMAT_VERSION was not changed (ADR-020)."
-            echo "A change under configs/**, crates/liminis-core/src/kernels/**"
-            echo "or crates/liminis-core/src/process/**, or to"
+            echo "A change under configs/**, crates/liminis-core/src/kernels/**,"
+            echo "crates/liminis-core/src/process/** or"
+            echo "crates/liminis-core/src/worldgen/**, or to"
             echo "crates/liminis-core/src/numeric/rng.rs, changes what a run"
             echo "means, so results from before and after this pull request"
             echo "cannot go on the same plot. Bump the constant in"
@@ -200,6 +201,12 @@ jobs:
             echo "rounded stochastically off that generator (ADR-027): a changed"
             echo "mixer, a changed counter list or a changed start constant"
             echo "changes every draw, hence every xi, hence every run (ADR-058)."
+            echo
+            echo "worldgen/** counts because it decides the state every tick"
+            echo "starts from: the purpose window, the octave spectrum and the"
+            echo "band an initial condition wanders inside all enter the draws,"
+            echo "so a change there gives a different world under the same seed"
+            echo "and the same scenario (SPEC section 12.4, ADR-021, ADR-058)."
             echo
             echo "If this change genuinely cannot affect dynamics, say so in the"
             echo "pull request description and record why."
