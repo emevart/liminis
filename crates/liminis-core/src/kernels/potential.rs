@@ -63,6 +63,16 @@
 //! the solvent's taken from the registry, is worth 0.2% by ADR-062's own
 //! measurement — and temperature is class `Q`, in no ledger, so nothing objects.
 //!
+//! And a field has cells with nothing in them. ADR-079 answers a non-positive
+//! `C_cell` with `T := T_ref` and no division at all, and it words that answer
+//! about the *cell* rather than about one kernel: this file is the second
+//! consumer of the denominator the record names, beside `kernels/temperature.rs`.
+//! What the answer looks like here is `Q::ZERO`, because what this file computes
+//! is the anomaly `T - T_ref` and not `T` — see [`temperature`]. The case is a
+//! legal state of a legal world and not a corner: `[initial]` puts a substance on
+//! one side of the layer (ADR-077), and on the other side there is no solvent to
+//! have a heat capacity.
+//!
 //! # Two dispatches, not one
 //!
 //! [`potential_voxel`] runs over the **enthalpy** grid (2.6e5 scalar reads a tick
@@ -225,12 +235,38 @@ pub fn potential_voxel(
 /// composition `optical_depth` uses in `kernels/light.rs`: `q_conc` with `Q::ONE`
 /// says "this amount, as a number", and the scale of the enthalpy field is inside
 /// [`PotentialParams::conv_gain`] along with everything else.
+///
+/// # The cell with nothing in it answers zero
+///
+/// ADR-079: "a cell with `C_cell <= 0` answers `T := T_ref` — zero enthalpy
+/// storage — divides nothing and does not stop in any build profile". The record
+/// states that about a cell and not about a kernel, and it names this file as the
+/// second consumer of the denominator, so the branch is owed here exactly as it is
+/// owed in `kernels/temperature.rs`.
+///
+/// It reads `Q::ZERO` rather than `p.t_ref` because there is no `t_ref` in
+/// [`PotentialParams`] and the module header says at length why one must never
+/// arrive: what this function returns is the anomaly `T - T_ref`, so the record's
+/// answer *is* zero here, one term shorter and not one decision different. A cell
+/// with no heat capacity therefore contributes nothing to the wide difference,
+/// which is the same statement as "it has no temperature anomaly to convect".
+///
+/// The shape is the `if capacity > Q::ZERO` of `kernels/temperature.rs`, and
+/// deliberately so: one question — "divide, or answer without dividing" — gets one
+/// spelling in both places rather than two idioms that could drift apart. There is
+/// no assertion over it for the two reasons ADR-079 rejects one by name: it would
+/// make a legal world unrunnable in the profile the tests run in and runnable in
+/// the other, and WGSL has no panic at all, so an assertion in the CPU reference
+/// (ADR-015 keeps it forever) manufactures the very shader divergence it looks
+/// like a guard against.
 #[inline(always)]
 fn temperature(enthalpy: &[M64], heat_capacity: &[Q], at: u32) -> Q {
-    qdiv(
-        q_conc_64(enthalpy[at as usize], Q::ONE),
-        heat_capacity[at as usize],
-    )
+    let capacity = heat_capacity[at as usize];
+    if capacity > Q::ZERO {
+        qdiv(q_conc_64(enthalpy[at as usize], Q::ONE), capacity)
+    } else {
+        Q::ZERO
+    }
 }
 
 /// Parameters of the interpolation from the enthalpy grid onto the velocity grid.
@@ -648,6 +684,73 @@ mod tests {
         for at in 2 * N_COARSE..3 * N_COARSE {
             assert_eq!(dst[at as usize], Q::ZERO);
         }
+    }
+
+    #[test]
+    fn a_cell_without_heat_capacity_answers_no_anomaly_and_divides_nothing() {
+        // ADR-079 in the anomaly form of this file. Two things are asserted and
+        // the first of them is that the test finishes at all: `cargo test` is a
+        // debug build, so without the branch `qdiv` would stop on the zero
+        // denominator rather than let an assertion below fail.
+        //
+        // Not a corner of the domain of definition. A voxel whose solvent is gone
+        // is a legal state of a legal world — `[initial]` puts a substance on one
+        // side of the layer (ADR-077) — and aqueous sulfate declares a *negative*
+        // partial molar heat capacity, so the sum reaches zero from above rather
+        // than only from an empty cell.
+        const HOT: i64 = 4096;
+        let p = params(TORUS, 1);
+
+        // A uniform anomaly, so that a healthy field is identically zero and every
+        // non-zero value below is the answer of a degenerate cell and nothing else.
+        let enthalpy = vec![M64::new(HOT); N_COARSE as usize];
+        let mut capacity = unit_capacity();
+        let empty = coarse_index(4, 3, 2);
+        let negative = coarse_index(1, 1, 1);
+        capacity[empty as usize] = Q::ZERO;
+        capacity[negative as usize] = Q::from_f64(-1.0);
+
+        let dst = dispatch(&enthalpy, &capacity, &p);
+        for (at, value) in dst.iter().enumerate() {
+            assert!(
+                value.debug_f64().is_finite(),
+                "component cell {at} is not finite"
+            );
+        }
+
+        let expected = Q::from_f64(GAIN * HOT as f64);
+
+        // `A_x = gain*(T(y+r) - T(y-r))`, so the cell below the empty one reads it
+        // as the upper arm and sees `0 - HOT`.
+        assert_eq!(
+            dst[coarse_index(4, 2, 2) as usize],
+            qsub(Q::ZERO, expected),
+            "the cell below the empty one"
+        );
+        assert_eq!(
+            dst[coarse_index(4, 4, 2) as usize],
+            expected,
+            "the cell above the empty one"
+        );
+        // And along X, into `A_y`, with the sign the kernel flips.
+        assert_eq!(
+            dst[(N_COARSE + coarse_index(3, 3, 2)) as usize],
+            expected,
+            "the cell left of the empty one"
+        );
+
+        // The negative denominator is the assertion that separates "answers zero"
+        // from "divides anyway": dividing would give `HOT/(-1) = -HOT` there and
+        // the arm below would read `-HOT - HOT`, that is twice this value.
+        assert_eq!(
+            dst[coarse_index(1, 0, 1) as usize],
+            qsub(Q::ZERO, expected),
+            "the cell below the one with a negative heat capacity"
+        );
+
+        // A cell out of reach of both is still the exact zero a uniform anomaly
+        // gives, or the assertions above are about a field of noise.
+        assert_eq!(dst[coarse_index(6, 4, 0) as usize], Q::ZERO);
     }
 
     #[test]

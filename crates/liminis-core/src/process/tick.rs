@@ -86,7 +86,7 @@
 //! | step | what is missing |
 //! |---|---|
 //! | `a` light | a lit scenario is refused by two locks at once: energy has no sink, and the width of a channel counter is A-20 (A-19 in ADR-075 and ADR-076, drafted while that number was free) |
-//! | `b` velocity | `Scratch` holds none of the three potential buffers `VelocityField::apply` writes |
+//! | `b` velocity | the four keys of ADR-069 reach no folder, and the Courant fold onto the enthalpy faces is `TODO(courant-fold)`; the buffers and the denominator no longer block it |
 //! | `e` pressure | `theta_max` is declared nowhere (`TODO(theta-max)`) |
 //! | `f` settling | `g` and `rho_medium` are named by no document (ADR-067, ADR-069) |
 //! | `h` reactions | both arches of the invariant under chemistry, and step `i'` with it |
@@ -112,18 +112,27 @@
 //! (ADR-057 wants the parity of a lane to come from the applications the phase
 //! *ran*) and an indistinguishable thing by its result.
 //!
-//! TODO(courant-fold): what has to arrive with step `b` is more than the velocity
-//! field. `process/advect.rs` carries `TODO(velocity-interpolation)` for the fine
-//! faces — ADR-069 stores the curl of the potential on the `64³` grid and no
-//! document writes the stencil that reads it onto the `128³` faces — and the
-//! enthalpy field of step `c` needs that mapping onto the faces of a *third*
-//! grid, `32³`, which no record mentions at all. Inventing either stencil here
-//! would put a second, silent addressing scheme underneath the only advective
-//! speed the Courant condition has. What must not happen is the quiet version:
-//! step `b` becoming dispatchable while these buffers stay zero, advection going
-//! on to move nothing, and
-//! `a_disabled_process_leaves_every_buffer_bit_for_bit` staying green because
-//! asserting exactly that is what it is for.
+//! TODO(courant-fold): the two halves of this are no longer the same size, and
+//! saying so is the point. The **fine** half is written: `kernels/curl.rs` has
+//! `face_courant_voxel`, it reads the `64³` velocity onto the `128³` faces in the
+//! layout `kernels/advect.rs` expects, and `VelocityField::apply` dispatches it as
+//! its last stage — so `TODO(velocity-interpolation)` in `process/advect.rs` is
+//! stale for that half and true only for this one. The **coarse** half is not:
+//! `face_courant_voxel` debug-asserts that its target grid is a *refinement* of
+//! the velocity grid (`nx == vnx << ratio_log2`), the enthalpy grid is coarser
+//! than the velocity grid rather than finer (`lod = 2` against `lod = 1`), and
+//! reading a `64³` field onto `32³` faces is an averaging that no record writes.
+//! ADR-045 gives a precedent for fine-to-coarse folding and step `c` over the
+//! enthalpy wants exactly that direction — but for a *flux* and not for a
+//! quantity, and inventing it here would put a second, silent addressing scheme
+//! underneath the only advective speed the Courant condition has.
+//!
+//! So `Scratch::enthalpy_courant` stays zero even once step `b` runs, and that is
+//! the quiet version this refusal exists to prevent: matter advected by a field
+//! and heat standing still, with both residuals closing exactly — transport
+//! conserves either way — every "alone" test green, the temperature field
+//! plausible, and the symptom a plume that carries substance without the heat that
+//! raised it. The honest form is a refusal and not a half-dispatch.
 //!
 //! # Where the temperature is recomputed, and why it is a decision
 //!
@@ -702,6 +711,16 @@ impl Tick {
         // that forwards `tick` and forgets `run_key` gives every seed the same
         // world, `same_seed_and_config_give_byte_identical_state` stays green,
         // and only `different_seed_gives_different_state` goes red.
+        //
+        // The velocity half is a consumer only on the scenarios that stir, and
+        // that is worth writing down beside the dispatch rather than discovering
+        // from a green test. `VelocityField::apply` branches on `stirs` on the
+        // host (ADR-069), and `run_key` enters `NoiseParams` and nothing else: at
+        // `stir_fraction = 0` a step `b` that dispatched perfectly would still
+        // leave this line true, because the convective half of `A` is a function
+        // of the enthalpy and the heat capacity alone. So the day the criterion
+        // above stops being ignored is the day a *stirring* fixture exists, and
+        // not the day step `b` builds.
         let _ = run_key;
 
         for &step in &STEP_ORDER {
@@ -981,14 +1000,33 @@ fn refuse_if_blocked(id: ProcessId) -> Result<()> {
             light::ENABLED_BY_DEFAULT
         ),
         ProcessId::VelocityField => bail!(
-            "process `{}` is enabled and step `b` cannot be dispatched: \
-             `VelocityField::apply` writes three buffers `Scratch` does not hold \
-             — the coarse potential on the enthalpy grid, the potential \
-             interpolated onto the velocity grid, and the stirred copy of it \
-             (ADR-069) — and nothing in this crate allocates them. The heat \
-             capacity `C_cell` this step reads is no longer among the blockers: \
-             `process/temperature.rs` fills it and `world::World` owns the buffer. \
-             Its default is enabled = {} (ADR-069)",
+            "process `{}` is enabled and step `b` cannot be dispatched, and \
+             neither of the two things that used to block it does so any longer. \
+             The buffers: `world::World` owns all four — the coarse potential on \
+             the enthalpy grid, the potential interpolated onto the velocity grid, \
+             the stirred copy of it and `u` itself — and hands them out together as \
+             `World::velocity_slices_mut` (ADR-069). The denominator: `C_cell` is \
+             identically `Q::ZERO` in every run, because `process::Temperature` is \
+             its only writer and is dispatched by nothing, but ADR-079 answers a \
+             non-positive `C_cell` about the *cell* rather than about one kernel, \
+             and `kernels/potential.rs` now implements that answer beside \
+             `kernels/temperature.rs`: the cell contributes no temperature anomaly \
+             and nothing is divided. Two things are left and only one of them is \
+             code. **Code:** the four keys of ADR-069 — u_conv_max, l_c, \
+             stir_fraction, stir_period — are `[[process]]` keys of the `Config`, \
+             `config/validate.rs` checks them and keeps none, `Derived` has no \
+             velocity section, and `Tick::new` takes a `&Derived`; so nothing \
+             outside `tests/` can build a `VelocityConfig`, and the precedent for \
+             carrying them through is `DerivedSubstance::diffusivity`, copied for \
+             exactly this reason. **A decision:** `TODO(courant-fold)` in the \
+             header of this file. The last stage of `VelocityField::apply` writes \
+             `Scratch::face_courant`, so the tick that dispatches step `b` is the \
+             tick step `c` starts moving the amounts on — while \
+             `Scratch::enthalpy_courant` stays zero, because reading a velocity \
+             onto the faces of the coarser enthalpy grid is a fine-to-coarse fold \
+             of a *flux* that no record writes. Matter carried by the flow and heat \
+             standing still, with both residuals closing exactly. Its default is \
+             enabled = {} (ADR-069)",
             id.id(),
             velocity::VELOCITY_FIELD_ENABLED_BY_DEFAULT
         ),

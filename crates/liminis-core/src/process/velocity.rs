@@ -15,6 +15,28 @@
 //! 5. face_courant_voxel     over the fine grid       into the advection layout
 //! ```
 //!
+//! # Where the five buffers live, and what the composition costs
+//!
+//! [`VelocityField::apply`] takes every buffer by argument and owns none. Four of
+//! the five belong to `world::World` — the coarse potential on the enthalpy grid,
+//! the potential interpolated onto the velocity grid, the stirred copy of it and
+//! `u` — and come out of one call to `World::velocity_slices_mut` in this
+//! function's argument order. The fifth, the Courant numbers of the fine faces,
+//! belongs to `process::Scratch`, and the two owners borrow disjointly.
+//!
+//! ADR-069 priced step `b` at two buffers, `A` and `u`, `3 x 64^3 x 4 B` each:
+//! 6.3 MB, 1.3% of the 482 MB of state. The composition that is implemented has
+//! four, 9 830 400 B = 9.830 MB at the 128^3 base grid, and neither of the two
+//! extra buffers is optional. The coarse potential exists because the closed form
+//! of the record has no interpolation stage, and the wide difference has to be
+//! taken on the grid the temperature lives on; the stirred copy exists because
+//! `stir_potential` reads its source at every octave, and a kernel may not read
+//! the buffer it writes (ADR-034). With the two coarse fields of ADR-079 beside
+//! them the block is 10 092 544 B = 10.09 MB, 2.09% rather than 1.3%. The
+//! arithmetic is written out on `world::World`'s `VELOCITY_COMPONENTS`; the
+//! divergence from the record is a record of its own and not an edit to ADR-069
+//! (ADR-032), and this paragraph is not that record.
+//!
 //! # The default is `false`, and it is arithmetic rather than caution
 //!
 //! [`VELOCITY_FIELD_ENABLED_BY_DEFAULT`]. `u_conv_max` is required when the

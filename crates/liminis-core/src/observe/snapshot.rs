@@ -37,18 +37,30 @@
 //!
 //! # What is not in the file, and why not
 //!
-//! The `Q`-valued buffers — light, velocity, the velocity potential, the heat
-//! capacity `C_cell` and the temperature. `Q` has a private representation and no
-//! byte door: the only way out of it is `debug_f64`, documented as a debug door,
-//! whose value is *mode dependent*. Writing it would make the format silently
-//! different under `FIXED`, in a file that records no numeric mode.
+//! Every `Q`-valued buffer `world::World` owns, and there are seven of them:
+//! light; the velocity `u`; the three potentials of step `b` — the coarse one on
+//! the enthalpy grid, the one interpolated onto the velocity grid and its stirred
+//! copy; the heat capacity `C_cell`; and the temperature. This is the one file in
+//! the crate whose subject *is* the list of what the format leaves out, so the
+//! list is spelled in full rather than abbreviated: nothing ties it to the fields
+//! of `World`, and an enumeration that has quietly gone short reads to the next
+//! author as exhaustive.
 //!
-//! The last two joined that list without changing the format, and for the reason
+//! `Q` has a private representation and no byte door: the only way out of it is
+//! `debug_f64`, documented as a debug door, whose value is *mode dependent*.
+//! Writing it would make the format silently different under `FIXED`, in a file
+//! that records no numeric mode.
+//!
+//! The last four joined that list without changing the format, and for the reason
 //! already stated for the light: they are derived and are rewritten in full
-//! before anything reads them. `process::Temperature` recomputes both once a tick
-//! out of the enthalpy field and the amounts, which the file *does* hold, and
-//! ADR-044 requires exactly that — the denominator is recomputed and never
-//! cached, so storing it would be storing a cache the record forbids.
+//! before anything reads them. `process::Temperature` recomputes `C_cell` and `T`
+//! once a tick out of the enthalpy field and the amounts, which the file *does*
+//! hold, and ADR-044 requires exactly that — the denominator is recomputed and
+//! never cached, so storing it would be storing a cache the record forbids. The
+//! two potentials are the same case one step further out: `VelocityField::apply`
+//! overwrites all three of its outputs from the enthalpy and `C_cell` on every
+//! tick it runs (ADR-069), so none of them is state that a restart could be
+//! missing.
 // TODO(snapshot-q): three things have to be decided together — a
 // mode-independent byte door for `Q`, a numeric-mode field in the snapshot
 // header, and whether the derived fields need storing at all (light is

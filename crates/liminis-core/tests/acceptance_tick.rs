@@ -47,7 +47,7 @@
 
 use liminis_core::config;
 use liminis_core::ledger::{Channel, DomainSums, Ledger};
-use liminis_core::numeric::{M32, M64};
+use liminis_core::numeric::{M32, M64, Q, qadd};
 use liminis_core::process::{
     ProcessId, ROSTER_LEN, RosterEntry, STEP_ORDER, Scratch, Step, Tick, default_roster,
 };
@@ -370,7 +370,7 @@ fn snapshot(world: &World) -> Vec<u8> {
     for value in world.energy_delta() {
         bytes.extend_from_slice(&value.raw().to_le_bytes());
     }
-    // The three `Q` fields go in by their bits and not by their value: `Q` is a
+    // The five `Q` fields go in by their bits and not by their value: `Q` is a
     // wrapper over an `f32` and `debug_f64` is the only way out of it, and the
     // widening is exact, so the bits of the `f64` distinguish exactly what the
     // bits of the `f32` do.
@@ -381,6 +381,18 @@ fn snapshot(world: &World) -> Vec<u8> {
         bytes.extend_from_slice(&value.debug_f64().to_bits().to_le_bytes());
     }
     for value in world.velocity_potential() {
+        bytes.extend_from_slice(&value.debug_f64().to_bits().to_le_bytes());
+    }
+    // The other two buffers of step `b` (ADR-069): the wide difference's output on
+    // the enthalpy grid, and the stirred copy of the interpolated potential. Here
+    // for the same reason as the two below — `VelocityField::apply` is dispatched
+    // by nothing, so these are exactly the buffers a comparison would quietly stop
+    // covering. `snapshot_covers_every_buffer_the_world_owns` is what keeps the
+    // list honest.
+    for value in world.velocity_potential_coarse() {
+        bytes.extend_from_slice(&value.debug_f64().to_bits().to_le_bytes());
+    }
+    for value in world.velocity_potential_stirred() {
         bytes.extend_from_slice(&value.debug_f64().to_bits().to_le_bytes());
     }
     // The two derived fields of the enthalpy grid (ADR-044, ADR-062). They are
@@ -634,17 +646,35 @@ fn same_seed_and_config_give_byte_identical_state() {
 }
 
 #[test]
-#[ignore = "no dispatchable process consumes run_key. Its two consumers are \
-            React::params (ADR-058) and NoiseParams in the velocity field \
-            (ADR-069), and neither step can be built — the reactions want a \
-            temperature field no operator derives, the velocity field wants the \
-            heat capacity buffer world/world.rs names and does not allocate. \
-            Until one of them is dispatchable the two runs below are equal, and \
-            the honest form of this criterion is a red test that says why rather \
-            than a weakened one that passes. Weakening it — comparing the run \
-            keys, or asserting only that the tick forwards the argument — is the \
-            temptation to name out loud: it would leave the actual failure, a \
-            tick that forwards `tick` and drops `run_key`, invisible while its \
+#[ignore = "no dispatchable process consumes run_key, and this note now owes two \
+            statements rather than one. Its two consumers are React::params \
+            (ADR-058) and NoiseParams in the velocity field (ADR-069). The \
+            reactions are blocked by the two arches of the invariant under \
+            chemistry and no longer by a temperature nobody derives: \
+            `process/temperature.rs` derives it (ADR-079). The velocity field is \
+            blocked by neither of the two things earlier versions of this note \
+            named: `world::World` owns all four buffers step `b` writes, and the \
+            heat capacity being identically zero is not a division by zero — \
+            ADR-079 answers a non-positive `C_cell` about the *cell*, and \
+            `kernels/potential.rs` implements that answer beside \
+            `kernels/temperature.rs`, so such a cell contributes no temperature \
+            anomaly and nothing is divided. What blocks step `b` is that the four \
+            keys of ADR-069 reach no folder — they are `[[process]]` keys of the \
+            `Config`, and `Tick::new` takes a `&Derived` that has no velocity \
+            section — and `TODO(courant-fold)`, which is a decision and not code. \
+            The second statement is about this criterion rather than about the \
+            dispatch, and it is the one that was never checked: a step `b` that \
+            dispatched perfectly would leave the two runs below *equal anyway*. \
+            `VelocityField::apply` branches on `stirs` on the host, `run_key` \
+            enters `NoiseParams` and nothing else, and the fixture in this file \
+            writes no `[[process]]` section at all, so its `stir_fraction` is the \
+            default zero and the whole field is a function of the enthalpy and the \
+            heat capacity. So this criterion needs a stirring scenario as well as a \
+            dispatch, and the honest form of it meanwhile is a red test that says \
+            so rather than a weakened one that passes. Weakening it — comparing \
+            the run keys, or asserting only that the tick forwards the argument — \
+            is the temptation to name out loud: it would leave the actual failure, \
+            a tick that forwards `tick` and drops `run_key`, invisible while its \
             neighbour above stays green"]
 fn different_seed_gives_different_state() {
     // A statement about this pair of seeds and not a theorem: `run_key` collapses
@@ -657,6 +687,138 @@ fn different_seed_gives_different_state() {
         snapshot(&right),
         "two seeds gave the same world"
     );
+}
+
+#[test]
+fn snapshot_covers_every_buffer_the_world_owns() {
+    // The helper above promises to hold *every* buffer of a world, and it keeps
+    // that promise by hand: nothing in the compiler ties a field of `World` to a
+    // line of `snapshot`. So a buffer added to the world and forgotten there
+    // leaves `same_seed_and_config_give_byte_identical_state` comparing two worlds
+    // with a field missing from both, and
+    // `a_disabled_process_leaves_every_buffer_bit_for_bit` green about a world it
+    // cannot see.
+    //
+    // **Per buffer, and never by a byte total alone.** The mistake this guard
+    // exists for is a copy-paste among five near-identical `for value in
+    // world.X()` loops — repeat one accessor, drop another — and a total is blind
+    // to exactly that, because five of the eleven buffers share a length with a
+    // neighbour: `velocity`, `velocity_potential` and `velocity_potential_stirred`
+    // are each `3 * n_velocity`, and `heat_capacity` and `temperature` are each
+    // `n_coarse`. An earlier version of this test counted bytes and claimed in a
+    // comment that the lengths were all distinct; they are not, and the claim was
+    // worse than no test, because it told the next reader to stop checking.
+    //
+    // So each buffer is perturbed in one cell through its own `_mut` accessor and
+    // the snapshot has to move. Every `Q` buffer and the accumulator start at zero
+    // and no fixture writes them, so an increment is always a change.
+    let derived = derived();
+
+    type Bump = fn(&mut World);
+    let bumps: [(&str, Bump); 11] = [
+        ("amounts_32", |world| {
+            // Through the *back* buffer and a swap, because `snapshot` reads the
+            // front one (ADR-057) and there is no door that writes it directly.
+            let field = world.amounts_32_mut().expect("four narrow substances");
+            let (src, dst) = field.pair_mut();
+            dst.copy_from_slice(src);
+            dst[0] = M32::from_i64_clamping(dst[0].to_i64() + 1);
+            field.swap();
+        }),
+        ("amounts_64", |world| {
+            let field = world.amounts_64_mut().expect("WATER is the wide substance");
+            let (src, dst) = field.pair_mut();
+            dst.copy_from_slice(src);
+            dst[0] = M64::new(dst[0].to_i64() + 1);
+            field.swap();
+        }),
+        ("enthalpy", |world| {
+            let field = world.enthalpy_mut();
+            let (src, dst) = field.pair_mut();
+            dst.copy_from_slice(src);
+            dst[0] = M64::new(dst[0].to_i64() + 1);
+            field.swap();
+        }),
+        ("energy_delta", |world| {
+            let cell = &mut world.energy_delta_mut()[0];
+            *cell = M64::new(cell.to_i64() + 1);
+        }),
+        ("light", |world| bump_q(&mut world.light_mut()[0])),
+        ("velocity", |world| bump_q(&mut world.velocity_mut()[0])),
+        ("velocity_potential", |world| {
+            bump_q(&mut world.velocity_potential_mut()[0]);
+        }),
+        ("velocity_potential_coarse", |world| {
+            bump_q(&mut world.velocity_potential_coarse_mut()[0]);
+        }),
+        ("velocity_potential_stirred", |world| {
+            bump_q(&mut world.velocity_potential_stirred_mut()[0]);
+        }),
+        ("heat_capacity", |world| {
+            bump_q(&mut world.heat_capacity_mut()[0]);
+        }),
+        ("temperature", |world| {
+            bump_q(&mut world.temperature_mut()[0])
+        }),
+    ];
+
+    for (name, bump) in bumps {
+        let mut world = world(&derived);
+        let before = snapshot(&world);
+        bump(&mut world);
+        assert_ne!(
+            snapshot(&world),
+            before,
+            "`snapshot` does not cover `{name}`"
+        );
+    }
+
+    // And the byte total on top, which catches the other half of the same
+    // copy-paste: an accessor repeated rather than dropped. The loop above cannot
+    // see that — a buffer covered twice still moves when it is perturbed.
+    //
+    // Counted in bytes because that is what `snapshot` produces: `M32` goes in
+    // four bytes wide, `M64` eight, and a `Q` eight, since it is widened to an
+    // `f64` before its bits are taken.
+    let world = world(&derived);
+    let mut expected = 0;
+    if let Some(field) = world.amounts_32() {
+        expected += field.read().len() * 4;
+    }
+    if let Some(field) = world.amounts_64() {
+        expected += field.read().len() * 8;
+    }
+    expected += world.enthalpy().lane(0).len() * 8;
+    expected += world.energy_delta().len() * 8;
+    expected += world.light().len() * 8;
+    expected += world.velocity().len() * 8;
+    expected += world.velocity_potential().len() * 8;
+    expected += world.velocity_potential_coarse().len() * 8;
+    expected += world.velocity_potential_stirred().len() * 8;
+    expected += world.heat_capacity().len() * 8;
+    expected += world.temperature().len() * 8;
+
+    assert_eq!(
+        snapshot(&world).len(),
+        expected,
+        "a buffer of the world is counted twice by `snapshot`, or is missing from \
+         both this list and the list above"
+    );
+
+    // What neither half buys, said out loud rather than left to be assumed: both
+    // lists are maintained by hand, so a buffer added to `World` and forgotten in
+    // *both* fires nothing. Closing that would want a door on `World` that
+    // enumerates its own buffers, and there is none — `TODO(velocity-layout)` in
+    // `world/world.rs` is the reason, an accessor that walked the buffers would
+    // have to pick an order.
+}
+
+/// One `Q` cell, moved by one. The wrapper exists because the rule about bare
+/// operators over `Q` (ADR-022) holds outside `kernels/` as well: `*cell + 1.0`
+/// does not compile, and reaching for `Q::from_f64(cell.debug_f64() + 1.0)`
+/// instead would go out through the debug door and back, which is mode dependent.
+fn bump_q(cell: &mut Q) {
+    *cell = qadd(*cell, Q::ONE);
 }
 
 // --- the order of the splitting ------------------------------------------
@@ -989,6 +1151,67 @@ fn a_roster_naming_one_process_twice_is_refused() {
         message.contains(ProcessId::VelocityField.id()),
         "the refusal has to name the repeated process; it said:\n{message}"
     );
+}
+
+#[test]
+fn the_velocity_refusal_names_what_still_blocks_step_b() {
+    // A string assertion on purpose. Nothing else in the crate can see that a
+    // `bail!` has gone stale, and `an_enabled_process_without_an_operator_is_refused`
+    // only checks that *some* refusal happened and that it names the process.
+    //
+    // Two blockers this message has named in the past are gone, and a refusal that
+    // names a blocker somebody has since removed is worse than no refusal, because
+    // the reader stops at the first sentence. `Scratch` holding none of the
+    // potential buffers went the day `world::World` allocated all four. The
+    // denominator went with ADR-079: `C_cell` is still identically `Q::ZERO` in
+    // every run, but a non-positive `C_cell` is answered about the *cell* — it
+    // contributes no temperature anomaly — and `kernels/potential.rs` implements
+    // that answer, so nothing divides by zero and nothing is non-finite.
+    //
+    // What is left is one piece of code and one decision, and the message owes
+    // both by name: the four keys of ADR-069 reach no folder, because `Tick::new`
+    // takes a `&Derived` that has no velocity section; and dispatching step `b`
+    // would fill `Scratch::face_courant` while `Scratch::enthalpy_courant` stayed
+    // zero, which is `TODO(courant-fold)`.
+    let derived = derived();
+    let world = world(&derived);
+    let message = format!(
+        "{:#}",
+        Tick::new(
+            &world,
+            &derived,
+            &roster(&[ProcessId::VelocityField]),
+            DT,
+            DX
+        )
+        .expect_err("step `b` cannot be dispatched")
+    );
+
+    // The dead blocker in the shape it used to take: `qdiv` stopping on the first
+    // tick. `kernels/potential.rs` no longer divides by a non-positive `C_cell`,
+    // so a refusal that still says it does is describing a build nobody has.
+    assert!(
+        !message.contains("qdiv"),
+        "the denominator is answered (ADR-079), so the refusal may not claim a \
+         division by zero; it said:\n{message}"
+    );
+
+    // That the buffers and the denominator are named as *settled*, and that both
+    // live blockers are named at all.
+    for wanted in [
+        "velocity_slices_mut",
+        "kernels/potential.rs",
+        "ADR-079",
+        "Derived",
+        "TODO(courant-fold)",
+        "enthalpy_courant",
+        "ADR-069",
+    ] {
+        assert!(
+            message.contains(wanted),
+            "the refusal has to name `{wanted}`; it said:\n{message}"
+        );
+    }
 }
 
 #[test]

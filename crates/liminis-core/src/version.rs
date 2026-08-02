@@ -784,4 +784,64 @@
 /// the decision of ADR-076 and not as tidying: it measures storage units per
 /// (W/m^2) per second, and the old name taught the wrong unit in the one place
 /// the unit is assigned.
-pub const WORLD_FORMAT_VERSION: u32 = 16;
+///
+/// # Version 17: the velocity field has all four of its buffers
+///
+/// `world::World` allocates the two that were missing — the coarse potential on
+/// the enthalpy grid, where the wide difference of ADR-069 lands, and the stirred
+/// copy of the interpolated potential, which is a fourth buffer rather than an
+/// addition in place because `stir_potential` reads its source at every octave
+/// (ADR-034). With `velocity` and `velocity_potential` beside them a world now
+/// owns everything one dispatch of `VelocityField::apply` writes, and
+/// `World::velocity_slices_mut` hands them out in that function's argument order.
+///
+/// **No run that existed changes by a single bit**, and the increment is of
+/// identity rather than of dynamics: step `b` still does not dispatch, so the two
+/// new buffers are written by nobody and read by nobody, and `Tick::new` still
+/// refuses `velocity_field` — for a different reason, which is the second half of
+/// this version. The guard of ADR-020 looks at the path and `process/**` was
+/// touched, so the number would have to move even if nothing else had.
+///
+/// Two things inside it are semantics in their own right:
+///
+/// - **the coarse potential is sized by the enthalpy grid.** A world has two
+///   coarse grids and they differ (`lod = 2` against `lod = 1`). Sized by the
+///   velocity grid it is eight times too long at the eco layout, which panics —
+///   and exactly the right length on a layout whose lods coincide, where the wide
+///   difference is then taken at twice the radius, one octave off in the selected
+///   wavelength, with the field staying smooth, divergence-free and inside its
+///   speed bound;
+/// - **`snapshot()` in `tests/acceptance_tick.rs` covers two more fields.** That
+///   helper keeps its promise to hold every buffer of a world by hand, so a buffer
+///   left out of it makes `a_disabled_process_leaves_every_buffer_bit_for_bit`
+///   green about a world it cannot see. `snapshot_covers_every_buffer_the_world_owns`
+///   is the check that the list stays complete.
+///
+/// The third thing inside it is a kernel, and it is the only part of this version
+/// that could change a number: **`kernels/potential.rs` implements the answer of
+/// ADR-079 for a non-positive `C_cell`.** The record words that answer about a
+/// *cell* — "a cell with `C_cell <= 0` answers `T := T_ref`, divides nothing and
+/// does not stop in any build profile" — and names this kernel as the second
+/// consumer of the denominator beside `kernels/temperature.rs`, which had the
+/// guard already. What the answer looks like there is `Q::ZERO`, because that
+/// kernel computes the anomaly `T - T_ref` and no `T_ref` may enter it.
+///
+/// No run changes here either, and for a reason worth stating rather than
+/// assuming: the kernel has no caller, step `b` does not dispatch. What the guard
+/// removes is a CPU reference (ADR-015 keeps it forever) that stopped in `qdiv` in
+/// debug and produced a non-finite `Q` in release, on an input the shader is
+/// required to survive — a solvent-free voxel, which is a legal state of a legal
+/// world at any tick (ADR-077) and not only while `C_cell` is identically zero.
+///
+/// What the refusal of step `b` says changed twice over, and both of the texts it
+/// replaces had become false. It named `Scratch`, which holds none of the
+/// potentials and was never going to; then it named the denominator, which
+/// ADR-079 had already answered. What blocks step `b` today is one piece of code
+/// and one decision. The code: the four keys of ADR-069 are `[[process]]` keys of
+/// the `Config`, `Derived` has no velocity section, and `Tick::new` takes a
+/// `&Derived` — so nothing outside `tests/` can build a `VelocityConfig`. The
+/// decision: `TODO(courant-fold)`. The last stage of `VelocityField::apply` fills
+/// `Scratch::face_courant`, so the tick that dispatches step `b` is the tick step
+/// `c` starts moving matter on, while `Scratch::enthalpy_courant` stays zero for
+/// want of a fine-to-coarse fold of a flux that no record writes.
+pub const WORLD_FORMAT_VERSION: u32 = 17;
