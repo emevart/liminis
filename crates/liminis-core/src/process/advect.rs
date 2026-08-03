@@ -461,16 +461,33 @@ macro_rules! define_advance {
         /// is not [`Advect::courant_len`] long. All three are programming errors
         /// rather than bad scenarios, and all three would otherwise surface as a
         /// quietly wrong world.
+        /// `chemical_weight` is `w_s` for **this** substance (ADR-081): what
+        /// crosses the lid takes its chemical energy with it, so the same
+        /// integer the matter counter is credited with, multiplied by a
+        /// constant, is owed to the energy half of the same channel.
+        ///
+        /// Inside the closure, so it is credited once per axis exactly as the
+        /// matter is. Skipping it is invisible in every run this build can
+        /// produce — `Scratch::face_courant` is never filled, so the dispatched
+        /// step applies a zero flux and credits nothing at all — and becomes a
+        /// leak of chemical energy through a venting lid the day step `b` runs.
+        /// The one thing that can see it is a direct fixture on this function
+        /// with a Courant number written by hand.
         pub fn $name(
             &self,
             field: &mut $field,
             lane: u32,
             courant: &[Q],
             substance: u32,
+            chemical_weight: i64,
             ledger: &mut Ledger,
         ) {
             self.$inner(field, lane, courant, |units| {
-                ledger.credit_matter(Channel::BoundaryExchange, substance, units);
+                ledger.credit_matter(Channel::BoundaryExchange, substance, i128::from(units));
+                ledger.credit_energy(
+                    Channel::BoundaryExchange,
+                    i128::from(chemical_weight) * i128::from(units),
+                );
             });
         }
 
@@ -718,11 +735,14 @@ macro_rules! define_phase_apply {
         ///
         /// If the field's lane count or shape is not the one this phase was
         /// folded for, or if the Courant buffer is the wrong length.
+        /// `chemical_weight` is indexed by **substance** and reached through
+        /// `substance_of_lane` (ADR-056, ADR-081).
         pub fn $name(
             &self,
             field: &mut $field,
             courant: &[Q],
             substance_of_lane: &[u32],
+            chemical_weight: &[i64],
             ledger: &mut Ledger,
         ) {
             assert_eq!(
@@ -736,6 +756,15 @@ macro_rules! define_phase_apply {
                  the array is indexed by lane, not by substance (ADR-056)",
                 substance_of_lane.len(),
                 self.lanes
+            );
+            assert!(
+                substance_of_lane
+                    .iter()
+                    .all(|&s| (s as usize) < chemical_weight.len()),
+                "the weight table holds {} entries and a lane of this phase names \
+                 a substance past them: it is indexed by substance and not by \
+                 lane (ADR-056, ADR-081)",
+                chemical_weight.len()
             );
             assert_eq!(
                 field.lanes(),
@@ -751,11 +780,13 @@ macro_rules! define_phase_apply {
             );
 
             for lane in 0..self.lanes {
+                let substance = substance_of_lane[lane as usize];
                 self.advect.$advance(
                     field,
                     lane,
                     courant,
-                    substance_of_lane[lane as usize],
+                    substance,
+                    chemical_weight[substance as usize],
                     ledger,
                 );
             }
@@ -797,7 +828,7 @@ impl AdvectPhase {
 
         self.advect
             .advance_lane_crediting_64(field, 0, courant, |joules| {
-                ledger.credit_energy(Channel::BoundaryExchange, joules);
+                ledger.credit_energy(Channel::BoundaryExchange, i128::from(joules));
             });
         field.restore_boundary(&self.split);
     }
@@ -844,6 +875,10 @@ mod tests {
     /// Wide enough for every lane count in this module.
     const MAX_SUBSTANCES: u32 = 32;
 
+    /// A weight table of zeroes (ADR-081). Nothing in this module vents, so the
+    /// chemical energy of what crosses the face is zero times nothing.
+    const NO_CHEMICAL_ENERGY: [i64; MAX_SUBSTANCES as usize] = [0; MAX_SUBSTANCES as usize];
+
     /// [`AdvectPhase::apply_32`] on a fixture with no exchanging face.
     ///
     /// The substance table is the identity on the lanes — nothing here vents, so
@@ -856,6 +891,7 @@ mod tests {
             field,
             courant,
             &table,
+            &NO_CHEMICAL_ENERGY,
             &mut Ledger::new(MAX_SUBSTANCES).unwrap(),
         );
     }
@@ -866,6 +902,7 @@ mod tests {
             field,
             courant,
             &table,
+            &NO_CHEMICAL_ENERGY,
             &mut Ledger::new(MAX_SUBSTANCES).unwrap(),
         );
     }

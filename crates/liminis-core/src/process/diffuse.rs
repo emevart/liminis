@@ -262,12 +262,43 @@ macro_rules! define_advance {
         /// **Each substep**, and not once a tick: `BOUNDARY_EXCHANGE` is
         /// credited on every substep of steps `c` and `d` (ADR-059). Crediting
         /// once instead is wrong by exactly the factor `n`, which is one on most
-        /// of the registry — so a fixture built on H2S, CH4, PO4, Fe or CO2 is
-        /// green over the mistake, and only the proton (six) or oxygen (two) can
-        /// go red.
-        pub fn $name(&self, field: &mut $field, lane: u32, substance: u32, ledger: &mut Ledger) {
+        /// of the registry — so a fixture built on H2S, CH4, PO4 or Fe is green
+        /// over the mistake, and only the proton (six), oxygen (two) or CO2 (two)
+        /// can go red.
+        ///
+        /// **CO2 stood in the green list here and did not belong there**, which
+        /// ADR-083 names as a defect of this comment rather than a correction to
+        /// the substep counts: `n(CO2) = ceil(6 * 1.9e-9 / (1e-4)^2) = 2` by SPEC
+        /// section 1.7 and by the count of ADR-061, so a fixture on it is
+        /// sensitive to the once-a-tick mistake by exactly a factor of two. Left
+        /// as it was, the next author builds a fixture on CO2 believing it cannot
+        /// see the difference.
+        /// `chemical_weight` is `w_s` for **this** substance (ADR-081): matter
+        /// that leaves through the lid takes its chemical energy with it, so the
+        /// same integer the counter above is credited with, multiplied by a
+        /// constant, is owed to the energy half of the same channel. No new
+        /// dimension, no new kernel and no second rounding.
+        ///
+        /// Inside the closure, so it is credited **per substep** off the same
+        /// integer. Added once per lane instead it is wrong by the factor `n`,
+        /// which is one for water, H2S and sulfate of the shipped registry, two
+        /// for oxygen and six for the proton — and the proton's `w` is exactly
+        /// zero by the single-ion convention, so the only witness in the corpus
+        /// is oxygen, at seven ten-thousandths of the credit.
+        pub fn $name(
+            &self,
+            field: &mut $field,
+            lane: u32,
+            substance: u32,
+            chemical_weight: i64,
+            ledger: &mut Ledger,
+        ) {
             self.$inner(field, lane, |units| {
-                ledger.credit_matter(Channel::BoundaryExchange, substance, units);
+                ledger.credit_matter(Channel::BoundaryExchange, substance, i128::from(units));
+                ledger.credit_energy(
+                    Channel::BoundaryExchange,
+                    i128::from(chemical_weight) * i128::from(units),
+                );
             });
         }
 
@@ -568,7 +599,17 @@ macro_rules! define_phase_apply {
         ///
         /// Panics if the field's lane count or shape is not the one this phase
         /// was folded for, or if `substance_of_lane` is not one entry per lane.
-        pub fn $name(&self, field: &mut $field, substance_of_lane: &[u32], ledger: &mut Ledger) {
+        /// `chemical_weight` is indexed by **substance** and reached through
+        /// `substance_of_lane`, for the reason that table exists at all
+        /// (ADR-056): a second lane-indexed table would be the same mistake with
+        /// a new name.
+        pub fn $name(
+            &self,
+            field: &mut $field,
+            substance_of_lane: &[u32],
+            chemical_weight: &[i64],
+            ledger: &mut Ledger,
+        ) {
             assert_eq!(
                 self.width, $width,
                 "this phase was folded for the other storage width"
@@ -593,10 +634,26 @@ macro_rules! define_phase_apply {
                 substance_of_lane.len(),
                 self.lanes.len()
             );
+            assert!(
+                substance_of_lane
+                    .iter()
+                    .all(|&s| (s as usize) < chemical_weight.len()),
+                "the weight table holds {} entries and a lane of this phase names \
+                 a substance past them: it is indexed by substance and not by \
+                 lane (ADR-056, ADR-081)",
+                chemical_weight.len()
+            );
 
             for (lane, folded) in self.lanes.iter().enumerate() {
                 if let Some(diffuse) = folded {
-                    diffuse.$advance(field, lane as u32, substance_of_lane[lane], ledger);
+                    let substance = substance_of_lane[lane];
+                    diffuse.$advance(
+                        field,
+                        lane as u32,
+                        substance,
+                        chemical_weight[substance as usize],
+                        ledger,
+                    );
                 }
             }
             field.restore_boundary(&self.split);
@@ -643,7 +700,7 @@ impl DiffusePhase {
 
         if let Some(diffuse) = self.lanes[0] {
             diffuse.advance_lane_crediting_64(field, 0, |joules| {
-                ledger.credit_energy(Channel::BoundaryExchange, joules);
+                ledger.credit_energy(Channel::BoundaryExchange, i128::from(joules));
             });
         }
         field.restore_boundary(&self.split);
@@ -879,16 +936,30 @@ mod tests {
     /// outside view of ADR-059 and live in `tests/acceptance_boundary.rs`.
     fn run_32(phase: &DiffusePhase, field: &mut Field32) {
         let table: Vec<u32> = (0..field.lanes()).collect();
-        phase.apply_32(field, &table, &mut Ledger::new(MAX_SUBSTANCES).unwrap());
+        phase.apply_32(
+            field,
+            &table,
+            &NO_CHEMICAL_ENERGY,
+            &mut Ledger::new(MAX_SUBSTANCES).unwrap(),
+        );
     }
 
     fn run_64(phase: &DiffusePhase, field: &mut Field64) {
         let table: Vec<u32> = (0..field.lanes()).collect();
-        phase.apply_64(field, &table, &mut Ledger::new(MAX_SUBSTANCES).unwrap());
+        phase.apply_64(
+            field,
+            &table,
+            &NO_CHEMICAL_ENERGY,
+            &mut Ledger::new(MAX_SUBSTANCES).unwrap(),
+        );
     }
 
     /// Wide enough for every lane count in this module.
     const MAX_SUBSTANCES: u32 = 32;
+
+    /// A weight table of zeroes (ADR-081). Nothing in this module vents, so the
+    /// chemical energy of what crosses the face is zero times nothing.
+    const NO_CHEMICAL_ENERGY: [i64; MAX_SUBSTANCES as usize] = [0; MAX_SUBSTANCES as usize];
 
     fn torus(nx: u32, ny: u32, nz: u32) -> Grid {
         Grid::new(nx, ny, nz, [Boundary::Periodic; 6]).unwrap()
@@ -1482,6 +1553,7 @@ mod tests {
         seed_lanes_32(&mut alternating);
         diffuse.advance_lane_32(
             &mut alternating,
+            0,
             0,
             0,
             &mut Ledger::new(MAX_SUBSTANCES).unwrap(),

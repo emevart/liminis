@@ -20,7 +20,7 @@
 
 ### Валидатор отказывается грузить
 
-Шестьдесят один отказ. Каждый — класс ошибки, который иначе проявится как
+Шестьдесят три отказа. Каждый — класс ошибки, который иначе проявится как
 странная динамика через сто тысяч тиков. Порядок тот же, что в таблице §10
 `CONFIG_SCHEMA.md`, и число получено пересчётом обоих перечней, а не сложением
 дельт из записей журнала: каждая из ADR-056 … ADR-069 берёт базой одно и то же
@@ -36,7 +36,22 @@
 `initial_layer_side_outside_the_enumeration_is_rejected` пришли с ADR-077 и стоят
 ниже, в «Начальных условиях», рядом с остальными именами про сторону слоя: там
 они читаются вместе с тем, что стерегут. §10 после них насчитывает шестьдесят
-три строки.
+пять строк.
+
+Последние два имени пришли с ADR-081, и оба про левую часть энергетического
+инварианта. `summed_energy_coefficient_disagreeing_with_the_declared_enthalpy_is_rejected`
+сверяет **целое** `−Σ ν_s·w_s` с объявленной `enthalpy` в единицах хранения и
+отказывает выше `MASS_EPSILON`; он не заменяет
+`reaction_enthalpy_disagreeing_with_formation_enthalpies_is_rejected` и не
+заменяется им — тот сверяет джоули на моль в `f64` и ловит неверную физику, этот
+ловит бит, потерянный при выводе весов, и сценарий может сойтись по первому до
+миллионной доли и разойтись здесь на `2.4·10⁻³`. Отказ обязан назвать оба числа и
+выход: поднять `max_conc` участников, чей `k_s > k_E`.
+`chemical_energy_of_the_domain_past_the_ledger_accumulator_is_rejected` про
+`Σ_s |w_s|·n_s` по всей сетке против `i128` накопителя `DomainSums::energy`:
+оценка считается в `f64` через `log2` и никогда формированием `i128`, потому что
+именно это произведение и переполнилось бы, пока его судят, — а в release
+переполнение `i128` не паникует.
 
 ```
 reaction_unbalanced_by_element_is_rejected
@@ -100,6 +115,8 @@ a_calibration_window_that_is_not_an_interval_is_rejected
 a_grid_not_divisible_by_its_coarsest_lod_is_rejected
 a_periodic_face_without_its_partner_is_rejected
 a_settling_substance_is_refused_until_g_and_the_medium_density_are_named
+summed_energy_coefficient_disagreeing_with_the_declared_enthalpy_is_rejected
+chemical_energy_of_the_domain_past_the_ledger_accumulator_is_rejected
 ```
 
 Над перечнем стоят три имени, которые сами отказами не являются и без которых он
@@ -263,12 +280,18 @@ stokes_velocity_uses_radius_not_diameter
 калибровку скорости осадконакопления так же незаметно.
 
 `reaction_energy_delta_is_integral_after_load` — про то, что энтальпия участвует
-в реакции наравне с веществом (ADR-041). Объявленная `enthalpy` вещественна, её
-коэффициент округляется при загрузке, и тест требует двух вещей сразу: что
-округление произошло один раз и до первого тика, и что валидатор назвал
-наведённую относительную ошибку числом. Неокруглённый коэффициент дал бы
-округление в рантайме на каждом применении — то есть независимое от вещественного,
-то есть расходящийся энергетический ledger.
+в реакции наравне с веществом (ADR-041), и содержание у него другое с ADR-081.
+`ν_E` больше не округляется от объявленной энтальпии: она **суммируется**,
+`ν_E := −Σ_s ν_s·w_s`, то есть сразу в направлении поля. Тест требует трёх вещей.
+Что коэффициент — целое, решённое до первого тика. Что **знак** тот: у
+экзотермической записи `ν_E` положительна (`+54 144 000` у окисления сульфида
+против `−54 144 000`, которые печатал загрузчик до записи), у эндотермической
+отрицательна; под старым определением обе носили знак объявленной энтальпии, и
+экзотермическая реакция **охлаждала** свою ячейку при закрывающемся ledger'е —
+одна и та же `ν_E` стоит по обе его стороны. И что докладываемое число названо:
+оно перестало быть `0.5/ν_E` и стало расхождением просуммированного коэффициента
+с объявленной энтальпией. Округление при этом никуда не делось — оно переехало на
+`w_s` и живёт там, где `k_s > k_E`; проверяется оно на весе, а не на `ν_E`.
 
 ### Сохранение
 
@@ -300,7 +323,6 @@ the_solar_slice_is_overwritten_not_accumulated
 the_fold_writes_only_its_own_coarse_index_in_every_output
 a_tick_without_the_fold_leaves_solar_in_untouched
 the_solar_reduction_is_exact_at_the_full_declared_enthalpy_range
-crediting_more_solar_than_the_counter_holds_is_refused_not_wrapped
 load_reports_the_energy_counter_ceiling_in_joules
 the_solar_term_does_not_depend_on_the_enthalpy_lod
 the_solar_term_scales_with_the_tick
@@ -329,6 +351,23 @@ the_undershoot_bound_counts_the_exchange_face_as_open
 ledger_residual_is_zero_over_1e6_ticks
 energy_ledger_residual_is_zero_over_1e6_ticks
 channel_counters_do_not_overflow_at_1e7_ticks
+a_channel_counter_is_as_wide_as_the_domain_sum_it_closes_against
+a_channel_counter_holds_ten_million_lit_ticks_at_full_sun
+a_boundary_flux_of_one_percent_of_the_pool_survives_the_declared_horizon
+an_energy_credit_past_the_i64_range_reaches_the_counter_exactly
+a_credit_past_the_i128_counter_still_panics_rather_than_wrapping
+a_snapshot_round_trips_a_counter_past_the_i64_range
+the_shipped_scenario_survives_a_thousand_ticks
+the_matter_residual_closes_across_a_tick_with_chemistry_in_it
+a_reaction_written_to_the_wrong_lane_breaks_the_matter_residual
+a_dropped_reaction_write_breaks_the_matter_residual
+the_extent_slice_is_overwritten_not_accumulated
+a_tick_without_chemistry_leaves_every_extent_total_at_zero
+only_the_reaction_step_declares_transmutes
+a_reacting_tick_closes_the_energy_ledger_with_no_channel
+the_exchange_face_credits_the_chemical_energy_of_what_it_moves
+load_reports_the_chemical_energy_of_the_domain_in_joules
+an_exothermic_reaction_warms_its_cell
 a_closed_domain_leaves_every_channel_counter_at_zero
 domain_sums_do_not_overflow_for_water_at_256_cubed
 ```
@@ -382,20 +421,63 @@ flux-form схемы. Ограничитель ван Леера этого не
 против двадцати пяти за четыре тика.
 
 `channel_counters_do_not_overflow_at_1e7_ticks` не гоняет десять миллионов
-тиков. Он проверяет тип счётчика и подставляет граничное значение. **Ни одна из
-двух ветвей при этом не доказана, и прежняя формулировка — «`i32`
-переполняется внутри заявленного горизонта, `i64` нет» — по обеим неверна.** По
-энергии: при `k_E = 67` потолок счётчика есть `2⁶³/2⁶⁷ = 62.5 мДж`, а один
-освещённый тик 128³ при полном солнце даёт `0.16384 Дж` — 2.62 потолка **за
-тик** (ADR-075, ADR-076). По веществу: `i64`-счётчик терпит `9.22·10¹¹` единиц
-за тик, то есть при 128³ около `5.63·10⁷` на воксель грани обмена, `0.011 %`
-его собственного пула воды, — постоянный градиент такого порядка исчерпывает
-счётчик внутри объявленного горизонта. Корпусное «10⁶ тиков по тысяче единиц
-дают 10⁹» из `QUANTITIES.md` §3 — заглушка, а не худший случай. Разрядность
-счётчиков каналов — открытый вопрос A-20 (в ADR-075 и ADR-076 он назван A-19:
-номер был свободен, когда их писали), и операционная форма, делающая потолок
-видимым вместо красного, — строка отчёта загрузки
-`load_reports_the_energy_counter_ceiling_in_joules`.
+тиков. Он подставляет граничное значение. **Обе ветви теперь доказаны, и прежняя
+формулировка — «`i32` переполняется внутри заявленного горизонта, `i64` нет» —
+неверна во второй половине** (ADR-083).
+
+По энергии: при `k_E = 67` потолок `i64`-счётчика был `2⁶³/2⁶⁷ = 62.5 мДж`, а
+один освещённый тик 128³ при полном солнце даёт `0.16384 Дж = 2.4179·10¹⁹`
+единиц — **2.62144 потолка за тик**. За 10⁷ тиков это `2.4179·10²⁶`; счётчик
+`i128` держит их с запасом в **39.4 бита**. Граничное значение подставляет
+`a_channel_counter_holds_ten_million_lit_ticks_at_full_sun`.
+
+По веществу: вместимость `i64` за весь прогон есть `9.223·10¹⁸` единиц, а
+`9.22·10¹¹` — это она же, **делённая на горизонт 10⁷ тиков** (ADR-004); делитель
+стоит рядом с числом, потому что без него оно читается как вместимость и
+промахивается на семь порядков. Ветвь достижима **при работающем сквозном
+потоке** — жерло или химия внутри, вынос через `BOUNDARY_EXCHANGE`, — а крышкой
+самой по себе не достижима вовсе: счётчик знаковый и хранит нетто, поэтому сутки
+симметричного обмена выглядят как отсутствие обмена. Сквозной поток в один
+процент пула поверхностного вокселя есть `8.389·10¹³` единиц за тик и исчерпывает
+`i64` на тике `1.0995·10⁵` — на одиннадцати процентах самого короткого
+объявленного горизонта. Это подставляет
+`a_boundary_flux_of_one_percent_of_the_pool_survives_the_declared_horizon`.
+
+Корпусное «10⁶ тиков по тысяче единиц дают 10⁹» из `QUANTITIES.md` §3 —
+заглушка, а не худший случай, и она сохранена под своим именем: половина её
+довода («`i32` безнадёжен, и молча») верна и остаётся. Операционная форма,
+делающая потолок видимым, — строка отчёта загрузки
+`load_reports_the_energy_counter_ceiling_in_joules`; после ADR-083 она печатает
+`2¹²⁷/2^k_E`.
+
+Шесть имён ADR-083, и первое из них сторожит само решение — ширина элемента
+правой стороны равна ширине элемента левой:
+
+```text
+a_channel_counter_is_as_wide_as_the_domain_sum_it_closes_against
+a_channel_counter_holds_ten_million_lit_ticks_at_full_sun
+a_boundary_flux_of_one_percent_of_the_pool_survives_the_declared_horizon
+an_energy_credit_past_the_i64_range_reaches_the_counter_exactly
+a_credit_past_the_i128_counter_still_panics_rather_than_wrapping
+a_snapshot_round_trips_a_counter_past_the_i64_range
+```
+
+`crediting_more_solar_than_the_counter_holds_is_refused_not_wrapped` снят вместе
+с конфигурацией, которую называл: после ADR-083 «больше солнца, чем держит
+счётчик» недостижимо никаким солнцем в объявленном размахе, и имя стало бы
+зелёным всегда и ни о чём. Его отказ переехал на границу `i128` внутрь
+`a_credit_past_the_i128_counter_still_panics_rather_than_wrapping`.
+
+**`the_shipped_scenario_survives_a_thousand_ticks`** — то, чего у приёмки не было
+по **роду**, а не по покрытию: `every_scenario_in_the_repository_loads` проверяет
+загрузку, и ни один тест корпуса не крутил ни одного сценария. Поэтому паника на
+седьмом тике поставляемого `h2s-oxidation.toml` прошла мимо всех тестов. Тест
+строит мир тем же путём, каким его строит прогон (`serve::build`, иначе крышка
+торгует с незасеянным резервуаром), и после каждого из тысячи тиков сводит
+инвариант **собственным** вызовом `assert_closed`, а не полагаясь на
+`#[cfg(debug_assertions)]` внутри `Tick::advance`. Сценарий один и в единственном
+числе намеренно: `hello.toml` проходит загрузку и не строится — умолчание
+`exchange` на `z_max` без `[boundary.reservoir]`.
 
 **`a_tick_without_the_fold_leaves_solar_in_untouched` носит `#[ignore]`, и
 причина записана в атрибуте.** ADR-075 называл его конфигурацию достижимой —
@@ -407,6 +489,51 @@ flux-form схемы. Ограничитель ван Леера этого не
 варианте, который тест заведён отличать. Имя возвращается в строй в тот день,
 когда шаг `i′` попадает в диспетч; ослабить его формулировку значило бы оставить
 на этом месте видимость живого сторожа.
+
+**Шесть имён ADR-080 — про второе слагаемое правой части вещественного
+тождества**, и SPEC §2.1 с ними расходится: там правая часть одночленная,
+`Δ(Σ поля + Σ клетки) == Σ(потоки по каналам)`, а в коде она стала
+`Δnₛ == Σ_c credited(c, s) + Σ_r ν_{r,s}·Ξ_r`. Спека заморожена (ADR-032),
+расхождение живёт здесь. Так же расходится §4.1: `invariant` отвечает тремя
+ответами, а не двумя, — третий `Transmutes`, и его объявляет один шаг `h`.
+
+`the_matter_residual_closes_across_a_tick_with_chemistry_in_it` — то, ради чего
+всё остальное: до ADR-080 `Ledger::assert_closed` падал на первом же тике с
+реакцией, и это была вещественная половина замка на шаге `h`.
+
+Несущие — второе и третье. `a_reaction_written_to_the_wrong_lane_breaks_the_matter_residual`
+падает от ошибки, ради невидимости которой отвергнут главный вариант записи —
+невязка по сохраняемым величинам вместо повеществной: на поставляемом реестре
+матрица состава имеет ранг 1 при пяти именах, и перенос количества между двумя
+веществами равного состава проецируется в ноль.
+`a_dropped_reaction_write_breaks_the_matter_residual` падает от ошибки, ради
+невидимости которой отвергнута сильнейшая альтернатива — восстановление `Ξ`
+на хосте из доменных дельт: та проверка слепа ровно на `span{ν}`, а потерянная
+запись целого вокселя даёт `Δn`, пропорциональное `ν`.
+
+`the_extent_slice_is_overwritten_not_accumulated` — про ADR-045: ядро
+перезаписывает свою ячейку, и накопление вернуло бы прошлый тик через ту самую
+дверь, которая заведена его ловить. `a_tick_without_chemistry_leaves_every_extent_total_at_zero`
+сторожит обнуление в `begin_tick`, и экстент в нём **подсаживается** до прогона:
+таблица, обнуляемая только конструктором, зелена при любой записи теста, где её
+не трогали. `only_the_reaction_step_declares_transmutes` сторожит **обе** оси:
+ни один процесс S0 не объявляет `Transmutes` по энергии — там ADR-081 оставляет
+шагу `h` буквальный `Conserved`, потому что взвешенная левая часть от реакции не
+меняется вовсе.
+
+Цена названа числом и она на воксель: срез экстента есть `4·R` Б, то есть
+**234 Б и 490 МБ при 128³ и `R = 1`** против базы ADR-062 в 230 Б и 482 МБ —
+1.74 % состояния; 270 Б и 566 МБ на десяти реакциях SPEC §2.3; и 486 Б и 1019 МБ
+на границе сборки `R_MAX = 64` — там сам срез весит 256 Б на воксель, то есть
+**111 % состояния**, и отладочная механика перевешивает весь мир. Длина среза равна
+`n_reactions`, а не `R_MAX`, и это единственное, что отодвигает обрыв.
+
+**Седьмого имени ADR-080 здесь нет, и это не пропуск.**
+`load_reports_the_bytes_the_extent_slice_costs` требует строки в отчёте загрузки,
+то есть правки `config/derive.rs` и поля в `Derived`; в корпусе его пока нет.
+Числа выше живут в доке `kernels::react::react_voxel` и в `version.rs`, а имя
+остаётся долгом — по правилу этого документа его нельзя вписать в перечень
+раньше теста.
 
 Последние два пришли из ADR-059 и, по его же словам, самые дешёвые и самые злые.
 `a_closed_domain_leaves_every_channel_counter_at_zero` гоняет настоящий транспорт

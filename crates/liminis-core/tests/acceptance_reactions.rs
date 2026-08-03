@@ -1,7 +1,7 @@
 //! Acceptance criteria of the reaction kernel (`ACCEPTANCE.md`, S0).
 //!
-//! Ten names, and the document fixes them — the stage is accepted by these and
-//! not by a reading of the code:
+//! Thirteen names, and the document fixes them — the stage is accepted by these
+//! and not by a reading of the code:
 //!
 //! ```text
 //! reaction_alone_conserves_each_element_exactly
@@ -14,7 +14,17 @@
 //! abiotic_reaction_proceeds_with_empty_catalyst
 //! abiotic_rate_is_independent_of_every_catalyst_field
 //! catalyzed_rate_equals_abiotic_rate_times_catalyst_concentration
+//! the_matter_residual_closes_across_a_tick_with_chemistry_in_it
+//! a_reaction_written_to_the_wrong_lane_breaks_the_matter_residual
+//! a_dropped_reaction_write_breaks_the_matter_residual
 //! ```
+//!
+//! The last three arrived with ADR-080 and they are the first tests in this file
+//! that judge the chemistry through the **ledger** rather than through the
+//! amounts. That is a different instrument: the ten above compare the kernel's
+//! output against arithmetic done in the test, and these three compare two
+//! independent witnesses of the same tick — the fields, and the kernel's own
+//! report of how far each reaction ran.
 //!
 //! They live in an integration test rather than beside the kernel on purpose,
 //! and `tests/acceptance_diffusion.rs` states the reason: an acceptance test is
@@ -47,8 +57,13 @@
 //! `nu_i = s_i * 2^(k_i - e_r)` (ADR-039), enthalpy as a participant of the
 //! stoichiometry vector at a reserved index (ADR-041).
 
-use liminis_core::kernels::react::{NO_CATALYST, ReactParams, Rx, react_voxel};
+use liminis_core::config;
+use liminis_core::kernels::fold::{FoldParams, fold_energy};
+use liminis_core::kernels::react::{NO_CATALYST, R_MAX, ReactParams, Rx, react_voxel};
+use liminis_core::kernels::temperature::{Heat, TemperatureParams, temperature_cell};
+use liminis_core::ledger::{Channel, DomainSums, Ledger, Nu};
 use liminis_core::numeric::{M32, M64, Q, run_key};
+use liminis_core::world::Width;
 
 /// A deliberately non-cubic grid, small enough to run whole in a test and large
 /// enough that a mistaken index lands somewhere visible.
@@ -112,9 +127,12 @@ struct Recipe {
     rid: u32,
     /// `(substance, molar coefficient)`, inputs negative.
     molar: &'static [(u32, i64)],
-    /// The molar enthalpy coefficient of the reaction, in the same signed sense:
-    /// negative means the record looks like an input, which is what an
-    /// exothermic reaction looks like from inside the vector.
+    /// The molar enthalpy coefficient of the reaction, in the direction of the
+    /// **field** (ADR-081): positive means the reaction gives heat up, so an
+    /// exothermic record looks like an output from inside the vector. The three
+    /// recipes below are exothermic, and their numbers are `-Sum_s s_s*w_s` over
+    /// the weights in [`W`] — see
+    /// `the_fixture_weights_agree_with_its_energy_coefficients`.
     molar_energy: i64,
     /// Turnovers per second per cubic metre, or per mole of catalyst when
     /// `catalyst` is set (ADR-063).
@@ -231,6 +249,22 @@ impl Tables {
             conc_per_unit: &self.conc_per_unit,
         }
     }
+
+    /// The four tables the residual multiplies the reduced extent by (ADR-080).
+    ///
+    /// The same borrows `Rx` hands the kernel and never a second copy: the
+    /// coefficient the ledger multiplies `Xi_r` by has to be the coefficient the
+    /// kernel applied, and here that is the storage `nu`, not the molar `s` — the
+    /// two differ by `2^(k_i - e_r)`, which is a factor of four on `A` in this
+    /// fixture and exactly one on the other five.
+    fn nu(&self) -> Nu<'_> {
+        Nu {
+            nu: &self.nu,
+            nu_sub: &self.nu_sub,
+            begin: &self.begin,
+            len: &self.len,
+        }
+    }
 }
 
 fn q(v: f64) -> Q {
@@ -255,6 +289,11 @@ struct World {
     dst32: Vec<M32>,
     dst64: Vec<M64>,
     energy: Vec<M64>,
+    /// The extent report of ADR-080: `n_voxels * n_reactions` cells, voxel-major.
+    /// Sized for `R_MAX` so that one fixture serves every recipe below; the
+    /// **stride** is always the scenario's `n_reactions`, which is what the
+    /// kernel writes on and what [`World::xi`] reads with.
+    xi: Vec<M32>,
     temperature: Vec<Q>,
     catalyst: Vec<Q>,
     lanes: [u32; N_SUBSTANCES as usize + 1],
@@ -277,6 +316,7 @@ impl World {
             dst32: vec![M32::ZERO; (n32 * N_VOXELS) as usize],
             dst64: vec![M64::ZERO; (n64 * N_VOXELS) as usize],
             energy: vec![M64::ZERO; N_VOXELS as usize],
+            xi: vec![M32::ZERO; N_VOXELS as usize * R_MAX],
             // One coarse cell at lod 0 per fine voxel: the mapping of a fine
             // index to a coarse one is exercised beside the kernel, and putting
             // a coarse grid here would only test the fixture.
@@ -343,6 +383,7 @@ impl World {
                 &mut self.dst32,
                 &mut self.dst64,
                 &mut self.energy,
+                &mut self.xi,
                 &self.temperature,
                 &self.catalyst,
                 rx,
@@ -350,6 +391,22 @@ impl World {
                 idx,
             );
         }
+    }
+
+    /// The extent reaction `r` reported in voxel `idx` (ADR-080).
+    ///
+    /// Off the report, not off the amounts. The whole content of the record is
+    /// that these are two independent witnesses, so a helper that derived one
+    /// from the other would make every test below an identity.
+    fn xi(&self, p: &ReactParams, r: usize, idx: u32) -> i64 {
+        self.xi[(idx as usize) * (p.n_reactions as usize) + r].to_i64()
+    }
+
+    /// What the host reduces in phase 5 LEDGER: `Xi_r` over the whole domain.
+    fn xi_total(&self, p: &ReactParams, r: usize) -> i128 {
+        (0..N_VOXELS)
+            .map(|idx| i128::from(self.xi(p, r, idx)))
+            .sum()
     }
 }
 
@@ -380,7 +437,7 @@ fn r1() -> Recipe {
     Recipe {
         rid: 0x5eed_0001,
         molar: &[(A, -1), (B, -2), (C, 1)],
-        molar_energy: -3,
+        molar_energy: 2,
         vmax: 0.25,
         t_vmax: 300.0,
         catalyst: NO_CATALYST,
@@ -392,7 +449,7 @@ fn r2() -> Recipe {
     Recipe {
         rid: 0x5eed_0002,
         molar: &[(B, -2), (D, -1), (E, 1)],
-        molar_energy: -5,
+        molar_energy: 12,
         vmax: 0.25,
         t_vmax: 300.0,
         catalyst: NO_CATALYST,
@@ -407,7 +464,7 @@ fn r3() -> Recipe {
     Recipe {
         rid: 0x5eed_0003,
         molar: &[(A, -1), (D, -1), (F, 1)],
-        molar_energy: -7,
+        molar_energy: 4,
         vmax: 0.5,
         t_vmax: 300.0,
         catalyst: NO_CATALYST,
@@ -466,6 +523,303 @@ fn assert_something_happened(world: &World) {
     assert!(
         moved,
         "nothing moved at all: a kernel that does nothing conserves everything"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// The matter residual with chemistry in it (ADR-080)
+// ---------------------------------------------------------------------------
+
+/// The left side of the matter invariant over one of the fixture's two states.
+///
+/// `after` picks the write buffer over the read one. A residual is
+/// `after - before` over one tick, and this fixture holds both states at once,
+/// which is what lets a whole tick be judged without a `Tick`.
+///
+/// Through the lane table and never through the substance index: the same wrong
+/// mapping applied on both sides gives a residual of exactly zero for ever
+/// (ADR-056), which is the failure `Tick::domain_sums` has its own paragraph
+/// about.
+fn domain_sums(world: &World, after: bool) -> DomainSums {
+    let mut sums = DomainSums::new(N_SUBSTANCES).unwrap();
+    for s in 0..N_SUBSTANCES {
+        let at = (world.lanes[s as usize] * N_VOXELS) as usize;
+        let span = at..at + N_VOXELS as usize;
+        if world.mask & (1 << s) != 0 {
+            sums.add_field_lane_64(
+                s,
+                if after {
+                    &world.dst64[span]
+                } else {
+                    &world.src64[span]
+                },
+            );
+        } else {
+            sums.add_field_lane_32(
+                s,
+                if after {
+                    &world.dst32[span]
+                } else {
+                    &world.src32[span]
+                },
+            );
+        }
+    }
+    sums
+}
+
+/// The three-reaction fixture every test in this section runs, plus the state it
+/// starts from.
+///
+/// Three reactions rather than one, and two of them competing for `B`: with a
+/// single reaction the extent term is one product of two numbers, and a residual
+/// that closes says nothing about whether the term is indexed by reaction at all.
+fn reacting_tick() -> (Tables, ReactParams, World) {
+    let t = tables(&[r1(), r2(), r3()], &MIXED_LANES, 0.0);
+    let mut p = params();
+    p.n_reactions = 3;
+    let world = World::uniform([100_000, 1_000, 0, 100_000, 0, 0], MIXED_LANES, MIXED_MASK);
+    (t, p, world)
+}
+
+/// Write a value into the **write** buffer, which is where a corruption of the
+/// kernel's output has to land.
+fn poke_dst(world: &mut World, s: u32, idx: u32, value: i64) {
+    let at = world.at(s, idx);
+    if world.mask & (1 << s) != 0 {
+        world.dst64[at] = M64::new(value);
+    } else {
+        world.dst32[at] = M32::new(i32::try_from(value).unwrap());
+    }
+}
+
+/// `ACCEPTANCE.md`, section "Conservation" (ADR-080).
+///
+/// The identity chemistry actually satisfies, end to end:
+/// `Delta n_s == Sum_c credited(c, s) + Sum_r nu_(r,s) * Xi_r`, with the left
+/// side summed off the fields and `Xi_r` reduced off the slice the kernel wrote.
+/// Before this record `Ledger::assert_closed` panicked on the first tick with any
+/// reaction in it, which is the matter half of the lock on step `h`.
+///
+/// Three things are asserted and the second is the one that keeps the first
+/// honest.
+///
+/// (1) the residual is an exact zero for every substance — not a tolerance;
+/// (2) **without the extent term the same tick does not close.** A ledger with no
+///     room for an extent is off by the whole of what the chemistry moved, which
+///     is what makes the zero above evidence of a term rather than of a quiet
+///     tick;
+/// (3) not one channel counter moved. `Xi` is not a channel and the registry did
+///     not grow a seventh name (ADR-059, ADR-080): the domain is closed, and
+///     `a_closed_domain_leaves_every_channel_counter_at_zero` stays true on a
+///     domain where chemistry is running.
+///
+/// What this cannot see is written down where it belongs, on
+/// `Ledger::residual_matter`: the extent is credited with the same `xi` that
+/// applied `Delta n = nu * xi`, so a wrong, negative or unbounded `xi` cancels
+/// between the two sides and is invisible here for ever. That class is
+/// `a_negative_pool_caps_the_extent_at_zero` and its neighbours, and it is not
+/// the ledger's.
+#[test]
+fn the_matter_residual_closes_across_a_tick_with_chemistry_in_it() {
+    let (t, p, mut world) = reacting_tick();
+    let before = domain_sums(&world, false);
+    world.run(&t.rx(), &p);
+    let after = domain_sums(&world, true);
+
+    assert_something_happened(&world);
+    // The substances genuinely convert, which is the reason a per-substance
+    // residual needed a second term at all.
+    assert_ne!(
+        after.matter(C),
+        before.matter(C),
+        "no reaction ran, so the residual below closes on 0 == 0"
+    );
+
+    let mut ledger = Ledger::with_reactions(N_SUBSTANCES, p.n_reactions).unwrap();
+    ledger.begin_tick();
+    ledger.reduce_extent(&world.xi, N_VOXELS);
+
+    for r in 0..p.n_reactions as usize {
+        assert_eq!(
+            ledger.extent(r as u32),
+            world.xi_total(&p, r),
+            "the reduction of reaction {r} is not the sum of its slice"
+        );
+    }
+    assert!(
+        ledger.extent(0) > 0,
+        "reaction 0 did not run, so its term is zero whatever the code does"
+    );
+
+    for s in 0..N_SUBSTANCES {
+        assert_eq!(
+            ledger.residual_matter(t.nu(), s, &before, &after),
+            0,
+            "substance {s} does not close"
+        );
+    }
+    ledger.assert_closed(t.nu(), &before, &after);
+
+    // (2) The same tick judged without the term. `Ledger::new` leaves the extent
+    //     table empty, so `Sum_r nu * Xi` is identically zero — which is exactly
+    //     the state of the ledger before ADR-080, and exactly what made step `h`
+    //     undispatchable.
+    let mut blind = Ledger::new(N_SUBSTANCES).unwrap();
+    blind.begin_tick();
+    let broken: Vec<i128> = (0..N_SUBSTANCES)
+        .map(|s| blind.residual_matter(Nu::EMPTY, s, &before, &after))
+        .collect();
+    assert!(
+        broken.iter().any(|&r| r != 0),
+        "a ledger with no extent term closed a reacting tick: {broken:?}"
+    );
+
+    // (3) Not a channel.
+    for channel in Channel::ALL {
+        for s in 0..N_SUBSTANCES {
+            assert_eq!(
+                ledger.matter(channel, s),
+                0,
+                "{} moved for substance {s} on a closed domain",
+                channel.name()
+            );
+        }
+    }
+}
+
+/// `ACCEPTANCE.md`, section "Conservation" (ADR-080).
+///
+/// One of the two load-bearing names of the record, and this is the one that
+/// answers the variant it rejected. A residual taken over the **conserved
+/// quantities** instead of over the substances cannot see this at all on a
+/// registry whose composition matrix has a kernel — and the shipped registry's
+/// has rank 1 out of five names — because moving an amount between two substances
+/// of equal composition projects to zero. Per substance, with the kernel's own
+/// report on the other side, it is a hard failure.
+///
+/// **The corruption is applied to the kernel's output, and that is stated rather
+/// than hidden.** A test cannot make `react_voxel` commit the bug from outside;
+/// what it can do is take the real output and move the delta of one reaction's
+/// product into the lane of another substance, which is byte for byte the state
+/// a kernel addressing by substance index instead of by `lane[s]` would leave
+/// (ADR-056). What is under test is that the residual is sensitive to the class,
+/// not that the kernel has the defect.
+#[test]
+fn a_reaction_written_to_the_wrong_lane_breaks_the_matter_residual() {
+    let (t, p, mut world) = reacting_tick();
+    let before = domain_sums(&world, false);
+    world.run(&t.rx(), &p);
+
+    let mut ledger = Ledger::with_reactions(N_SUBSTANCES, p.n_reactions).unwrap();
+    ledger.begin_tick();
+    ledger.reduce_extent(&world.xi, N_VOXELS);
+
+    // The control, and it is not decoration: without it a residual that had lost
+    // its extent term entirely would be non-zero below and this test would be
+    // green on the wrong evidence. The uncorrupted tick has to close first.
+    ledger.assert_closed(t.nu(), &before, &domain_sums(&world, true));
+
+    // Everything reaction 0 produced lands on `E` instead of on `C`. Both are
+    // narrow, both are products of a reaction that ran, and both are made of the
+    // same conserved quantities as their neighbours — so nothing about the
+    // arrangement is convenient.
+    for idx in 0..N_VOXELS {
+        let moved = world.delta(C, idx);
+        assert_ne!(moved, 0, "voxel {idx} produced no C to misplace");
+        let kept = world.before(C, idx);
+        let landed = world.after(E, idx) + moved;
+        poke_dst(&mut world, C, idx, kept);
+        poke_dst(&mut world, E, idx, landed);
+    }
+    let after = domain_sums(&world, true);
+
+    // Both ends of the misplacement, and both have to be loud: the lane that did
+    // not receive what its reaction made, and the lane that received what was not
+    // made for it.
+    assert_ne!(
+        ledger.residual_matter(t.nu(), C, &before, &after),
+        0,
+        "the substance whose product went elsewhere still closes"
+    );
+    assert_ne!(
+        ledger.residual_matter(t.nu(), E, &before, &after),
+        0,
+        "the substance that received a foreign product still closes"
+    );
+
+    // And the whole check fires, naming the substance rather than saying only
+    // that the tick did not close.
+    let refusal = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        ledger.assert_closed(t.nu(), &before, &after);
+    }))
+    .expect_err("a misplaced write closed the ledger");
+    let message = refusal
+        .downcast_ref::<String>()
+        .cloned()
+        .unwrap_or_default();
+    assert!(
+        message.contains("the matter ledger did not close"),
+        "the refusal has to say what failed, and says: {message}"
+    );
+}
+
+/// `ACCEPTANCE.md`, section "Conservation" (ADR-080).
+///
+/// The second load-bearing name, and it answers the *strongest* rejected
+/// alternative: reconstructing `Xi` on the host from the domain deltas
+/// (`nu * Xi == Delta n_domain`) instead of taking a report from the kernel. That
+/// reconstruction is blind on exactly `span{nu}` — a lost write, a doubled
+/// application, a dispatch that missed a slab all move the domain by something
+/// proportional to `nu` and pass silently. With two independent witnesses they do
+/// not.
+///
+/// The lost write here is a whole voxel: its amounts stay at state `N` while its
+/// block of the extent slice reports the reaction that ran. That is not an exotic
+/// arrangement — it is what a dispatch one voxel short of the domain looks like,
+/// and it is also what a stale extent slice looks like from the other side.
+#[test]
+fn a_dropped_reaction_write_breaks_the_matter_residual() {
+    let (t, p, mut world) = reacting_tick();
+    let before = domain_sums(&world, false);
+    world.run(&t.rx(), &p);
+
+    let mut ledger = Ledger::with_reactions(N_SUBSTANCES, p.n_reactions).unwrap();
+    ledger.begin_tick();
+    ledger.reduce_extent(&world.xi, N_VOXELS);
+
+    // The same control as in the test above: the intact tick closes, so what the
+    // assertions below observe is the lost write and not a residual that lost its
+    // second term.
+    ledger.assert_closed(t.nu(), &before, &domain_sums(&world, true));
+
+    const LOST: u32 = 5;
+    let mut dropped = 0i64;
+    for s in 0..N_SUBSTANCES {
+        dropped += world.delta(s, LOST).abs();
+        let kept = world.before(s, LOST);
+        poke_dst(&mut world, s, LOST, kept);
+    }
+    assert!(dropped > 0, "voxel {LOST} had no write to lose");
+    let after = domain_sums(&world, true);
+
+    let residuals: Vec<i128> = (0..N_SUBSTANCES)
+        .map(|s| ledger.residual_matter(t.nu(), s, &before, &after))
+        .collect();
+    assert!(
+        residuals.iter().any(|&r| r != 0),
+        "a whole voxel's write was lost and every substance still closed: \
+         {residuals:?}"
+    );
+
+    // Precisely, on the product of reaction 0: the domain is short by exactly one
+    // voxel's worth of it, and the residual is that number and not merely
+    // non-zero. A check that only says "something is off" cannot tell a lost
+    // write from a rounding.
+    assert_eq!(
+        residuals[C as usize],
+        -i128::from(i64::from(nu_of(C, 1)) * world.xi(&p, 0, LOST)),
+        "the shortfall in C is not one voxel of reaction 0"
     );
 }
 
@@ -893,4 +1247,599 @@ fn catalyzed_rate_equals_abiotic_rate_times_catalyst_concentration() {
              catalyst concentration of 3"
         );
     }
+}
+
+// ---------------------------------------------------------------------------
+// The energy half of the invariant (ADR-081)
+// ---------------------------------------------------------------------------
+
+/// A closed box carrying the chemistry of `configs/scenarios/h2s-oxidation.toml`,
+/// with formation enthalpies that agree with the declared reaction enthalpies to
+/// the last digit (ADR-044).
+///
+/// Written out rather than read off the shipped file, for the reason every other
+/// fixture in `tests/` gives: an acceptance test that loaded the repository's own
+/// scenario would go red the day somebody calibrated it, and would go red about
+/// calibration rather than about the sign of `nu_E`.
+///
+/// Sulfate keeps its **negative** heat capacity, which is physics and not a typo
+/// (`configs/scenarios/h2s-oxidation.toml`): the denominator of the temperature
+/// is a sum of different signs, and the solvent is what makes it positive. See
+/// `an_exothermic_reaction_warms_its_cell` for why the cell has to hold water.
+const EXOTHERMIC_SCENARIO: &str = r#"
+name = "exothermic-fixture"
+dt = 1.0
+beta = 0.015625
+T_ref = 300.0
+
+[conserved]
+C = 12.01070
+N = 14.00670
+P = 30.97376
+S = 32.06500
+Fe = 55.84500
+
+[grid]
+nx = 8
+ny = 8
+nz = 8
+dx = 1.0e-4
+
+[boundary]
+x_min = "periodic"
+x_max = "periodic"
+y_min = "periodic"
+y_max = "periodic"
+z_min = "closed"
+z_max = "closed"
+
+[[substance]]
+id = "H2S"
+molar_mass = 34.08088
+typical_conc = 0.1
+max_conc = 10.0
+partial_molar_volume = 3.5e-5
+settling_radius = 0.0
+diffusivity = 1.6e-9
+c_p = 179.0
+enthalpy_formation = 0.0
+composition = { S = 1 }
+
+[[substance]]
+id = "WATER"
+molar_mass = 18.01528
+typical_conc = 55000.0
+max_conc = 55600.0
+partial_molar_volume = 1.8e-5
+settling_radius = 0.0
+diffusivity = 2.3e-9
+c_p = 75.3
+enthalpy_formation = -285830.0
+composition = {}
+
+[[substance]]
+id = "O2"
+molar_mass = 31.99880
+typical_conc = 0.25
+max_conc = 1.0
+partial_molar_volume = 3.1e-5
+settling_radius = 0.0
+diffusivity = 2.1e-9
+c_p = 234.0
+enthalpy_formation = 0.0
+composition = {}
+
+[[substance]]
+id = "SO4"
+molar_mass = 96.06260
+typical_conc = 28.0
+max_conc = 100.0
+partial_molar_volume = 1.4e-5
+settling_radius = 0.0
+diffusivity = 1.0e-9
+c_p = -293.0
+enthalpy_formation = -846000.0
+composition = { S = 1 }
+
+[[substance]]
+id = "H_ION"
+molar_mass = 1.007940
+typical_conc = 1.0e-4
+max_conc = 1.0e-2
+partial_molar_volume = 0.0
+settling_radius = 0.0
+diffusivity = 9.3e-9
+c_p = 0.0
+enthalpy_formation = 0.0
+composition = {}
+
+[[reaction]]
+id = "h2s_oxidation"
+enthalpy = -846000.0
+catalyst = ""
+energy_from = ""
+inputs = { H2S = 1, O2 = 2 }
+outputs = { SO4 = 1, H_ION = 2 }
+
+[reaction.rate]
+vmax = 1.0e-6
+t_vmax = 298.15
+q10 = 2.0
+km = { H2S = 0.01, O2 = 0.01 }
+
+[[field]]
+id = "enthalpy"
+lod = 2
+thermal_diffusivity = 1.4e-7
+t_min = 273.15
+t_max = 323.15
+"#;
+
+/// The fine grid of [`EXOTHERMIC_SCENARIO`], and the coarse grid the enthalpy
+/// field folds onto: `2 x 2 x 2` cells of sixty-four fine voxels each.
+const FINE: u32 = 8;
+const N_FINE: u32 = FINE * FINE * FINE;
+const ENTHALPY_LOD: u32 = 2;
+const COARSE_SIDE: u32 = FINE >> ENTHALPY_LOD;
+const N_COARSE: u32 = COARSE_SIDE * COARSE_SIDE * COARSE_SIDE;
+/// `2^(3*lod)`: how many fine voxels one coarse cell owns.
+const PER_COARSE: i64 = 1 << (3 * ENTHALPY_LOD);
+
+/// The scenario's zero of enthalpy storage, K, as the fixture declares it.
+const T_REF_SCENARIO: f64 = 300.0;
+
+/// How far the reaction is made to run in every fine voxel of the warm cell, in
+/// quanta of `2^-e_r` turnovers.
+///
+/// `2^24`, and deliberately not the `xi ~ 2` a tick of the shipped scenario
+/// actually produces (ADR-081). One tick of real chemistry warms a coarse cell
+/// by `1.8e-7 K`, and `Q` is an `f32`: at 300 K its unit in the last place is
+/// `3e-5 K`, two hundred times larger, so `T_ref + H/C` answers `T_ref` exactly
+/// and a strict inequality would be red under **either** sign. The fixture
+/// therefore runs a million ticks' worth of extent in one dispatch, which is the
+/// smallest change that makes the sign observable at all. What is under test is
+/// the sign of `nu_E`, and the sign does not depend on how far the reaction ran.
+const XI: i64 = 1 << 24;
+
+/// The lane of every substance of [`EXOTHERMIC_SCENARIO`] within its width class,
+/// and the mask that says which class that is (ADR-040, ADR-056).
+///
+/// Derived from the loader's own widths rather than written out: which substance
+/// ends up wide is a conclusion of `config/derive.rs` from `max_conc`, and a
+/// hand-written table here would be a second source for it.
+fn lanes_of(d: &config::Derived) -> (Vec<u32>, u32) {
+    let mut lane = vec![0u32; d.substances().len()];
+    let mut mask = 0u32;
+    let (mut n32, mut n64) = (0u32, 0u32);
+    for (s, decl) in d.decls().iter().enumerate() {
+        match decl.width {
+            Width::Bits64 => {
+                lane[s] = n64;
+                mask |= 1 << s;
+                n64 += 1;
+            }
+            Width::Bits32 => {
+                lane[s] = n32;
+                n32 += 1;
+            }
+        }
+    }
+    (lane, mask)
+}
+
+/// `ACCEPTANCE.md`, section "Physics" (ADR-081, ADR-044, ADR-079).
+///
+/// **The one thing in this repository that can tell the two signs of `nu_E`
+/// apart.** On the shipped scenario the old definition — `round(dH * 2^(k_E -
+/// e_r))` — and the new one — `-Sum_s nu_s * w_s` — give the same modulus and
+/// differ only in sign, so every conservation test, every "alone" test and every
+/// residual is green under either: the same `nu_E` stands on both sides of the
+/// energy ledger. Only a temperature can see it, and a temperature has only
+/// existed since ADR-079.
+///
+/// The chain is the one a tick runs: the loader fixes `nu_E`, `kernels/fold.rs`
+/// adds it to the enthalpy field, and `kernels/temperature.rs` divides by the
+/// composition of the cell. Nothing here flips a sign of its own — that is the
+/// whole content of ADR-081, "the sign lives in one place, in the derivation at
+/// load".
+///
+/// **The denominator has to be positive, and it is not positive by nature.**
+/// `T = T_ref + H/Sum(n*c_p)` is warming only where the sum is above zero, and
+/// aqueous sulfate declares `c_p = -293 J/(mol K)`, which is real. ADR-077 lets a
+/// scenario put a substance on one side of the layer, so a voxel holding sulfate
+/// and no solvent is a legal state of a legal world; there ADR-079 answers about
+/// the **cell** rather than about the kernel — `C_cell <= 0` gives `T := T_ref`,
+/// divides nothing and panics in no build profile. Such a cell would make this
+/// test compare `T_ref` against `T_ref` and pass under either sign, so the cell
+/// below holds water and the assertion on the capacity is written out first.
+#[test]
+fn an_exothermic_reaction_warms_its_cell() {
+    let config = config::parse(EXOTHERMIC_SCENARIO).expect("the fixture must parse");
+    let d = config::validate(&config).expect("the fixture must validate");
+
+    let rx = d
+        .reactions()
+        .iter()
+        .find(|r| r.id == "h2s_oxidation")
+        .expect("the fixture declares it");
+
+    // (1) The sign, at the one place it is decided. The declared enthalpy is
+    //     negative — the reaction gives heat up — and `nu_E` is stated in the
+    //     direction of the **field**, so it is positive: the fold adds it, and
+    //     what the field gains the chemical form lost.
+    assert!(
+        rx.nu_energy > 0,
+        "an exothermic reaction has nu_E = {} in the direction of the field \
+         (ADR-081)",
+        rx.nu_energy
+    );
+    assert_eq!(
+        rx.nu_energy, 54_144_000,
+        "846000 J/turnover at k_E = 67 and e_r = 61 is 846000 * 2^6"
+    );
+
+    // The composition of the warm cell: the solvent at its typical concentration,
+    // and sulfate — whose `c_p` is negative — beside it.
+    let (lane, mask) = lanes_of(&d);
+    let n32 = d
+        .decls()
+        .iter()
+        .filter(|s| s.width == Width::Bits32)
+        .count() as u32;
+    let n64 = d.decls().len() as u32 - n32;
+    let lane_len = N_FINE + 1;
+    let mut amounts_32 = vec![M32::ZERO; (n32 * lane_len) as usize];
+    let mut amounts_64 = vec![M64::ZERO; (n64 * lane_len) as usize];
+
+    let mut capacity_per_unit = vec![Q::ZERO; d.substances().len()];
+    for (s, sub) in d.substances().iter().enumerate() {
+        // `c_p[s] * 2^-k[s]`, J/(K * storage unit) — what the host folds for
+        // `Heat::capacity_per_unit`, computed here out of the scenario's own
+        // `c_p` and the loader's own `k`.
+        let per_unit = config.substance[s].c_p / (2f64).powi(i32::from(sub.k));
+        capacity_per_unit[s] = Q::from_f64(per_unit);
+        let units = i64::try_from(sub.amount_at_typical).expect("a typical amount fits an i64");
+        for idx in 0..N_FINE {
+            let at = (lane[s] * lane_len + idx) as usize;
+            if mask & (1 << s) != 0 {
+                amounts_64[at] = M64::new(units);
+            } else {
+                amounts_32[at] = M32::new(i32::try_from(units).expect("a narrow amount fits"));
+            }
+        }
+    }
+
+    let t_p = TemperatureParams {
+        nx: FINE,
+        ny: FINE,
+        nz: FINE,
+        lod: ENTHALPY_LOD,
+        n_voxels: N_FINE,
+        lane_len,
+        n_substances: d.substances().len() as u32,
+        width_mask: mask,
+        t_ref: Q::from_f64(T_REF_SCENARIO),
+        // `2^-k_E`, the joules one storage unit of enthalpy is worth (ADR-062).
+        joules_per_unit: Q::from_f64((2f64).powi(-i32::from(d.energy().k_e))),
+    };
+    let heat = Heat {
+        lane: &lane,
+        capacity_per_unit: &capacity_per_unit,
+    };
+
+    let mut src_h = vec![M64::ZERO; N_COARSE as usize];
+    let mut dst_h = vec![M64::ZERO; N_COARSE as usize];
+    let mut heat_capacity = vec![Q::ZERO; N_COARSE as usize];
+    let mut temperature = vec![Q::ZERO; N_COARSE as usize];
+
+    for coarse in 0..N_COARSE {
+        temperature_cell(
+            &amounts_32,
+            &amounts_64,
+            &src_h,
+            &mut heat_capacity,
+            &mut temperature,
+            &heat,
+            &t_p,
+            coarse,
+        );
+    }
+    let before = temperature[0];
+    let c_cell = heat_capacity[0];
+
+    // (2) The denominator, before anything is asserted about the numerator.
+    //     A cell answering `T_ref` because it has no heat capacity (ADR-079)
+    //     would pass the comparison below under either sign of `nu_E`.
+    assert!(
+        c_cell > Q::ZERO,
+        "the cell has C_cell = {c_cell:?} and answers T_ref without dividing \
+         (ADR-079), so it cannot tell the two signs apart"
+    );
+    assert_eq!(before, Q::from_f64(T_REF_SCENARIO), "H = 0 means T = T_ref");
+
+    // The reaction runs in every fine voxel of coarse cell 0 and nowhere else.
+    let mut energy_delta = vec![M64::ZERO; N_FINE as usize];
+    for z in 0..(1u32 << ENTHALPY_LOD) {
+        for y in 0..(1u32 << ENTHALPY_LOD) {
+            for x in 0..(1u32 << ENTHALPY_LOD) {
+                energy_delta[(x + y * FINE + z * FINE * FINE) as usize] =
+                    M64::new(rx.nu_energy * XI);
+            }
+        }
+    }
+
+    let light = vec![Q::ZERO; N_FINE as usize];
+    let mut solar = vec![M64::ZERO; N_COARSE as usize];
+    let f_p = FoldParams {
+        nx: FINE,
+        ny: FINE,
+        nz: FINE,
+        lod: ENTHALPY_LOD,
+        // A dark box: the solar term is identically zero, so what reaches the
+        // field is the chemistry and nothing else.
+        i_surface: Q::ZERO,
+        units_per_intensity: Q::ZERO,
+        dt: Q::ONE,
+    };
+    for coarse in 0..N_COARSE {
+        fold_energy(
+            &energy_delta,
+            &light,
+            &src_h,
+            &mut dst_h,
+            &mut solar,
+            &f_p,
+            coarse,
+        );
+    }
+    assert_eq!(
+        dst_h[0].to_i64(),
+        PER_COARSE * rx.nu_energy * XI,
+        "the fold gathers sixty-four fine voxels into one cell"
+    );
+
+    src_h.copy_from_slice(&dst_h);
+    for coarse in 0..N_COARSE {
+        temperature_cell(
+            &amounts_32,
+            &amounts_64,
+            &src_h,
+            &mut heat_capacity,
+            &mut temperature,
+            &heat,
+            &t_p,
+            coarse,
+        );
+    }
+    let after = temperature[0];
+
+    // (3) Strictly warmer, and by the predicted amount. "Not colder" would be
+    //     satisfied by a cell that did nothing.
+    assert!(
+        after > before,
+        "burning sulfide cooled the water: {before:?} -> {after:?} (ADR-081)"
+    );
+    let predicted = PER_COARSE as f64 * XI as f64 * rx.nu_energy as f64
+        / ((2f64).powi(i32::from(d.energy().k_e)) * c_cell.debug_f64());
+    let got = after.debug_f64() - before.debug_f64();
+    assert!(
+        (got - predicted).abs() <= 1.0e-5 * predicted.abs(),
+        "the cell warmed by {got} K against the predicted {predicted} K"
+    );
+    // And the magnitude written out, so that a scale slipped by a power of two
+    // is visible without recomputing the formula above.
+    assert!(
+        (1.48..1.49).contains(&got),
+        "64 * 2^24 quanta at nu_E = 54144000 and C_cell = 2.645e-4 J/K is 1.486 K, \
+         and this cell warmed by {got} K"
+    );
+
+    // (4) Every other coarse cell stood still: the fold reads its own sixty-four
+    //     voxels, and a cell warmed by somebody else's chemistry would make the
+    //     assertion above true for the wrong reason.
+    for coarse in 1..N_COARSE {
+        assert_eq!(
+            temperature[coarse as usize],
+            Q::from_f64(T_REF_SCENARIO),
+            "coarse cell {coarse} moved without any chemistry in it"
+        );
+    }
+}
+
+/// What one storage unit of each fixture substance is worth as chemical energy,
+/// in the storage units of the enthalpy field (ADR-081).
+///
+/// `w_s = round(enthalpy_formation_s * 2^(k_E - k_s))`, and here the numbers are
+/// chosen rather than derived, for the reason every other table in this file is
+/// chosen: no scenario carries this chemistry. What they are chosen **for** is
+/// the identity the record rests on — `Sum_s nu_s * w_s + nu_E == 0` for every
+/// one of the three reactions — and `the_fixture_weights_agree_with_its_energy_coefficients`
+/// is what keeps the three `molar_energy` numbers above and this table in step.
+///
+/// Every one of them is negative, as a formation enthalpy usually is, and the
+/// three reactions come out exothermic — `nu_E > 0`, in the direction of the
+/// field.
+const W: [i64; N_SUBSTANCES as usize] = [-4, -8, -40, -6, -70, -38];
+
+/// The left side of the **energy** invariant over one of the fixture's two
+/// states: the enthalpy of the field plus the chemical energy of what the domain
+/// holds (ADR-081).
+///
+/// `add_chemical_energy` last, after every matter door, and the order is not
+/// stylistic: the door reads `DomainSums::matter`, so called earlier it weighs a
+/// half-filled table. No residual can see that — the same short sum taken before
+/// and after cancels in `after - before` — which is why the rule lives in a
+/// comment here and in `Tick::domain_sums`, and why the absolute number is
+/// asserted by `load_reports_the_chemical_energy_of_the_domain_in_joules`
+/// instead.
+fn energy_sums(world: &World, enthalpy: &[M64], after: bool) -> DomainSums {
+    let mut sums = domain_sums(world, after);
+    sums.add_enthalpy_lane_64(enthalpy);
+    sums.add_chemical_energy(&W);
+    sums
+}
+
+/// The identity the fixture is built on, asserted rather than trusted.
+///
+/// Without it the two tables below drift apart at the first edit and every
+/// energy assertion in this file becomes a statement about whatever they drifted
+/// to. The kernel is not involved: this is arithmetic over the tables the host
+/// hands it.
+#[test]
+fn the_fixture_weights_agree_with_its_energy_coefficients() {
+    let t = tables(&[r1(), r2(), r3()], &MIXED_LANES, 0.0);
+    for r in 0..3usize {
+        let begin = t.begin[r] as usize;
+        let len = t.len[r] as usize;
+        let mut sum = 0i64;
+        let mut nu_energy = None;
+        for i in begin..begin + len {
+            let s = t.nu_sub[i];
+            if s == S_ENERGY {
+                nu_energy = Some(i64::from(t.nu[i]));
+            } else {
+                sum += i64::from(t.nu[i]) * W[s as usize];
+            }
+        }
+        let nu_energy = nu_energy.expect("every recipe carries an energy record");
+        assert_eq!(
+            nu_energy, -sum,
+            "reaction {r} has nu_E = {nu_energy} against -Sum nu_s*w_s = {}",
+            -sum
+        );
+        assert!(
+            nu_energy > 0,
+            "the fixture's reactions are exothermic, so nu_E is positive in the \
+             direction of the field (ADR-081)"
+        );
+    }
+}
+
+/// `ACCEPTANCE.md`, section "Conservation" (ADR-081, ADR-080, ADR-028).
+///
+/// The energy twin of `the_matter_residual_closes_across_a_tick_with_chemistry_in_it`,
+/// and it closes by a **different** mechanism, which is the whole of why the two
+/// records are two. Matter gets a second term on the right — `Sum_r nu_(r,s) *
+/// Xi_r` — because chemistry turns substances into one another. Energy gets
+/// nothing on the right at all: the chemical energy of the substances joins the
+/// **left** side, so a reaction stops being a source and becomes a transfer
+/// between two forms of one quantity, and the identity `Sum_s nu_s*w_s + nu_E ==
+/// 0` makes the residual zero by construction rather than by check.
+///
+/// Three things, and the third is what keeps the first honest.
+///
+/// (1) the residual is an exact zero, with the left side taken as
+///     `enthalpy field + Sum_s w_s*n_s`;
+/// (2) not one energy counter moved. No `CHEMICAL_HEAT` was invented: a channel
+///     is a door **out** of the domain and a reaction is not a door, which is the
+///     one argument ADR-081 rejects the channel on;
+/// (3) the negative control. The same tick judged with a left side that omits the
+///     chemical term does **not** close, and is off by exactly `nu_E * Xi`
+///     summed over the reactions.
+///
+/// **The pair `(h, i')` is dispatched together or not at all** (ADR-045), and
+/// this test is why that matters here. `nu_E * Xi` reaches the enthalpy field
+/// only through the fold, while `Sum w_s*n_s` moves the instant the reaction
+/// kernel writes; step `h` run without `i'` therefore leaves the left side short
+/// by exactly `nu_E * Xi`, and the plausible repair — adding `Sum_r nu_(E,r)*Xi_r`
+/// to the right — is the double credit ADR-080 forbids in as many words. Neither
+/// the compiler nor any other test in this repository marks that boundary; (3)
+/// does.
+#[test]
+fn a_reacting_tick_closes_the_energy_ledger_with_no_channel() {
+    let (t, p, mut world) = reacting_tick();
+
+    // The enthalpy field of this fixture is one cell per voxel — `lod = 0`, the
+    // legal 1:1 fold `kernels/fold.rs` documents — so the fold is a copy of the
+    // accumulator into the field and the mapping of fine voxels to coarse cells
+    // is exercised where it belongs, beside that kernel.
+    let mut src_h = vec![M64::ZERO; N_VOXELS as usize];
+    let mut dst_h = vec![M64::ZERO; N_VOXELS as usize];
+    let before = energy_sums(&world, &src_h, false);
+
+    world.run(&t.rx(), &p);
+
+    let light = vec![Q::ZERO; N_VOXELS as usize];
+    let mut solar = vec![M64::ZERO; N_VOXELS as usize];
+    let f_p = FoldParams {
+        nx: NX,
+        ny: NY,
+        nz: NZ,
+        lod: 0,
+        i_surface: Q::ZERO,
+        units_per_intensity: Q::ZERO,
+        dt: Q::ONE,
+    };
+    for coarse in 0..N_VOXELS {
+        fold_energy(
+            &world.energy,
+            &light,
+            &src_h,
+            &mut dst_h,
+            &mut solar,
+            &f_p,
+            coarse,
+        );
+    }
+    src_h.copy_from_slice(&dst_h);
+    let after = energy_sums(&world, &src_h, true);
+
+    assert_something_happened(&world);
+    assert_ne!(
+        after.matter(C),
+        before.matter(C),
+        "no reaction ran, so the residual below closes on 0 == 0"
+    );
+    assert_ne!(
+        src_h.iter().map(|h| h.to_i64()).sum::<i64>(),
+        0,
+        "the enthalpy field did not move, so the chemical term has nothing to \
+         cancel against"
+    );
+
+    let mut ledger = Ledger::with_reactions(N_SUBSTANCES, p.n_reactions).unwrap();
+    ledger.begin_tick();
+    ledger.reduce_extent(&world.xi, N_VOXELS);
+
+    // (1)
+    assert_eq!(
+        ledger.residual_energy(&before, &after),
+        0,
+        "the energy ledger did not close on a reacting tick"
+    );
+
+    // (2)
+    for channel in Channel::ALL {
+        assert_eq!(
+            ledger.energy(channel),
+            0,
+            "{} credited energy on a closed domain",
+            channel.name()
+        );
+    }
+
+    // (3) The same tick judged without the chemical term on the left.
+    let mut blind_before = domain_sums(&world, false);
+    blind_before.add_enthalpy_lane_64(&vec![M64::ZERO; N_VOXELS as usize]);
+    let mut blind_after = domain_sums(&world, true);
+    blind_after.add_enthalpy_lane_64(&src_h);
+    let short = ledger.residual_energy(&blind_before, &blind_after);
+    let heat: i128 = (0..p.n_reactions as usize)
+        .map(|r| {
+            let begin = t.begin[r] as usize;
+            let len = t.len[r] as usize;
+            let nu_energy = (begin..begin + len)
+                .find(|&i| t.nu_sub[i] == S_ENERGY)
+                .map(|i| i128::from(t.nu[i]))
+                .expect("every recipe carries an energy record");
+            nu_energy * ledger.extent(r as u32)
+        })
+        .sum();
+    assert!(heat > 0, "the fixture's chemistry released no heat at all");
+    assert_eq!(
+        short, heat,
+        "a left side without the chemical term is off by exactly nu_E * Xi, and \
+         adding that to the right would credit one transformation twice \
+         (ADR-080)"
+    );
 }

@@ -45,10 +45,10 @@
 //!   lie.
 
 use liminis_core::config;
-use liminis_core::ledger::{Channel, DomainSums, Ledger};
+use liminis_core::ledger::{Channel, DomainSums, Ledger, Nu};
 use liminis_core::numeric::{M32, M64};
 use liminis_core::process::{
-    DiffusePhase, N_MAX, ProcessId, ROSTER_LEN, RosterEntry, Scratch, Tick, default_roster,
+    Advect, DiffusePhase, N_MAX, ProcessId, ROSTER_LEN, RosterEntry, Scratch, Tick, default_roster,
 };
 use liminis_core::world::{
     Boundary, Face, Field, Field32, Grid, LaneRef, Registry, World, WorldLayout,
@@ -120,6 +120,17 @@ const N_SUBSTANCES: u32 = 5;
 const VENTING: u32 = 3;
 
 /// Seed one lane's voxels and promote them into the front buffer.
+/// A weight table of zeroes, one entry per substance of the synthetic registry
+/// above (ADR-081).
+///
+/// The fixtures below are about the **matter** counter, and a zero weight is what
+/// keeps them about it: with no chemical energy on the left side the energy half
+/// of `BOUNDARY_EXCHANGE` stays at zero and the assertions that no other counter
+/// moved go on meaning what they meant. What a non-zero weight does is
+/// `the_exchange_face_credits_the_chemical_energy_of_what_it_moves`, at the
+/// bottom of this file, on the registry a scenario actually declares.
+const NO_CHEMICAL_ENERGY: [i64; N_SUBSTANCES as usize] = [0; N_SUBSTANCES as usize];
+
 fn seed_32(field: &mut Field32, amount: impl Fn(u32) -> i32) {
     let n_voxels = field.n_voxels();
     let (_, dst) = field.lane_pair_mut(0);
@@ -169,7 +180,7 @@ fn boundary_outflow_appears_in_channel_counter() {
 
     let mut ledger = Ledger::new(N_SUBSTANCES).unwrap();
     ledger.begin_tick();
-    phase.apply_32(&mut field, &[VENTING], &mut ledger);
+    phase.apply_32(&mut field, &[VENTING], &NO_CHEMICAL_ENERGY, &mut ledger);
 
     let mut after = DomainSums::new(N_SUBSTANCES).unwrap();
     after.add_field_lane_32(VENTING, field.lane(0));
@@ -184,7 +195,7 @@ fn boundary_outflow_appears_in_channel_counter() {
     // *entered* the domain, which is the convention `ledger/mod.rs` picks
     // between the two ADR-059 states, and this is the only place in the project
     // where picking the other one can fail.
-    let counted = i128::from(ledger.matter(Channel::BoundaryExchange, VENTING));
+    let counted = ledger.matter(Channel::BoundaryExchange, VENTING);
     assert_eq!(
         counted, -lost,
         "the counter is not the flow through the lid"
@@ -192,8 +203,11 @@ fn boundary_outflow_appears_in_channel_counter() {
 
     // (3) The residual is an exact zero. Under the opposite sign convention it
     // would be `2*lost` rather than a small error.
-    assert_eq!(ledger.residual_matter(VENTING, &before, &after), 0);
-    ledger.assert_closed(&before, &after);
+    assert_eq!(
+        ledger.residual_matter(Nu::EMPTY, VENTING, &before, &after),
+        0
+    );
+    ledger.assert_closed(Nu::EMPTY, &before, &after);
 
     // (4) The other five channels were not touched, for any substance: what
     // crosses this face belongs to BOUNDARY_EXCHANGE and to nothing else
@@ -234,7 +248,12 @@ fn boundary_outflow_appears_in_channel_counter() {
     let mut sealed_field: Field32 = Field::new(&sealed_grid, 1).unwrap();
     seed_32(&mut sealed_field, |_| 1_000_000);
     let mut quiet = Ledger::new(N_SUBSTANCES).unwrap();
-    sealed_phase.apply_32(&mut sealed_field, &[VENTING], &mut quiet);
+    sealed_phase.apply_32(
+        &mut sealed_field,
+        &[VENTING],
+        &NO_CHEMICAL_ENERGY,
+        &mut quiet,
+    );
     assert_eq!(domain_sum(&sealed_field), started_with);
     assert_eq!(quiet.matter(Channel::BoundaryExchange, VENTING), 0);
 }
@@ -261,7 +280,7 @@ fn the_channel_is_credited_on_every_substep_and_not_once_a_tick() {
         // One credit per substep, and each of them is a whole plane's worth, so
         // counting them means counting the substeps the phase ran. The proxy is
         // the ratio of the two totals, which is what the assertion below uses.
-        phase.apply_32(&mut field, &[VENTING], &mut ledger);
+        phase.apply_32(&mut field, &[VENTING], &NO_CHEMICAL_ENERGY, &mut ledger);
         assert!(ledger.matter(Channel::BoundaryExchange, VENTING) < 0);
         phase.substeps_of(0)
     };
@@ -301,7 +320,7 @@ fn the_ghost_cell_is_the_same_value_in_both_buffers() {
     assert_eq!(phase.substeps_of(0), 1, "an odd substep count is the case");
 
     let mut ledger = Ledger::new(N_SUBSTANCES).unwrap();
-    phase.apply_32(&mut field, &[VENTING], &mut ledger);
+    phase.apply_32(&mut field, &[VENTING], &NO_CHEMICAL_ENERGY, &mut ledger);
 
     // After the substeps and after `restore_lane`, which copies the whole lane
     // back to front and would carry an unseeded `back` over a seeded `front`.
@@ -323,7 +342,12 @@ fn the_ghost_cell_is_the_same_value_in_both_buffers() {
     seed_32(&mut alternating, |_| 1_000_000);
     alternating.set_ghost(0, M32::new(RESERVOIR));
     let mut ledger = Ledger::new(N_SUBSTANCES).unwrap();
-    proton.apply_32(&mut alternating, &[VENTING], &mut ledger);
+    proton.apply_32(
+        &mut alternating,
+        &[VENTING],
+        &NO_CHEMICAL_ENERGY,
+        &mut ledger,
+    );
     assert_eq!(alternating.ghost(0), M32::new(RESERVOIR));
 
     // The consequence, and the reason the assertion above is worth making: a lid
@@ -331,7 +355,7 @@ fn the_ghost_cell_is_the_same_value_in_both_buffers() {
     // reservoir at 777 000 units against a domain at a million. Six substeps
     // against a reservoir this close cannot take more than the whole gap.
     let taken = -ledger.matter(Channel::BoundaryExchange, VENTING);
-    let gap = i64::from(1_000_000 - RESERVOIR) * i64::from(grid.nx() * grid.ny());
+    let gap = i128::from(1_000_000 - RESERVOIR) * i128::from(grid.nx() * grid.ny());
     assert!(taken > 0, "nothing crossed a lid with a gradient across it");
     assert!(
         taken < gap,
@@ -693,7 +717,7 @@ fn exchange_face_carries_enthalpy_into_the_energy_counter() {
         let mut after = DomainSums::new(n_substances).unwrap();
         after.add_enthalpy_lane_64(world.enthalpy().lane(0));
 
-        let credited = i128::from(ledger.energy(Channel::BoundaryExchange));
+        let credited = ledger.energy(Channel::BoundaryExchange);
         let moved = after.energy() - before.energy();
 
         if entering {
@@ -874,7 +898,7 @@ fn a_tick_over_a_venting_world_closes_both_residuals() {
     // pair of zeroes ten times.
     let mut moved = 0;
     for s in 0..n_substances {
-        let credited = i128::from(ledger.matter(Channel::BoundaryExchange, s));
+        let credited = ledger.matter(Channel::BoundaryExchange, s);
         if credited != 0 {
             moved += 1;
             assert_eq!(
@@ -891,7 +915,7 @@ fn a_tick_over_a_venting_world_closes_both_residuals() {
     assert_ne!(ledger.energy(Channel::BoundaryExchange), 0);
     assert_eq!(
         after.energy() - before.energy(),
-        i128::from(ledger.energy(Channel::BoundaryExchange))
+        ledger.energy(Channel::BoundaryExchange)
     );
 
     // No other channel was written at all: everything that credits credits on
@@ -905,4 +929,222 @@ fn a_tick_over_a_venting_world_closes_both_residuals() {
             assert_eq!(ledger.matter(channel, s), 0, "{}", channel.name());
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// the_exchange_face_credits_the_chemical_energy_of_what_it_moves
+// ---------------------------------------------------------------------------
+
+/// The left side of the energy invariant over a world: the enthalpy field plus
+/// the chemical energy of everything the domain holds (ADR-081).
+///
+/// `add_chemical_energy` last, after every matter door — it reads the `matter`
+/// accumulators, so called earlier it weighs a half-filled table, and no residual
+/// can see that because the same short sum cancels in `after - before`.
+fn energy_left_side(world: &World, weights: &[i64]) -> DomainSums {
+    let n_substances = world.registry().n_substances();
+    let mut sums = DomainSums::new(n_substances).unwrap();
+    for s in 0..n_substances {
+        match world.lane_of(s) {
+            LaneRef::Narrow(lane) => {
+                sums.add_field_lane_32(s, world.amounts_32().expect("a narrow field").lane(lane));
+            }
+            LaneRef::Wide(lane) => {
+                sums.add_field_lane_64(s, world.amounts_64().expect("a wide field").lane(lane));
+            }
+        }
+    }
+    sums.add_enthalpy_lane_64(world.enthalpy().lane(0));
+    sums.add_chemical_energy(weights);
+    sums
+}
+
+/// The substance behind every lane of one width class, through `World::lane_of`.
+fn substance_by_lane(world: &World, wide: bool) -> Vec<u32> {
+    let n_substances = world.registry().n_substances();
+    let mut by_lane = Vec::new();
+    for s in 0..n_substances {
+        match (world.lane_of(s), wide) {
+            (LaneRef::Narrow(lane), false) | (LaneRef::Wide(lane), true) => {
+                if by_lane.len() <= lane as usize {
+                    by_lane.resize(lane as usize + 1, 0);
+                }
+                by_lane[lane as usize] = s;
+            }
+            _ => {}
+        }
+    }
+    by_lane
+}
+
+/// `ACCEPTANCE.md`, section "Conservation" (ADR-081).
+///
+/// Matter that leaves through the lid takes its chemical energy with it, so
+/// `BOUNDARY_EXCHANGE` owes `Sum_s w_s * Delta n_s` — the **same integer** the
+/// per-substance counter already holds, multiplied by a constant. No new
+/// dimension, no new kernel and no second rounding (the discipline of ADR-075).
+///
+/// Equality of what was credited against what was moved, **on one tick**. Whether
+/// the counter survives a run is a different question and belongs to ADR-083 and
+/// ADR-084.
+///
+/// **Both paths, and the second one cannot be reached by any scenario.** There
+/// are two places where `BOUNDARY_EXCHANGE` is credited per substance —
+/// `process/diffuse.rs` and `process/advect.rs` — and today `Scratch::face_courant`
+/// is never filled (`TODO(courant-fold)`), so step `c` applies a zero flux and
+/// credits nothing. "Credited in `process/advect.rs`" and "forgotten in
+/// `process/advect.rs`" are byte-identical on every run this build can produce,
+/// and become a real leak the day step `b` dispatches. The only defence available
+/// today is the direct `Advect::advance_lane_32` fixture at the bottom of this
+/// test, with a Courant number written by hand.
+#[test]
+fn the_exchange_face_credits_the_chemical_energy_of_what_it_moves() {
+    let derived = derived();
+    let reservoir = derived.reservoir().expect("the fixture declares one");
+    let weights = derived.chemical_weights();
+    let n_substances = derived.substances().len() as u32;
+
+    // The weights are what make the assertion below anything at all: a table of
+    // zeroes satisfies it for any implementation whatever.
+    assert!(
+        weights.iter().any(|&w| w != 0),
+        "the fixture's registry declares no formation enthalpy at all"
+    );
+
+    // --- the diffusive half, which the tick dispatches today --------------
+
+    let mut world = vented_world(&derived);
+    // An empty domain against a full reservoir: matter comes in through the lid,
+    // and it comes in for every substance the reservoir declares.
+    world
+        .seed_ghosts(&reservoir.amount_out, M64::new(reservoir.enthalpy_out))
+        .unwrap();
+
+    let before = energy_left_side(&world, &weights);
+
+    let narrow = substance_by_lane(&world, false);
+    let wide = substance_by_lane(&world, true);
+    let diffusivity = |by_lane: &[u32]| -> Vec<f64> {
+        by_lane
+            .iter()
+            .map(|&s| derived.substances()[s as usize].diffusivity)
+            .collect()
+    };
+
+    let mut ledger = Ledger::new(n_substances).unwrap();
+    ledger.begin_tick();
+
+    if !narrow.is_empty() {
+        let phase = DiffusePhase::new_32(
+            world.grid(),
+            narrow.len() as u32,
+            &diffusivity(&narrow),
+            DT,
+            DX,
+            reservoir.k_ex,
+        )
+        .unwrap();
+        phase.apply_32(
+            world.amounts_32_mut().expect("a narrow field"),
+            &narrow,
+            &weights,
+            &mut ledger,
+        );
+    }
+    if !wide.is_empty() {
+        let phase = DiffusePhase::new_64(
+            world.grid(),
+            wide.len() as u32,
+            &diffusivity(&wide),
+            DT,
+            DX,
+            reservoir.k_ex,
+        )
+        .unwrap();
+        phase.apply_64(
+            world.amounts_64_mut().expect("a wide field"),
+            &wide,
+            &weights,
+            &mut ledger,
+        );
+    }
+
+    // What was moved, weighted — off the counters the face already wrote, and
+    // never off the fields. The identity under test is between two numbers the
+    // ledger holds, so recomputing one of them from the domain would test
+    // something else.
+    let carried: i128 = (0..n_substances)
+        .map(|s| {
+            i128::from(weights[s as usize]) * ledger.matter_this_tick(Channel::BoundaryExchange, s)
+        })
+        .sum();
+    assert_ne!(carried, 0, "nothing with a weight crossed the lid");
+    assert_eq!(
+        ledger.energy_this_tick(Channel::BoundaryExchange),
+        carried,
+        "the chemical energy of what crossed the lid was not credited"
+    );
+
+    // And the thermal term the face already owed, on top of it. The enthalpy
+    // field vents on its own account (ADR-067) and the two land in one counter.
+    let chemical_only = ledger.energy_this_tick(Channel::BoundaryExchange);
+    let field_record = derived.enthalpy_field();
+    let enthalpy_phase = DiffusePhase::new_64(
+        world.enthalpy_grid(),
+        1,
+        &[field_record.diffusivity],
+        DT,
+        field_record.coarse_dx,
+        reservoir.k_ex,
+    )
+    .unwrap();
+    enthalpy_phase.apply_enthalpy(world.enthalpy_mut(), &mut ledger);
+    let thermal = ledger.energy_this_tick(Channel::BoundaryExchange) - chemical_only;
+    assert_ne!(thermal, 0, "the reservoir is at t_out and no heat crossed");
+
+    let after = energy_left_side(&world, &weights);
+    assert_eq!(
+        ledger.residual_energy(&before, &after),
+        0,
+        "the energy ledger did not close over a venting lid"
+    );
+    assert_eq!(
+        ledger.energy_this_tick(Channel::BoundaryExchange),
+        carried + thermal
+    );
+
+    // --- the advective half, which no scenario can drive ------------------
+
+    let grid = vented(4, 4, 5);
+    let advect = Advect::new(&grid, DT, DX).unwrap();
+    let mut field: Field32 = Field::new(&grid, 1).unwrap();
+    seed_32(&mut field, |_| 1_000_000);
+    field.set_ghost(0, M32::ZERO);
+
+    // A Courant number nothing in this build ever writes: `Scratch::face_courant`
+    // is allocated and left at zero, so the phase the tick dispatches applies a
+    // zero flux and credits nothing at all.
+    let courant = vec![liminis_core::numeric::Q::from_f64(0.25); advect.courant_len()];
+
+    let mut moving = Ledger::new(n_substances).unwrap();
+    moving.begin_tick();
+    advect.advance_lane_32(
+        &mut field,
+        0,
+        &courant,
+        VENTING,
+        weights[VENTING as usize],
+        &mut moving,
+    );
+
+    let moved = moving.matter_this_tick(Channel::BoundaryExchange, VENTING);
+    assert_ne!(
+        moved, 0,
+        "the advective fixture moved nothing through the lid"
+    );
+    assert_eq!(
+        moving.energy_this_tick(Channel::BoundaryExchange),
+        i128::from(weights[VENTING as usize]) * moved,
+        "advection carried matter through the lid without its chemical energy"
+    );
 }

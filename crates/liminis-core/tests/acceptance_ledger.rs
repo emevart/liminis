@@ -3,6 +3,8 @@
 //!
 //! ```text
 //! channel_counters_do_not_overflow_at_1e7_ticks
+//! a_channel_counter_holds_ten_million_lit_ticks_at_full_sun
+//! a_boundary_flux_of_one_percent_of_the_pool_survives_the_declared_horizon
 //! a_closed_domain_leaves_every_channel_counter_at_zero
 //! domain_sums_do_not_overflow_for_water_at_256_cubed
 //! ```
@@ -14,10 +16,11 @@
 //! was supposed to be judging.
 //!
 //! The unit tests under `src/ledger/` are the inside view, and they check things
-//! these three cannot: the sign convention, the tick delta against the running
-//! total, the shape of the counter table. Neither set subsumes the other.
+//! these five cannot: the sign convention, the tick delta against the running
+//! total, the shape of the counter table, and the width of the counter against
+//! the width of the domain sum it closes against. Neither set subsumes the other.
 
-use liminis_core::ledger::{CHANNEL_COUNT, Channel, DomainSums, Ledger};
+use liminis_core::ledger::{CHANNEL_COUNT, Channel, DomainSums, Ledger, Nu};
 use liminis_core::numeric::{M32, M64};
 use liminis_core::process::DiffusePhase;
 use liminis_core::world::{Boundary, Field, Field32, Field64, Grid};
@@ -32,12 +35,12 @@ const SEALED: f64 = 0.0;
 /// ever touched, so which substance a lane stands for cannot matter here.
 fn run_diffusion_32(phase: &DiffusePhase, field: &mut Field32) {
     let table: Vec<u32> = (0..field.lanes()).collect();
-    phase.apply_32(field, &table, &mut Ledger::new(32).unwrap());
+    phase.apply_32(field, &table, &[0; 32], &mut Ledger::new(32).unwrap());
 }
 
 fn run_diffusion_64(phase: &DiffusePhase, field: &mut Field64) {
     let table: Vec<u32> = (0..field.lanes()).collect();
-    phase.apply_64(field, &table, &mut Ledger::new(32).unwrap());
+    phase.apply_64(field, &table, &[0; 32], &mut Ledger::new(32).unwrap());
 }
 
 // ---------------------------------------------------------------------------
@@ -45,10 +48,21 @@ fn run_diffusion_64(phase: &DiffusePhase, field: &mut Field64) {
 // ---------------------------------------------------------------------------
 
 /// `ACCEPTANCE.md` says in as many words that this test does not run ten
-/// million ticks: it checks the width of the counter and substitutes the
-/// boundary value. `QUANTITIES.md` section 3 supplies both numbers — a thousand
-/// units a tick over the horizon of 10^7 ticks that SPEC section 13 declares as
-/// the readiness criterion of S0.
+/// million ticks: it substitutes the boundary value. The horizon is the one
+/// ADR-004 declares, `10^6`–`10^7` ticks, and the worst case is taken at the
+/// upper end of it.
+///
+/// **The old placeholder is kept and is now labelled as one.** A thousand units
+/// a tick over `10^7` ticks is `10^10`, and `QUANTITIES.md` section 3 used it to
+/// argue that a counter must be sixty-four bits wide. Half of that argument was
+/// always true and stayed true: `i32` is hopeless, silently and not loudly.
+/// The other half — "and `i64` is roomy" — **is false by number**, and it is not
+/// the arithmetic below that refutes it, it is the two tests underneath this one:
+/// full sun fills an `i64` energy counter 2.62 times over in a *single* tick, and
+/// a through-flow of one percent of a surface voxel's pool exhausts it on tick
+/// `1.1e5`, eleven percent of the shortest declared horizon (ADR-083). This test
+/// is therefore about the `i32` half only, and says so, rather than standing as a
+/// green monument to the claim that was disproved.
 ///
 /// What overflow would mean here is not a lost low bit. It is a counter that
 /// comes back a plausible number seven times too small, or — a little further
@@ -57,9 +71,9 @@ fn run_diffusion_64(phase: &DiffusePhase, field: &mut Field64) {
 /// the wrong right-hand side.
 #[test]
 fn channel_counters_do_not_overflow_at_1e7_ticks() {
-    const PER_TICK: i64 = 1_000;
-    const TICKS: i64 = 10_000_000;
-    const HORIZON: i64 = PER_TICK * TICKS;
+    const PER_TICK: i128 = 1_000;
+    const TICKS: i128 = 10_000_000;
+    const HORIZON: i128 = PER_TICK * TICKS;
 
     let mut ledger = Ledger::new(2).unwrap();
 
@@ -99,6 +113,115 @@ fn channel_counters_do_not_overflow_at_1e7_ticks() {
     ledger.credit_matter(Channel::Impact, 0, HORIZON);
     ledger.credit_matter(Channel::Impact, 0, -HORIZON);
     assert_eq!(ledger.matter(Channel::Impact, 0), 0);
+}
+
+// ---------------------------------------------------------------------------
+// a_channel_counter_holds_ten_million_lit_ticks_at_full_sun
+// ---------------------------------------------------------------------------
+
+/// The energy branch of ADR-083, at the worst case the corpus declares, and it
+/// does not run ten million ticks either — it substitutes the boundary value and
+/// demands the **exact number** rather than the absence of a panic.
+///
+/// The arithmetic, entirely from declared quantities: the upper face of a 128
+/// cubed domain at `dx = 1e-4 m` is `128^2 * (1e-4)^2 = 1.6384e-4 m^2`; full sun
+/// of `1e3 W/m^2` over a one-second tick is `0.16384 J`; and `k_E = 67` (ADR-062)
+/// makes a joule `2^67` units, so one lit tick is `2^81/10^5 = 2.4179e19` units.
+/// Over `10^7` ticks — the upper end of the horizon ADR-004 declares — that is
+/// `2.4179e26`.
+///
+/// `SOLAR_IN` has no cancellation of any kind: it counts what was absorbed and
+/// not a net (ADR-059), so it grows monotonically wherever absorption is
+/// non-negative. This branch has no long horizon to hide behind, which is why it
+/// is the one that fixes the width.
+#[test]
+fn a_channel_counter_holds_ten_million_lit_ticks_at_full_sun() {
+    /// `floor(2^81 / 10^5)`, the units of storage one lit tick delivers.
+    const PER_TICK: i128 = 24_178_516_392_292_583_494;
+    const TICKS: i128 = 10_000_000;
+
+    let mut ledger = Ledger::new(1).unwrap();
+    ledger.credit_energy(Channel::SolarIn, PER_TICK * TICKS);
+    assert_eq!(
+        ledger.energy(Channel::SolarIn),
+        241_785_163_922_925_834_940_000_000,
+        "the counter lost digits at the declared horizon of full sun"
+    );
+
+    // The counterpoint, without which the assertion above says nothing: the same
+    // number does not fit an `i64` at all, and neither does **one tick** of it.
+    assert!(i64::try_from(ledger.energy(Channel::SolarIn)).is_err());
+    assert!(i64::try_from(PER_TICK).is_err());
+
+    // 2.62144 ceilings in a single tick, and the number is exact: `2^18 * 1e-5`.
+    // Written as a ratio of integers so that no `f64` enters this file, and read
+    // back off the counter so that it is the ledger being asserted about.
+    let mut one_tick = Ledger::new(1).unwrap();
+    one_tick.credit_energy(Channel::SolarIn, PER_TICK);
+    let per_tick = one_tick.energy(Channel::SolarIn);
+    assert!(per_tick * 100_000 > 262_143 * (1i128 << 63));
+    assert!(per_tick * 100_000 < 262_145 * (1i128 << 63));
+
+    // Thirty-nine free bits after the whole horizon: `2.4179e26 < 2^88 < 2^127`.
+    let whole = ledger.energy(Channel::SolarIn);
+    assert!(whole < 1i128 << 88);
+    assert!(whole > 1i128 << 87);
+}
+
+// ---------------------------------------------------------------------------
+// a_boundary_flux_of_one_percent_of_the_pool_survives_the_declared_horizon
+// ---------------------------------------------------------------------------
+
+/// The matter branch of ADR-083, on the number that branch is argued from.
+///
+/// **The honest form of the claim, and it is weaker than the draft's.** A
+/// counter is signed and holds the *net* (ADR-059), one per `(channel,
+/// substance)` pair over every face, so a lid that brings a percent of the pool
+/// in and takes the same amount out does not move it at all: a day of symmetric
+/// exchange looks exactly like no exchange. Monotonic growth needs a **through
+/// flow** — matter entering by another channel (a vent, `GEOTHERMAL_IN`,
+/// `VENT_BURST`) or being made by a reaction inside, and leaving through
+/// `BOUNDARY_EXCHANGE`. So: this branch is reachable with a through flow running,
+/// chemical or geothermal, and is not reachable by a lid on its own. Without one,
+/// what bounds the net outflow is the capacity of the domain (ADR-006) and not
+/// the width of the counter.
+///
+/// The number stands either way. Water holds `5.12e11` units per voxel (ADR-040)
+/// and the face of a 128 cubed domain carries 16 384 voxels, so a through flow of
+/// one percent of a surface voxel's pool is `1.6384e4 * 5.12e9 = 8.389e13` units
+/// a tick.
+#[test]
+fn a_boundary_flux_of_one_percent_of_the_pool_survives_the_declared_horizon() {
+    /// One percent of the water pool of a surface voxel, over the whole face.
+    const PER_TICK: i128 = 83_886_080_000_000;
+    const TICKS: i128 = 10_000_000;
+
+    let mut ledger = Ledger::new(1).unwrap();
+    ledger.credit_matter(Channel::BoundaryExchange, 0, -PER_TICK * TICKS);
+    assert_eq!(
+        ledger.matter(Channel::BoundaryExchange, 0),
+        -838_860_800_000_000_000_000,
+        "the counter lost digits at the declared horizon"
+    );
+    assert!(i64::try_from(ledger.matter(Channel::BoundaryExchange, 0)).is_err());
+
+    // Where an `i64` would have died, counted rather than incanted: `i64::MAX`
+    // divided by the per-tick flow is tick 109 951 — eleven percent of `10^6`,
+    // the *shortest* horizon ADR-004 declares.
+    let at_tick = i128::from(i64::MAX) / PER_TICK;
+    assert_eq!(at_tick, 109_951);
+    // Eleven percent of `10^6`, in whole numbers so that no `f64` enters this
+    // file: `10.995%`, which is over a tenth and under an eighth of the horizon.
+    assert!(at_tick * 100 > 10 * 1_000_000);
+    assert!(at_tick * 100 < 12 * 1_000_000);
+
+    // And it is not a rounding: the flow of the next tick does not fit an i64.
+    assert!(i64::try_from(PER_TICK * (at_tick + 1)).is_err());
+
+    // Signed and net, which is the whole reason the claim above needed weakening:
+    // an equal exchange the other way puts the counter back at zero.
+    ledger.credit_matter(Channel::BoundaryExchange, 0, PER_TICK * TICKS);
+    assert_eq!(ledger.matter(Channel::BoundaryExchange, 0), 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -248,12 +371,12 @@ fn a_closed_domain_leaves_every_channel_counter_at_zero() {
         reduce(&mut after, &narrow, &wide);
 
         assert_eq!(
-            ledger.residual_matter(NARROW, &before, &after),
+            ledger.residual_matter(Nu::EMPTY, NARROW, &before, &after),
             0,
             "tick {tick}: the narrow substance did not close"
         );
         assert_eq!(
-            ledger.residual_matter(WIDE, &before, &after),
+            ledger.residual_matter(Nu::EMPTY, WIDE, &before, &after),
             0,
             "tick {tick}: the wide substance did not close"
         );
@@ -262,7 +385,7 @@ fn a_closed_domain_leaves_every_channel_counter_at_zero() {
             0,
             "tick {tick}: energy did not close"
         );
-        ledger.assert_closed(&before, &after);
+        ledger.assert_closed(Nu::EMPTY, &before, &after);
 
         // And nothing was credited to anything. Ninety numbers at fourteen
         // substances; six times two plus six here.
@@ -412,4 +535,125 @@ fn domain_sums_do_not_overflow_for_water_at_256_cubed() {
     assert_eq!(control / (i128::from(i32::MAX) + 1), 262_144);
     assert_eq!(i128::from(i64::MAX) / control, 16_383);
     assert_eq!(water / control, 15_258);
+}
+
+// ---------------------------------------------------------------------------
+// load_reports_the_chemical_energy_of_the_domain_in_joules
+// ---------------------------------------------------------------------------
+
+/// The shipped scenario, read from `configs/` rather than written here.
+///
+/// This test is about the numbers of a scenario that exists, so it has to load
+/// the one that does. It goes through `config::derive` and not through
+/// `config::validate` for the reason `acceptance_fold.rs` gives about its own
+/// pair: the derivation is the one door to these quantities.
+fn shipped_scenario() -> String {
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../configs/scenarios/h2s-oxidation.toml"
+    );
+    std::fs::read_to_string(path).expect("the shipped scenario")
+}
+
+fn derived_at(text: &str) -> liminis_core::config::Derived {
+    let config = liminis_core::config::parse(text).expect("the scenario parses");
+    liminis_core::config::derive(&config).expect("the scenario derives")
+}
+
+/// `ACCEPTANCE.md`, section "Conservation" (ADR-081, and the divergence from
+/// frozen SPEC section 2.1).
+///
+/// SPEC section 2.1 writes the left side of the invariant as
+/// `Delta(sum fields + sum cells)` — an **unweighted** sum. After ADR-081 the
+/// energy half of it is weighted: the domain holds `H_field + Sum_s w_s * n_s`,
+/// and the chemical term is seventy-six times the whole declared span of the
+/// enthalpy field. The spec is frozen and is not edited (ADR-032), so the
+/// divergence lives here, as a number the loader prints.
+///
+/// The three numbers are `1 757 J`, `23.1 J` and `76`, and the middle one is the
+/// **full** declared span `2 * H_max * n_cells`. Half of it — `H_max * n_cells`,
+/// which is what "the field holds H_max" invites — prints a ratio of 152 and is
+/// invisible without the literal.
+#[test]
+fn load_reports_the_chemical_energy_of_the_domain_in_joules() {
+    let d = derived_at(&shipped_scenario());
+    let energy = d.energy();
+
+    // The weights the sum is taken over, so that a plausible total cannot come
+    // out of implausible parts. Water carries 99.8% of it and appears in no
+    // reaction at all, which is the price ADR-081 names: its
+    // `enthalpy_formation` is now load-bearing and nothing checks it.
+    let weights = d.chemical_weights();
+    let named = |id: &str| -> i64 {
+        let s = d
+            .substances()
+            .iter()
+            .position(|s| s.id == id)
+            .unwrap_or_else(|| panic!("no substance `{id}`"));
+        weights[s]
+    };
+    assert_eq!(named("WATER"), -9_366_077_440, "-285830 J/mol at k = 52");
+    assert_eq!(
+        named("H2S"),
+        -19_850,
+        "-39700 J/mol at k = 68, halved exactly"
+    );
+    assert_eq!(named("O2"), -5_850);
+    assert_eq!(named("SO4"), -29_096_640);
+    assert_eq!(
+        named("H_ION"),
+        0,
+        "zero by the single-ion convention, and the one substance above k_E"
+    );
+
+    let chemical = energy.chemical_energy_joules;
+    let span = energy.field_span_joules;
+    assert!(
+        (1750.0..1765.0).contains(&chemical.abs()),
+        "the domain holds {chemical:e} J of chemical energy, not 1757 J"
+    );
+    assert!(chemical < 0.0, "formation enthalpies are negative");
+    assert!(
+        (23.0..23.2).contains(&span),
+        "the declared field span is {span:e} J, not 23.1 J"
+    );
+    let ratio = chemical.abs() / span;
+    assert!(
+        (75.0..77.0).contains(&ratio),
+        "the ratio is {ratio}, and 152 means the half span was used"
+    );
+
+    let report = d.report();
+    assert!(report.contains("chemical energy of the domain"), "{report}");
+    assert!(report.contains("2*H_max*n_cells"), "{report}");
+
+    // The ratio is a property of the registry and not of the grid: both terms
+    // scale with the number of voxels, one through `n_voxels` and the other
+    // through `n_cells`, so a scenario cannot make the chemical term look small
+    // by shrinking the world.
+    let bigger = derived_at(
+        &shipped_scenario()
+            .replace("nx = 48", "nx = 128")
+            .replace("ny = 48", "ny = 128")
+            .replace("nz = 48", "nz = 128"),
+    );
+    let big_ratio =
+        bigger.energy().chemical_energy_joules.abs() / bigger.energy().field_span_joules;
+    assert!(
+        (big_ratio - ratio).abs() < 0.1,
+        "the ratio moved from {ratio} to {big_ratio} with the grid"
+    );
+    assert!(
+        (33_000.0..33_600.0).contains(&bigger.energy().chemical_energy_joules.abs()),
+        "at 128 cubed the chemical term is {:e} J, not 33.3 kJ",
+        bigger.energy().chemical_energy_joules
+    );
+
+    // And the domain fits the ledger with room: the shipped scenario stands at
+    // seventy-eight bits of the hundred and twenty-seven the accumulator has.
+    assert!(
+        (77.0..79.0).contains(&energy.chemical_energy_bits),
+        "the shipped scenario stands at {} bits",
+        energy.chemical_energy_bits
+    );
 }

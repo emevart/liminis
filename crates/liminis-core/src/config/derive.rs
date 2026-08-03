@@ -277,6 +277,25 @@ pub struct DerivedSubstance {
     /// the substance order of a `Config` and the substance order of a `Derived`
     /// agree only because nothing has yet had a reason to reorder either.
     pub diffusivity: f64,
+    /// `w_s = round(enthalpy_formation * 2^(k_E - k))`: the chemical energy of
+    /// **one storage unit** of this substance, in the storage units of the
+    /// enthalpy field (ADR-081).
+    ///
+    /// The weight of this substance on the **left** side of the energy
+    /// invariant. `Ledger::residual_energy` holds `H_field + Sum_s w_s * n_s`
+    /// against the channels, so a reaction stops being a source of energy and
+    /// becomes a transfer between two forms of one quantity — and the identity
+    /// `Sum_s nu_s * w_s + nu_E == 0` makes the energy half close by
+    /// construction rather than by check.
+    ///
+    /// A field of the record and not a `[i64; MAX_SUBSTANCES]` beside it, for
+    /// the reason [`DerivedSubstance::layer`] gives one screen down: one index
+    /// of a substance and not two.
+    ///
+    /// Filled by step 7 and zero until then, like
+    /// [`DerivedReaction::nu_energy`]: it needs `k_E`, and `k_E` needs every
+    /// `e_r`.
+    pub chemical_weight: i64,
     /// The side of the sediment/water boundary this substance is enriched on
     /// (ADR-077).
     ///
@@ -308,10 +327,27 @@ pub struct DerivedReaction {
     pub scarcest: u32,
     /// Storage-unit stoichiometry, one entry per *distinct* participant.
     pub nu: Vec<Nu>,
-    /// `round(enthalpy * 2^(k_E - e_r))`, rounded once and before the first
-    /// tick (ADR-041).
+    /// `nu_E := -Sum_s nu_s * w_s`, the energy coefficient of the reaction in
+    /// the storage units of the enthalpy field, summed at load (ADR-081).
+    ///
+    /// **Stated in the direction of the field, so an exothermic reaction has
+    /// `nu_E > 0`.** `kernels/react.rs` writes it into the per-voxel
+    /// accumulator and `kernels/fold.rs` adds that to the enthalpy, so what the
+    /// field gains is what the chemical form lost: the sign is decided here,
+    /// once, and no kernel flips it. ADR-081 cancels the formula of ADR-041 —
+    /// `nu_E = dH * 2^(k_E - e_r)` and its rounding — and leaves the rest of
+    /// that record standing; the declared `enthalpy` is now what this sum is
+    /// **checked against** rather than what it is computed from.
     pub nu_energy: i64,
-    /// `|nu_E - exact| / |exact|`, the error that rounding induced.
+    /// How far the summed coefficient stands from the declared enthalpy,
+    /// relative: `|nu_E + enthalpy * 2^(k_E - e_r)| / |enthalpy * 2^(k_E-e_r)|`
+    /// (ADR-081).
+    ///
+    /// **Not the rounding error of `nu_E`**, which no longer rounds. What rounds
+    /// is `w_s`, and only where `k_s > k_E`; this is the discrepancy that
+    /// rounding leaves between the two independent statements of one quantity —
+    /// the scenario's declared enthalpy and the sum over the formation
+    /// enthalpies of the participants. Refused above `MASS_EPSILON`.
     pub energy_relative_error: f64,
     /// Mass of one turnover, g/mol, over the consumed side of the netted
     /// records.
@@ -374,20 +410,61 @@ pub struct DerivedEnergy {
     /// window closes at 67 while this still names photosynthesis — which is how
     /// ADR-062 words it too.
     pub window_upper_set_by: usize,
-    /// The largest relative error `nu_E` rounding induced, over all reactions.
-    pub worst_relative_error: f64,
-    /// Which reaction that error belongs to.
-    pub worst_reaction: usize,
-    /// What one energy channel counter holds before it overflows, in joules:
-    /// `2^63 / 2^k_E` (ADR-075).
+    /// The largest [`DerivedReaction::energy_relative_error`] over all reactions.
     ///
-    /// Reported rather than refused, because whether an `i64` counter is the
-    /// right width at all is open question A-20 (A-19 in ADR-075 and ADR-076,
-    /// which were drafted while that number was free). At `k_E = 67` this is
-    /// `2^-4 J = 62.5 mJ`, and one lit tick of a 128 cubed domain at full sun
-    /// delivers `0.16384 J` — 2.62 ceilings in a single tick (ADR-076). That is
-    /// the second of the two locks holding the refusal of a lit scenario shut,
-    /// and the number is printed so that whoever opens the first one sees it.
+    /// Same name and same type as before ADR-081, and a **different quantity**:
+    /// it used to be the rounding error of `nu_E` (`0.5/nu_E`, `9.2e-9` on the
+    /// shipped scenario) and is now the discrepancy of the summed coefficient
+    /// against the declared enthalpy. The report line is the only place either
+    /// has ever been read, which is why the change is written down here.
+    pub worst_relative_error: f64,
+    /// Which reaction that discrepancy belongs to.
+    pub worst_reaction: usize,
+    /// `Sum_s w_s * n_s` over the whole domain at `typical_conc`, in joules
+    /// (ADR-081).
+    ///
+    /// Negative on any ordinary registry, because a formation enthalpy usually
+    /// is. Stored here rather than computed by [`Derived::report`], which holds
+    /// neither a `Config` nor a grid.
+    ///
+    /// This is the operational form of a divergence from the frozen spec: SPEC
+    /// section 2.1 writes the left side of the invariant as an unweighted sum of
+    /// the fields, and after ADR-081 the energy half is weighted. The spec is not
+    /// edited (ADR-032); the number is printed instead, and
+    /// `load_reports_the_chemical_energy_of_the_domain_in_joules` is what reads
+    /// it.
+    pub chemical_energy_joules: f64,
+    /// The **full** declared span of the enthalpy field over the whole domain:
+    /// `2 * H_max * n_cells`, in joules.
+    ///
+    /// Full, and not `H_max * n_cells`: the field runs from `t_min` to `t_max`
+    /// and `H_max` is the larger half. The half-span mistake prints a ratio of
+    /// 152 in place of 76 and is invisible without a literal to compare against.
+    pub field_span_joules: f64,
+    /// How many bits `Sum_s |w_s| * n_s(max_conc)` over the whole domain
+    /// occupies, against the 127 of `ledger::DomainSums::energy` (ADR-081).
+    ///
+    /// Computed through `log2` in `f64` and never by forming the `i128`: the
+    /// product this bounds is exactly the one that would wrap while being
+    /// judged, and an `i128` multiplication wraps silently in release.
+    pub chemical_energy_bits: f64,
+    /// What one energy channel counter holds before it overflows, in joules:
+    /// `2^127 / 2^k_E` (ADR-075, ADR-083).
+    ///
+    /// Reported rather than refused, and the reason changed with the width. It
+    /// used to be printed because the answer was contested: at `i64` the ceiling
+    /// was `2^63/2^k_E = 62.5 mJ` at `k_E = 67`, against `0.16384 J` for one lit
+    /// tick of a 128 cubed domain — 2.62 ceilings in a single tick — and that was
+    /// the second of the two locks holding the refusal of a lit scenario shut.
+    /// ADR-083 settled it: the counter is as wide as the domain sum it closes
+    /// against, and at `k_E = 67` this is `2^60 J = 1.15e18 J`, which is `7.0e11`
+    /// declared horizons of full sun.
+    ///
+    /// It goes on being printed because it is a *derived* number that a scenario
+    /// can still move: `k_E` comes out of the scenario's own reactions and
+    /// enthalpy range (ADR-062), so the ceiling is a fact about this config and
+    /// not a constant of the build. Never a literal in code, at either exponent —
+    /// that is the rule ADR-062 set and the rule that survived 63 becoming 127.
     pub counter_ceiling_joules: f64,
 }
 
@@ -598,6 +675,17 @@ impl Derived {
             .collect()
     }
 
+    /// `w_s` for every substance, in declaration order (ADR-081).
+    ///
+    /// What `ledger::DomainSums::add_chemical_energy` and the two exchange faces
+    /// take. Allocating, so a host calls it once when it folds a tick and never
+    /// per tick — fourteen `i64` on the registry of SPEC section 2.3, 112 bytes,
+    /// and nothing per voxel.
+    #[must_use]
+    pub fn chemical_weights(&self) -> Vec<i64> {
+        self.substances.iter().map(|s| s.chemical_weight).collect()
+    }
+
     /// Everything derived, as lines a loader can print.
     ///
     /// Not decoration: ADR-041 requires the validator to *name the induced
@@ -631,7 +719,7 @@ impl Derived {
         }
         for r in &self.reactions {
             out.push_str(&format!(
-                "reaction {}: e_r = {} (scarcest {}), nu_E = {}, relative error {:e}\n",
+                "reaction {}: e_r = {} (scarcest {}), nu_E = {}, discrepancy {:e}\n",
                 r.id, r.e_r, r.scarcest, r.nu_energy, r.energy_relative_error
             ));
             out.push_str(&format!(
@@ -643,9 +731,16 @@ impl Derived {
             Width::Bits32 => "i32",
             Width::Bits64 => "i64",
         };
+        for s in &self.substances {
+            out.push_str(&format!(
+                "substance {}: w = {} units of enthalpy per storage unit \
+                 (enthalpy_formation at k_E)\n",
+                s.id, s.chemical_weight
+            ));
+        }
         out.push_str(&format!(
             "energy: k_E = {}, {width}, window [{}, {}], C_cell = {:e} J/K, H_max = {:e} J, \
-             worst relative error {:e}\n",
+             worst discrepancy {:e}\n",
             self.energy.k_e,
             self.energy.window.0,
             self.energy.window.1,
@@ -653,14 +748,30 @@ impl Derived {
             self.energy.h_max,
             self.energy.worst_relative_error
         ));
-        // The ceiling of an energy channel counter, in joules (ADR-075). Printed
-        // rather than refused, because the width of a counter is open question
-        // A-20 — A-19 in ADR-075 and ADR-076, which were drafted while that
-        // number was free — and printed at all because at `k_E = 67` it is
-        // 62.5 mJ, which is less than one lit tick of a 128 cubed domain
-        // delivers.
+        // The left-hand side of the energy invariant, weighed (ADR-081). Printed
+        // because SPEC section 2.1 writes that side as an unweighted sum and is
+        // frozen (ADR-032): the divergence lives here and in the acceptance name
+        // `load_reports_the_chemical_energy_of_the_domain_in_joules`, not in an
+        // edit to the spec. The ratio is what makes the two numbers a statement
+        // — it does not depend on the size of the grid.
         out.push_str(&format!(
-            "energy: channel counter ceiling {:e} J (2^63/2^k_E, A-20)\n",
+            "energy: chemical energy of the domain {:e} J against a declared \
+             field span of {:e} J (2*H_max*n_cells), ratio {:.1}\n",
+            self.energy.chemical_energy_joules,
+            self.energy.field_span_joules,
+            self.energy.chemical_energy_joules.abs() / self.energy.field_span_joules
+        ));
+        out.push_str(&format!(
+            "energy: the domain may hold {:.1} bits of chemical energy against \
+             the 127 of the ledger accumulator (ADR-081)\n",
+            self.energy.chemical_energy_bits
+        ));
+        // The ceiling of an energy channel counter, in joules (ADR-075,
+        // ADR-083). Printed rather than refused: the width is settled — as wide
+        // as the domain sum it closes against — but the ceiling is derived from
+        // this scenario's own `k_E`, so it belongs in this scenario's report.
+        out.push_str(&format!(
+            "energy: channel counter ceiling {:e} J (2^127/2^k_E, ADR-083)\n",
             self.energy.counter_ceiling_joules
         ));
         if let Some(light) = &self.light {
@@ -838,15 +949,39 @@ pub fn derive(config: &Config) -> Result<Derived> {
     }
     check_mass_tolerance(config, &reactions)?;
 
-    // 6. and 7. The energy scale, and `nu_E` on it.
+    // 6. and 7. The energy scale, the chemical weight of every substance on it,
+    //    and `nu_E` summed out of the weights (ADR-081).
     let field = enthalpy_field(config)?;
     let thermal = thermal_transport(config, field)?;
-    let energy = energy_window(config, field, &pending, &thermal)?;
-    for (r, p) in reactions.iter_mut().zip(&pending) {
-        let (nu_energy, error) = quantize_enthalpy(p.enthalpy, energy.k_e, p.e_r)?;
-        r.nu_energy = nu_energy;
-        r.energy_relative_error = error;
+    let mut energy = energy_window(config, field, &pending, &thermal)?;
+    for (s, substance) in substances.iter_mut().enumerate() {
+        substance.chemical_weight = chemical_weight(
+            config.substance[s].enthalpy_formation,
+            energy.k_e,
+            substance.k,
+        )
+        .with_context(|| format!("substance `{}`", substance.id))?;
     }
+    let weights: Vec<i64> = substances.iter().map(|s| s.chemical_weight).collect();
+    let mut worst_relative_error = 0.0;
+    let mut worst_reaction = NO_REACTION;
+    for (r, (reaction, p)) in reactions.iter_mut().zip(&pending).enumerate() {
+        let summed = summed_energy_coefficient(&reaction.nu, &weights);
+        let error = check_summed_against_declared(summed, p.enthalpy, energy.k_e, p.e_r, &p.id)?;
+        reaction.nu_energy = summed;
+        reaction.energy_relative_error = error;
+        if error > worst_relative_error || worst_reaction == NO_REACTION {
+            worst_relative_error = error;
+            worst_reaction = r;
+        }
+    }
+    energy.worst_relative_error = worst_relative_error;
+    energy.worst_reaction = worst_reaction;
+    energy.chemical_energy_bits = check_domain_chemical_energy(config, &substances)?;
+    let (chemical_energy_joules, field_span_joules) =
+        domain_energy_report(config, field, &substances, &energy);
+    energy.chemical_energy_joules = chemical_energy_joules;
+    energy.field_span_joules = field_span_joules;
 
     // 9. Substeps, per field and at its own lod.
     let mut fields = Vec::with_capacity(config.field.len());
@@ -1393,6 +1528,9 @@ fn resolve_substance(
         amount_at_max,
         amount_at_typical,
         diffusivity: substance.diffusivity,
+        // Filled in by step 7 for the reason `nu_energy` is: `w_s` needs `k_E`,
+        // and `k_E` needs every `e_r` and every `c_p` (ADR-062, ADR-081).
+        chemical_weight: 0,
         layer,
     })
 }
@@ -1834,15 +1972,6 @@ fn energy_window(
         }
         let k_e = u8::try_from(upper)
             .with_context(|| format!("energy scale exponent {upper} does not fit a u8"))?;
-        let mut worst_relative_error = 0.0;
-        let mut worst_reaction = NO_REACTION;
-        for (r, p) in pending.iter().enumerate() {
-            let (_, error) = quantize_enthalpy(p.enthalpy, k_e, p.e_r)?;
-            if error > worst_relative_error || worst_reaction == NO_REACTION {
-                worst_relative_error = error;
-                worst_reaction = r;
-            }
-        }
         return Ok(DerivedEnergy {
             k_e,
             width,
@@ -1853,12 +1982,21 @@ fn energy_window(
             window: (lower as u32, upper as u32),
             window_lower_set_by,
             window_upper_set_by,
-            worst_relative_error,
-            worst_reaction,
-            // `2^63/2^k_E`, and `2^63` rather than `i64::MAX` because the
+            // Both filled by step 7. They are a property of the *weights*, and
+            // the weights are a property of the `k_E` this loop is choosing —
+            // computing them here would be computing them once per candidate
+            // width (ADR-081).
+            worst_relative_error: 0.0,
+            worst_reaction: NO_REACTION,
+            chemical_energy_joules: 0.0,
+            field_span_joules: 0.0,
+            chemical_energy_bits: 0.0,
+            // `2^127/2^k_E`, and `2^127` rather than `i128::MAX` because the
             // difference of one unit is invisible at this scale and the power of
-            // two is the number ADR-075 states.
-            counter_ceiling_joules: exp2_exact(63 - i32::from(k_e))?,
+            // two is the number ADR-075 stated and ADR-083 widened. Over the
+            // window of ADR-062, `k_E` in [61, 67], the exponent runs 2^60..2^66,
+            // every one of them exact in an `f64`.
+            counter_ceiling_joules: exp2_exact(127 - i32::from(k_e))?,
         });
     }
 
@@ -1873,41 +2011,250 @@ fn energy_window(
     )
 }
 
-/// `nu_E = round(dH * 2^(k_E - e_r))` and the relative error that rounding
-/// induced.
+/// `w_s = round(enthalpy_formation * 2^(k_E - k))`: what one storage unit of a
+/// substance is worth as chemical energy, in the storage units of the enthalpy
+/// field (ADR-081).
 ///
-/// Rounded **once**, at load, and the rounded value is declared to be the true
-/// enthalpy of the reaction (ADR-041). Left as an `f64` in the reaction table
-/// and rounded at every application, it would bring back the independent
-/// rounding of energy that ADR-026 and ADR-027 rejected twice and ADR-041
-/// removed a third time — a residual accumulating one quantum per application.
+/// The weight of one substance on the **left** side of the energy invariant.
+/// Rounded once, at load, and the rounded value is then the truth about that
+/// substance for every tick — the same discipline ADR-041 set for `nu_E` and
+/// ADR-059 for the composition of the reservoir.
 ///
-/// The sign travels with it. The bounds of the window are taken over `|dH|`, and
-/// a sign lost there turns an exothermic reaction endothermic under a ledger
-/// that closes.
-fn quantize_enthalpy(enthalpy: f64, k_e: u8, e_r: u8) -> Result<(i64, f64)> {
-    let exact = enthalpy * exp2_exact(i32::from(k_e) - i32::from(e_r))?;
+/// Exact wherever `k <= k_E`, because the multiplier is then a whole power of
+/// two. Where `k > k_E` it rounds, and that is the one place the summed `nu_E`
+/// can part company with the declared enthalpy — see
+/// [`check_summed_against_declared`], which measures the actual discrepancy
+/// rather than its bound.
+///
+/// # Errors
+///
+/// If the product is not finite, or does not fit an `i64`. The accumulator it
+/// will be multiplied into is an `i128` and the amount it multiplies is up to an
+/// `i64`, so a weight past `i64` is a scenario whose chemical energy has no
+/// storage at all — and `ledger::DomainSums::add_chemical_energy` takes an
+/// `&[i64]`.
+fn chemical_weight(enthalpy_formation: f64, k_e: u8, k: u8) -> Result<i64> {
+    let exact = enthalpy_formation * exp2_exact(i32::from(k_e) - i32::from(k))?;
     if !exact.is_finite() {
-        bail!("dH * 2^(k_E - e_r) = {exact}");
+        bail!("enthalpy_formation * 2^(k_E - k) = {exact}");
     }
-    // TODO(nu-e-rounding): the rounding rule for `nu_E` is named by nothing.
-    // `NUMERIC.md` section 3 fixes halves away from zero for operations on `Q`
-    // and stochastic rounding for `xi` (ADR-027); this is neither — it is a
-    // one-off conversion at load. Halves away from zero is taken because it is
-    // the rule the document states for every deterministic conversion, and
-    // because it is symmetric in the sign, which the stochastic rule is not
-    // reproducible in. One bit of the enthalpy of every reaction rests on this,
-    // so it is a TODO and not a choice made in silence.
+    // TODO(w-s-rounding): the rounding rule for `w_s` is named by nothing, and
+    // this is the second time the corpus has had to pick one. `NUMERIC.md`
+    // section 3 fixes halves away from zero for operations on `Q` and stochastic
+    // rounding for `xi` (ADR-027); a one-off conversion at load is neither, and
+    // `TODO(nu-e-rounding)` covered `nu_E`, which ADR-081 stopped rounding at
+    // all. Halves away from zero is taken because it is the rule the document
+    // states for every deterministic conversion and because it is the only
+    // candidate symmetric in the sign. On the shipped scenario the choice is
+    // invisible — `-39700/2` and `-11700/2` are whole and the proton's `h_f` is
+    // zero by the single-ion convention — so `floor` written here would show up
+    // on the first scenario with an odd formation enthalpy, shifting `nu_E` by
+    // up to `Sum|nu_s|/2`. It is a TODO and not a choice made in silence.
     let rounded = exact.round();
-    if rounded.abs() > f64::from(i32::MAX) {
-        bail!("nu_E = {rounded:e} does not fit the i32 of the reaction table (ADR-041)");
+    if rounded.abs() > 9.223_372_036_854_775_e18 {
+        bail!(
+            "w_s = {rounded:e} does not fit the i64 of the weight table: one \
+             storage unit of this substance would carry more chemical energy \
+             than the ledger can hold for the whole domain (ADR-081)"
+        );
     }
-    let error = if exact == 0.0 {
-        0.0
+    Ok(rounded as i64)
+}
+
+/// `nu_E := -Sum_s nu_s * w_s`, the energy coefficient of one reaction in the
+/// direction of the field (ADR-081).
+///
+/// Over the reaction's own **storage-unit** `nu` and never over the molar `s`:
+/// the two differ by `2^(k_s - e_r)` per substance, which is a factor of `2^17`
+/// on the proton of the shipped scenario alone. Taken over `s` the sum is a
+/// plausible number of the wrong magnitude, and every ledger closes over it,
+/// because the same `nu_E` stands on both sides.
+///
+/// The energy record itself is not among `nu` — it is filled from this — so
+/// there is no self-reference to guard against.
+fn summed_energy_coefficient(nu: &[Nu], weight: &[i64]) -> i64 {
+    let mut sum = 0i128;
+    for entry in nu {
+        sum -= i128::from(entry.value) * i128::from(weight[entry.substance as usize]);
+    }
+    // Clamped rather than wrapped, and the caller refuses anything past `i32`
+    // one line later (ADR-041). An `i64` here holds `2^31 * 2^63` worth of terms
+    // with room, and the saturation exists so that an absurd registry reaches a
+    // message rather than a wrapped coefficient.
+    sum.clamp(i128::from(i64::MIN), i128::from(i64::MAX)) as i64
+}
+
+/// The summed `nu_E` against the enthalpy the scenario declares (ADR-081).
+///
+/// Two independent statements of one quantity: the scenario's `enthalpy` key,
+/// and the sum over the formation enthalpies of the participants at the derived
+/// scales. They agree exactly whenever every participant has `k_s <= k_E` — the
+/// multiplier is then a whole power of two and nothing rounds — and they part
+/// company by up to `0.5 * Sum_{k_s > k_E} |nu_s|` when it does not. On the
+/// shipped scenario that bound is `2.4e-3`, two thousand times the tolerance,
+/// and the **actual** discrepancy is exactly zero; so what is checked is the
+/// discrepancy and not the bound.
+///
+/// This does **not** replace `enthalpy_agreement` in `config/validate.rs`
+/// (ADR-044), and the two are not the same check. That one compares the declared
+/// enthalpy against `Sum s_net * dH_f` in J/mol and in `f64`, and catches wrong
+/// physics; this one compares integers in storage units, and catches a bit lost
+/// in the derivation of the weights. A scenario can pass the first to a part in
+/// a million and fail this one by `2.4e-3`.
+///
+/// Returns the relative discrepancy.
+///
+/// # Errors
+///
+/// If the discrepancy is above `MASS_EPSILON`, or if the coefficient does not
+/// fit the `i32` of the reaction table (ADR-041).
+fn check_summed_against_declared(
+    summed: i64,
+    enthalpy: f64,
+    k_e: u8,
+    e_r: u8,
+    id: &str,
+) -> Result<f64> {
+    // The declared enthalpy on the energy scale, in the direction of the field:
+    // exothermic is negative in J/turnover and positive here.
+    let declared = -enthalpy * exp2_exact(i32::from(k_e) - i32::from(e_r))?;
+    if !declared.is_finite() {
+        bail!("reaction `{id}`: enthalpy * 2^(k_E - e_r) = {declared}");
+    }
+    if i128::from(summed).abs() > i128::from(i32::MAX) {
+        bail!(
+            "reaction `{id}` sums to nu_E = {summed}, which does not fit the i32 \
+             of the reaction table (ADR-041, ADR-081)"
+        );
+    }
+    let error = if declared == 0.0 {
+        // Unreachable through `derive`: `energy_window` refuses `dH = 0` before
+        // this runs (`TODO(zero-enthalpy)`). Guarded anyway, because a division
+        // by zero here would answer NaN and NaN compares false against every
+        // threshold — a refusal that cannot fire.
+        f64::from(summed != 0)
     } else {
-        (rounded - exact).abs() / exact.abs()
+        (f64::from(i32::try_from(summed).expect("checked one line up")) - declared).abs()
+            / declared.abs()
     };
-    Ok((rounded as i64, error))
+    if error > MASS_EPSILON {
+        bail!(
+            "reaction `{id}` declares enthalpy = {enthalpy:e} J/turnover, which \
+             is {declared:e} units at k_E = {k_e} and e_r = {e_r}; the formation \
+             enthalpies of its participants sum to nu_E = {summed}, a relative \
+             discrepancy of {error:e} against a tolerance of {MASS_EPSILON:e}. \
+             The two disagree because w_s = round(dH_f * 2^(k_E - k_s)) rounds \
+             wherever k_s > k_E (ADR-081). Raise max_conc of the participants \
+             whose k_s is above k_E until their scales fall to it — k_i is \
+             floor(log2(2^28/(max_conc*V_voxel))) — or move t_min, t_max or \
+             T_ref, which are worth about one bit of k_E (ADR-062)"
+        );
+    }
+    Ok(error)
+}
+
+/// `Sum_s |w_s| * n_s(max_conc) * n_voxels` against the `i128` of
+/// `ledger::DomainSums::energy`, in bits (ADR-081).
+///
+/// Returns how many bits the estimate occupies; refuses at 127.
+///
+/// **Computed in `f64` through `log2` and never by forming the `i128`.** The
+/// product this bounds is exactly the one that would wrap while being judged:
+/// Rust panics on an `i128` overflow in debug only, and `liminis serve` computes
+/// the domain sums in **both** profiles, so a check written with the real
+/// integers would wrap before it could decide anything.
+///
+/// Taken at `max_conc` — the largest amount a voxel may legally hold — and not
+/// at `typical_conc`, so the answer is a bound on the run and not a snapshot of
+/// its first tick. The worst case in the corpus is water of SPEC section 2.3 at
+/// 256 cubed: `5.12e11` units per voxel at `w = -4 573 280`, that is `3.93e25`
+/// over the domain, 85 bits of 127 with 42 to spare.
+// TODO(domain-energy-bound): two things about this bound are settled by no
+// record and are chosen here by following ADR-081's own arithmetic. It computes
+// the worst corpus case at the **declared** concentration, so that is what is
+// used; the alternative is the storage ceiling `2^(w-4)` a voxel can actually
+// hold, which is 32 bits more at `i64` and would leave ten bits of margin rather
+// than forty-two. And the enthalpy field's own `2*H_max*n_cells` lands in the
+// same accumulator and is not added in here — at 76 times smaller it cannot
+// change the answer on the corpus, but that is a fact about the corpus and not a
+// theorem. Both belong in `DECISIONS.md`.
+fn check_domain_chemical_energy(config: &Config, substances: &[DerivedSubstance]) -> Result<f64> {
+    let n_voxels =
+        f64::from(config.grid.nx) * f64::from(config.grid.ny) * f64::from(config.grid.nz);
+    let mut total = 0.0f64;
+    for substance in substances {
+        // `as f64` on an `i128` amount that `resolve_substance` has already held
+        // under `i64::MAX`, and on a weight held under `i64::MAX` one function
+        // up. Both lose low bits and neither loses an exponent, which is all this
+        // estimate reads.
+        total += (substance.chemical_weight as f64).abs() * (substance.amount_at_max as f64);
+    }
+    total *= n_voxels;
+    if !total.is_finite() {
+        bail!(
+            "the chemical energy of the domain at max_conc overflows an f64 \
+             before it can be compared against the i128 of the ledger (ADR-081)"
+        );
+    }
+    if total <= 0.0 {
+        // A registry that declares no formation enthalpy at all. Legal, and it
+        // makes the left side of the energy invariant the enthalpy field alone,
+        // which is what it was before ADR-081.
+        return Ok(0.0);
+    }
+    let bits = total.log2();
+    if bits > 127.0 {
+        bail!(
+            "the chemical energy the domain may hold is {total:e} storage units, \
+             which is {bits:.1} bits against the 127 of the ledger's i128 \
+             accumulator (`ledger::DomainSums::energy`). It would wrap while \
+             being summed, in release without a panic, and the residual would go \
+             on closing against a right-hand side that is no longer the truth. \
+             Lower max_conc, lower |enthalpy_formation|, or shrink the grid \
+             (ADR-081, ADR-083)"
+        );
+    }
+    Ok(bits)
+}
+
+/// `Sum_s w_s * n_s(typical)` over the whole domain and `2 * H_max * n_cells`,
+/// both in joules (ADR-081).
+///
+/// The two numbers `Derived::report` prints beside each other, and the ratio
+/// between them is the point: on the shipped scenario the chemical term is
+/// `1 757 J` against a declared field span of `23.1 J`, seventy-six times
+/// larger, and the ratio does not depend on the size of the grid. That is the
+/// operational form of the divergence from SPEC section 2.1, which writes the
+/// left side of the invariant as an unweighted sum (ADR-032: the spec is not
+/// edited, the number is printed).
+///
+/// The **full** span, `2 * H_max`, because the field runs from `t_min` to
+/// `t_max` and `H_max` is the larger of the two halves. `H_max * n_cells` prints
+/// a ratio of 152.
+fn domain_energy_report(
+    config: &Config,
+    field: &FieldRecord,
+    substances: &[DerivedSubstance],
+    energy: &DerivedEnergy,
+) -> (f64, f64) {
+    let n_voxels =
+        f64::from(config.grid.nx) * f64::from(config.grid.ny) * f64::from(config.grid.nz);
+    let joules_per_unit = (-f64::from(energy.k_e)).exp2();
+    let mut chemical = 0.0f64;
+    for substance in substances {
+        chemical += (substance.chemical_weight as f64) * (substance.amount_at_typical as f64);
+    }
+    // The cells of the **enthalpy** grid, `nx >> lod` and so on per axis: the
+    // field lives there and `H_max` is the enthalpy of one of its cells
+    // (ADR-062). Counted with `V_voxel` in its place the span is sixty-four
+    // times too large at `lod = 2` and the ratio comes out at 1.2.
+    let cells = f64::from(config.grid.nx >> field.lod)
+        * f64::from(config.grid.ny >> field.lod)
+        * f64::from(config.grid.nz >> field.lod);
+    (
+        chemical * n_voxels * joules_per_unit,
+        2.0 * energy.h_max * cells,
+    )
 }
 
 /// Step 9 for one field: its substeps at its own lod (ADR-030, ADR-062).
@@ -2076,6 +2423,23 @@ dx = 1e-4
 
     /// One `[[substance]]` record with every required key of section 5 written
     /// out.
+    ///
+    /// **`enthalpy_formation` is an argument and not a zero, and it is
+    /// load-bearing since ADR-081.** It used to be `0e0` for every fixture in
+    /// this module, which was legal while `nu_E` was rounded from the declared
+    /// enthalpy and stopped being legal the moment `nu_E` became
+    /// `-Sum_s nu_s * w_s`: a registry of zero formation enthalpies gives every
+    /// reaction `nu_E = 0` against a declared enthalpy that is not, and the load
+    /// is refused. So every fixture below is thermochemically consistent, and the
+    /// rule that keeps it painless is worth stating once: a weight rounds only
+    /// where `k_s > k_E`, so a participant above the energy scale is given
+    /// `enthalpy_formation = 0` and every other one an enthalpy that makes the
+    /// molar sum exact — and then the summed coefficient equals the declared one
+    /// to the unit, on every fixture here.
+    #[allow(clippy::too_many_arguments)]
+    // Eight arguments against a clippy threshold of seven, and the eighth is
+    // `enthalpy_formation`, which ADR-081 made load-bearing. A struct here would
+    // buy the lint and cost every call site its shape.
     fn substance(
         id: &str,
         molar_mass: f64,
@@ -2083,6 +2447,7 @@ dx = 1e-4
         max: f64,
         diffusivity: f64,
         c_p: f64,
+        enthalpy_formation: f64,
         composition: &str,
     ) -> String {
         format!(
@@ -2096,11 +2461,29 @@ partial_molar_volume = 1e-5
 settling_radius = 0e0
 diffusivity = {diffusivity:e}
 c_p = {c_p:e}
-enthalpy_formation = 0e0
+enthalpy_formation = {enthalpy_formation:e}
 composition = {composition}
 "
         )
     }
+
+    /// Formation enthalpies for the four substances of `CONFIG_SCHEMA.md`
+    /// section 12, J/mol.
+    ///
+    /// Aqueous standard values, except sulfate, which is moved by 170 J/mol from
+    /// its real `-909270` so that the sum comes out at the round `-8.46e5` the
+    /// worked example declares:
+    /// `-909100 + 0 - (-39700) - 2*(-11700) = -846000` exactly. The proton is
+    /// zero by the single-ion convention, and that is what keeps the summed
+    /// coefficient exact — its `k` is above `k_E` on every registry here, so its
+    /// weight is the one that would round.
+    const H_F_H2S: f64 = -39700.0;
+    const H_F_O2: f64 = -11700.0;
+    const H_F_SO4: f64 = -909100.0;
+    const H_F_PROTON: f64 = 0.0;
+
+    /// Formation enthalpy of liquid water, J/mol (SPEC section 2.3).
+    const H_F_WATER: f64 = -285830.0;
 
     fn reaction(id: &str, enthalpy: f64, inputs: &str, outputs: &str) -> String {
         format!(
@@ -2145,9 +2528,19 @@ t_max = 3.2315e2
                 10.0,
                 1.6e-9,
                 C_P_PLACEHOLDER,
+                H_F_H2S,
                 "{ S = 1 }",
             ),
-            substance("O2", 31.99880, 0.25, 1.0, 2.1e-9, C_P_PLACEHOLDER, "{}"),
+            substance(
+                "O2",
+                31.99880,
+                0.25,
+                1.0,
+                2.1e-9,
+                C_P_PLACEHOLDER,
+                H_F_O2,
+                "{}",
+            ),
             substance(
                 "SO4",
                 96.06260,
@@ -2155,6 +2548,7 @@ t_max = 3.2315e2
                 so4_max,
                 1.0e-9,
                 C_P_PLACEHOLDER,
+                H_F_SO4,
                 "{ S = 1 }",
             ),
             substance(
@@ -2164,6 +2558,7 @@ t_max = 3.2315e2
                 1.0e-2,
                 9.3e-9,
                 C_P_PLACEHOLDER,
+                H_F_PROTON,
                 "{}",
             ),
         ]
@@ -2200,7 +2595,9 @@ t_max = 3.2315e2
     fn water_and_proton() -> String {
         format!(
             "{HEADER}{}{}{}{}",
-            substance("WATER", 18.01528, 55500.0, 55500.0, 2.3e-9, C_P_WATER, "{}"),
+            substance(
+                "WATER", 18.01528, 55500.0, 55500.0, 2.3e-9, C_P_WATER, H_F_WATER, "{}",
+            ),
             substance(
                 "H_ION",
                 1.007940,
@@ -2208,11 +2605,18 @@ t_max = 3.2315e2
                 1.0e-2,
                 9.3e-9,
                 C_P_PLACEHOLDER,
+                H_F_PROTON,
                 "{}"
             ),
             reaction(
                 "photosynthesis",
-                4.95e7,
+                // `-106 * H_F_WATER`, and not the round `4.95e7` this fixture
+                // used to declare: the reaction is a reduction of photosynthesis
+                // to the water-proton pair, so its enthalpy is whatever the pair
+                // makes it, and after ADR-081 that is checked rather than assumed.
+                // It moves neither `e_r` nor `k_E`, which is why the reduction is
+                // still the one ADR-062 does its arithmetic on.
+                3.029_798e7,
                 "{ WATER = 106 }",
                 "{ H_ION = 13 }"
             ),
@@ -2227,7 +2631,9 @@ t_max = 3.2315e2
         format!(
             "{HEADER}{}{}{}{}{}",
             spec_12_substances(100.0),
-            substance("WATER", 18.01528, 55500.0, 55500.0, 2.3e-9, C_P_WATER, "{}"),
+            substance(
+                "WATER", 18.01528, 55500.0, 55500.0, 2.3e-9, C_P_WATER, H_F_WATER, "{}",
+            ),
             reaction(
                 "h2s_oxidation",
                 -8.46e5,
@@ -2236,7 +2642,7 @@ t_max = 3.2315e2
             ),
             reaction(
                 "photosynthesis",
-                4.95e7,
+                3.029_798e7,
                 "{ WATER = 106 }",
                 "{ H_ION = 13 }"
             ),
@@ -2262,6 +2668,7 @@ t_max = 3.2315e2
                 2.0,
                 1.9e-9,
                 C_P_PLACEHOLDER,
+                0e0,
                 "{ C = 1 }"
             ),
             substance(
@@ -2271,6 +2678,7 @@ t_max = 3.2315e2
                 0.1,
                 1.6e-9,
                 C_P_PLACEHOLDER,
+                0e0,
                 "{ N = 1 }"
             ),
             substance(
@@ -2280,9 +2688,12 @@ t_max = 3.2315e2
                 0.02,
                 0.8e-9,
                 C_P_PLACEHOLDER,
+                0e0,
                 "{ P = 1 }"
             ),
-            substance("WATER", 18.01528, 55500.0, 55500.0, 2.3e-9, C_P_WATER, "{}"),
+            substance(
+                "WATER", 18.01528, 55500.0, 55500.0, 2.3e-9, C_P_WATER, H_F_WATER, "{}",
+            ),
             substance(
                 "BIOMASS",
                 3553.237,
@@ -2290,9 +2701,24 @@ t_max = 3.2315e2
                 2.0,
                 0e0,
                 C_P_PLACEHOLDER,
+                // `4.95e7 + 106 * H_F_WATER`, so that the reaction's declared
+                // enthalpy is the sum over its participants exactly: the other
+                // five carry zero, and water and biomass are both at or below
+                // `k_E`, so no weight rounds and the summed `nu_E` comes out at
+                // `-792 000 000` to the unit (ADR-081).
+                1.920_202e7,
                 "{ C = 106, N = 16, P = 1 }"
             ),
-            substance("O2", 31.99880, 0.25, 1.0, 2.1e-9, C_P_PLACEHOLDER, "{}"),
+            substance(
+                "O2",
+                31.99880,
+                0.25,
+                1.0,
+                2.1e-9,
+                C_P_PLACEHOLDER,
+                0e0,
+                "{}",
+            ),
             substance(
                 "H_ION",
                 1.007940,
@@ -2300,11 +2726,16 @@ t_max = 3.2315e2
                 1.0e-2,
                 9.3e-9,
                 C_P_PLACEHOLDER,
+                H_F_PROTON,
                 "{}"
             ),
             reaction(
                 "photosynthesis",
-                4.95e7,
+                // Scaled with the stoichiometry, and it has to be: `m` turnovers
+                // written as one reaction release `m` times the enthalpy, and
+                // after ADR-081 the declared number is checked against the sum
+                // over the participants rather than merely carried.
+                4.95e7 * f64::from(m),
                 &format!(
                     "{{ CO2 = {}, N_MIN = {}, P_MIN = {}, WATER = {} }}",
                     106 * m,
@@ -2341,9 +2772,19 @@ t_max = 3.2315e2
                     100.0,
                     1.6e-9,
                     C_P_PLACEHOLDER,
+                    0e0,
                     "{ S = 1 }"
                 ),
-                substance("O2", 31.99880, 28.0, 100.0, 2.1e-9, C_P_PLACEHOLDER, "{}"),
+                substance(
+                    "O2",
+                    31.99880,
+                    28.0,
+                    100.0,
+                    2.1e-9,
+                    C_P_PLACEHOLDER,
+                    0e0,
+                    "{}",
+                ),
                 substance(
                     "SO4",
                     96.06260,
@@ -2351,6 +2792,15 @@ t_max = 3.2315e2
                     100.0,
                     1.0e-9,
                     C_P_PLACEHOLDER,
+                    // Every substance of this registry sits at `k = 61` against
+                    // `k_E = 43`, so every weight rounds: the whole enthalpy of
+                    // the reaction is carried by sulfate and its value is a power
+                    // of two, `-2^23`, chosen so that `w = -32` is exact and the
+                    // summed `nu_E` matches the declared enthalpy to the unit
+                    // (ADR-081). Any other number here is refused, and the
+                    // refusal is the point of
+                    // `summed_energy_coefficient_disagreeing_with_the_declared_enthalpy_is_rejected`.
+                    -8.388_608e6,
                     "{ S = 1 }"
                 ),
                 substance(
@@ -2360,13 +2810,14 @@ t_max = 3.2315e2
                     100.0,
                     9.3e-9,
                     C_P_PLACEHOLDER,
+                    0e0,
                     "{}"
                 ),
             ]
             .concat(),
             reaction(
                 "h2s_oxidation",
-                -8.46e6,
+                -8.388_608e6,
                 "{ H2S = 1, O2 = 2 }",
                 "{ SO4 = 1, H_ION = 2 }"
             ),
@@ -2495,7 +2946,7 @@ t_max = 3.2315e2
         // give the same number. Counted over inputs alone, the photosynthesis of
         // SPEC section 5 loses the proton entirely.
         let mirrored = swap(
-            &spec_12(),
+            &swap(&spec_12(), "enthalpy = -8.46e5", "enthalpy = 8.46e5"),
             "inputs  = { H2S = 1, O2 = 2 }\noutputs = { SO4 = 1, H_ION = 2 }",
             "inputs  = { SO4 = 1, H_ION = 2 }\noutputs = { H2S = 1, O2 = 2 }",
         );
@@ -2713,7 +3164,9 @@ t_max = 3.2315e2
         let text = format!(
             "{HEADER}{}{}{}{}",
             spec_12_substances(100.0),
-            substance("WATER", 18.01528, 55500.0, 55500.0, 2.3e-9, C_P_WATER, "{}"),
+            substance(
+                "WATER", 18.01528, 55500.0, 55500.0, 2.3e-9, C_P_WATER, H_F_WATER, "{}",
+            ),
             reaction(
                 "h2s_oxidation",
                 -8.46e5,
@@ -2806,86 +3259,370 @@ t_max = 3.2315e2
         assert!(err.contains("tolerance"), "{err}");
     }
 
+    /// `ACCEPTANCE.md`, from ADR-041 and amended by ADR-081.
+    ///
+    /// **The content changed and the name did not, because the name is what the
+    /// document accepts the stage by.** `nu_E` no longer rounds — it is
+    /// `-Sum_s nu_s * w_s`, summed out of the formation enthalpies of the
+    /// participants — so what this asserts is (a) that it is an integer settled
+    /// before the first tick, (b) the numbers of ADR-062 **with the sign
+    /// inverted**, because ADR-081 states the coefficient in the direction of
+    /// the field, and (c) the discrepancy against the declared enthalpy as a
+    /// number. The rounding rule moved with it, from `nu_E` to `w_s`, and (d)
+    /// follows it there.
     #[test]
     fn reaction_energy_delta_is_integral_after_load() {
-        // Two corpus reactions and one synthetic. The synthetic one exists
-        // because both corpus enthalpies land exactly on the derived scale, so
-        // the error they induce is zero and proves nothing. Its enthalpy is
-        // chosen so that `dH * 2^(k_E - e_r)` is 79_012_307.75 *exactly* — the
-        // product of an f64 by a power of two is exact — and a fractional part
-        // over one half is what tells the rounding rules apart.
-        let text = format!(
-            "{}{}",
-            two_reactions(),
-            reaction(
-                "synthetic_fractional",
-                1.234_567_308_593_75e6,
-                "{ H2S = 1, O2 = 2 }",
-                "{ SO4 = 1, H_ION = 2 }"
-            )
-        );
-        let d = derived(&text);
+        let d = derived(&two_reactions());
         assert_eq!(d.energy().k_e, 67);
 
-        // (b) The numbers of ADR-062, sign included. The sign is lost easily —
-        // the window is computed over |dH| — and lost, an exothermic reaction
-        // becomes endothermic under a ledger that still closes.
+        // (b) The numbers of ADR-062, sign included — and the sign is the whole
+        // of ADR-081. `h2s_oxidation` gives heat up, so its coefficient is
+        // **positive** in the direction of the enthalpy field: `kernels/fold.rs`
+        // adds it, the cell warms, and what the field gains the chemical form of
+        // the substances lost. Photosynthesis takes heat in and is negative.
+        // Under the old definition both wore the sign of the declared enthalpy
+        // and an exothermic reaction cooled its cell — with every ledger closing,
+        // because the same `nu_E` stands on both sides of it.
         let h2s = reaction_named(&d, "h2s_oxidation");
         assert_eq!(h2s.e_r, 61);
-        assert_eq!(h2s.nu_energy, -54_144_000, "-8.46e5 * 2^6");
+        assert_eq!(
+            h2s.nu_energy, 54_144_000,
+            "846000 J/turnover at k_E = 67 and e_r = 61: 846000 * 2^6, positive"
+        );
         let photo = reaction_named(&d, "photosynthesis");
         assert_eq!(photo.e_r, 63);
-        assert_eq!(photo.nu_energy, 792_000_000, "4.95e7 * 2^4");
-        assert!(h2s.nu_energy < 0 && photo.nu_energy > 0);
+        assert_eq!(photo.nu_energy, -484_767_680, "-106 * w_WATER, negative");
+        assert!(
+            h2s.nu_energy > 0 && photo.nu_energy < 0,
+            "exothermic is positive and endothermic negative in the direction of \
+             the field (ADR-081)"
+        );
 
-        // (a) Rounded once, and before the first tick. The behaviour, not the
-        // type: a coefficient kept as a real and rounded at every application
-        // gives a different sum as soon as it has a fractional part.
-        let synthetic = reaction_named(&d, "synthetic_fractional");
-        let exact: f64 = 1.234_567_308_593_75e6 * 64.0;
-        assert_eq!(exact, 79_012_307.75, "the fixture has to be exact");
+        // (a) It is the sum over the participants and not a second reading of the
+        // declared enthalpy, which is what the lazy implementation would be —
+        // `-round(dH * 2^(k_E - e_r))`, one sign flipped and nothing defined.
+        // The two agree on every scenario whose weights are exact, so the thing
+        // that separates them is the arithmetic below and the refusal in
+        // `summed_energy_coefficient_disagreeing_with_the_declared_enthalpy_is_rejected`.
+        let weights: Vec<i64> = d.chemical_weights();
+        let by_hand: i64 = h2s
+            .nu
+            .iter()
+            .map(|entry| -entry.value * weights[entry.substance as usize])
+            .sum();
+        assert_eq!(by_hand, h2s.nu_energy);
         assert_eq!(
-            synthetic.nu_energy, 79_012_308,
-            "halves away from zero; `floor` and `trunc` both answer 79_012_307 \
-             here, and the literal is written out rather than recomputed as \
-             `exact.round()`, which would assert the implementation against \
-             itself"
+            weights[substance_index(&d, "SO4")],
+            -58_182_400,
+            "-909100 J/mol at k = 61 and k_E = 67 is -909100 * 2^6"
         );
-        let applications = 1_000_000i64;
-        assert_ne!(
-            applications * synthetic.nu_energy,
-            (applications as f64 * exact).round() as i64,
-            "if this holds, the fixture no longer has a fractional part and the \
-             assertion below is vacuous"
+        assert_eq!(
+            weights[substance_index(&d, "H_ION")],
+            0,
+            "zero by the single-ion convention, which is why the one participant \
+             above k_E rounds nothing"
         );
 
-        // (c) The error is named as a number, and it is bounded by the
-        // significance inequality that set the bottom of the window.
+        // (c) The discrepancy is named as a number, and on this fixture it is an
+        // exact zero: every participant with a formation enthalpy of its own sits
+        // at or below `k_E`, so `w_s = h_f * 2^(k_E - k_s)` is a whole shift.
         assert_eq!(h2s.energy_relative_error, 0.0);
         assert_eq!(photo.energy_relative_error, 0.0);
-        let expected = (synthetic.nu_energy as f64 - exact).abs() / exact.abs();
-        assert!((synthetic.energy_relative_error - expected).abs() < 1e-18);
-        assert!(synthetic.energy_relative_error <= 0.5 / (synthetic.nu_energy as f64).abs());
-        assert!(d.energy().worst_relative_error <= MASS_EPSILON);
-        assert!(d.energy().worst_relative_error > 0.0);
-        assert_eq!(d.energy().worst_reaction, 2);
-        assert!(d.report().contains("relative error"), "{}", d.report());
+        assert_eq!(d.energy().worst_relative_error, 0.0);
+        assert!(d.report().contains("discrepancy"), "{}", d.report());
 
-        // (d) The rule itself, on both signs and on the tie. Every one of these
-        // is a mutation no conservation test can see: the same `nu_E` stands on
-        // both sides of the energy ledger, so an enthalpy quantised one unit
-        // further from zero at every application closes it exactly (ADR-041).
-        // Under `floor` every exothermic reaction — which is the corpus case —
-        // would be quantised down, systematically and identically, forever.
-        let (positive, _) = quantize_enthalpy(79_012_307.75 / 64.0, 67, 61).unwrap();
-        assert_eq!(positive, 79_012_308, "0.75 goes up, not down");
-        let (negative, _) = quantize_enthalpy(-79_012_307.75 / 64.0, 67, 61).unwrap();
-        assert_eq!(negative, -79_012_308, "away from zero, not toward it");
-        assert_eq!(positive, -negative, "symmetric in the sign, which is why");
+        // (d) The rounding rule, on both signs and on the tie — moved from `nu_E`
+        // to `w_s`, because that is the only quantity on this path that still
+        // rounds. It rounds exactly where `k_s > k_E`, and every one of these is
+        // a mutation no conservation test can see: the same weight stands on both
+        // sides of the energy ledger, so a weight quantised one unit further from
+        // zero closes it exactly. Under `floor` every substance with a negative
+        // formation enthalpy — which is the corpus case — would be quantised
+        // down, systematically and identically, forever.
+        assert_eq!(
+            chemical_weight(0.75, 67, 67).unwrap(),
+            1,
+            "0.75 goes up, not down"
+        );
+        assert_eq!(
+            chemical_weight(-0.75, 67, 67).unwrap(),
+            -1,
+            "away from zero, not toward it"
+        );
         // The tie, where away-from-zero parts from ties-to-even: two is even, so
         // the banker's rule would answer two.
-        let (tie, _) = quantize_enthalpy(2.5 / 64.0, 67, 61).unwrap();
-        assert_eq!(tie, 3, "halves away from zero (`NUMERIC.md` section 3)");
+        assert_eq!(
+            chemical_weight(2.5, 67, 67).unwrap(),
+            3,
+            "halves away from zero (`NUMERIC.md` section 3)"
+        );
+        // And the same thing said through the exponent rather than through a
+        // fraction, which is the shape it has in the derivation: a substance two
+        // binary orders above the energy scale.
+        assert_eq!(chemical_weight(150.0, 72, 74).unwrap(), 38, "37.5 -> 38");
+        assert_eq!(chemical_weight(-150.0, 72, 74).unwrap(), -38);
+    }
+
+    /// `ACCEPTANCE.md`, section "Refusals" (ADR-081).
+    ///
+    /// A scenario whose declared enthalpy agrees with the sum over the formation
+    /// enthalpies of its participants **in joules per mole** — the check ADR-044
+    /// makes and `config/validate.rs` runs — and whose *integer* coefficient
+    /// disagrees, because `w_s = round(dH_f * 2^(k_E - k_s))` rounds wherever
+    /// `k_s > k_E`.
+    ///
+    /// **The fixture is the load-bearing part of this test.** The shipped
+    /// scenario cannot produce this failure at all: `-39700/2` and `-11700/2` are
+    /// whole, the proton's formation enthalpy is zero by the single-ion
+    /// convention, and its actual discrepancy is exactly zero. So the failure has
+    /// to be built, and it has to be built on an **odd** formation enthalpy
+    /// carried by a substance whose scale is above the energy scale — otherwise
+    /// the lazy implementation of ADR-081, `nu_E = -round(dH * 2^(k_E - e_r))`
+    /// with one sign flipped and nothing defined, passes this test as well as the
+    /// real one.
+    ///
+    /// Here the registry of `CONFIG_SCHEMA.md` section 12 comes out at
+    /// `k_E = 72` with the proton at `k = 74`, and the proton is given
+    /// `150 J/mol`: `150 * 2^-2` is `37.5`, a genuine half, and the weight rounds
+    /// to 38. Sulfate is moved by the same 300 J/mol the two protons of the
+    /// reaction add, so the **molar** sum is still exactly the declared `-8.46e5`
+    /// and only the integers disagree.
+    #[test]
+    fn summed_energy_coefficient_disagreeing_with_the_declared_enthalpy_is_rejected() {
+        // The proton at 150 J/mol, and sulfate moved by 2 * 150 so that
+        // `-909400 + 2*150 + 39700 + 2*11700 = -846000` to the last digit.
+        let odd_proton = format!(
+            "{HEADER}{}{}{}{}{}{}",
+            substance(
+                "H2S",
+                34.08088,
+                0.1,
+                10.0,
+                1.6e-9,
+                C_P_PLACEHOLDER,
+                H_F_H2S,
+                "{ S = 1 }",
+            ),
+            substance(
+                "O2",
+                31.99880,
+                0.25,
+                1.0,
+                2.1e-9,
+                C_P_PLACEHOLDER,
+                H_F_O2,
+                "{}",
+            ),
+            substance(
+                "SO4",
+                96.06260,
+                28.0,
+                100.0,
+                1.0e-9,
+                C_P_PLACEHOLDER,
+                -909_400.0,
+                "{ S = 1 }",
+            ),
+            substance(
+                "H_ION",
+                1.007940,
+                1.0e-4,
+                1.0e-2,
+                9.3e-9,
+                C_P_PLACEHOLDER,
+                150.0,
+                "{}",
+            ),
+            reaction(
+                "h2s_oxidation",
+                -8.46e5,
+                "{ H2S = 1, O2 = 2 }",
+                "{ SO4 = 1, H_ION = 2 }"
+            ),
+            enthalpy_record(2, 1.4e-7)
+        );
+
+        // The molar identity ADR-044 checks holds exactly, so this scenario is
+        // not refused by the check that already existed — which is the whole
+        // point of writing a second one.
+        let molar = -909_400.0 + 2.0 * 150.0 - H_F_H2S - 2.0 * H_F_O2;
+        assert_eq!(molar, -846_000.0, "the fixture must pass the ADR-044 check");
+
+        let err = refusal(&odd_proton);
+        assert!(err.contains("h2s_oxidation"), "{err}");
+        assert!(
+            err.contains("54_144_000".replace('_', "").as_str())
+                || err.contains("1732599808")
+                || err.contains("nu_E"),
+            "the refusal must print both numbers: {err}"
+        );
+        assert!(
+            err.contains("max_conc"),
+            "the way out has to be named: {err}"
+        );
+
+        // And the same registry with the proton back at zero loads, so what was
+        // refused is the rounding and not the shape of the fixture. `spec_12`
+        // differs from the above in exactly two numbers.
+        let d = derived(&spec_12());
+        assert_eq!(d.energy().k_e, 72, "the proton sits above the energy scale");
+        assert_eq!(substance_named(&d, "H_ION").k, 74);
+        assert_eq!(substance_named(&d, "H_ION").chemical_weight, 0);
+        let rx = reaction_named(&d, "h2s_oxidation");
+        assert_eq!(rx.nu_energy, 1_732_608_000, "846000 * 2^(72 - 61)");
+        assert_eq!(rx.energy_relative_error, 0.0);
+    }
+
+    /// `ACCEPTANCE.md`, section "Refusals" (ADR-081, ADR-083).
+    ///
+    /// The chemical energy the domain may hold is an `i128` in
+    /// `ledger::DomainSums`, and a registry can declare its way past it. Refused
+    /// at load rather than wrapped at run time — Rust panics on an `i128`
+    /// overflow in debug only, and `liminis serve` computes the domain sums in
+    /// **both** build profiles, so a wrap in release leaves a residual closing
+    /// against a right-hand side that is no longer the truth.
+    ///
+    /// **Reachable only by declaration.** The estimate per voxel is
+    /// `|h_f| * max_conc * V_voxel * 2^k_E`, and both of its factors are already
+    /// held under `i64` — the weight by `chemical_weight` and the amount by
+    /// `resolve_substance` — so a registry of ordinary numbers cannot come near
+    /// it. The fixture below therefore declares an absurd pair: a formation
+    /// enthalpy of `-2^84 J/mol` on a substance whose scale is raised to 96 by
+    /// its reaction's extent exponent.
+    #[test]
+    fn chemical_energy_of_the_domain_past_the_ledger_accumulator_is_rejected() {
+        // `A + X -> B + Y`: two pairs, and each is there for one reason.
+        //
+        // `A` and `B` are a trace pair at `1e-15 mol/m^3`, and their only job is
+        // to push the extent exponent up to 96 — a substance cannot do that for
+        // itself, because ADR-039 caps `max_conc/typical_conc` at `2^14` and a
+        // scale raised to its own `e_r` therefore holds about `2^20` units, not
+        // enough to overflow anything. `X` and `Y` ride that exponent instead:
+        // their scales are raised from 61 to 96 and one voxel of them holds
+        // `7.9e18` units, an `i64` all but full.
+        //
+        // Their formation enthalpies are `-2^84 J/mol` and `-2^84 + 2^50`, both
+        // whole powers of two on the energy scale, so every weight is exact and
+        // the summed coefficient matches the declared enthalpy to the unit: this
+        // fixture is refused by the domain bound and by nothing else. The
+        // difference `2^50` is what the reaction declares, and it cancels in the
+        // sum — `nu_E` is `-2^21`, comfortably inside an `i32`, while each weight
+        // is `2^55`.
+        let absurd = |max_conc: f64| -> String {
+            format!(
+                "{HEADER}{}{}{}{}{}{}{}",
+                substance(
+                    "WATER", 18.01528, 55500.0, 55500.0, 2.3e-9, C_P_WATER, H_F_WATER, "{}",
+                ),
+                substance(
+                    "A",
+                    50.0,
+                    1.0e-15,
+                    1.6e-11,
+                    1.0e-9,
+                    C_P_PLACEHOLDER,
+                    0e0,
+                    "{ N = 1 }",
+                ),
+                substance(
+                    "B",
+                    50.0,
+                    1.0e-15,
+                    1.6e-11,
+                    1.0e-9,
+                    C_P_PLACEHOLDER,
+                    0e0,
+                    "{ N = 1 }",
+                ),
+                substance(
+                    "X",
+                    100.0,
+                    max_conc / 16384.0,
+                    max_conc,
+                    1.0e-9,
+                    C_P_PLACEHOLDER,
+                    -1.934_281_311_383_406_7e25,
+                    "{ C = 1 }",
+                ),
+                substance(
+                    "Y",
+                    100.0,
+                    max_conc / 16384.0,
+                    max_conc,
+                    1.0e-9,
+                    C_P_PLACEHOLDER,
+                    -1.934_281_311_270_816_7e25,
+                    "{ C = 1 }",
+                ),
+                reaction(
+                    "x_to_y",
+                    1.125_899_906_842_624e15,
+                    "{ A = 1, X = 1 }",
+                    "{ B = 1, Y = 1 }"
+                ),
+                enthalpy_record(2, 1.4e-7)
+            )
+        };
+
+        // The passing side first, so that what the refusal below reports is the
+        // one number that moved. The same absurd enthalpies at a thousandth of
+        // the concentration fit, and the loader says by how much.
+        let d = derived(&absurd(1.0e-3));
+        assert_eq!(d.energy().k_e, 67);
+        assert_eq!(substance_named(&d, "X").k, 96, "raised to e_r");
+        assert_eq!(reaction_named(&d, "x_to_y").e_r, 96);
+        assert_eq!(reaction_named(&d, "x_to_y").nu_energy, -2_097_152);
+        assert_eq!(reaction_named(&d, "x_to_y").energy_relative_error, 0.0);
+        assert!(
+            (120.0..121.0).contains(&d.energy().chemical_energy_bits),
+            "the passing fixture stands at {} bits",
+            d.energy().chemical_energy_bits
+        );
+
+        let err = refusal(&absurd(1.0));
+        assert!(err.contains("127"), "the bound has to be named: {err}");
+        assert!(
+            err.contains("max_conc"),
+            "the way out has to be named: {err}"
+        );
+
+        // The worst case the corpus itself can reach, and it is nowhere near:
+        // water of SPEC section 2.3 at 256 cubed, `5.12e11` units per voxel at
+        // `w = -4 573 280`. Eighty-five bits of a hundred and twenty-seven, with
+        // forty-two to spare — the number ADR-081 prints, recomputed here off a
+        // registry rather than quoted.
+        let spec_2_3_at_256 = swap(
+            &swap(
+                &swap(&water_and_proton(), "nx = 64", "nx = 256"),
+                "ny = 64",
+                "ny = 256",
+            ),
+            "nz = 64",
+            "nz = 256",
+        );
+        let big = derived(&spec_2_3_at_256);
+        let water = substance_named(&big, "WATER");
+        assert_eq!(water.k, 63);
+        assert_eq!(water.chemical_weight, -4_573_280);
+        assert_eq!(water.amount_at_max, 511_897_148_045);
+        assert!(
+            (85.0..85.1).contains(&big.energy().chemical_energy_bits),
+            "the worst corpus case stands at {} bits, not 85",
+            big.energy().chemical_energy_bits
+        );
+        assert!(
+            big.report().contains("bits of chemical energy"),
+            "{}",
+            big.report()
+        );
+    }
+
+    /// Where a substance stands in the declaration order.
+    fn substance_index(d: &Derived, id: &str) -> usize {
+        d.substances()
+            .iter()
+            .position(|s| s.id == id)
+            .unwrap_or_else(|| panic!("no substance `{id}`"))
     }
 
     #[test]
@@ -3207,7 +3944,16 @@ t_max = 3.2315e2
         let substance_twice = format!(
             "{HEADER}{}{}{}{}",
             spec_12_substances(100.0),
-            substance("O2", 31.99880, 0.25, 1.0, 2.1e-9, C_P_PLACEHOLDER, "{}"),
+            substance(
+                "O2",
+                31.99880,
+                0.25,
+                1.0,
+                2.1e-9,
+                C_P_PLACEHOLDER,
+                H_F_O2,
+                "{}",
+            ),
             reaction(
                 "h2s_oxidation",
                 -8.46e5,
@@ -3358,13 +4104,18 @@ t_max = 3.2315e2
 
     #[test]
     fn load_reports_the_energy_counter_ceiling_in_joules() {
-        // ADR-075: the ceiling of an energy channel counter is `2^63/2^k_E`, and
-        // at `k_E = 67` that is 62.5 mJ — less than one lit tick of a 128 cubed
-        // domain delivers. The number is printed rather than turned into a
-        // refusal, because whether an `i64` counter is the right width at all is
-        // open question A-20 (A-19 in ADR-075 and ADR-076, which were drafted
-        // while that number was free); what the report owes the reader is the
-        // number, in joules, beside the substep counts.
+        // ADR-075 and ADR-083: the ceiling of an energy channel counter is
+        // `2^127/2^k_E`, and at `k_E = 67` that is `2^60 J = 1.15e18 J`. What the
+        // report owes the reader is the number, in joules, beside the substep
+        // counts.
+        //
+        // **Three literals move together or not at all**, and this is the third:
+        // `counter_ceiling_joules` computes `exp2_exact(127 - k_e)`, `report`
+        // prints the formula, and the line below recomputes the expectation with
+        // an exponent of its own. That is deliberate — a test that read the
+        // constant back would be an identity — and it is also the trap: leave
+        // this at 63 and the "fix" is to bend the test to a report that says
+        // 62.5 mJ against a counter holding 1.15e18 J, with CI green.
         //
         // Two scenarios with **different** `k_E`, and the expectation computed
         // rather than written down: `k_E` is derived and depends on the scenario,
@@ -3379,7 +4130,7 @@ t_max = 3.2315e2
 
         for d in [&wide, &narrow] {
             let k_e = i32::from(d.energy().k_e);
-            let expected = 2.0f64.powi(63 - k_e);
+            let expected = 2.0f64.powi(127 - k_e);
             assert_eq!(d.energy().counter_ceiling_joules, expected);
             let printed = format!("{expected:e}");
             assert!(

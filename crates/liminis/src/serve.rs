@@ -50,7 +50,7 @@ use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
 use liminis_core::config::{self, Config, Derived};
-use liminis_core::ledger::{DomainSums, Ledger};
+use liminis_core::ledger::{DomainSums, Ledger, Nu};
 use liminis_core::numeric::{M32, M64, run_key};
 use liminis_core::process::{ProcessId, ROSTER_LEN, RosterEntry, Scratch, Tick};
 use liminis_core::version::WORLD_FORMAT_VERSION;
@@ -524,7 +524,16 @@ fn advance_one(sim: &mut Sim) {
 /// build.
 fn residual_of(sim: &Sim) -> Residual {
     let matter = (0..sim.before.n_substances())
-        .map(|s| sim.ledger.residual_matter(s, &sim.before, &sim.after))
+        .map(|s| {
+            // `Nu::EMPTY` because no roster this binary can build dispatches step
+            // `h` — `Tick::new` refuses an enabled `reactions` — so every `Xi_r`
+            // of every tick is zero and the second term of ADR-080 is absent by
+            // construction. It is not a shortcut that could rot quietly: the day
+            // chemistry runs, `residual_matter` refuses a reduced extent it has no
+            // stoichiometry for, and this line goes red rather than under-reporting.
+            sim.ledger
+                .residual_matter(Nu::EMPTY, s, &sim.before, &sim.after)
+        })
         .max_by_key(|residual| residual.unsigned_abs())
         .unwrap_or(0);
 
@@ -1611,7 +1620,7 @@ mod tests {
             advance_one(&mut guard);
             guard.tick.domain_sums(&guard.world, &mut after);
             let want: Vec<i128> = (0..n)
-                .map(|s| guard.ledger.residual_matter(s, &before, &after))
+                .map(|s| guard.ledger.residual_matter(Nu::EMPTY, s, &before, &after))
                 .collect();
             let published = guard.last.as_ref().expect("a tick was completed").matter;
             (want, published)
@@ -1923,6 +1932,94 @@ mod tests {
         assert!(
             ids.contains(&awkward),
             "the id did not arrive verbatim: {ids:?}"
+        );
+    }
+
+    /// The shipped scenario, run for a thousand ticks, with both residuals held
+    /// against the counters after every one of them.
+    ///
+    /// **The gap this fills is not a width, it is a kind.** The acceptance suite
+    /// had `every_scenario_in_the_repository_loads`, which parses a file; nothing
+    /// anywhere *ran* one. So the panic ADR-083 was written against — the
+    /// `BOUNDARY_EXCHANGE` energy counter overflowing an `i64` on the **seventh**
+    /// tick of `configs/scenarios/h2s-oxidation.toml`, one command and no process
+    /// beyond diffusion — went past all five hundred and sixty-one tests in the
+    /// corpus without touching one of them.
+    ///
+    /// # Three ways this test can be empty, and what is done about each
+    ///
+    /// **One: asserting nothing.** `Ledger::assert_closed` fires inside
+    /// `Tick::advance` under `cfg(debug_assertions)` only, so under
+    /// `cargo test --release` a thousand ticks would prove "it did not fall
+    /// over" — which is true of a completely broken ledger the moment the
+    /// counter stops overflowing. Hence the call below is this test's own, out
+    /// of this test's own accumulators, in every profile.
+    ///
+    /// **Two: the wrong world.** A `World` built by hand skips
+    /// `World::seed_ghosts`, so the lid trades with a reservoir of nothing and
+    /// the counter grows *faster* — red before the fix and green after it, for a
+    /// reason having nothing to do with the shipped scenario. So the world comes
+    /// through `build`, which is the function `liminis serve` itself calls.
+    ///
+    /// **Three: not reading the counter.** A run that quietly stopped crediting
+    /// would close every tick and finish in silence. The last assertion is
+    /// therefore that `BOUNDARY_EXCHANGE` has left the `i64` range altogether:
+    /// on the old width this run could not have got here at all.
+    ///
+    /// # Why one scenario, singular
+    ///
+    /// `configs/` holds two and only one of them runs. `config::load` is
+    /// `read_to_string` plus `parse` — it does not call the validator — so
+    /// `hello.toml` passes `every_scenario_in_the_repository_loads` and then
+    /// fails in `build`: one of its six faces defaults to `exchange` (`z_max`)
+    /// and it declares no `[boundary.reservoir]`. Generalising this test to
+    /// "every scenario in `configs/`" would go red on that, for a reason that is
+    /// not this one; skipping what does not build would make it green over the
+    /// empty set. Whether that is a defect of the file or of `config::load` is
+    /// ADR-078, which is not implemented in this tree.
+    // TODO(test-time-budget): this test costs about seventeen minutes in a debug
+    // build — a thousand ticks of 48^3 with five substances at the measured one
+    // second a tick — against about twelve seconds when it fails at tick seven.
+    // No document in the corpus gives `cargo test` a time budget: not a record,
+    // not `ACCEPTANCE.md`, not CI; E-3 in `OPEN_QUESTIONS.md` is about a
+    // throughput benchmark and not about a ceiling on acceptance time. The three
+    // ways out — leave it, mark it `#[ignore]`, or shrink the grid — are a
+    // decision and not a code change, and `#[ignore]` in particular is exactly
+    // what would have let tick seven through again. It runs unmarked until a
+    // record says otherwise.
+    #[test]
+    fn the_shipped_scenario_survives_a_thousand_ticks() {
+        const TICKS: u32 = 1_000;
+        const SEED: u64 = 42;
+
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../configs/scenarios/h2s-oxidation.toml");
+        let scenario = config::load(&path).expect("the shipped scenario parses");
+        let mut sim = build(&scenario, SEED).expect("the shipped scenario builds");
+
+        let n_substances = sim.world.registry().n_substances();
+        let mut before = DomainSums::new(n_substances).expect("the sums before a tick");
+        let mut after = DomainSums::new(n_substances).expect("the sums after a tick");
+
+        for tick in 0..TICKS {
+            sim.tick.domain_sums(&sim.world, &mut before);
+            advance_one(&mut sim);
+            sim.tick.domain_sums(&sim.world, &mut after);
+            sim.ledger.assert_closed(Nu::EMPTY, &before, &after);
+            assert_eq!(sim.ticks, tick + 1, "the tick counter skipped");
+        }
+
+        // The lid trades enthalpy with a reservoir ten kelvin colder than the
+        // domain starts at, every substep of the enthalpy field, so this counter
+        // is the one that overflowed. Below `i64::MIN` and not merely "large":
+        // a counter that stayed inside the old range would mean the run no
+        // longer reaches the case this test exists for.
+        let counter = sim.ledger.energy(Channel::BoundaryExchange);
+        assert!(
+            counter < i128::from(i64::MIN),
+            "the boundary counter stands at {counter}, still inside an i64: a \
+             thousand ticks of the shipped scenario no longer reach the width \
+             this test is about"
         );
     }
 

@@ -62,12 +62,12 @@ const SEALED: f64 = 0.0;
 /// ever touched, so which substance a lane stands for cannot matter here.
 fn run_diffusion_32(phase: &DiffusePhase, field: &mut Field32) {
     let table: Vec<u32> = (0..field.lanes()).collect();
-    phase.apply_32(field, &table, &mut Ledger::new(32).unwrap());
+    phase.apply_32(field, &table, &[0; 32], &mut Ledger::new(32).unwrap());
 }
 
 fn run_diffusion_64(phase: &DiffusePhase, field: &mut Field64) {
     let table: Vec<u32> = (0..field.lanes()).collect();
-    phase.apply_64(field, &table, &mut Ledger::new(32).unwrap());
+    phase.apply_64(field, &table, &[0; 32], &mut Ledger::new(32).unwrap());
 }
 
 /// The eco regime of SPEC section 1.7: a one-second tick and a 100 um voxel.
@@ -644,6 +644,10 @@ fn run_a_tick(world: &mut World) {
     // this wave — and it does not touch what is being asserted here, which is
     // where the *amounts* were read from and written to.
     let mut energy = vec![M64::ZERO; n_voxels as usize];
+    // One cell per voxel per reaction, and this fixture declares one reaction
+    // (ADR-080). Nothing here reads it back: what this test asserts is where the
+    // *amounts* came from and went to.
+    let mut xi = vec![M32::ZERO; n_voxels as usize];
     {
         let rx = tables.rx();
         let (src32, src64, dst32, dst64) = world.amount_slices_mut();
@@ -654,6 +658,7 @@ fn run_a_tick(world: &mut World) {
                 dst32,
                 dst64,
                 &mut energy,
+                &mut xi,
                 &temperature,
                 &catalyst,
                 &rx,

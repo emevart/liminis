@@ -188,8 +188,8 @@ fn header<'a>(columns: &'a [&'a str]) -> RunHeader<'a> {
 /// case, and the one the writer must not be allowed to shorten.
 struct Tick {
     totals: Vec<i128>,
-    channel_matter: Vec<i64>,
-    channel_energy: [i64; CHANNEL_COUNT],
+    channel_matter: Vec<i128>,
+    channel_energy: [i128; CHANNEL_COUNT],
     residual_matter: Vec<i128>,
     residual_energy: i128,
     fields: Vec<FieldStat<'static>>,

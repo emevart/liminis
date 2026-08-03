@@ -511,10 +511,9 @@ pub struct Process {
     /// than approximate.
     ///
     /// Zero is legal and is the closed-box scenario. Anything above zero is
-    /// refused for now, and by two locks at once (ADR-076): energy has no sink in
-    /// any scenario, and the width of a channel counter is open question A-20
-    /// (A-19 in ADR-075 and ADR-076, which were drafted while that number was
-    /// free).
+    /// refused for now (ADR-076), because energy has no sink in any scenario.
+    /// That used to be one of two locks; the other, the width of a channel
+    /// counter, was answered by ADR-083.
     pub i_surface: Option<f64>,
     /// Amplitude of the daily modulation as a fraction of `i_surface`, in
     /// `[0, 1]`. Default `0` (ADR-076), on the model of `stir_fraction`.

@@ -772,9 +772,9 @@
 ///   multiplier `units_per_intensity = dx^2 * 2^k_E` is derived and is not a key.
 ///   Every scenario's `config_hash` moves, because the schema grew — and no
 ///   scenario's behaviour does, because a lit scenario does not load at all: it
-///   is refused by two locks, an energy sink that exists nowhere and the width of
-///   a channel counter — open question A-20 (A-19 in ADR-075 and ADR-076, which
-///   were drafted while that number was free);
+///   was refused by two locks, an energy sink that exists nowhere and the width
+///   of a channel counter, and version 18 below leaves the first of those
+///   standing alone;
 /// - **a `requires` window is a load error.** ADR-073 refuses a non-empty
 ///   `requires` in the validator instead of accepting a window no kernel can
 ///   satisfy. No scenario in `configs/` writes one, so the set of loadable worlds
@@ -844,4 +844,102 @@
 /// `Scratch::face_courant`, so the tick that dispatches step `b` is the tick step
 /// `c` starts moving matter on, while `Scratch::enthalpy_courant` stays zero for
 /// want of a fine-to-coarse fold of a flux that no record writes.
-pub const WORLD_FORMAT_VERSION: u32 = 17;
+///
+/// # Version 18: a channel counter is `i128`
+///
+/// ADR-083. Both halves of the ledger's counter table, and the snapshots the
+/// tick's increment is measured from, go from `i64` to `i128` — the width of the
+/// domain sum they are held against — and `credit_matter`/`credit_energy` take
+/// that width, so the second door `credit_energy_wide` and its checked narrowing
+/// disappear.
+///
+/// **The world does not move by one unit.** Not a field, not a voxel, not a
+/// counter's *value*: only the width of the box the value sits in. The guard of
+/// ADR-020 fires because `process/**` was edited — `diffuse.rs` and `advect.rs`
+/// widen four credit arguments, `react.rs` calls the surviving door — and it
+/// fires with nothing behind it. This is the **third** idle firing, after ADR-057
+/// and ADR-075, and the number moves anyway for the reason the rule has no
+/// exceptions: the guard cannot tell a widening from a change of semantics, and
+/// an author who decides that on its behalf once will decide it again.
+///
+/// What did change for real is a file format, and it has a number of its own:
+/// `SNAPSHOT_FORMAT_VERSION` moves 1 -> 2, because the counter block on disk
+/// grows from 720 to 1 440 bytes (`observe/snapshot.rs`).
+///
+/// The run this fixes was not hypothetical. `configs/scenarios/h2s-oxidation.toml`
+/// — the one scenario in the repository that runs at all — panicked on the
+/// **seventh** tick inside `process/diffuse.rs`, crediting the enthalpy the lid
+/// trades with a reservoir ten kelvin colder than the domain starts at: an `i64`
+/// energy counter holds `2^63/2^k_E = 62.5 mJ` at `k_E = 67`, one tick credits
+/// 0.152 of that, and six ticks fill it. It went past five hundred and sixty-one
+/// tests because the suite loaded every scenario and ran none;
+/// `the_shipped_scenario_survives_a_thousand_ticks` is what was missing.
+///
+/// # Version 19: the reaction step reports its extent, and the matter identity
+/// grows a second term
+///
+/// ADR-080. `kernels::react::react_voxel` takes an eleventh binding, `xi_out`,
+/// and writes `idx * R + r` — how far each reaction ran in this voxel — beside
+/// the amounts and the energy increment. The host reduces that slice in phase 5
+/// LEDGER, and `ledger::residual_matter` becomes
+/// `Delta n_s == Sum_c credited(c, s) + Sum_r nu_(r,s) * Xi_r`.
+/// `process::Conservation` gains a third arm, `Transmutes`, which step `h`
+/// declares for matter and no process declares for energy.
+///
+/// **The world does not move by one unit, and this time the record says so
+/// itself.** Step `h` stays undispatchable — `refuse_if_blocked` still refuses an
+/// enabled `reactions`, now over the energy arch alone — so no scenario runs a
+/// reaction, `xi_out` is written by no dispatch, and every run of version 18
+/// comes out under version 19 bit for bit. The guard of ADR-020 fires because
+/// `kernels/**` and `process/**` were edited, and it fires idle. That is the
+/// **fourth** idle firing, after ADR-057, ADR-075 and ADR-083, and the number
+/// moves anyway for the reason the rule has no exceptions: a guard that cannot
+/// tell a report from a change of dynamics is a guard, and an author who decides
+/// that on its behalf once will decide it again.
+///
+/// What the number does record is a price that is real the moment step `h`
+/// dispatches: `4 * R` bytes per voxel of extent, against the 230 B per voxel of
+/// ADR-062. At `R = 1` that is 234 B and 490 MB at 128 cubed; at the ten
+/// reactions SPEC section 2.3 is heading for, 270 B and 566 MB; at the build
+/// bound `R_MAX = 64`, 486 B and 1 019 MB, where the slice alone is 256 B per
+/// voxel — 111% of the state — which is why it is `n_reactions` long and never
+/// `R_MAX`.
+///
+/// What it does **not** record is the energy half. ADR-081 closes that one by
+/// weighting the left side, not by a second term on the right, and folding both
+/// into one edit would have credited every conversion twice.
+///
+/// # Version 20: the left side of the energy invariant is weighted, and `nu_E`
+/// carries the sign of the field
+///
+/// ADR-081. Three things in `process/**` moved and every one of them is
+/// semantics:
+///
+/// - `Tick::domain_sums` gained a last door. The left side of the energy
+///   identity is now `H_field + Sum_s w_s * n_s`, where
+///   `w_s = round(enthalpy_formation_s * 2^(k_E - k_s))` is derived at load, so
+///   a reaction stops being a source of energy and becomes a transfer between
+///   two forms of one quantity.
+/// - `process/diffuse.rs` and `process/advect.rs` credit `BOUNDARY_EXCHANGE`
+///   with `Sum_s w_s * Delta n_s` beside the per-substance flow. Matter that
+///   leaves through the lid takes its chemical energy with it, and the counter
+///   has to say so.
+/// - the `ProcessId::Reactions` arm of `refuse_if_blocked` no longer names the
+///   ledger, which no longer blocks anything.
+///
+/// **This firing is not idle, and it is the first of the batch that is not.**
+/// Every scenario with a venting face now moves an energy counter it did not
+/// move under version 19: on the shipped scenario the lid credits the chemical
+/// energy of what it trades, which is `4.55 mJ` on the worst transient tick
+/// against the `9.61 mJ` the same face already owed as heat. No amount, no
+/// temperature and no field moves — the credit lands on a counter and the
+/// residual closes on both sides of it — but a channel total is an observable
+/// (ADR-037, ADR-071), and two runs either side of this number are not
+/// comparable.
+///
+/// `nu_E` also changes sign for every exothermic reaction, from
+/// `round(dH * 2^(k_E - e_r))` to `-Sum_s nu_s * w_s`. That moves no run in the
+/// repository today only because step `h` is dispatched by nothing; the day it
+/// is, it is the difference between a reaction that warms its cell and one that
+/// cools it.
+pub const WORLD_FORMAT_VERSION: u32 = 20;

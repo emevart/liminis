@@ -340,6 +340,15 @@ pub fn fold_energy(
     // From `src_h`, never from `dst_h`: `dst_h[coarse] += ...` would be a read
     // from the buffer being written, and it is indistinguishable from this line on
     // a zeroed output.
+    //
+    // **The sum is a sum and not a difference, and since ADR-081 that is correct
+    // rather than accidental.** `nu_E` is defined as `-Sum_s nu_s * w_s`, that is
+    // in the direction of *this field*: an exothermic reaction is positive here,
+    // the enthalpy rises, and what the field gains the chemical form of the
+    // substances lost. Before that record `nu_E` carried the sign of the declared
+    // enthalpy and this line cooled the water when sulfide burned — which nothing
+    // could see until a temperature existed (ADR-079). The sign lives in
+    // `config/derive.rs` and in one place only; this line was not touched.
     dst_h[coarse as usize] = src_h[coarse as usize] + reactions + from_light;
 }
 

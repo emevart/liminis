@@ -656,25 +656,25 @@ fn light(config: &Config) -> Result<()> {
     }
 
     if i_surface > 0.0 {
-        // Temporary, and **two locks at once**. Naming only one of them would
-        // teach the next reader that the other is not there: the counter fills at
-        // `i_surface = 381.5 W/m^2`, eighteen times below the threshold the field
-        // itself imposes, so lifting the sink alone trades a silent overflow of
-        // the field for a loud panic in the ledger. The precedent for the shape is
+        // Temporary, and **one lock now, not two**. It was two: the missing sink
+        // and the width of a channel counter. ADR-083 lifted the second — the
+        // counter is `i128` and holds `2^127/2^k_E = 1.15e18 J` at `k_E = 67`,
+        // which is `7.0e11` declared horizons of full sun — and lifting only that
+        // one is deliberate, because lifting the other with it would let a lit
+        // scenario load into a world where absorbed energy has nowhere to go.
+        // ADR-084 is what removes this refusal, and it removes it rather than
+        // reformulating it. The precedent for the shape is
         // `a_settling_substance_is_refused_until_g_and_the_medium_density_are_named`.
         bail!(
             "process `{LIGHT_PROCESS}` declares i_surface = {i_surface} W/m^2, and \
-             a lit scenario is refused for now by two locks at once (ADR-076). \
-             First: energy has no sink in any scenario — RADIATIVE_OUT is not \
-             implemented and step `j` has nothing to write — so absorbed light \
-             accumulates without bound and crosses the declared temperature range \
-             in about 42 ticks at full sun, taking the Courant bound proved at \
-             load with it. Second: the width of a channel counter is open question \
-             A-20 — A-19 in ADR-075 and ADR-076, which were drafted while that \
-             number was free — and an i64 SOLAR_IN does not hold even one lit \
-             tick: the ceiling is 2^63/2^k_E = 62.5 mJ at k_E = 67 against \
-             0.16384 J a tick at 128^3, that is 2.62 ceilings. Neither lock is \
-             enough on its own. \
+             a lit scenario is refused for now because energy has no sink in any \
+             scenario (ADR-076): RADIATIVE_OUT is not implemented and step `j` has \
+             nothing to write, so absorbed light accumulates without bound and \
+             crosses the declared temperature range in about 42 ticks at full sun, \
+             taking the Courant bound proved at load with it. This used to be one \
+             of two locks; the other was the width of a channel counter, and \
+             ADR-083 answered it — the counter is i128 and its ceiling is \
+             2^127/2^k_E, so it is no longer what keeps the light off. \
              Write i_surface = 0.0 for a closed box"
         );
     }
@@ -1655,8 +1655,13 @@ t_max = 323.15
     fn water_and_proton(s_proton: i64) -> String {
         // Placeholder, as everywhere here: no `enthalpy_formation` is named by
         // the corpus. Chosen so that the declared enthalpy at `s_proton = 13` is
-        // the `4.94e7 J/turnover` order ADR-062 does its arithmetic on.
-        let h_f_proton = 3.8e6;
+        // the `4.94e7 J/turnover` order ADR-062 does its arithmetic on — and, since
+        // ADR-081, so that it is a whole multiple of `2^10`: the proton's scale is
+        // `k = 74` against `k_E = 67`, so its weight `round(dH_f * 2^-7)` is the
+        // one thing in this fixture that can round, and a rounded weight puts the
+        // summed `nu_E` a part in sixty thousand from the declared enthalpy — over
+        // the tolerance, and refused. `3 800 064 = 2^10 * 3711`.
+        let h_f_proton = 3_800_064.0;
         let enthalpy = h_f_proton * s_proton as f64;
         format!(
             r#"
@@ -2842,24 +2847,23 @@ composition = { C = 106, N = 16, P = 1 }
 
     #[test]
     fn a_lit_scenario_is_refused_until_an_energy_sink_exists() {
-        // Temporary and **two-locked**, on the precedent of
+        // Temporary and **one-locked now**, on the precedent of
         // `a_settling_substance_is_refused_until_g_and_the_medium_density_are_named`.
-        // The claim is about the two substrings and not about the refusal: a
-        // message naming only the missing sink teaches the next reader that a sink
-        // is enough, and the day one lock is lifted becomes the day a silent
-        // overflow of the field is traded for a loud panic in the ledger — the
-        // counter fills at `i_surface = 381.5 W/m^2`, eighteen times below the
-        // threshold the field itself imposes (ADR-076).
         //
-        // `A-20` is the question the second lock sends the reader to, and the
-        // number is asserted because it is the one part of the message that is
-        // an address rather than an argument: ADR-075 and ADR-076 both call it
-        // A-19 — free when they were drafted, taken by the chemistry question by
-        // the time they were applied — so a reader who follows the record instead
-        // of the code lands on the sign of a reaction enthalpy and finds nothing
-        // about counter widths there.
+        // It was two locks: no sink, and the width of a channel counter. ADR-083
+        // answered the second and this test lost a substring with it — `A-20` was
+        // the only automatic guard on twenty-two prose mentions of that question,
+        // and it is being spent rather than kept, because a refusal that goes on
+        // citing an answered question reads to the next author as a live lock.
+        //
+        // **The refusal itself stays**, and that is the whole point of removing
+        // one lock and not both. Deleting it here would make a lit scenario
+        // loadable into a world where absorbed energy has nowhere to go, and the
+        // failure would not be a panic but an energy residual that either never
+        // closes or closes because there is nothing to close. ADR-084 is what
+        // takes this test away.
         let message = refusal(&with_light("enabled = true\ni_surface = 1.0e3"));
-        assert_names(&message, &["i_surface", "sink", "A-20"]);
+        assert_names(&message, &["i_surface", "sink"]);
 
         // The mirror: the dark box loads.
         validated(&with_light("enabled = true\ni_surface = 0.0"));

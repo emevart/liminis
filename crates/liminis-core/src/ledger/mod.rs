@@ -7,11 +7,36 @@
 //! written. Until this module there was no right-hand side in any form, and
 //! "closed accounting" was an intention rather than a property.
 //!
-//! # Three things that are easy to confuse
+//! # Four things that are easy to confuse
+//!
+//! **A summed extent is not a counter.** `Xi_r` — [`Ledger::extent`] — is how far
+//! reaction `r` ran over the whole domain this tick, and it is the second term on
+//! the right of the matter identity (ADR-080). It is **not** a channel: the
+//! registry below stays closed at six names, `Channel::ALL` does not grow, and
+//! `a_closed_domain_leaves_every_channel_counter_at_zero` is true on a domain
+//! where chemistry is running. A channel is a door in the boundary; a reaction is
+//! not a door, and a seventh channel would let any residual be closed by
+//! declaring one. It differs from a counter in lifetime too: a counter
+//! accumulates over the run because its total is an observable, and `Xi` is
+//! cleared by [`Ledger::begin_tick`] because it has no reader outside the tick.
 //!
 //! **A counter is not a residual.** [`Ledger::matter`] is the running net flow
-//! through one `(channel, substance)` pair over the whole run — it grows for ten
-//! million ticks and is `i64` for that reason (`QUANTITIES.md` section 3).
+//! through one `(channel, substance)` pair over the whole run, and it is `i128`
+//! — **the width of the domain sum it is held against** (ADR-083,
+//! `QUANTITIES.md` section 3). That is a relation and not a margin: a residual is
+//! `left - right`, so for as long as the two sides had different widths there
+//! was a place where the narrow one could wrap and the wide one could not, and
+//! the residual still came out zero, because the wrap happened *before* the
+//! subtraction. `a_channel_counter_is_as_wide_as_the_domain_sum_it_closes_against`
+//! is the guard on exactly that.
+//!
+//! The margin is the other half, and it was not academic: an `i64` counter held
+//! `2^63/2^k_E = 62.5 mJ` at `k_E = 67`, against `0.16384 J` — 2.62 ceilings —
+//! for one lit tick of a 128 cubed domain, and the shipped scenario overflowed
+//! it on the **seventh** tick through the lid alone, with no light and no
+//! chemistry (ADR-083). At `i128` the same counter holds `2^127/2^k_E = 2^60 J`,
+//! which is `7.04e11` declared horizons of full sun.
+//!
 //! [`Ledger::residual_matter`] is the difference between the two sides over
 //! **one tick**, and it is required to be an exact zero, not a small number. A
 //! residual computed against the running total instead of against the tick's
@@ -150,6 +175,53 @@ impl Channel {
     const fn row(self) -> usize {
         self as usize
     }
+}
+
+/// The stoichiometry the extent term is multiplied by, borrowed and never
+/// copied (ADR-080).
+///
+/// The four tables `process::React` already hands the kernel, in the same
+/// layout: `nu` and `nu_sub` by **entry**, `begin` and `len` by **reaction**
+/// (ADR-041). It is built from `React::rx()` and from nothing else, which is the
+/// point rather than an optimisation — the coefficient the residual multiplies
+/// `Xi_r` by has to be the coefficient the kernel applied, so it is one number
+/// read twice and never a number formed a second time (ADR-075). The molar `s`
+/// of the scenario is the wrong one and loudly so on most substances and
+/// silently so on one: `nu_i = s_i * 2^(k_i - e_r)`, which is a factor of
+/// `2^17` on the proton of the shipped scenario and exactly one on any substance
+/// whose `k_i` happens to equal `e_r`.
+#[derive(Clone, Copy, Debug)]
+pub struct Nu<'a> {
+    /// Storage coefficients, all reactions end to end, signed (ADR-039).
+    pub nu: &'a [i32],
+    /// Which substance `nu[j]` belongs to. The reserved index of enthalpy
+    /// appears here like any other participant and is past the last substance
+    /// (ADR-041), which is why the sum below never sees it.
+    pub nu_sub: &'a [u32],
+    /// Where reaction `r` starts in `nu`.
+    pub begin: &'a [u32],
+    /// How many entries reaction `r` has.
+    pub len: &'a [u32],
+}
+
+impl Nu<'_> {
+    /// No reactions at all — the vector of every process of the roster but step
+    /// `h` (ADR-080).
+    ///
+    /// Legal only while every `Xi_r` of the tick is zero, and
+    /// [`Ledger::residual_matter`] says so with an assertion rather than by
+    /// treating the term as absent: an extent that was reduced and no
+    /// stoichiometry to convert it with is a residual that silently forgets a
+    /// whole reaction. The assertion is indexwise rather than on the length —
+    /// every reaction this vector does not describe has to have moved nothing —
+    /// so a tick without chemistry closes against `EMPTY` on a ledger that has
+    /// room for reactions, and a tick with chemistry does not.
+    pub const EMPTY: Nu<'static> = Nu {
+        nu: &[],
+        nu_sub: &[],
+        begin: &[],
+        len: &[],
+    };
 }
 
 /// Sum a lane exactly, widening every element into the accumulator.
@@ -340,6 +412,59 @@ impl DomainSums {
         self.energy += total_64(energy);
     }
 
+    /// Add the **chemical** energy of everything the domain holds:
+    /// `Sum_s weight[s] * matter[s]` (ADR-081).
+    ///
+    /// `weight[s]` is `w_s = round(enthalpy_formation_s * 2^(k_E - k_s))`, the
+    /// chemical energy of one storage unit of substance `s` in the storage units
+    /// of the enthalpy field, derived once at load (`config/derive.rs`). No
+    /// buffer is read: the amounts were already summed by the doors above, and
+    /// this weighs the accumulators they filled.
+    ///
+    /// **The last door, and nothing here can enforce it.** It reads
+    /// [`DomainSums::matter`], so called before any `add_field_lane_*` it weighs
+    /// a half-filled table — and no residual can see that, because the same
+    /// short sum taken before and after cancels in `after - before` and stays
+    /// zero for ever. Calling it twice is the mirror of the same failure: on a
+    /// closed domain the doubled term cancels the same way, and on a venting one
+    /// it breaks loudly. The only witness is an *absolute* number, which is what
+    /// `load_reports_the_chemical_energy_of_the_domain_in_joules` prints.
+    ///
+    /// **Why the weight is on the left and not a term on the right.** A reaction
+    /// converts `Delta n_s = nu_s * xi` and moves the enthalpy field by
+    /// `nu_E * xi`; with `nu_E := -Sum_s nu_s * w_s` the sum of the two is
+    /// identically zero, so the energy half closes **by construction** rather
+    /// than by check, and no channel for the heat of reaction has to be invented
+    /// — a channel is a door out of the domain and a reaction is not a door
+    /// (ADR-028, ADR-059).
+    ///
+    /// # Panics
+    ///
+    /// If `weight` is not one entry per substance. A short table would silently
+    /// drop every substance past its end, and a long one is a table built for
+    /// another registry — both of which give a residual that closes.
+    #[track_caller]
+    pub fn add_chemical_energy(&mut self, weight: &[i64]) {
+        assert_eq!(
+            weight.len(),
+            self.matter.len(),
+            "the weight table holds {} entries against {} substances (ADR-081)",
+            weight.len(),
+            self.matter.len()
+        );
+        for (s, &w) in weight.iter().enumerate() {
+            // `i64 * i128` at the accumulator's width, and the margin is what
+            // makes it safe rather than the type: the worst case the corpus can
+            // reach is water of SPEC section 2.3 at 256 cubed — `5.12e11` units
+            // per voxel at `w = -4 573 280` — which is `3.93e25`, 85 bits of 127.
+            // That margin is guaranteed by the load-time refusal
+            // `chemical_energy_of_the_domain_past_the_ledger_accumulator_is_rejected`
+            // and by nothing here: Rust panics on an `i128` overflow in debug
+            // only, and `liminis serve` computes these sums in **both** profiles.
+            self.energy += i128::from(w) * self.matter[s];
+        }
+    }
+
     /// Everything the domain holds of `substance`, in its storage units.
     ///
     /// # Panics
@@ -365,13 +490,18 @@ impl DomainSums {
 
 /// The channel counters, and the two residuals they close.
 ///
-/// One signed `i64` per `(channel, substance)` pair and one per
+/// One signed `i128` per `(channel, substance)` pair and one per
 /// `(channel, energy)` pair, plus a snapshot of both taken at the start of the
-/// tick. Ninety counters at the fourteen substances of SPEC section 2.3 — 720
-/// bytes, 1 440 with the snapshot; at `world::registry::MAX_SUBSTANCES`, which
-/// is thirty-one because the thirty-second index belongs to enthalpy, 192
-/// counters, 1 536 bytes and 3 072 with the snapshot. Neither the table nor the
-/// snapshot is per voxel, so the byte budget of ADR-045 does not move at all.
+/// tick — the snapshots at the same width as the totals, because
+/// [`Ledger::matter_this_tick`] and not [`Ledger::matter`] is the right-hand
+/// side of every residual (ADR-083).
+///
+/// Ninety counters at the fourteen substances of SPEC section 2.3 — 1 440 bytes,
+/// 2 880 with the snapshot; at `world::registry::MAX_SUBSTANCES`, which is
+/// thirty-one because the thirty-second index belongs to enthalpy, 192 counters,
+/// 3 072 bytes and 6 144 with the snapshot. The width cost 1 440 bytes of that
+/// and 3 072 at the bound. Neither the table nor the snapshot is per voxel, so
+/// the byte budget of ADR-045 does not move in any digit it prints.
 ///
 /// # Signed, and which way
 ///
@@ -394,12 +524,32 @@ impl DomainSums {
 pub struct Ledger {
     n_substances: u32,
     /// `channel * n_substances + substance`, running net over the whole run.
-    matter: Vec<i64>,
+    matter: Vec<i128>,
     /// One per channel, running net over the whole run.
-    energy: [i64; CHANNEL_COUNT],
+    energy: [i128; CHANNEL_COUNT],
     /// Both of the above as they stood at the last [`Ledger::begin_tick`].
-    matter_at_tick_start: Vec<i64>,
-    energy_at_tick_start: [i64; CHANNEL_COUNT],
+    ///
+    /// The same width as the totals, and narrowing them alone would compile:
+    /// `matter` would read back correctly while `matter_this_tick` — the actual
+    /// right-hand side of every residual — lied about everything past `i64`, with
+    /// no panic anywhere and every small-number residual test still green
+    /// (ADR-083).
+    matter_at_tick_start: Vec<i128>,
+    energy_at_tick_start: [i128; CHANNEL_COUNT],
+    /// How many reactions the extent table below accounts for. Zero for a
+    /// ledger built by [`Ledger::new`].
+    n_reactions: u32,
+    /// `Xi_r` for this tick: the domain-wide extent of every reaction, in quanta
+    /// of `2^(-e_r)` of a turnover (ADR-080).
+    ///
+    /// **Per tick, and cleared by [`Ledger::begin_tick`] like nothing else here
+    /// is.** A channel counter accumulates over the run because its running
+    /// total is an observable — ADR-037 asks for it and ADR-071 publishes it —
+    /// and `Xi` has no reader outside the tick at all: it is not in
+    /// `/api/state`, not in the metric stream, and not a quantity of the world.
+    /// So there is no snapshot beside it, and no question about its width: the
+    /// ceiling of one tick at 128 cubed is `1.21e12` against `1.7e38`.
+    extent: Vec<i128>,
 }
 
 impl Ledger {
@@ -417,6 +567,23 @@ impl Ledger {
     /// would give the bound a second home and a second error message to drift
     /// out of step with the first.
     pub fn new(n_substances: u32) -> Result<Self> {
+        Ledger::with_reactions(n_substances, 0)
+    }
+
+    /// The same, with room for the extent of `n_reactions` reactions (ADR-080).
+    ///
+    /// The second door rather than a changed first one, and the reason is the
+    /// direction the forgotten door fails in. [`Ledger::new`] leaves the extent
+    /// table empty, so `Sum_r nu * Xi` is identically zero and the residual of a
+    /// reacting tick comes out non-zero by the whole of what the chemistry
+    /// moved — loud, on the first tick, naming the substances. A default that
+    /// silently sized itself from somewhere would fail the other way.
+    ///
+    /// # Errors
+    ///
+    /// The errors of [`Ledger::new`], and if the extent table would be longer
+    /// than a `usize` can address.
+    pub fn with_reactions(n_substances: u32, n_reactions: u32) -> Result<Self> {
         if n_substances == 0 {
             bail!("a ledger over no substances closes against anything (ADR-003)");
         }
@@ -425,18 +592,28 @@ impl Ledger {
         let Some(len) = width.checked_mul(CHANNEL_COUNT) else {
             bail!("a counter table for {n_substances} substances is longer than a usize");
         };
+        let reactions =
+            usize::try_from(n_reactions).context("more reactions than this host can index")?;
         Ok(Self {
             n_substances,
             matter: vec![0; len],
             energy: [0; CHANNEL_COUNT],
             matter_at_tick_start: vec![0; len],
             energy_at_tick_start: [0; CHANNEL_COUNT],
+            n_reactions,
+            extent: vec![0; reactions],
         })
     }
 
     /// How many substances this counts.
     pub fn n_substances(&self) -> u32 {
         self.n_substances
+    }
+
+    /// How many reactions this accounts the extent of. Zero for a ledger built
+    /// by [`Ledger::new`].
+    pub fn n_reactions(&self) -> u32 {
+        self.n_reactions
     }
 
     /// The counter table is `channel`-major: one contiguous row of substances
@@ -465,6 +642,95 @@ impl Ledger {
     pub fn begin_tick(&mut self) {
         self.matter_at_tick_start.copy_from_slice(&self.matter);
         self.energy_at_tick_start = self.energy;
+        // And the extent goes to zero rather than being snapshotted, because it
+        // is the one quantity here that is per tick (ADR-080). A tick that does
+        // not dispatch step `h` therefore has `Xi == 0` for every reaction by
+        // construction, and the whole second term of the matter identity
+        // vanishes — which is the same statement as "the roster's other eight
+        // processes declare `Xi = 0`". Left standing, last tick's extent would be
+        // credited a second time against a field that did not move; that is the
+        // stale-accumulator failure of ADR-045 relocated from the kernel's slice
+        // into this table, and `a_tick_without_chemistry_leaves_every_extent_total_at_zero`
+        // is the guard.
+        self.extent.fill(0);
+    }
+
+    /// Reduce the kernel's per-voxel extent report into `Xi_r` for this tick
+    /// (ADR-080).
+    ///
+    /// `xi_out` is the slice `kernels::react::react_voxel` wrote: one block of
+    /// `n_reactions` cells per voxel, voxel-major. This is the host side of the
+    /// division of labour ADR-041 states in as many words — "the reaction kernel
+    /// does not touch the channel counters ... the sums for the ledger are taken
+    /// by reduction in the LEDGER phase" — and it runs in **phase 5**, not phase
+    /// 4. The rule of `process/tick.rs` that every credit happens above the
+    /// LEDGER phase is about **channels**, and `Xi` is not a channel.
+    ///
+    /// **Overwrites, and does not accumulate.** Called at most once a tick, after
+    /// the one dispatch of the whole chemistry (ADR-050); an accumulating
+    /// reduction would be a second place last tick's extent could survive, after
+    /// the slice itself.
+    ///
+    /// # Panics
+    ///
+    /// If `xi_out` is shorter than `n_voxels * n_reactions`, or if this ledger
+    /// was built by [`Ledger::new`] and has no room for an extent at all — the
+    /// second because a reduction into nothing is silent and leaves the residual
+    /// short by the whole of what the chemistry moved.
+    #[track_caller]
+    pub fn reduce_extent(&mut self, xi_out: &[M32], n_voxels: u32) {
+        assert!(
+            self.n_reactions > 0,
+            "this ledger has no extent table and was handed the report of a \
+             dispatch: build it with Ledger::with_reactions (ADR-080)"
+        );
+        let reactions = self.n_reactions as usize;
+        let cells = (n_voxels as usize) * reactions;
+        assert!(
+            xi_out.len() >= cells,
+            "the extent report holds {} cells against {n_voxels} voxels times {} \
+             reactions",
+            xi_out.len(),
+            self.n_reactions
+        );
+
+        self.extent.fill(0);
+        for idx in 0..n_voxels as usize {
+            for r in 0..reactions {
+                // Widened per element, for the reason `total_32` gives one screen
+                // up: the accumulator is `i128` and so is every partial sum. At
+                // 128 cubed the ceiling of one tick is `1.21e12` against
+                // `1.7e38`, so the width is not what is being defended here — the
+                // habit is. A bare `+=` rather than the `checked_add` the counters
+                // use, and the asymmetry is deliberate: a counter accumulates over
+                // the whole run and this is cleared every tick, so there is no
+                // horizon to argue about — and the reduction runs only in the
+                // debug build, where an overflow panics on its own.
+                self.extent[r] += i128::from(xi_out[idx * reactions + r].to_i64());
+            }
+        }
+    }
+
+    /// The domain-wide extent of reaction `r` over this tick, in quanta of
+    /// `2^(-e_r)` of a turnover (ADR-080).
+    ///
+    /// Zero on every tick that did not dispatch step `h`, and zero for a ledger
+    /// built by [`Ledger::new`]. Not an observable and not published — see the
+    /// field's own comment for why it has no snapshot.
+    ///
+    /// # Panics
+    ///
+    /// If `reaction` is outside the count this ledger was built for.
+    #[track_caller]
+    pub fn extent(&self, reaction: u32) -> i128 {
+        let width = self.extent.len();
+        let Some(&total) = usize::try_from(reaction)
+            .ok()
+            .and_then(|r| self.extent.get(r))
+        else {
+            panic!("reaction {reaction} is outside the {width} this ledger accounts for");
+        };
+        total
     }
 
     /// Credit `units` of `substance` to `channel`: positive when the matter
@@ -485,7 +751,7 @@ impl Ledger {
     /// a diverging one with nothing in the output to see, and a credit happens
     /// once per channel per tick on the host, where `checked_add` costs nothing.
     #[track_caller]
-    pub fn credit_matter(&mut self, channel: Channel, substance: u32, units: i64) {
+    pub fn credit_matter(&mut self, channel: Channel, substance: u32, units: i128) {
         let slot = self.slot(channel, substance);
         let counter = self.matter[slot];
         let Some(sum) = counter.checked_add(units) else {
@@ -507,7 +773,7 @@ impl Ledger {
     ///
     /// On overflow, in both build profiles.
     #[track_caller]
-    pub fn credit_energy(&mut self, channel: Channel, joules: i64) {
+    pub fn credit_energy(&mut self, channel: Channel, joules: i128) {
         let counter = self.energy[channel.row()];
         let Some(sum) = counter.checked_add(joules) else {
             panic!(
@@ -521,64 +787,14 @@ impl Ledger {
         self.energy[channel.row()] = sum;
     }
 
-    /// Credit an energy flow that was accumulated in `i128`, narrowing it back
-    /// through a checked conversion.
-    ///
-    /// The one caller today is the solar reduction of ADR-075, and the width is
-    /// its accumulator's rather than this counter's. The exact sum of the fold's
-    /// solar slice does not fit an `i64` at the declared span of the enthalpy
-    /// field — `32 768 x 1.97e18 = 6.46e22` against `9.22e18` — so a reduction
-    /// that accumulated in `i64` would wrap into a plausible negative *before*
-    /// any conversion, and a `try_from` over an already-wrapped number is silent.
-    /// Hence: widen, add, and narrow exactly once, here.
-    ///
-    /// Outside every `cfg`, like [`Ledger::credit_energy`]. The counters tick in
-    /// both build profiles, and a release build that quietly skipped a credit
-    /// would give a diverging ledger with no panic anywhere — the rare thing that
-    /// is worse than a wrong debug build.
-    ///
-    /// # Panics
-    ///
-    /// If `units` does not fit an `i64` — naming the channel, the number and
-    /// open question A-20 — and on overflow of the counter itself, in both build
-    /// profiles.
-    ///
-    /// This is a refusal and not a loss of account: saturating or wrapping here
-    /// would leave the ledger closing against a right-hand side that is no longer
-    /// the truth. Whether an `i64` counter is the right width at all is open
-    /// question A-20 (A-19 in ADR-075 and ADR-076, which were drafted while that
-    /// number was free), and at `k_E = 67` the answer is visibly "no" — the
-    /// counter holds `2^63/2^67 = 62.5 mJ` against the `0.16384 J` one lit tick
-    /// of a 128 cubed domain delivers (ADR-075, ADR-076). Until A-20 is answered
-    /// no scenario may declare `i_surface > 0`, which is what keeps this panic
-    /// unreachable rather than imminent.
-    #[track_caller]
-    pub fn credit_energy_wide(&mut self, channel: Channel, units: i128) {
-        let Ok(narrow) = i64::try_from(units) else {
-            panic!(
-                "ledger credit does not fit the counter: channel {}, energy, \
-                 {units} units against an i64 counter. The width of a channel \
-                 counter is open question A-20 — A-19 in ADR-075 and ADR-076, \
-                 which were drafted while that number was free — and at k_E = 67 \
-                 an i64 holds 2^63/2^67 = 62.5 mJ, while one lit tick of a 128^3 \
-                 domain is 0.16384 J, which is 2.62 ceilings (ADR-075, ADR-076). \
-                 Wrapping or saturating here would keep the run going with a \
-                 ledger that closes against a right-hand side that is no longer \
-                 the truth",
-                channel.name()
-            );
-        };
-        self.credit_energy(channel, narrow);
-    }
-
     /// The running net flow of `substance` through `channel` over the whole run.
     #[track_caller]
-    pub fn matter(&self, channel: Channel, substance: u32) -> i64 {
+    pub fn matter(&self, channel: Channel, substance: u32) -> i128 {
         self.matter[self.slot(channel, substance)]
     }
 
     /// The running net energy flow through `channel` over the whole run.
-    pub fn energy(&self, channel: Channel) -> i64 {
+    pub fn energy(&self, channel: Channel) -> i128 {
         self.energy[channel.row()]
     }
 
@@ -589,46 +805,102 @@ impl Ledger {
     /// The two have the same type and nearly the same name, and they differ from
     /// the second tick on.
     #[track_caller]
-    pub fn matter_this_tick(&self, channel: Channel, substance: u32) -> i64 {
+    pub fn matter_this_tick(&self, channel: Channel, substance: u32) -> i128 {
         let slot = self.slot(channel, substance);
         self.matter[slot] - self.matter_at_tick_start[slot]
     }
 
     /// The same for energy.
-    pub fn energy_this_tick(&self, channel: Channel) -> i64 {
+    pub fn energy_this_tick(&self, channel: Channel) -> i128 {
         self.energy[channel.row()] - self.energy_at_tick_start[channel.row()]
     }
 
     /// Everything credited for one substance this tick, over all six channels.
+    ///
+    /// **This sum stopped being unoverflowable by construction with ADR-083, and
+    /// the change is worth naming rather than discovering.** While the counters
+    /// were `i64` these six terms were widened into an `i128` accumulator, so no
+    /// arrangement of six counters could overflow it; now six `i128` values are
+    /// added at their own width, and `residual_matter` subtracts three of them
+    /// with bare operators. At the declared quantities that is unreachable —
+    /// after `10^7` ticks of full sun the widest counter stands 39 bits below the
+    /// ceiling — but the failure class is precisely the one ADR-083 is about: a
+    /// wrap happens *before* the subtraction, so the residual comes out zero at
+    /// the moment the accounting is lost. The door used to be locked by the type
+    /// and is now locked only by the magnitude.
     fn credited_matter(&self, substance: u32) -> i128 {
         Channel::ALL
             .into_iter()
-            .map(|channel| i128::from(self.matter_this_tick(channel, substance)))
+            .map(|channel| self.matter_this_tick(channel, substance))
             .sum()
     }
 
-    /// Everything credited in energy this tick, over all six channels.
+    /// Everything credited in energy this tick, over all six channels. See
+    /// [`Ledger::credited_matter`] for what the width of the terms costs.
     fn credited_energy(&self) -> i128 {
         Channel::ALL
             .into_iter()
-            .map(|channel| i128::from(self.energy_this_tick(channel)))
+            .map(|channel| self.energy_this_tick(channel))
             .sum()
     }
 
-    /// `delta(domain) - sum(channels)` for one substance over this tick.
+    /// `delta(domain) - sum(channels) - sum over reactions of nu * Xi` for one
+    /// substance over this tick.
     ///
-    /// Required to be an exact zero (ADR-003, ADR-059). Not "small": both sides
-    /// are integers and the schemes conserve by construction rather than by
-    /// accuracy, so anything but zero means matter appeared or vanished without
-    /// a name.
+    /// Required to be an exact zero (ADR-003, ADR-059, ADR-080). Not "small":
+    /// both sides are integers and the schemes conserve by construction rather
+    /// than by accuracy, so anything but zero means matter appeared or vanished
+    /// without a name.
+    ///
+    /// # The second term, and what it buys
+    ///
+    /// ADR-003 prints one term on the right, and every process of the roster but
+    /// step `h` reports `Xi == 0`, so for them this is that equation unchanged.
+    /// What the term adds is the thing a ledger is for: the residual now compares
+    /// **two independent witnesses of one action** — the field, and the kernel's
+    /// own report of how far each reaction ran — instead of one witness against
+    /// itself. It catches a write that landed in the wrong lane, a lost write, a
+    /// double application, a dispatch that missed part of the domain, and a
+    /// saturation that was not symmetric.
+    ///
+    /// # The epistemic boundary, said here because the next reader will not
+    /// otherwise find it
+    ///
+    /// **The extent is credited with the same `xi` that applied `Delta n = nu *
+    /// xi`.** A `xi` that is wrongly computed, negative, or not bounded by the
+    /// substrate is therefore invisible to this residual and always will be: one
+    /// number enters both sides and cancels. Its standing is exactly that of a
+    /// channel counter (ADR-059) — the ledger checks that the report and the
+    /// field agree, never that either is right. Those classes are guarded by the
+    /// kernel's own "alone" tests, `a_negative_pool_caps_the_extent_at_zero` and
+    /// its neighbours, and by nothing in this module. A residual that closes on a
+    /// reacting tick is **not** evidence that the reaction rate is right, and
+    /// reading it as such is the mistake this paragraph exists to prevent: the
+    /// ledger did not start policing chemistry.
+    ///
+    /// # Energy does not get a term like this
+    ///
+    /// Deliberately, and it is worth a sentence because the pull of symmetry is
+    /// strong. ADR-081 closes the energy half by weighting the **left** side
+    /// (`H_field + sum over s of w_s * n_s`), which makes the contribution of a
+    /// reaction to that side identically zero; a second term on the right there
+    /// would credit one conversion twice and break the residual by exactly its
+    /// own size on the first reacting tick. See [`Ledger::residual_energy`].
     ///
     /// # Panics
     ///
     /// If `substance` is outside the count, or if either `DomainSums` accounts
     /// for a different number of substances than this ledger counts — the two
-    /// are built from one registry and there is nothing else that says so.
+    /// are built from one registry and there is nothing else that says so — or if
+    /// `nu` does not describe a reaction whose extent was reduced.
     #[track_caller]
-    pub fn residual_matter(&self, substance: u32, before: &DomainSums, after: &DomainSums) -> i128 {
+    pub fn residual_matter(
+        &self,
+        nu: Nu<'_>,
+        substance: u32,
+        before: &DomainSums,
+        after: &DomainSums,
+    ) -> i128 {
         // Both sums are held against the ledger's own count, not merely against
         // each other, and the reason is that the two mistakes fail in opposite
         // directions. Sums *narrower* than the ledger are loud already:
@@ -646,12 +918,74 @@ impl Ledger {
             before.n_substances(),
             after.n_substances()
         );
-        after.matter(substance) - before.matter(substance) - self.credited_matter(substance)
+        after.matter(substance)
+            - before.matter(substance)
+            - self.credited_matter(substance)
+            - self.transmuted_matter(nu, substance)
+    }
+
+    /// `sum over reactions of nu_(r,s) * Xi_r` for one substance (ADR-080).
+    ///
+    /// The stoichiometry is borrowed from the process that applied it and never
+    /// formed a second time: `nu_i = s_i * 2^(k_i - e_r)` in storage units, which
+    /// is a factor of `2^17` away from the molar `s` on the proton of the shipped
+    /// scenario and exactly equal to it on any substance whose `k_i` happens to
+    /// be `e_r` — so a second derivation is green on the fixture that has one
+    /// and wrong on the registry that does not.
+    ///
+    /// The enthalpy record sits in `nu` like any other participant and its
+    /// reserved index is past the last substance (ADR-041), so this loop never
+    /// matches it. That is a property of the index and not of a filter here: an
+    /// `s_energy` inside the substance range would land the enthalpy coefficient
+    /// on a substance, and `kernels/react.rs` refuses that in its own preamble.
+    ///
+    /// # Panics
+    ///
+    /// If any reaction whose extent was reduced is not described by `nu`. That
+    /// is the direction that fails silently — the term would be short by a whole
+    /// reaction and the residual would report the shortfall as missing matter,
+    /// naming the substances and not the cause.
+    #[track_caller]
+    fn transmuted_matter(&self, nu: Nu<'_>, substance: u32) -> i128 {
+        for (r, &total) in self.extent.iter().enumerate().skip(nu.begin.len()) {
+            assert!(
+                total == 0,
+                "reaction {r} ran to an extent of {total} and the stoichiometry \
+                 given to the residual describes {} reactions: the term would \
+                 forget it whole (ADR-080)",
+                nu.begin.len()
+            );
+        }
+
+        let mut total = 0i128;
+        for r in 0..nu.begin.len().min(self.extent.len()) {
+            let extent = self.extent[r];
+            if extent == 0 {
+                continue;
+            }
+            for j in nu.begin[r]..nu.begin[r] + nu.len[r] {
+                if nu.nu_sub[j as usize] == substance {
+                    total += i128::from(nu.nu[j as usize]) * extent;
+                }
+            }
+        }
+        total
     }
 
     /// The same for energy — a separate number, because ADR-028 made the
     /// invariant double and one axis cannot express a process that conserves
     /// matter while moving energy.
+    ///
+    /// **No extent term here, and its absence is a decision rather than an
+    /// omission** (ADR-080). ADR-081 closes this half by weighting the left side
+    /// — `H_field + sum over s of w_s * n_s`, with `nu_E` defined as
+    /// `-sum over s of nu_s * w_s` — which makes the contribution of a reaction
+    /// to the left side identically zero. Adding `sum over reactions of nu_E *
+    /// Xi_r` on the right on top of that would credit one conversion twice, and
+    /// the residual would diverge by exactly that amount on the first tick with
+    /// any chemistry in it. Conservation by construction beats conservation by
+    /// checking (ADR-034), so the energy axis takes the weighted left side and
+    /// this function keeps one term on the right.
     pub fn residual_energy(&self, before: &DomainSums, after: &DomainSums) -> i128 {
         after.energy() - before.energy() - self.credited_energy()
     }
@@ -666,26 +1000,29 @@ impl Ledger {
     ///
     /// # Panics
     ///
-    /// If any residual is non-zero. The message names the substance, both sides
-    /// and the per-channel breakdown: the residual alone says that the tick did
-    /// not close and nothing about which channel failed to be credited. Also if
-    /// the sums and the ledger disagree about how many substances there are —
-    /// see [`Ledger::residual_matter`], which is where that is caught, and which
-    /// this always reaches because a ledger over zero substances is refused.
+    /// If any residual is non-zero. The message names the substance, both sides,
+    /// the per-channel breakdown and the per-reaction one: the residual alone
+    /// says that the tick did not close and nothing about which channel failed to
+    /// be credited or which reaction moved what. Also if the sums and the ledger
+    /// disagree about how many substances there are — see
+    /// [`Ledger::residual_matter`], which is where that is caught, and which this
+    /// always reaches because a ledger over zero substances is refused.
     #[track_caller]
-    pub fn assert_closed(&self, before: &DomainSums, after: &DomainSums) {
+    pub fn assert_closed(&self, nu: Nu<'_>, before: &DomainSums, after: &DomainSums) {
         for substance in 0..self.n_substances {
-            let residual = self.residual_matter(substance, before, after);
+            let residual = self.residual_matter(nu, substance, before, after);
             assert!(
                 residual == 0,
                 "the matter ledger did not close: substance {substance} is off \
                  by {residual}. The domain went {} -> {} (delta {}), the \
-                 channels credited {} this tick: {}",
+                 channels credited {} this tick: {}. The reactions moved {}: {}",
                 before.matter(substance),
                 after.matter(substance),
                 after.matter(substance) - before.matter(substance),
                 self.credited_matter(substance),
-                self.breakdown_matter(substance)
+                self.breakdown_matter(substance),
+                self.transmuted_matter(nu, substance),
+                self.breakdown_extent(nu, substance)
             );
         }
 
@@ -714,6 +1051,37 @@ impl Ledger {
             })
             .collect::<Vec<_>>()
             .join(", ")
+    }
+
+    /// One `r=nu*Xi` term per reaction that touched this substance, for the panic
+    /// message.
+    ///
+    /// Only the reactions with a non-zero extent and only the ones whose vector
+    /// names this substance: at `R_MAX` a full listing would be sixty-four terms
+    /// of which the interesting one is somewhere in the middle, and a message
+    /// nobody reads is a message that is not there.
+    fn breakdown_extent(&self, nu: Nu<'_>, substance: u32) -> String {
+        let mut terms = Vec::new();
+        for r in 0..nu.begin.len().min(self.extent.len()) {
+            let extent = self.extent[r];
+            if extent == 0 {
+                continue;
+            }
+            for j in nu.begin[r]..nu.begin[r] + nu.len[r] {
+                if nu.nu_sub[j as usize] == substance {
+                    terms.push(format!(
+                        "reaction {r}: nu={} * Xi={extent} = {}",
+                        nu.nu[j as usize],
+                        i128::from(nu.nu[j as usize]) * extent
+                    ));
+                }
+            }
+        }
+        if terms.is_empty() {
+            "no reaction moved this substance".to_owned()
+        } else {
+            terms.join(", ")
+        }
     }
 
     fn breakdown_energy(&self) -> String {
@@ -818,8 +1186,8 @@ mod tests {
         // right-hand side of the residual, so a disagreement there closes the
         // ledger against another substance's flow.
         const N: u32 = 3;
-        let value = |channel: Channel, substance: u32| -> i64 {
-            (channel as i64 + 1) * 1_000 + i64::from(substance) + 1
+        let value = |channel: Channel, substance: u32| -> i128 {
+            (channel as i128 + 1) * 1_000 + i128::from(substance) + 1
         };
 
         let mut ledger = Ledger::new(N).unwrap();
@@ -852,7 +1220,7 @@ mod tests {
         let mut before = DomainSums::new(N).unwrap();
         let mut after = DomainSums::new(N).unwrap();
         for substance in 0..N {
-            let credited: i64 = Channel::ALL
+            let credited: i128 = Channel::ALL
                 .into_iter()
                 .map(|channel| value(channel, substance))
                 .sum();
@@ -863,7 +1231,7 @@ mod tests {
                 &[M32::new(start + i32::try_from(credited).unwrap())],
             );
         }
-        ledger.assert_closed(&before, &after);
+        ledger.assert_closed(Nu::EMPTY, &before, &after);
     }
 
     /// One substance, one voxel, so that the arithmetic is the whole test.
@@ -884,16 +1252,16 @@ mod tests {
 
         let mut ledger = Ledger::new(1).unwrap();
         ledger.begin_tick();
-        ledger.credit_matter(Channel::BoundaryExchange, 0, i64::from(K));
-        assert_eq!(ledger.residual_matter(0, &before, &after), 0);
+        ledger.credit_matter(Channel::BoundaryExchange, 0, i128::from(K));
+        assert_eq!(ledger.residual_matter(Nu::EMPTY, 0, &before, &after), 0);
 
         // The other convention, and what it costs: not a small error, but twice
         // the flow, on every tick where anything crosses the boundary.
         let mut backwards = Ledger::new(1).unwrap();
         backwards.begin_tick();
-        backwards.credit_matter(Channel::BoundaryExchange, 0, -i64::from(K));
+        backwards.credit_matter(Channel::BoundaryExchange, 0, -i128::from(K));
         assert_eq!(
-            backwards.residual_matter(0, &before, &after),
+            backwards.residual_matter(Nu::EMPTY, 0, &before, &after),
             i128::from(2 * K)
         );
 
@@ -905,7 +1273,7 @@ mod tests {
 
         let mut energy = Ledger::new(1).unwrap();
         energy.begin_tick();
-        energy.credit_energy(Channel::SolarIn, i64::from(K));
+        energy.credit_energy(Channel::SolarIn, i128::from(K));
         assert_eq!(energy.residual_energy(&before_e, &after_e), 0);
     }
 
@@ -917,7 +1285,7 @@ mod tests {
         ledger.begin_tick();
         ledger.credit_matter(Channel::Impact, 0, 100);
         assert_eq!(
-            ledger.residual_matter(0, &sums_of_one(0), &sums_of_one(100)),
+            ledger.residual_matter(Nu::EMPTY, 0, &sums_of_one(0), &sums_of_one(100)),
             0
         );
 
@@ -928,7 +1296,7 @@ mod tests {
         ledger.begin_tick();
         ledger.credit_matter(Channel::Impact, 0, 150);
         assert_eq!(
-            ledger.residual_matter(0, &sums_of_one(100), &sums_of_one(250)),
+            ledger.residual_matter(Nu::EMPTY, 0, &sums_of_one(100), &sums_of_one(250)),
             0
         );
 
@@ -987,18 +1355,18 @@ mod tests {
 
         let mut ledger = Ledger::new(2).unwrap();
         ledger.begin_tick();
-        ledger.credit_energy(Channel::SolarIn, i64::from(JOULES));
-        assert_eq!(ledger.residual_matter(0, &before, &after), 0);
-        assert_eq!(ledger.residual_matter(1, &before, &after), 0);
+        ledger.credit_energy(Channel::SolarIn, i128::from(JOULES));
+        assert_eq!(ledger.residual_matter(Nu::EMPTY, 0, &before, &after), 0);
+        assert_eq!(ledger.residual_matter(Nu::EMPTY, 1, &before, &after), 0);
         assert_eq!(ledger.residual_energy(&before, &after), 0);
-        ledger.assert_closed(&before, &after);
+        ledger.assert_closed(Nu::EMPTY, &before, &after);
 
         // And the two halves are genuinely separate numbers: the same tick with
         // the energy credit missing closes on matter and not on energy. Folded
         // into one counter or one residual, this case is inexpressible.
         let mut half_blind = Ledger::new(2).unwrap();
         half_blind.begin_tick();
-        assert_eq!(half_blind.residual_matter(0, &before, &after), 0);
+        assert_eq!(half_blind.residual_matter(Nu::EMPTY, 0, &before, &after), 0);
         assert_eq!(
             half_blind.residual_energy(&before, &after),
             i128::from(JOULES)
@@ -1009,10 +1377,10 @@ mod tests {
         // outward energy channel of SPEC section 7.
         let mut ledger = Ledger::new(2).unwrap();
         ledger.begin_tick();
-        ledger.credit_energy(Channel::RadiativeOut, -i64::from(JOULES));
-        assert_eq!(ledger.residual_matter(0, &after, &before), 0);
+        ledger.credit_energy(Channel::RadiativeOut, -i128::from(JOULES));
+        assert_eq!(ledger.residual_matter(Nu::EMPTY, 0, &after, &before), 0);
         assert_eq!(ledger.residual_energy(&after, &before), 0);
-        ledger.assert_closed(&after, &before);
+        ledger.assert_closed(Nu::EMPTY, &after, &before);
     }
 
     #[test]
@@ -1026,7 +1394,7 @@ mod tests {
         const IN_GUILD: i32 = 150;
         const IN_CELLS: i64 = 350;
         // Two guild voxels and two cell rows, so N is what the domain gained.
-        const N: i64 = 2 * IN_GUILD as i64 + 2 * IN_CELLS;
+        const N: i128 = 2 * IN_GUILD as i128 + 2 * IN_CELLS as i128;
 
         let build = |guild: i32, cells: i64| {
             let mut sums = DomainSums::new(1).unwrap();
@@ -1039,16 +1407,16 @@ mod tests {
 
         let before = build(50, 100);
         let after = build(50 + IN_GUILD, 100 + IN_CELLS);
-        assert_eq!(
-            after.matter(BIOMASS) - before.matter(BIOMASS),
-            i128::from(N)
-        );
+        assert_eq!(after.matter(BIOMASS) - before.matter(BIOMASS), N);
 
         let mut ledger = Ledger::new(1).unwrap();
         ledger.begin_tick();
         ledger.credit_matter(Channel::Impact, BIOMASS, N);
-        assert_eq!(ledger.residual_matter(BIOMASS, &before, &after), 0);
-        ledger.assert_closed(&before, &after);
+        assert_eq!(
+            ledger.residual_matter(Nu::EMPTY, BIOMASS, &before, &after),
+            0
+        );
+        ledger.assert_closed(Nu::EMPTY, &before, &after);
 
         // The same tick with the left side cut down to `amount[]`: off by the
         // whole of what the guilds and the cells did, and in S0 there is nothing
@@ -1059,8 +1427,8 @@ mod tests {
             sums
         };
         assert_eq!(
-            ledger.residual_matter(BIOMASS, &amount_only(), &amount_only()),
-            i128::from(-N)
+            ledger.residual_matter(Nu::EMPTY, BIOMASS, &amount_only(), &amount_only()),
+            -N
         );
 
         // Enthalpy and cell energy reach the energy half and nothing else. That
@@ -1082,7 +1450,7 @@ mod tests {
         // sign and turn a converging ledger into a diverging one with nothing in
         // the output to see.
         let mut ledger = Ledger::new(2).unwrap();
-        ledger.credit_matter(Channel::BoundaryExchange, 1, i64::MAX);
+        ledger.credit_matter(Channel::BoundaryExchange, 1, i128::MAX);
         ledger.credit_matter(Channel::BoundaryExchange, 1, 1);
     }
 
@@ -1090,7 +1458,7 @@ mod tests {
     #[should_panic(expected = "channel RADIATIVE_OUT, energy")]
     fn an_energy_counter_overflow_is_loud_too() {
         let mut ledger = Ledger::new(1).unwrap();
-        ledger.credit_energy(Channel::RadiativeOut, i64::MIN);
+        ledger.credit_energy(Channel::RadiativeOut, i128::MIN);
         ledger.credit_energy(Channel::RadiativeOut, -1);
     }
 
@@ -1107,7 +1475,7 @@ mod tests {
         after.add_field_lane_64(1, &[M64::new(16)]);
 
         let ledger = Ledger::new(2).unwrap();
-        ledger.assert_closed(&before, &after);
+        ledger.assert_closed(Nu::EMPTY, &before, &after);
     }
 
     #[test]
@@ -1147,7 +1515,149 @@ mod tests {
         let ledger = Ledger::new(1).unwrap();
         let before = DomainSums::new(3).unwrap();
         let after = DomainSums::new(3).unwrap();
-        ledger.assert_closed(&before, &after);
+        ledger.assert_closed(Nu::EMPTY, &before, &after);
+    }
+
+    /// The inside view of ADR-080, and the three things the acceptance names
+    /// cannot reach from outside.
+    ///
+    /// `the_matter_residual_closes_across_a_tick_with_chemistry_in_it` and its two
+    /// neighbours judge the term through a real kernel dispatch. What they cannot
+    /// do is hand the ledger a reduction it has no vector for, or a table it has
+    /// no room for: those are refusals of this module against a caller, and a
+    /// caller that made them would be a host being written, not a scenario being
+    /// run.
+    #[test]
+    fn the_extent_term_refuses_what_it_cannot_account_for() {
+        // (1) A ledger with no room for an extent refuses the reduction outright
+        //     rather than dropping it. Dropping it is the quiet failure: the
+        //     residual then comes out short by the whole of what the chemistry
+        //     moved, and the message names the substances rather than the
+        //     forgotten reduction.
+        let mut narrow = Ledger::new(1).unwrap();
+        assert_eq!(
+            narrow.n_reactions(),
+            0,
+            "the one-argument constructor made room for an extent nobody asked for"
+        );
+        let refusal = refusal_of(|| {
+            narrow.reduce_extent(&[M32::new(3)], 1);
+        })
+        .expect("a reduction into a ledger with no extent table was accepted");
+        assert!(
+            refusal.contains("with_reactions"),
+            "the refusal has to name the constructor, and says: {refusal}"
+        );
+
+        // (2) A report shorter than `n_voxels * n_reactions`. This is the shape
+        //     mistake with no symptom: a slice of `n_voxels` cells is what every
+        //     other per-voxel buffer looks like, it is long enough for the first
+        //     voxel of a one-reaction scenario, and past that the blocks overlap.
+        let mut ledger = Ledger::with_reactions(1, 2).unwrap();
+        assert_eq!(ledger.n_reactions(), 2);
+        assert!(
+            refusal_of(|| {
+                ledger.reduce_extent(&[M32::new(1); 3], 2);
+            })
+            .is_some(),
+            "a report of three cells was accepted for two voxels of two reactions"
+        );
+
+        // (3) The reduction is the sum of the slice, per reaction and not per
+        //     voxel. Voxel-major `idx * R + r`, so a transposed reader gets
+        //     plausible numbers out of the same cells: here reaction 0 sums to 4
+        //     and reaction 1 to 40, and transposed they would come out 13 and 31.
+        let report = [M32::new(1), M32::new(10), M32::new(3), M32::new(30)];
+        ledger.reduce_extent(&report, 2);
+        assert_eq!(ledger.extent(0), 4);
+        assert_eq!(ledger.extent(1), 40);
+
+        // (4) And a residual handed no stoichiometry for a reaction that ran
+        //     refuses instead of forgetting it. This is what makes `Nu::EMPTY`
+        //     safe to pass from a tick that dispatches no chemistry: the day one
+        //     does, the constant stops compiling into a green run.
+        let before = DomainSums::new(1).unwrap();
+        let after = DomainSums::new(1).unwrap();
+        let refusal = refusal_of(|| {
+            let _ = ledger.residual_matter(Nu::EMPTY, 0, &before, &after);
+        })
+        .expect("a reduced extent with no stoichiometry was accepted");
+        assert!(
+            refusal.contains("forget it whole"),
+            "the refusal has to say what would be lost, and says: {refusal}"
+        );
+
+        // (5) The reduction overwrites. Called twice — which one dispatch of the
+        //     whole chemistry never does (ADR-050), and which is exactly how a
+        //     second dispatch would arrive — the totals are the last report and
+        //     not the sum of two.
+        ledger.reduce_extent(&report, 2);
+        assert_eq!(ledger.extent(0), 4, "the reduction accumulated");
+    }
+
+    #[test]
+    #[should_panic(expected = "reaction 2 is outside the 2")]
+    fn a_reaction_outside_the_ledger_is_loud() {
+        let ledger = Ledger::with_reactions(1, 2).unwrap();
+        let _ = ledger.extent(2);
+    }
+
+    #[test]
+    fn a_channel_counter_is_as_wide_as_the_domain_sum_it_closes_against() {
+        // The guard on the decision of ADR-083 itself, and the thing it guards
+        // is a *relation*: the residual is `left - right`, so while the two
+        // sides have different widths there is a place where one of them can
+        // wrap and the other cannot, and the residual stays zero because the
+        // wrap happened **before** the subtraction. Asserted through the return
+        // types of the two public doors rather than through the size of either
+        // struct, because a struct's size says nothing about what a caller can
+        // read out of it.
+        let ledger = Ledger::new(1).unwrap();
+        let sums = DomainSums::new(1).unwrap();
+
+        assert_eq!(
+            std::mem::size_of_val(&ledger.matter(Channel::SolarIn, 0)),
+            std::mem::size_of_val(&sums.matter(0)),
+            "the matter counter and the matter domain sum are different widths"
+        );
+        assert_eq!(
+            std::mem::size_of_val(&ledger.energy(Channel::SolarIn)),
+            std::mem::size_of_val(&sums.energy()),
+            "the energy counter and the energy domain sum are different widths"
+        );
+
+        // And the width, absolutely. Without this the assertions above are
+        // satisfied by narrowing *both* halves back to `i64` in one edit, which
+        // is the one change that restores exactly the asymmetry ADR-083 removed
+        // — silently, and with the equality above still true.
+        assert_eq!(std::mem::size_of::<i128>(), 16);
+        assert_eq!(
+            std::mem::size_of_val(&ledger.matter(Channel::SolarIn, 0)),
+            16
+        );
+
+        // **What this cannot see, and it is the dangerous half.**
+        // `matter_at_tick_start` and `energy_at_tick_start` are private and have
+        // no getter, so no width comparison reaches them. Widening the running
+        // totals and leaving the snapshots `i64` compiles the moment a narrowing
+        // is inserted into `begin_tick`, and then `matter_this_tick` — which is
+        // the right-hand side of every residual, `matter` is not — lies about
+        // everything past `i64` while `matter` reads back correctly. Every
+        // existing residual test is built on small numbers and stays green. So
+        // the snapshots are held by behaviour instead: credit past the old
+        // range, take the snapshot, credit again, and demand the increment
+        // exactly.
+        const PAST: i128 = 1 << 100;
+        let mut ledger = Ledger::new(1).unwrap();
+        ledger.credit_matter(Channel::BoundaryExchange, 0, PAST);
+        ledger.credit_energy(Channel::BoundaryExchange, -PAST);
+        ledger.begin_tick();
+        ledger.credit_matter(Channel::BoundaryExchange, 0, 7);
+        ledger.credit_energy(Channel::BoundaryExchange, -9);
+        assert_eq!(ledger.matter_this_tick(Channel::BoundaryExchange, 0), 7);
+        assert_eq!(ledger.energy_this_tick(Channel::BoundaryExchange), -9);
+        assert_eq!(ledger.matter(Channel::BoundaryExchange, 0), PAST + 7);
+        assert_eq!(ledger.energy(Channel::BoundaryExchange), -PAST - 9);
     }
 
     #[test]
@@ -1187,108 +1697,129 @@ mod tests {
     }
 
     #[test]
-    fn crediting_more_solar_than_the_counter_holds_is_refused_not_wrapped() {
-        // `ACCEPTANCE.md`, and the configuration that will actually reach it is
-        // not this one. The solar reduction of ADR-075 accumulates in `i128`
-        // because the exact sum of the slice does not fit an `i64` at the
-        // declared span of the enthalpy field, and the counter it pays into is
-        // `i64` (ADR-059). At `k_E = 67` the counter tops out at
-        // `2^63/2^67 = 62.5 mJ`, while the upper face of a 128 cubed domain at
-        // `dx = 1e-4 m` takes `0.16384 J` of full sun in one second — **2.62144
-        // ceilings in a single tick** (ADR-076). So the real configuration of
-        // this test is the first lit tick of the first lit scenario, and it is
-        // unreachable for exactly as long as ADR-076's refusal stands: no
-        // scenario may declare `i_surface > 0` until energy has a sink *and*
-        // A-20 has an answer.
-        //
-        // Substituted here rather than reached, the way
-        // `channel_counters_do_not_overflow_at_1e7_ticks` substitutes instead of
-        // running ten million ticks. What is on trial is the conversion: written
-        // `as i64` this wraps to a plausible negative and the ledger goes on
-        // closing against a right-hand side that is no longer the truth.
-        //
-        // **"Not wrapped" is the half a `#[should_panic]` cannot state.** A
-        // conversion written `as i64` does not panic at all, so the absence of a
-        // panic is one failure; a conversion that panicked *after* touching the
-        // counter would be the other, and it is the one a test ending at the
-        // panic cannot see. Hence the counter is read afterwards and has to be
-        // exactly where it started.
+    fn an_energy_credit_past_the_i64_range_reaches_the_counter_exactly() {
+        // The claim is a **value**, not a signature: a runtime test cannot see a
+        // parameter type, and a name promising that it could would be a lie about
+        // what the test looks at. So the assertions are equalities, unit for unit.
+        // `assert!(x > i64::MAX)` would be the weak form and a saturating counter
+        // passes it — the equality is what a saturation cannot survive.
+        // Through `From` and never through `as`, which is this module's own rule
+        // for every counted number (see the header).
+        let past = i128::from(i64::MAX) + 1;
+
         let mut ledger = Ledger::new(1).unwrap();
-        let refusal = refusal_of(|| {
-            ledger.credit_energy_wide(Channel::SolarIn, i128::from(i64::MAX) + 1);
-        });
-        let message = refusal.expect("one unit past i64::MAX was credited instead of refused");
-        assert!(message.contains("A-20"), "the refusal says: {message}");
+        ledger.credit_energy(Channel::SolarIn, past);
+        assert_eq!(ledger.energy(Channel::SolarIn), past);
+
+        // And it goes on adding rather than stopping at a boundary: a counter
+        // that clamped anywhere in the old range agrees with the line above and
+        // not with this one.
+        ledger.credit_energy(Channel::SolarIn, past);
+        assert_eq!(ledger.energy(Channel::SolarIn), 2 * past);
+
+        // The real number rather than a boundary substituted for it: one lit tick
+        // of a 128 cubed domain spread over the 32 768 coarse cells of the
+        // enthalpy grid is `32 768 x 1.97e18 = 6.46e22` at the declared span of
+        // the field (ADR-062, ADR-075) — the exact fixture that used to carry
+        // `#[should_panic]` in `process/react.rs`, because the second door
+        // refused it. There is one door now and it takes the whole number.
+        const SPAN: i128 = 1_970_000_000_000_000_000;
+        const CELLS: i128 = 32_768;
+        let mut solar = Ledger::new(1).unwrap();
+        solar.credit_energy(Channel::SolarIn, SPAN * CELLS);
         assert_eq!(
-            ledger.energy(Channel::SolarIn),
-            0,
-            "the counter moved on a credit that was refused"
+            solar.energy(Channel::SolarIn),
+            64_552_960_000_000_000_000_000
         );
+        assert!(i64::try_from(solar.energy(Channel::SolarIn)).is_err());
+
+        // Matter reads the same way. Two tables (ADR-028), two chances to get it
+        // wrong, and getting one right says nothing about the other.
+        let mut matter = Ledger::new(1).unwrap();
+        matter.credit_matter(Channel::BoundaryExchange, 0, -past);
+        assert_eq!(matter.matter(Channel::BoundaryExchange, 0), -past);
     }
 
     #[test]
-    fn the_wide_credit_takes_the_boundary_and_refuses_past_it() {
-        // The boundary itself, not its neighbourhood: `i64::MAX` is a legal
-        // credit and `i64::MAX + 1` is not. A conversion written with `>` where
-        // it wanted `>=`, or one that reserved a unit of headroom it was never
-        // asked for, is caught by the pair and by nothing else.
+    fn a_credit_past_the_i128_counter_still_panics_rather_than_wrapping() {
+        // The heir of the refusal ADR-075 asked for: `checked_add` stays, the
+        // panic stays, only the boundary moved. Three claims, of three different
+        // shapes, which is why the panic is caught rather than expected —
+        // `#[should_panic(expected = ...)]` takes one substring and ends the test
+        // at the panic, and the third claim is about the state *after* it.
         //
-        // **Both sides here rather than one side each side of the file.** The
-        // accepting half alone leaves the name a promise the body does not keep,
-        // and a conversion that refused every credit would pass it; the refusing
-        // half alone is the test above. Two tests that only mean something read
-        // together are one test whose halves can be deleted separately.
+        // (1) the boundary itself, not its neighbourhood: `i128::MAX` is a legal
+        //     counter value and one past it is not. A check written `>` where it
+        //     wanted `>=` misses by exactly one and by nothing else;
+        // (2) the message names the channel and both numbers: a panic saying only
+        //     "overflow" sends the reader to look through six counters;
+        // (3) the counter stands where it was and has not wrapped into a
+        //     plausible negative. This is the whole difference between a refusal
+        //     and a wrap, and a test that ends at the panic cannot look at it.
         let mut ledger = Ledger::new(1).unwrap();
-        ledger.credit_energy_wide(Channel::SolarIn, i128::from(i64::MAX));
-        assert_eq!(ledger.energy(Channel::SolarIn), i64::MAX);
+        ledger.credit_energy(Channel::SolarIn, i128::MAX);
+        assert_eq!(ledger.energy(Channel::SolarIn), i128::MAX);
 
-        let mut past = Ledger::new(1).unwrap();
-        assert!(
-            refusal_of(|| {
-                past.credit_energy_wide(Channel::SolarIn, i128::from(i64::MAX) + 1);
-            })
-            .is_some(),
-            "one unit past i64::MAX was accepted"
-        );
-
-        // And the sign travels: the same pair on the other end of the type.
-        let mut ledger = Ledger::new(1).unwrap();
-        ledger.credit_energy_wide(Channel::SolarIn, i128::from(i64::MIN));
-        assert_eq!(ledger.energy(Channel::SolarIn), i64::MIN);
-
-        let mut past = Ledger::new(1).unwrap();
-        assert!(
-            refusal_of(|| {
-                past.credit_energy_wide(Channel::SolarIn, i128::from(i64::MIN) - 1);
-            })
-            .is_some(),
-            "one unit past i64::MIN was accepted"
-        );
-    }
-
-    #[test]
-    fn the_wide_credit_names_the_channel_it_refused() {
-        // The message has to carry the channel and the number as well as A-20:
-        // a panic that says only "does not fit" sends the reader to look for the
-        // overflow in six counters, and one that names only the question sends
-        // him to a record instead of to the credit that broke.
-        //
-        // All three substrings in one assertion, which is why the panic is caught
-        // rather than expected: `#[should_panic(expected = ...)]` takes one of
-        // them, and the two it does not take are exactly the two that can be
-        // deleted from the format string without any test noticing.
-        let units = i128::from(i64::MIN) - 1;
-        let mut ledger = Ledger::new(1).unwrap();
+        // Seven and not one, so that the increment is a substring worth looking
+        // for: every large counter contains a "1" somewhere, and an assertion
+        // that cannot fail is an assertion that is not there.
         let message = refusal_of(|| {
-            ledger.credit_energy_wide(Channel::SolarIn, units);
+            ledger.credit_energy(Channel::SolarIn, 7);
         })
-        .expect("a credit past i64::MIN was accepted");
-
-        for expected in [Channel::SolarIn.name(), units.to_string().as_str(), "A-20"] {
+        .expect("a credit past i128::MAX was accepted");
+        for expected in [
+            Channel::SolarIn.name(),
+            i128::MAX.to_string().as_str(),
+            "+ 7",
+        ] {
             assert!(
                 message.contains(expected),
                 "the refusal has to name `{expected}`, and says: {message}"
             );
         }
+        assert_eq!(
+            ledger.energy(Channel::SolarIn),
+            i128::MAX,
+            "the counter moved on a credit that was refused"
+        );
+
+        // Symmetrically at the other end of the type: a counter holds the net and
+        // an outward channel runs negative all run long (ADR-059).
+        let mut ledger = Ledger::new(1).unwrap();
+        ledger.credit_energy(Channel::RadiativeOut, i128::MIN);
+        assert!(
+            refusal_of(|| {
+                ledger.credit_energy(Channel::RadiativeOut, -1);
+            })
+            .is_some(),
+            "one unit past i128::MIN was accepted"
+        );
+        assert_eq!(ledger.energy(Channel::RadiativeOut), i128::MIN);
+
+        // And the matter half, which is a separate table and a separate function
+        // (ADR-028): both of them can be got wrong on their own.
+        let mut ledger = Ledger::new(1).unwrap();
+        ledger.credit_matter(Channel::BoundaryExchange, 0, i128::MAX);
+        assert_eq!(ledger.matter(Channel::BoundaryExchange, 0), i128::MAX);
+        let message = refusal_of(|| {
+            ledger.credit_matter(Channel::BoundaryExchange, 0, 1);
+        })
+        .expect("one unit past i128::MAX was accepted by the matter half");
+        assert!(
+            message.contains(Channel::BoundaryExchange.name()),
+            "the refusal has to name the channel, and says: {message}"
+        );
+        assert_eq!(ledger.matter(Channel::BoundaryExchange, 0), i128::MAX);
+
+        let mut ledger = Ledger::new(1).unwrap();
+        ledger.credit_matter(Channel::BoundaryExchange, 0, i128::MIN);
+        assert!(
+            refusal_of(|| {
+                ledger.credit_matter(Channel::BoundaryExchange, 0, -1);
+            })
+            .is_some(),
+            "one unit past i128::MIN was accepted by the matter half"
+        );
+        assert_eq!(ledger.matter(Channel::BoundaryExchange, 0), i128::MIN);
     }
 }

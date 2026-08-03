@@ -85,11 +85,11 @@
 //!
 //! | step | what is missing |
 //! |---|---|
-//! | `a` light | a lit scenario is refused by two locks at once: energy has no sink, and the width of a channel counter is A-20 (A-19 in ADR-075 and ADR-076, drafted while that number was free) |
+//! | `a` light | a lit scenario is refused by one lock: energy has no sink. It was two — the second, the width of a channel counter, was answered by ADR-083 |
 //! | `b` velocity | the four keys of ADR-069 reach no folder, and the Courant fold onto the enthalpy faces is `TODO(courant-fold)`; the buffers and the denominator no longer block it |
 //! | `e` pressure | `theta_max` is declared nowhere (`TODO(theta-max)`) |
 //! | `f` settling | `g` and `rho_medium` are named by no document (ADR-067, ADR-069) |
-//! | `h` reactions | both arches of the invariant under chemistry, and step `i'` with it |
+//! | `h` reactions | the dispatch wiring, and nothing else: both arches of the invariant closed with ADR-080 and ADR-081. `Tick::new` folds no operator for it and no record says where its three buffers live (`TODO(react-dispatch)`) |
 //! | `i'` fold | step `h`, which it is dispatched with or not at all |
 //! | `j` channels | there are no events, and no emissivity or vent composition |
 //!
@@ -203,7 +203,7 @@ use super::{
     pressure, react, settle, velocity,
 };
 use crate::config::Derived;
-use crate::ledger::{DomainSums, Ledger};
+use crate::ledger::{DomainSums, Ledger, Nu};
 use crate::numeric::Q;
 use crate::world::{LaneRef, Width, World};
 
@@ -351,6 +351,18 @@ pub struct Tick {
     substance_of_lane_32: Vec<u32>,
     /// The same for the wide field.
     substance_of_lane_64: Vec<u32>,
+    /// `w_s` for every substance, in **substance** order (ADR-081).
+    ///
+    /// Folded once here, out of `Derived::chemical_weights`, and read twice a
+    /// tick: by [`Tick::domain_sums`], which weighs the left side of the energy
+    /// invariant with it, and by the two transport phases, which owe
+    /// `BOUNDARY_EXCHANGE` the chemical energy of whatever crossed the lid.
+    /// Fourteen `i64` on the registry of SPEC section 2.3 — 112 bytes, and
+    /// nothing per voxel.
+    ///
+    /// By substance and not by lane, and reached from a lane through
+    /// `substance_of_lane_*` above (ADR-056).
+    chemical_weight: Vec<i64>,
     /// Voxels of the fine grid, for the shape of the Courant buffer.
     n_voxels: u32,
     /// Cells of the enthalpy grid, for the shape of the other one.
@@ -608,6 +620,7 @@ impl Tick {
             diffuse_h,
             enabled,
             every_n,
+            chemical_weight: derived.chemical_weights(),
             substance_of_lane_32: substance_by_lane(world, Width::Bits32),
             substance_of_lane_64: substance_by_lane(world, Width::Bits64),
             n_substances: registry.n_substances(),
@@ -752,10 +765,22 @@ impl Tick {
                     // from the applications the phase *ran* (ADR-057).
                     let courant = &scratch.face_courant;
                     if let (Some(phase), Some(field)) = (&self.advect_32, world.amounts_32_mut()) {
-                        phase.apply_32(field, courant, &self.substance_of_lane_32, ledger);
+                        phase.apply_32(
+                            field,
+                            courant,
+                            &self.substance_of_lane_32,
+                            &self.chemical_weight,
+                            ledger,
+                        );
                     }
                     if let (Some(phase), Some(field)) = (&self.advect_64, world.amounts_64_mut()) {
-                        phase.apply_64(field, courant, &self.substance_of_lane_64, ledger);
+                        phase.apply_64(
+                            field,
+                            courant,
+                            &self.substance_of_lane_64,
+                            &self.chemical_weight,
+                            ledger,
+                        );
                     }
                     // The enthalpy, which SPEC section 8 names on this line
                     // beside the substances. Its own grid, so its own buffer,
@@ -770,10 +795,20 @@ impl Tick {
                 }
                 Step::Diffusion => {
                     if let (Some(phase), Some(field)) = (&self.diffuse_32, world.amounts_32_mut()) {
-                        phase.apply_32(field, &self.substance_of_lane_32, ledger);
+                        phase.apply_32(
+                            field,
+                            &self.substance_of_lane_32,
+                            &self.chemical_weight,
+                            ledger,
+                        );
                     }
                     if let (Some(phase), Some(field)) = (&self.diffuse_64, world.amounts_64_mut()) {
-                        phase.apply_64(field, &self.substance_of_lane_64, ledger);
+                        phase.apply_64(
+                            field,
+                            &self.substance_of_lane_64,
+                            &self.chemical_weight,
+                            ledger,
+                        );
                     }
                     // "энтальпия на 32³ — шесть": the six substeps of ADR-062 are
                     // the record's own, derived from `thermal_diffusivity` at the
@@ -791,10 +826,33 @@ impl Tick {
         // (ADR-059). Below every credit and above nothing — a channel written
         // after this point would make the *next* tick's residual wrong and name
         // no culprit.
+        //
+        // The reduction of the extent belongs here too, and it is the one thing
+        // in this phase that is *not* a channel (ADR-080). ADR-041 puts it here
+        // in as many words — "the reaction kernel does not touch the channel
+        // counters ... the sums for the ledger are taken by reduction in the
+        // LEDGER phase" — and the rule transcribed at the top of this file,
+        // "every credit happens above the LEDGER phase", is about channels and
+        // does not reach it.
+        //
+        // Structurally, and this is the half a comment has to carry: the
+        // reduction runs **if and only if** step `h` was folded into this tick,
+        // exactly as `i'` is dispatched together with `h` and never apart from it
+        // (ADR-045). Today it is folded into no tick — `Tick::new` refuses an
+        // enabled `reactions` — so there is no reduction to run and no
+        // stoichiometry to multiply by, and `Nu::EMPTY` is what the other eight
+        // processes of the roster report. The day step `h` dispatches, three
+        // lines arrive in one edit: the buffer, `Ledger::reduce_extent` over it
+        // immediately above this block, and `React::nu()` in place of the
+        // constant below. Forgetting the middle one is not silent — the extent
+        // stays zero while the field moved, and the residual breaks by the whole
+        // of what the chemistry did; forgetting the last one is not silent
+        // either, because `residual_matter` refuses a reduced extent it has no
+        // vector for.
         #[cfg(debug_assertions)]
         {
             self.domain_sums(world, &mut scratch.after);
-            ledger.assert_closed(&scratch.before, &scratch.after);
+            ledger.assert_closed(Nu::EMPTY, &scratch.before, &scratch.after);
         }
     }
 
@@ -876,6 +934,17 @@ impl Tick {
             out.add_cell_masses_32(biomass, CELL_STRUCT_MASS);
         }
         out.add_cell_energy_64(CELL_ENERGY);
+
+        // The chemical energy of everything the domain holds, and it goes
+        // **last** (ADR-081). It weighs the `matter` accumulators the doors above
+        // filled, so one line earlier it would weigh a half-filled table — and no
+        // residual can see that, because the same short sum taken before and
+        // after cancels in `after - before` and stays zero for ever. The same
+        // class as "a lane where a substance was meant", two paragraphs up, and
+        // the same kind of witness: only an absolute number can fail, which is
+        // `load_reports_the_chemical_energy_of_the_domain_in_joules` on the
+        // loader's side.
+        out.add_chemical_energy(&self.chemical_weight);
     }
 }
 
@@ -980,20 +1049,17 @@ fn refuse_if_blocked(id: ProcessId) -> Result<()> {
             "process `{}` is enabled and step `a` cannot be dispatched, and what \
              blocks it is no longer a missing number: ADR-076 declares `i_surface` \
              and derives `units_per_intensity`, and ADR-075 settles what the fold \
-             owes the ledger. What blocks it is a **pair** of open questions, and \
-             neither is enough on its own. Energy has no sink in any scenario — \
-             `RADIATIVE_OUT` is unimplemented and step `j` has nothing to write — \
-             so absorbed light accumulates without bound and crosses the declared \
-             temperature range in about 42 ticks at full sun, taking the Courant \
-             bound proved at load with it. And the width of a channel counter is \
-             open question A-20 — A-19 in ADR-075 and ADR-076, which were drafted \
-             while that number was free — and an i64 `SOLAR_IN` holds \
-             2^63/2^k_E = 62.5 mJ at k_E = 67, against 0.16384 J for one lit tick \
-             of a 128^3 domain — 2.62 ceilings in a tick, so lifting the sink \
-             alone would trade a \
-             silent overflow of the field for a loud panic in the ledger. \
+             owes the ledger. What blocks it is **one** open question, where there \
+             used to be two. Energy has no sink in any scenario — `RADIATIVE_OUT` \
+             is unimplemented and step `j` has nothing to write — so absorbed \
+             light accumulates without bound and crosses the declared temperature \
+             range in about 42 ticks at full sun, taking the Courant bound proved \
+             at load with it. The other lock, the width of a channel counter, was \
+             answered by ADR-083: the counter is i128 and holds \
+             2^127/2^k_E = 1.15e18 J at k_E = 67, against 0.16384 J for one lit \
+             tick of a 128^3 domain, so it is no longer what keeps the light off. \
              `config/validate.rs` refuses a scenario with i_surface > 0 by the \
-             same two locks; a dark box, i_surface = 0, is legal there and \
+             same remaining lock; a dark box, i_surface = 0, is legal there and \
              pointless here. Its default is enabled = {} (`process/light.rs`, \
              ADR-076)",
             id.id(),
@@ -1059,26 +1125,37 @@ fn refuse_if_blocked(id: ProcessId) -> Result<()> {
             id.id(),
             super::phase::ENABLED_BY_DEFAULT
         ),
+        // TODO(react-dispatch): ADR-081 asks for this arm to be **deleted**, not
+        // rewritten, and it is rewritten because deleting it alone is strictly
+        // worse than the state it replaces. `Tick::new` builds no `React`, no
+        // fold operator and no `Temperature`, and `Tick::advance` answers
+        // `Step::Reactions | Step::EnergyFold` with `unreachable!` — so removing
+        // the refusal turns a load-time error naming a missing decision into a
+        // run-time panic naming nothing. What the record costs at "one call plus
+        // five" it does not name: who folds the three operators into `Tick::new`,
+        // and whether `Scratch` grows the `energy_delta`, `xi_out` and `solar`
+        // buffers or `World` hands them out together the way it already does for
+        // the velocity field. Both belong in `DECISIONS.md`; the arm goes with
+        // them, in the same commit as the wiring.
         ProcessId::Reactions => bail!(
             "process `{}` is enabled and step `h` cannot be dispatched, and the \
-             temperature is no longer what blocks it — `process/temperature.rs` \
-             derives `T` from enthalpy and the actual composition (ADR-044, \
-             ADR-062) and `world::World` owns both coarse buffers. What is left is \
-             both arches of the invariant. Matter: `ledger::residual_matter` is \
-             taken per substance and chemistry turns substances into one another, \
-             so `Ledger::assert_closed` panics on the first tick with any reaction \
-             in it, and the statement chemistry does satisfy is an arm of \
-             `process::Conservation` that no record has worded. Energy: \
-             `Tick::domain_sums` counts the enthalpy field alone, there is no door \
-             for the chemical energy of the substances, and the sign of the \
-             increment — `nu_E` or `-nu_E`, that is, whether an exothermic \
-             reaction warms the cell — is chosen by nothing. Step `i'` is no longer \
-             blocked in its own right — ADR-076 derives `units_per_intensity` and \
-             ADR-075 settles what the fold owes the ledger (A-16 closed) — but \
-             the two are dispatched together or not at all \
-             (ADR-045: the reaction kernel overwrites its cell, so a fold over a \
-             stale accumulator credits last tick's energy again). Its default is \
-             enabled = {} (`process/react.rs`)",
+             ledger is no longer why. Both arches of the invariant are closed: \
+             ADR-080 gave `ledger::residual_matter` its second term — the kernel \
+             reports the extent of every reaction through a slice and the host \
+             reduces it in phase 5 — and ADR-081 weighted the **left** side of \
+             the energy identity, so the domain holds `H_field + Sum_s w_s*n_s`, \
+             `nu_E` is `-Sum_s nu_s*w_s` in the direction of the field, an \
+             exothermic reaction warms its cell, and `react::invariant()` \
+             declares `Transmutes` for matter and `Conserved` for energy. What is \
+             left is wiring, and it is wiring nobody has decided: `Tick::new` \
+             folds no `React`, no energy fold and no `Temperature`, and no record \
+             says whether the three per-voxel buffers they need come from \
+             `Scratch` or from `World`. ADR-079 fixes the one piece that is \
+             decided — the temperature is recomputed immediately before step `h` \
+             — and ADR-045 fixes the other — `h` and `i'` are dispatched together \
+             or not at all, because the reaction kernel overwrites its \
+             accumulator and a fold over a stale one credits last tick's energy \
+             again. Its default is enabled = {} (`process/react.rs`)",
             id.id(),
             react::ENABLED_BY_DEFAULT
         ),

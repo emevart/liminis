@@ -38,16 +38,17 @@ use proptest::test_runner::FileFailurePersistence;
 /// `tests/acceptance_boundary.rs`.
 const SEALED: f64 = 0.0;
 
-/// One substance per lane, and a scratch ledger. On a sealed grid no counter is
-/// ever touched, so which substance a lane stands for cannot matter here.
+/// One substance per lane, a weight table of zeroes, and a scratch ledger. On a
+/// sealed grid no counter is ever touched, so neither which substance a lane
+/// stands for nor what its chemical energy is worth can matter here (ADR-081).
 fn run_diffusion_32(phase: &DiffusePhase, field: &mut Field32) {
     let table: Vec<u32> = (0..field.lanes()).collect();
-    phase.apply_32(field, &table, &mut Ledger::new(32).unwrap());
+    phase.apply_32(field, &table, &[0; 32], &mut Ledger::new(32).unwrap());
 }
 
 fn run_diffusion_64(phase: &DiffusePhase, field: &mut Field64) {
     let table: Vec<u32> = (0..field.lanes()).collect();
-    phase.apply_64(field, &table, &mut Ledger::new(32).unwrap());
+    phase.apply_64(field, &table, &[0; 32], &mut Ledger::new(32).unwrap());
 }
 
 /// The eco regime of SPEC section 1.7: a one-second tick and a 100 um voxel.

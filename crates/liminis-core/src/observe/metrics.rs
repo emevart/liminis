@@ -29,14 +29,24 @@
 //! the difference of two sums inexact while leaving it plausible". A residual of
 //! one unit against that sum rounds to exactly zero in a double, and the stream
 //! would then report a closed ledger because the number was blurred rather than
-//! because the tick closed. So [`TickMetrics`] carries `i128` and `i64`, and the
-//! only door to a real number in the record — `Record::real` — is not used by
-//! anything here.
+//! because the tick closed. So every counted column of [`TickMetrics`] is
+//! `i128` — the counters joined the sums there with ADR-083 — and the only door
+//! to a real number in the record, `Record::real`, is not used by anything here.
 //!
 //! The half of that this file cannot fix: a reader in JavaScript truncates past
 //! `2^53`, so the viewer of ADR-016 reads a residual that is exactly right as
 //! something else. "The file reads with any tool" is one of the three reasons
 //! NDJSON was chosen and it is partly false for exactly these integers.
+//!
+//! **Since ADR-083 that reaches the `channel.*` columns too**, and it is said
+//! here because silence would read as "those columns are safe". A channel
+//! counter is `i128` and may legitimately stand above `2^63`, never mind `2^53`
+//! — after `10^7` lit ticks it sits at `2.42e26` — so a JavaScript reader
+//! truncates a counter exactly as it already truncated a domain sum. Nothing in
+//! the format changes for it: `push_int` prints every digit in decimal,
+//! `Record::int` already took `i128`, and `METRICS_SCHEMA_VERSION` does not move.
+//! `/api/state` is untouched by this: it publishes the residuals and no counter
+//! at all.
 //!
 //! # The roster and the record cannot drift apart
 //!
@@ -142,9 +152,9 @@ pub struct TickMetrics<'a> {
     /// than by walking `Ledger`'s table: the transposed address stays inside the
     /// table and merely permutes the pairs, which closes the ledger against
     /// another substance's flow without ever leaving the array.
-    pub channel_matter: &'a [i64],
+    pub channel_matter: &'a [i128],
     /// The running energy counter of every channel, in discriminant order.
-    pub channel_energy: &'a [i64; CHANNEL_COUNT],
+    pub channel_energy: &'a [i128; CHANNEL_COUNT],
     /// `Ledger::residual_matter` per substance. Required to be zero, and written
     /// whether or not it is (ADR-037).
     pub residual_matter: &'a [i128],
@@ -188,7 +198,7 @@ pub fn channel_slot(n_substances: usize, channel: Channel, substance: usize) -> 
 /// own bounds check. Nothing outside `ledger/` computes an address into that
 /// table.
 #[must_use]
-pub fn channel_matter_totals(ledger: &Ledger) -> Vec<i64> {
+pub fn channel_matter_totals(ledger: &Ledger) -> Vec<i128> {
     let n = ledger.n_substances() as usize;
     let mut out = vec![0; n * CHANNEL_COUNT];
     for channel in Channel::ALL {
@@ -201,7 +211,7 @@ pub fn channel_matter_totals(ledger: &Ledger) -> Vec<i64> {
 
 /// The running energy counters, in discriminant order.
 #[must_use]
-pub fn channel_energy_totals(ledger: &Ledger) -> [i64; CHANNEL_COUNT] {
+pub fn channel_energy_totals(ledger: &Ledger) -> [i128; CHANNEL_COUNT] {
     let mut out = [0; CHANNEL_COUNT];
     for channel in Channel::ALL {
         out[channel as usize] = ledger.energy(channel);
@@ -218,7 +228,7 @@ pub fn channel_energy_totals(ledger: &Ledger) -> [i64; CHANNEL_COUNT] {
 pub fn columns(substance_id: &[&str], field_name: &[&str]) -> Vec<String> {
     let n = substance_id.len();
     let zeros = vec![0i128; n];
-    let counters = vec![0i64; n * CHANNEL_COUNT];
+    let counters = vec![0i128; n * CHANNEL_COUNT];
     let fields: Vec<FieldStat<'_>> = field_name
         .iter()
         .map(|&name| FieldStat {
@@ -269,13 +279,10 @@ fn walk(m: &TickMetrics<'_>, emit: &mut impl FnMut(&str, i128)) {
     for channel in Channel::ALL {
         for (s, id) in m.substance_id.iter().enumerate() {
             compose(&mut key, &["channel.", channel.name(), ".", id]);
-            emit(
-                &key,
-                i128::from(m.channel_matter[channel_slot(n, channel, s)]),
-            );
+            emit(&key, m.channel_matter[channel_slot(n, channel, s)]);
         }
         compose(&mut key, &["channel.", channel.name(), ".energy"]);
-        emit(&key, i128::from(m.channel_energy[channel as usize]));
+        emit(&key, m.channel_energy[channel as usize]);
     }
 
     // Both residuals, unconditionally, whatever they hold. A written zero is
@@ -571,7 +578,7 @@ mod tests {
         .unwrap()
     }
 
-    fn tick(counters: &[i64], residual: &[i128]) -> Vec<u8> {
+    fn tick(counters: &[i128], residual: &[i128]) -> Vec<u8> {
         let roster = roster();
         let refs: Vec<&str> = roster.iter().map(String::as_str).collect();
         let mut writer = writer(&refs);
@@ -626,7 +633,7 @@ mod tests {
         let refs: Vec<&str> = short.iter().map(String::as_str).collect();
         let mut writer = writer(&refs);
         let totals = [1i128, 2];
-        let counters = [0i64; IDS.len() * CHANNEL_COUNT];
+        let counters = [0i128; IDS.len() * CHANNEL_COUNT];
         let residual = [0i128; IDS.len()];
         let fields = [FieldStat {
             name: "enthalpy",
@@ -702,7 +709,7 @@ mod tests {
         let refs: Vec<&str> = roster.iter().map(String::as_str).collect();
         let mut writer = writer(&refs);
         let totals = [1i128];
-        let counters = [0i64; IDS.len() * CHANNEL_COUNT];
+        let counters = [0i128; IDS.len() * CHANNEL_COUNT];
         let residual = [0i128; IDS.len()];
         let error = writer
             .tick(&TickMetrics {
@@ -734,8 +741,8 @@ mod tests {
         // (`ledger/mod.rs`). Every pair gets a distinct value, and the record
         // must carry each of them under its own name.
         let mut ledger = Ledger::new(2).unwrap();
-        let value = |channel: Channel, substance: u32| -> i64 {
-            (channel as i64 + 1) * 1_000 + i64::from(substance) + 1
+        let value = |channel: Channel, substance: u32| -> i128 {
+            (channel as i128 + 1) * 1_000 + i128::from(substance) + 1
         };
         for channel in Channel::ALL {
             for substance in 0..2 {

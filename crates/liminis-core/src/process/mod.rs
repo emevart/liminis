@@ -55,22 +55,25 @@
 //! implements.
 //!
 //! No `Process` trait, and not for lack of a decision about its shape — ADR-034
-//! settled that. It is missing three types, and each of them is blocked on
+//! settled that. It was missing three types; two are left, and each is blocked on
 //! something that has to be decided before it can be written:
 //!
 //! - `FieldRef`, for `reads` and `writes`. A field reference is a substance and
 //!   a buffer address; `world::World::lane_of` now resolves that (ADR-056), and
 //!   what is still missing is the loader that would say which fields a process
 //!   named in TOML actually reads.
-//! - The second arm of [`Conservation`]. It names a channel, and `ledger/` now
-//!   has the channel registry — but `process/**` is under the guard of ADR-020,
-//!   and that arm is not what this wave moved the version for.
 //! - The `world` argument of `apply`. `world::World` exists as of ADR-057, and
 //!   nothing constructs one outside tests: the loader that would derive the
 //!   widths, the scales and the substep counts a `World` is built from does not
 //!   build one yet.
 //!
-//! Writing the trait against invented versions of those three would put a
+//! The third was [`Conservation`] itself, and it is complete: `ChangedThrough`
+//! arrived with the channel registry, `Transmutes` with ADR-080. What is still
+//! not written is one *declaration* rather than a type — `React::invariant()`,
+//! because the enum carries both axes and the energy one belongs to ADR-081. The
+//! matter axis of step `h` is declared, by [`react::matter_conservation`].
+//!
+//! Writing the trait against invented versions of the two above would put a
 //! second, silent addressing scheme underneath every process. So for now a
 //! process is a plain type with an `apply` that takes exactly the fields it
 //! touches — which is the half of ADR-034 that matters anyway: a process cannot
@@ -179,11 +182,11 @@ pub(crate) fn coarse_shape_agrees(
 
 /// What a process does to one of the two ledgers over one tick.
 ///
-/// The pair of enums of SPEC section 4.1, one arm short. `Conserved` means the
-/// process moves the quantity around and the sum over the domain comes out bit
-/// for bit equal — not "equal to within a tolerance": ADR-003 makes the per-tick
-/// residual an exact integer comparison, and transport conserves by construction
-/// rather than by accuracy (ADR-005).
+/// The pair of enums of SPEC section 4.1 — three arms now, where the spec prints
+/// two. `Conserved` means the process moves the quantity around and the sum over
+/// the domain comes out bit for bit equal — not "equal to within a tolerance":
+/// ADR-003 makes the per-tick residual an exact integer comparison, and transport
+/// conserves by construction rather than by accuracy (ADR-005).
 ///
 /// The second arm names a channel, and it is what a process that vents declares
 /// (ADR-028, ADR-059). Nothing in the corpus compares the declaration against
@@ -193,6 +196,10 @@ pub(crate) fn coarse_shape_agrees(
 /// accounting false while every test in the project is green. That is why the
 /// transport processes take the arm from `Grid::has_exchange` rather than from a
 /// constant.
+///
+/// The third is [`Transmutes`](Conservation::Transmutes), and it is third rather
+/// than second: `ChangedThrough` was written long before it, and what was missing
+/// from the pair was never a channel.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Conservation {
     /// The quantity is neither created nor destroyed by this process.
@@ -200,6 +207,41 @@ pub enum Conservation {
     /// The quantity crosses the boundary of the domain, and every unit of it is
     /// counted into this channel (ADR-003, ADR-059).
     ChangedThrough(crate::ledger::Channel),
+    /// The quantity changes only by whole multiples of vectors checked at load,
+    /// and the process reports the extent of each vector to the ledger
+    /// (ADR-080).
+    ///
+    /// The arm chemistry needs and the one nothing could say before. A reaction
+    /// destroys `H2S` and creates `SO4` in one operation; on the axis
+    /// `ledger::residual_matter` measures — per substance, exactly — that is
+    /// neither `Conserved` nor a crossing of the boundary, because nothing left
+    /// the domain. What is true is stronger than either: `Delta n_s` is
+    /// `Sum_r nu_(r,s) * Xi_r` with `nu` integer and checked at load against
+    /// every declared conserved quantity, against mass and against enthalpy
+    /// (ADR-025, ADR-027, ADR-033, ADR-043, ADR-064), so declaring this arm
+    /// **implies** that every conserved element balances while the substances
+    /// convert.
+    ///
+    /// **Not a channel, and the difference is the point.** `ledger::Channel`
+    /// stays closed at six names (ADR-059) and `Channel::ALL` does not grow: a
+    /// channel is a door in the boundary of the domain, and a reaction is not a
+    /// door. A seventh channel would let any residual be closed by declaring one
+    /// — which is the failure ADR-059 exists to prevent — and
+    /// `a_closed_domain_leaves_every_channel_counter_at_zero` has to stay true on
+    /// a domain where chemistry is running.
+    ///
+    /// **`Transmutes` and not `Reacts`.** The arm is tied to an operator with
+    /// load-checked vectors, not to the word "reaction". Step `g`, phase
+    /// transitions, takes it the day it has such an operator; today it has no
+    /// operator at all (ADR-065, [`phase`](crate::process::phase)) and there is
+    /// nothing to promise on its behalf.
+    ///
+    /// Syntactically it is available on both axes of [`Invariant`], because the
+    /// enum is one enum. Content it has on the matter axis only: no S0 process
+    /// declares it for energy, ADR-081 leaves step `h` declaring `Conserved`
+    /// there, and `only_the_reaction_step_declares_transmutes` guards both axes
+    /// rather than one.
+    Transmutes,
 }
 
 /// The invariant of a process: what it does to matter, and separately what it

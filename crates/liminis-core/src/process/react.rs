@@ -64,10 +64,13 @@
 //!
 //! # What is not here
 //!
-//! **The invariant.** [`super::Invariant`] has one arm, `Conserved`, and it is
-//! false for chemistry in the sense the ledger measures: `ledger::residual_matter`
-//! is taken per substance, and a reaction turns substances into one another. See
-//! the TODO on [`React`].
+//! **Nothing of the invariant, any more.** Both axes are answered and both are
+//! declared: [`invariant`] returns
+//! [`Conservation::Transmutes`](super::Conservation::Transmutes) for matter — the
+//! arm ADR-080 added, against which `ledger::residual_matter` closes with its
+//! second term — and `Conserved` for energy, because ADR-081 put the chemical
+//! energy of the substances on the *left* side of that identity and left the
+//! right side alone.
 //!
 //! **The process id.** The roster of ADR-065 holds every spelling in one place,
 //! `process::ProcessId::id`, because an id reaches `config_hash` through the
@@ -99,10 +102,11 @@
 use anyhow::{Context, Result, bail};
 
 use super::light::Light;
+use super::{Conservation, Invariant};
 use crate::config::{Config, Derived, Reaction};
 use crate::kernels::fold::FoldParams;
 use crate::kernels::react::{NO_CATALYST, R_MAX, ReactParams, Rx, S_MAX, react_voxel};
-use crate::ledger::{Channel, Ledger};
+use crate::ledger::{Channel, Ledger, Nu};
 use crate::numeric::{M32, M64, Q, run_key};
 use crate::world::{Field32, Field64, Grid, MAX_SUBSTANCES, Registry};
 
@@ -112,37 +116,88 @@ use crate::world::{Field32, Field64, Grid, MAX_SUBSTANCES, Registry};
 /// because ADR-050 merged three steps into one; ADR-065 then put the default
 /// beside the invariant, which is here, so this is where it went.
 ///
-/// `false`, and the temperature is no longer the reason.
+/// `false`, and of the three things that used to make it so, one is left.
 /// `process/temperature.rs` derives `T` from enthalpy and the actual composition
-/// now, and `world::World` allocates both coarse buffers. What is left are two
-/// arches of the invariant, and neither is a line of code:
+/// now, and `world::World` allocates both coarse buffers. The matter arch of the
+/// invariant closed with ADR-080: [`matter_conservation`] declares
+/// `Transmutes`, the kernel reports the extent of every reaction through a slice,
+/// the host reduces it in phase 5, and `ledger::residual_matter` gained its second
+/// term — so `Ledger::assert_closed` no longer panics on the first tick with any
+/// chemistry in it.
 ///
-/// - **the matter half.** `ledger::residual_matter` is taken per substance and a
-///   reaction turns substances into one another, so `Tick::advance` calls
-///   `Ledger::assert_closed` in debug and panics on the first tick with any
-///   chemistry in it. The statement chemistry actually satisfies — "every
-///   conserved quantity balances while the substances convert" — is worded by no
-///   record and is not an arm of [`super::Conservation`]. See the TODO on
-///   [`React`];
-/// - **the energy half.** `Tick::domain_sums` counts the enthalpy field and
-///   nothing else, and there is no door for the chemical energy of the
-///   substances, so the enthalpy a reaction releases is covered by no channel.
-///   Underneath that sits the sign nobody has chosen: `nu_E` is negative for an
-///   exothermic reaction, `fold_energy` adds it to the enthalpy, and by today's
-///   code an exothermic reaction therefore *cools* the cell — which was
-///   unobservable until the temperature operator existed and is now the whole of
-///   the thermal feedback through `q10`.
+/// The energy arch closed with ADR-081, and it closed by weighting the **left**
+/// side rather than by adding a term to the right: the domain holds
+/// `H_field + Sum_s w_s * n_s`, `nu_E := -Sum_s nu_s * w_s` is stated in the
+/// direction of the field, and [`invariant`] declares `Conserved` for energy with
+/// nothing to report. Both arches of A-19 are therefore answered, and nothing in
+/// the ledger keeps this `false` any longer.
 ///
 /// The mirror argument is unchanged and it is the strong one: a world with matter
-/// and no chemistry is not the world this project is for, so the day both arches
-/// close, `true` is the reading of SPEC section 8 — and it will be a change of
-/// semantics for every scenario, under the guard of ADR-020.
-// TODO(CONFIG_SCHEMA.md section 13 item 23): assigned by no record, and now
-// blocked by one open question rather than by the temperature — the second arm of
-// `process::Conservation` and the door for chemical energy in
-// `ledger::DomainSums`, together with the sign of the enthalpy increment, are
-// `OPEN_QUESTIONS.md` **A-19**. They are settled by a record, not here.
+/// and no chemistry is not the world this project is for, so `true` is the reading
+/// of SPEC section 8 — and it will be a change of semantics for **every** scenario
+/// in the repository at once, under the guard of ADR-020.
+// TODO(CONFIG_SCHEMA.md section 13 item 23): the default itself is assigned by no
+// record, and that is now the whole of what keeps it here. It used to point at
+// `OPEN_QUESTIONS.md` A-19, which ADR-080 and ADR-081 closed between them; both
+// records say in as many words that flipping it is a decision of its own, with its
+// own entry in `DECISIONS.md`, its own increment of `WORLD_FORMAT_VERSION` and its
+// own shift of every observable in the repository. Settled by a record, not here.
 pub const ENABLED_BY_DEFAULT: bool = false;
+
+/// What step `h` does to matter: it transmutes (ADR-080).
+///
+/// Kept beside [`invariant`] rather than folded into it, because it is the door
+/// the matter axis was written through and the two records that answered the two
+/// axes are two.
+///
+/// `Transmutes` and not `Conserved`: the amount of an individual substance is not
+/// conserved by chemistry in the sense `ledger::residual_matter` measures, and
+/// `Conserved` here would be a lie that stayed green until the first tick with a
+/// reaction in it.
+///
+/// A free function and not a method, on the precedent of
+/// [`phase::invariant`](super::phase::invariant) and
+/// [`channels::invariant`](super::channels::invariant): the arm is a property of
+/// the step and not of the tables a scenario folded into. The transport processes
+/// take `&self` because theirs genuinely depends on the grid — `ChangedThrough`
+/// when the lid vents, `Conserved` when it does not — and there is no scenario
+/// under which chemistry does anything but transmute.
+#[must_use]
+pub const fn matter_conservation() -> Conservation {
+    Conservation::Transmutes
+}
+
+/// What step `h` does to both halves of the ledger (ADR-080, ADR-081).
+///
+/// `Transmutes` for matter and **`Conserved` for energy** — literally, with no
+/// second term on the right and no channel of its own. The two arms are two
+/// records and two mechanisms, and they must not be added together:
+///
+/// - matter closes because `ledger::residual_matter` gained a second term,
+///   `Sum_r nu_(r,s) * Xi_r`, the extent the kernel reported and the host reduced
+///   (ADR-080);
+/// - energy closes because the **left** side gained a weight: the domain holds
+///   `H_field + Sum_s w_s * n_s`, so a reaction is not a source but a transfer
+///   between two forms of one quantity, and `Sum_s nu_s * w_s + nu_E == 0` by the
+///   definition of `nu_E` (ADR-081).
+///
+/// Writing `ChangedThrough` here — inventing a `CHEMICAL_HEAT` channel — was
+/// rejected on one argument and only one: a channel is a named door **out** of
+/// the domain, and a reaction neither imports nor exports. Adding
+/// `Sum_r nu_(E,r) * Xi_r` to the right of the energy identity instead would
+/// credit one transformation twice and break the residual by exactly that amount
+/// while the enthalpy field went on being right.
+///
+/// A free function and not a method, for the reason [`matter_conservation`]
+/// gives: the arms are a property of the step and not of the tables a scenario
+/// folded into.
+#[must_use]
+pub const fn invariant() -> Invariant {
+    Invariant {
+        matter: matter_conservation(),
+        energy: Conservation::Conserved,
+    }
+}
 
 /// The three extents of the world this process needs, and no fourth.
 ///
@@ -200,17 +255,6 @@ pub struct Undeclared<'a> {
 ///
 /// Built once per run and applied once per tick. Everything in it is a fold of
 /// the scenario and of the derivation; nothing in it is state.
-// TODO(matter-invariant): `React::invariant()` is not written, and what is
-// missing is not the code. `process::Conservation` has one arm, `Conserved`, and
-// `ledger::residual_matter` is computed **per substance** — so declaring
-// `Invariant { matter: Conserved, energy: Conserved }` here would be a lie in
-// exactly the sense the ledger measures, and it would stay green until the first
-// tick with chemistry and the first call of `assert_closed`. The statement
-// chemistry actually satisfies is "every conserved quantity balances while the
-// substances convert", and no record says how that is worded as an arm of the
-// enum. The energy half has a second hole under it: the increment lands in the
-// accumulator and reaches enthalpy only through step `i'`, and
-// `ledger::DomainSums` has no door for the accumulator at all.
 #[derive(Clone, Debug)]
 pub struct React {
     // --- by entry ---
@@ -463,6 +507,27 @@ impl React {
         }
     }
 
+    /// The four tables the ledger multiplies the reduced extent by (ADR-080).
+    ///
+    /// The same four `Rx` carries and the same borrows: the coefficient the
+    /// residual multiplies `Xi_r` by has to be the coefficient the kernel
+    /// **applied**, so it is one number read twice rather than a number formed a
+    /// second time. The molar `s` of the scenario is the wrong one and quietly so
+    /// — `nu_i = s_i * 2^(k_i - e_r)`, a factor of `2^17` on the proton of the
+    /// shipped scenario and exactly one on any substance whose `k_i` happens to
+    /// equal `e_r`, which is how a second derivation stays green on the fixture
+    /// that has it.
+    #[inline]
+    #[must_use]
+    pub fn nu(&self) -> Nu<'_> {
+        Nu {
+            nu: &self.nu,
+            nu_sub: &self.nu_sub,
+            begin: &self.begin,
+            len: &self.len,
+        }
+    }
+
     /// The kernel's scalars for one tick.
     ///
     /// The one place the tick and the run key are put into their two `u32`
@@ -513,11 +578,31 @@ impl React {
     /// Afterwards the new state is in the write buffers; [`React::promote`]
     /// restores the process boundary of ADR-057.
     ///
+    /// # `xi_out`, and what the ledger can and cannot see through it
+    ///
+    /// `xi_out` is `n_voxels * n_reactions` cells of extent, one block per voxel,
+    /// and it is what the matter half of the ledger closes against (ADR-080):
+    /// `Delta n_s == Sum_c credited(c, s) + Sum_r nu_(r,s) * Xi_r`, with `Xi_r`
+    /// reduced from this slice in phase 5 LEDGER. It travels beside
+    /// `energy_delta` and under the same rule — the kernel **overwrites** its
+    /// cell, so a caller that copies the slice around the dispatch and forgets to
+    /// copy it back leaves the previous tick's extent standing, and a reduction
+    /// over it credits last tick's chemistry again (ADR-045).
+    ///
+    /// **The extent is credited with the same `xi` that applied `Delta n = nu *
+    /// xi`.** The residual therefore cannot see a `xi` that is wrongly computed,
+    /// negative or unbounded — it is one number entering both sides — and its
+    /// standing is exactly that of a channel counter (ADR-059): the ledger checks
+    /// that what was *reported* and what was *written* agree, not that either is
+    /// right. Those classes are guarded by this kernel's own "alone" tests —
+    /// `a_negative_pool_caps_the_extent_at_zero` and its neighbours — and by
+    /// nothing in `ledger/`.
+    ///
     /// # Panics
     ///
     /// If a buffer is shorter than the shape this process was folded for.
     #[allow(clippy::too_many_arguments)]
-    // Eight against a clippy threshold of seven, for the reason the kernel's own
+    // Nine against a clippy threshold of seven, for the reason the kernel's own
     // signature gives: every slice here is one binding on the other side of the
     // call, and folding them into a struct would buy a lint and cost the shape.
     pub fn apply(
@@ -528,6 +613,7 @@ impl React {
         dst32: &mut [M32],
         dst64: &mut [M64],
         energy_delta: &mut [M64],
+        xi_out: &mut [M32],
         temperature: &[Q],
         catalyst: &[Q],
     ) {
@@ -536,6 +622,20 @@ impl React {
             energy_delta.len() >= n_voxels as usize,
             "the energy accumulator holds {} cells against {n_voxels} voxels",
             energy_delta.len()
+        );
+        // The one length in this signature that is not `n_voxels`, which is why
+        // it is checked here in both profiles rather than left to the kernel's
+        // `debug_assert`: a slice of `n_voxels` cells is the shape every other
+        // per-voxel buffer has, it is long enough for the first voxel of a
+        // one-reaction scenario, and past that the blocks of two voxels overlap
+        // and the reduction reads one voxel's extent as another's (ADR-080).
+        let cells = (n_voxels as usize) * (self.params.n_reactions as usize);
+        assert!(
+            xi_out.len() >= cells,
+            "the extent slice holds {} cells against {n_voxels} voxels times {} \
+             reactions",
+            xi_out.len(),
+            self.params.n_reactions
         );
         assert_eq!(
             src32.len(),
@@ -557,6 +657,7 @@ impl React {
                 dst32,
                 dst64,
                 energy_delta,
+                xi_out,
                 temperature,
                 catalyst,
                 &rx,
@@ -690,29 +791,37 @@ fn check_undeclared(undeclared: &Undeclared<'_>, n_reactions: usize) -> Result<(
 ///
 /// **`i128`, and the width is not decoration.** The exact sum over the declared
 /// span of the enthalpy field is `32 768 x 1.97e18 = 6.46e22` against an `i64`
-/// ceiling of `9.22e18`. An accumulator declared `i64` wraps into a plausible
-/// negative *before* the conversion, and the checked conversion in
-/// `Ledger::credit_energy_wide` sees nothing wrong with an already-wrapped number
-/// — the defence would introduce the fault it exists to catch.
+/// ceiling of `9.22e18`, so an accumulator declared `i64` wraps into a plausible
+/// negative before anything downstream ever sees it.
+///
+/// **There is one door and no conversion** (ADR-083). The accumulator and the
+/// counter are now the same width, so the whole `6.46e22` reaches `SOLAR_IN`
+/// exactly rather than through a checked narrowing that could only ever refuse
+/// it: `Ledger::credit_energy_wide`, its `i64::try_from` and the panic naming a
+/// counter width as an open question are gone, and the identity ADR-075 asked
+/// for — one number, read twice — now holds all the way to the counter.
 ///
 /// One credit per tick, and `SOLAR_IN` has exactly one writer: crediting it from
 /// anywhere else would be a second reduction with a rounding of its own, which is
 /// the return into what ADR-075 rejected.
 pub fn credit_solar(solar: &[M64], ledger: &mut Ledger) {
-    ledger.credit_energy_wide(Channel::SolarIn, reduce_solar(solar));
+    ledger.credit_energy(Channel::SolarIn, reduce_solar(solar));
 }
 
 /// The sum of the fold's solar slice, exactly, at any slice the type admits.
 ///
-/// Private, and split out of [`credit_solar`] for one reason: at the declared
-/// span of the enthalpy field the sum does not fit the counter, so the whole
-/// point of the accumulator's width — that the number reaching
-/// `Ledger::credit_energy_wide` is the true one and not a wrapped one — is
-/// invisible from outside the panic that number then causes. Written `i64` and
-/// wrapping, this returns a plausible negative that the checked conversion
-/// accepts without a word, and every assertion about panics stays green. As a
-/// value it can simply be compared with the sum, which is what
+/// Private, and split out of [`credit_solar`] for one reason: written `i64` and
+/// wrapping, this returns a plausible negative at the declared span of the
+/// enthalpy field, and nothing downstream can tell that from the truth — a
+/// counter credited with it holds a number that is wrong and looks right. As a
+/// **value** it can simply be compared with the sum, which is what
 /// `the_solar_reduction_is_exact_at_the_full_declared_enthalpy_range` does.
+///
+/// The split used to buy more than that: while the counter was `i64` the exact
+/// sum could not be credited at all, so the reduction had to be checkable apart
+/// from the credit. Since ADR-083 the accumulator and the counter are one width
+/// and the same test asserts both — but the value door stays, because the claim
+/// "the reduction is exact" is about this function and not about the ledger.
 ///
 /// It is not a second door to `SOLAR_IN`: it credits nothing, and the channel
 /// still has exactly one writer above.
@@ -862,6 +971,7 @@ fn finite(value: f64, key: &str, reaction: &str) -> Result<Q> {
 mod tests {
     use super::*;
     use crate::config::{derive, parse, validate};
+    use crate::ledger::DomainSums;
     use crate::numeric::{q_conc_64, qadd, qdiv, qmul, rand, xi};
     use crate::world::{Boundary, LaneRef, World, WorldLayout};
 
@@ -1154,6 +1264,10 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         derived: Derived,
         world: World,
         react: React,
+        /// The extent report of ADR-080. It lives beside the world rather than in
+        /// it, for the reason the header of `React::apply` gives: nothing owns
+        /// this buffer yet, because nothing dispatches step `h`.
+        xi: Vec<M32>,
     }
 
     impl Fixture {
@@ -1212,10 +1326,12 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
                 seed,
             )?;
 
+            let cells = (world.grid().n_voxels() as usize) * (react.n_reactions() as usize);
             Ok(Self {
                 derived,
                 world,
                 react,
+                xi: vec![M32::ZERO; cells],
             })
         }
 
@@ -1294,6 +1410,7 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
                     dst32,
                     dst64,
                     &mut energy,
+                    &mut self.xi,
                     temperature,
                     catalyst,
                 );
@@ -1734,6 +1851,97 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         }
     }
 
+    /// The left side of the matter invariant over the fixture's current state.
+    ///
+    /// Off `World::amount_slices`, which is state `N` — so it is called once
+    /// before the step and once after [`Fixture::promote`] has restored the
+    /// process boundary (ADR-057). Through `lane_of`, never through the substance
+    /// index: the same wrong mapping on both sides gives an exact zero for ever
+    /// (ADR-056).
+    fn domain_sums(f: &Fixture) -> DomainSums {
+        let mut sums = DomainSums::new(N_SUBSTANCES).unwrap();
+        let lane_len = f.world.grid().lane_len();
+        let n_voxels = f.n_voxels() as usize;
+        let (narrow, wide) = f.world.amount_slices();
+        for s in 0..N_SUBSTANCES {
+            match f.world.lane_of(s) {
+                LaneRef::Narrow(lane) => {
+                    let at = (lane * lane_len) as usize;
+                    sums.add_field_lane_32(s, &narrow[at..at + n_voxels]);
+                }
+                LaneRef::Wide(lane) => {
+                    let at = (lane * lane_len) as usize;
+                    sums.add_field_lane_64(s, &wide[at..at + n_voxels]);
+                }
+            }
+        }
+        sums
+    }
+
+    /// The extent term of ADR-080 against the tables a **loaded scenario**
+    /// produced, rather than against tables a test wrote out.
+    ///
+    /// `tests/acceptance_reactions.rs` judges the same identity, and it builds its
+    /// stoichiometry by hand. That leaves one joint unexamined, and it is the
+    /// joint the record cares about: `React::nu()` has to hand the residual the
+    /// **storage** coefficients `config/derive.rs` derived and the kernel applied,
+    /// `nu_i = s_i * 2^(k_i - e_r)` — not the molar `s` of the TOML. On this
+    /// fixture that is not a distinction without a difference: `ZED` is the
+    /// substance whose `k` was raised past its own overflow ceiling to reach
+    /// `e_r` (ADR-039, ADR-040), so the two differ by a power of two on some
+    /// participants and coincide on others, which is exactly the shape that lets a
+    /// second derivation pass on half a registry.
+    ///
+    /// The reduction runs where `Tick::advance` would run it — after the step,
+    /// before the residual — and the ledger is built by `with_reactions`, which is
+    /// the door a host that dispatches step `h` has to go through.
+    #[test]
+    fn the_residual_closes_against_the_derived_stoichiometry() {
+        let text = scenario(&[
+            plain_amination(VMAX_FOUR_QUANTA),
+            dimerisation(VMAX_FOUR_QUANTA),
+        ]);
+        let mut f = Fixture::build(&text, SEED).unwrap();
+        f.stage_everywhere(ZED, 1 << 20);
+        f.stage_everywhere(ACE, 147_456);
+        f.commit(0);
+
+        let before = domain_sums(&f);
+        let temperature = f.isothermal();
+        f.apply(7, &temperature, &[]);
+        f.promote();
+        let after = domain_sums(&f);
+
+        let n_reactions = f.react.n_reactions();
+        let mut ledger = Ledger::with_reactions(N_SUBSTANCES, n_reactions).unwrap();
+        ledger.begin_tick();
+        ledger.reduce_extent(&f.xi, f.n_voxels());
+
+        // The chemistry ran, or the closure below is a statement about zero.
+        assert!(ledger.extent(0) > 0 && ledger.extent(1) > 0);
+        // And the substances genuinely convert: without this the per-substance
+        // residual would close with no second term at all.
+        assert_ne!(after.matter(ZEDACE), before.matter(ZEDACE));
+
+        ledger.assert_closed(f.react.nu(), &before, &after);
+
+        // And the premise that makes the closure above a statement about the
+        // *storage* coefficients rather than about any coefficients: at least one
+        // participant of the first reaction has `k != e_r`, so the molar
+        // coefficient a second derivation would reach for differs from the one the
+        // kernel applied by a power of two. Without this line the test is green on
+        // a fixture where the two happen to coincide, which is the whole way a
+        // second derivation survives review.
+        let e_r = i32::try_from(f.e_r_of(0)).unwrap();
+        let shifted = (0..N_SUBSTANCES).any(|s| f.k_of(s) != e_r);
+        assert!(
+            shifted,
+            "every substance of the fixture has k == e_r = {e_r}, so the molar and \
+             the storage coefficients coincide and the closure above says nothing \
+             about which of the two reached the residual"
+        );
+    }
+
     /// ADR-050, word for word: one call for the whole of the chemistry.
     ///
     /// Two reactions sharing `ACE`. The demands are 4 and 8 quanta against a pool
@@ -1799,6 +2007,10 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         g.stage_everywhere(ACE, 147_456);
         g.commit(0);
         let mut split = vec![M64::ZERO; g.n_voxels() as usize];
+        // One reaction per dispatch here, so the extent slice is one cell per
+        // voxel; the stride the kernel writes on is `params.n_reactions`, not the
+        // scenario's count.
+        let mut split_xi = vec![M32::ZERO; g.n_voxels() as usize];
         {
             let rx = g.react.rx();
             let mut params = g.react.params(7);
@@ -1813,6 +2025,7 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
                         dst32,
                         dst64,
                         &mut split,
+                        &mut split_xi,
                         &temperature,
                         &[],
                         &one,
@@ -2148,11 +2361,14 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         // (ADR-062), and a 128 cubed world at `lod = 2` has 32 768 of them:
         // `6.46e22`, against an `i64` ceiling of `9.22e18`.
         //
-        // The claim is the **exact sum**, not the absence of a panic. Declared
-        // `i64`, the accumulator wraps into a plausible negative before any
-        // conversion happens, and the checked conversion inside `credit_energy_wide`
-        // is then perfectly happy with it — the defence introduces the fault it is
-        // there to catch, and no assertion about panics can see that.
+        // **This test changed what it claims, not what it says.** It used to
+        // present the full fixture as unpassable — the reduction was exact, the
+        // counter was `i64`, and crediting the whole `6.46e22` was a refusal — so
+        // the credit below had to be checked on a slice small enough to fit.
+        // ADR-083 made the counter as wide as the accumulator, so the whole
+        // number now travels the whole way and the test says so with an equality.
+        // Without that last step it would be checking the reduction alone and
+        // nothing about the path to `SOLAR_IN`.
         const CELLS: usize = 32_768;
         const SPAN: i64 = 1_970_000_000_000_000_000;
 
@@ -2163,11 +2379,7 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         // The reduction itself, over the whole fixture, and not a sum written out
         // again here: a test that adds the slice up in its own body checks that
         // `i128` addition is exact and leaves the accumulator inside
-        // `reduce_solar` free to be anything. Credited whole this refuses — the
-        // counter is `i64` and open question A-20 is why, the one ADR-075 and
-        // ADR-076 call A-19 because the number was free when they were drafted —
-        // so the number is taken as a value first, and the credit below is
-        // checked on a slice the counter can hold.
+        // `reduce_solar` free to be anything.
         assert_eq!(reduce_solar(&solar), exact);
 
         // A width, not a saturation: one unit off the top of the same slice has
@@ -2178,10 +2390,18 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         lowered[CELLS - 1] = M64::new(SPAN - 1);
         assert_eq!(reduce_solar(&lowered), exact - 1);
 
+        // The whole `6.46e22`, through `credit_solar`, into the counter, exactly.
+        // This is the half the reduction assertions cannot state: a `credit_solar`
+        // written `credit_energy(ch, reduce_solar(solar) as i64)` leaves every
+        // line above green and hands the counter a wrapped negative in silence.
+        let mut ledger = Ledger::new(1).unwrap();
+        credit_solar(&solar, &mut ledger);
+        assert_eq!(ledger.energy(Channel::SolarIn), exact);
+
         let mut ledger = Ledger::new(1).unwrap();
         let small = vec![M64::new(SPAN / 4); 4];
         credit_solar(&small, &mut ledger);
-        assert_eq!(ledger.energy(Channel::SolarIn), SPAN);
+        assert_eq!(ledger.energy(Channel::SolarIn), i128::from(SPAN));
 
         // And the whole slice is read: a reduction over a prefix credits part of a
         // tick, and the residual it breaks is the *next* tick's.
@@ -2190,39 +2410,8 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         credit_solar(&mixed, &mut ledger);
         assert_eq!(
             ledger.energy(Channel::SolarIn),
-            (0..64i64).sum::<i64>() - 64 * 32
+            (0..64i128).sum::<i128>() - 64 * 32
         );
-    }
-
-    #[test]
-    #[should_panic(expected = "A-20")]
-    fn the_solar_credit_of_one_lit_tick_reaches_the_counter_through_the_checked_door() {
-        // The other half of the width, and the one the test above cannot state:
-        // that the exact number reaches `SOLAR_IN` through
-        // `Ledger::credit_energy_wide` rather than being narrowed on the way. A
-        // `credit_solar` written `credit_energy(ch, reduce_solar(solar) as i64)`
-        // keeps every assertion above green — the reduction is still exact — and
-        // the counter takes a wrapped negative in silence.
-        //
-        // The fixture is the real configuration of ADR-075 rather than a boundary
-        // substituted for it: the upper face of a 128 cubed domain at
-        // `dx = 1e-4 m` is `1.6384e-4 m^2`, full sun of `1e3 W/m^2` over one
-        // second is `0.16384 J`, and `k_E = 67` makes that `0.16384 * 2^67 =
-        // 2.4179e19` units — 2.62144 ceilings of an `i64` counter in a single
-        // tick. Spread over the 32 768 coarse cells of the enthalpy grid it is
-        // this much each. Unreachable for as long as ADR-076 refuses a lit
-        // scenario, and on the first lit tick after that, not the millionth.
-        const CELLS: usize = 32_768;
-        const PER_CELL: i64 = 737_869_762_948_382;
-
-        let solar = vec![M64::new(PER_CELL); CELLS];
-        assert!(
-            i64::try_from(reduce_solar(&solar)).is_err(),
-            "one lit tick fits an i64 after all; the arithmetic above has moved"
-        );
-
-        let mut ledger = Ledger::new(1).unwrap();
-        credit_solar(&solar, &mut ledger);
     }
 
     #[test]

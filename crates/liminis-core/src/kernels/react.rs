@@ -231,18 +231,36 @@ pub struct ReactParams {
 
 /// All reactions of one voxel: one snapshot in, one write out.
 ///
-/// Reads `src32`/`src64`, writes its own cell of `dst32`/`dst64` and of
-/// `energy_delta`, and nothing else. It touches no neighbour, no channel counter
-/// and no atomic: a reaction is local, and the sums for the ledger are taken by
-/// reduction in the LEDGER phase (ADR-041).
+/// Reads `src32`/`src64`, writes its own cell of `dst32`/`dst64`, of
+/// `energy_delta` and of `xi_out`, and nothing else. It touches no neighbour, no
+/// channel counter and no atomic: a reaction is local, and the sums for the
+/// ledger are taken by reduction in the LEDGER phase (ADR-041, ADR-080).
 ///
 /// The three passes are the three passes of SPEC section 5 — demand, then the
 /// coefficient, then application — and the order between them is the whole
 /// point. Every substance is written back, including the ones whose delta came
 /// out zero: the write buffer holds state `N+1` in full, and a skipped lane is
 /// left not "unchanged" but one tick stale (ADR-057).
+///
+/// # The extent slice, and what it costs
+///
+/// `xi_out` is the report the matter half of the ledger closes against
+/// (ADR-080): `Delta n_s == Sum_c credited(c, s) + Sum_r nu_(r,s) * Xi_r`, with
+/// `Xi_r` reduced on the host from this slice. The extent is a local of the third
+/// pass and there is no other way out of a kernel — ADR-034 fixes a free function
+/// with no return value, and a WGSL compute entry point returns nothing at all,
+/// so "hand the host a number" is this same slice with two host implementations
+/// instead of one (ADR-075, rejected).
+///
+/// **`4 * R` bytes per voxel**, `R` being the scenario's reaction count and never
+/// [`R_MAX`]. Against the 230 B per voxel of ADR-062: 234 B and 490 MB at 128
+/// cubed for `R = 1`, 1.74% of the state; 270 B and 566 MB at the ten reactions
+/// SPEC section 2.3 is heading for, 17.4%; and at `R_MAX = 64` it is 256 B per
+/// voxel — 486 B and 1 019 MB, **111%** of the whole state, at which point the
+/// debug mechanism outweighs the world. The cliff is real and the length of this
+/// slice is the only thing holding it off.
 #[allow(clippy::too_many_arguments)]
-// Eleven arguments against a clippy threshold of seven. The signature is fixed
+// Twelve arguments against a clippy threshold of seven. The signature is fixed
 // by ADR-034 and every slice here is one binding in WGSL, so folding them into a
 // struct would buy a lint and cost the shape the port depends on.
 #[allow(clippy::needless_range_loop)]
@@ -259,6 +277,7 @@ pub fn react_voxel(
     dst32: &mut [M32],
     dst64: &mut [M64],
     energy_delta: &mut [M64],
+    xi_out: &mut [M32],
     temperature: &[Q],
     catalyst: &[Q],
     rx: &Rx,
@@ -276,6 +295,19 @@ pub fn react_voxel(
          land in the lane of a substance, and the matter ledger would still \
          close (ADR-028, ADR-041)",
         p.s_energy
+    );
+    // One block of `n_reactions` cells per voxel, and the block of the **last**
+    // voxel has to fit. A slice sized `n_voxels` — the shape of every other
+    // per-voxel buffer in this signature, and so the shape a host reaches for —
+    // is long enough for voxel zero of a one-reaction scenario and for nothing
+    // else, and the reduction would read the extent of one voxel as the extent
+    // of another (ADR-080).
+    debug_assert!(
+        xi_out.len() >= (p.n_voxels as usize) * (p.n_reactions as usize),
+        "the extent slice holds {} cells against {} voxels times {} reactions",
+        xi_out.len(),
+        p.n_voxels,
+        p.n_reactions
     );
 
     // 1. Demand. Every reaction works out how many quanta of extent it would
@@ -319,6 +351,20 @@ pub fn react_voxel(
     let mut delta = [0i64; S_MAX];
     for r in 0..p.n_reactions as usize {
         let extent = scale_extent(want[r], scale);
+        // The report to the ledger, written **before** the early exit and
+        // written on every reaction, including the ones that did nothing
+        // (ADR-080). A write and not an addition, for the reason ADR-045 gives
+        // about `energy_delta`: the slice lives inside one tick and there is no
+        // clearing pass, so a `+=` here would let a reduction credit last tick's
+        // extent a second time — and a stale quantum is indistinguishable from a
+        // fresh one. `the_extent_slice_is_overwritten_not_accumulated` is the
+        // guard, and it is the same failure `the_energy_delta_is_written_not_added`
+        // guards one field over.
+        //
+        // Voxel-major, `idx * R + r`: this voxel's own block of `R` cells and no
+        // other, so the rule of ADR-034 holds unchanged — a voxel writes only
+        // where it lives.
+        xi_out[(idx as usize) * (p.n_reactions as usize) + r] = M32::new(extent);
         if extent == 0 {
             continue;
         }
@@ -449,10 +495,21 @@ fn rate_of(
     let mut limiting = Q::ONE;
     for j in rx.begin[r]..rx.begin[r] + rx.len[r] {
         let s = rx.nu_sub[j as usize];
-        // The enthalpy record is not a substrate. In an exothermic reaction
+        // The enthalpy record is not a substrate. In an **endothermic** reaction
         // `nu_E < 0`, so it looks exactly like an input from in here: the rate
         // would be limited by a pool that does not exist, and `amount_get` would
         // index the lane table past its end (ADR-041).
+        //
+        // Which sign this guard saves changed with ADR-081 and the guard did not.
+        // `nu_E` is now stated in the direction of the field — `-Sum_s nu_s*w_s`
+        // — so an *exothermic* record is positive and `nu >= 0` short-circuits it
+        // on every scenario the repository carries. That makes this line look
+        // dead: delete it and the whole corpus stays green, and the failure
+        // arrives on the first endothermic reaction, as an index into
+        // `lane[s_energy]` — a panic in debug, and in WGSL a read the
+        // specification allows to land on another binding. The one thing standing
+        // here is `the_energy_record_is_not_a_substrate` below, which keeps a
+        // negative `nu_E` on purpose.
         if s == p.s_energy || rx.nu[j as usize] >= 0 {
             continue;
         }
@@ -524,6 +581,10 @@ fn extent_cap(
     for j in rx.begin[r]..rx.begin[r] + rx.len[r] {
         let s = rx.nu_sub[j as usize];
         let nu = i64::from(rx.nu[j as usize]);
+        // The third of the three guards on `s_energy`, and the third to change
+        // which sign it saves: after ADR-081 an exothermic `nu_E` is positive, so
+        // what would reach a lane that does not exist is an **endothermic**
+        // record. See `rate_of` for why the branch is not dead.
         if s == p.s_energy || nu >= 0 {
             continue;
         }
@@ -549,7 +610,9 @@ fn extent_cap(
 ///
 /// Enthalpy is skipped for the reason `rate_of` gives: a record with `nu_E < 0`
 /// looks like an input, and a demand accumulated against a pool that does not
-/// exist would make the whole chemistry compete for it.
+/// exist would make the whole chemistry compete for it. Since ADR-081 that is the
+/// **endothermic** case — `nu_E` is stated in the direction of the field, so an
+/// exothermic record is positive and never reaches this branch at all.
 #[inline(always)]
 fn accumulate_demand(demand: &mut [i64; S_MAX], rx: &Rx, p: &ReactParams, r: usize, want: i32) {
     for j in rx.begin[r]..rx.begin[r] + rx.len[r] {
@@ -861,6 +924,11 @@ mod tests {
         dst32: Vec<M32>,
         dst64: Vec<M64>,
         energy: Vec<M64>,
+        /// The extent report of ADR-080, sized for `R_MAX` reactions so that the
+        /// fixture does not have to be rebuilt per scenario. The **stride** is
+        /// still `p.n_reactions`, which is what the kernel writes on, so
+        /// [`World::xi`] takes the params rather than assuming the allocation.
+        xi: Vec<M32>,
         temperature: Vec<Q>,
         catalyst: Vec<Q>,
     }
@@ -873,6 +941,7 @@ mod tests {
                 dst32: vec![M32::ZERO; (3 * N_VOXELS) as usize],
                 dst64: vec![M64::ZERO; N_VOXELS as usize],
                 energy: vec![M64::ZERO; N_VOXELS as usize],
+                xi: vec![M32::ZERO; N_VOXELS as usize * R_MAX],
                 temperature: vec![q(300.0); N_VOXELS as usize],
                 catalyst: vec![q(1.0); N_VOXELS as usize],
             };
@@ -914,12 +983,23 @@ mod tests {
                 &mut self.dst32,
                 &mut self.dst64,
                 &mut self.energy,
+                &mut self.xi,
                 &self.temperature,
                 &self.catalyst,
                 rx,
                 p,
                 idx,
             );
+        }
+
+        /// The extent reaction `r` reported in this voxel (ADR-080).
+        ///
+        /// Read off the report rather than off the amounts, unlike
+        /// [`World::extent`] one function down: the whole point of the slice is
+        /// that it is a **second** witness, so a reader that derived it from the
+        /// field would be the first witness wearing the second one's name.
+        fn xi(&self, p: &ReactParams, r: usize, idx: u32) -> i64 {
+            self.xi[(idx as usize) * (p.n_reactions as usize) + r].to_i64()
         }
 
         fn run(&mut self, rx: &Rx, p: &ReactParams) {
@@ -963,11 +1043,19 @@ mod tests {
 
     #[test]
     fn the_energy_record_is_not_a_substrate() {
-        // Exothermic: `nu_E` is negative, so from inside the loops the enthalpy
+        // Endothermic: `nu_E` is negative, so from inside the loops the enthalpy
         // record looks exactly like an input. If either the cap or the demand
         // pass treats it as one, the chemistry is limited by a pool that does not
         // exist while the vector `nu` is applied in full — and both halves of the
         // invariant close.
+        //
+        // **Relabelled by ADR-081, not re-signed, and the difference is the whole
+        // value of this fixture.** That record states `nu_E` in the direction of
+        // the field, so an exothermic reaction now has `nu_E > 0` — and a
+        // positive coefficient is short-circuited by `nu >= 0` before the guard
+        // on `s_energy` is ever consulted. Rewriting the sign here to match the
+        // new convention would leave the three guards without a single test in
+        // the repository; the reaction stays endothermic instead.
         //
         // The fixture points `lane[s_energy]` past both fields, so the mistake is
         // a panic here rather than a quietly borrowed number.
@@ -1013,6 +1101,69 @@ mod tests {
                     world.energy[idx as usize],
                     M64::new(-(i64::from(idx)) - 7_777),
                     "a voxel wrote into a cell that is not its own"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn the_extent_slice_is_overwritten_not_accumulated() {
+        // The twin of the test above, one slice over, and it exists because the
+        // consequence is worse here. `energy_delta` feeds step `i'`; the extent
+        // slice feeds `Ledger::residual_matter`, which is the one thing in the
+        // project that decides whether a tick is trustworthy. A `+=` in the write
+        // would make a reduction over a voxel the dispatch skipped credit last
+        // tick's chemistry against a field that did not move — the
+        // stale-accumulator failure ADR-045 removed the clearing pass for, arriving
+        // through the door built to detect it (ADR-080).
+        //
+        // Three claims, and each fails to a different mistake:
+        //
+        // (1) the cell is **replaced**. Junk is planted in every cell first, so a
+        //     `+=` shows up as junk plus four rather than as four;
+        // (2) a reaction whose extent came out zero still reports. The write sits
+        //     above the `continue` in the third pass, and moved below it a
+        //     reaction that stopped running would leave its previous quantum in
+        //     place — which is the same stale value in a slower disguise;
+        // (3) a voxel writes only its own block of `R` cells. `idx * R + r`
+        //     transposed to `r * n_voxels + idx` stays inside the slice, gives
+        //     plausible numbers, and is a different reaction's extent.
+        let t = tables(&[
+            recipe(&[(X, -1), (Y, -2), (Z, 1)], 0.25),
+            // No `X` left to work on once the first reaction is fed a pool of
+            // zero, so this one's extent is zero in every voxel — and it has to
+            // say so rather than say nothing.
+            recipe(&[(W, -1), (Z, 1)], 0.5),
+        ]);
+        let p = params(2);
+        let mut world = World::new([100_000, 100_000, 0, 0]);
+        for (i, cell) in world.xi.iter_mut().enumerate() {
+            *cell = M32::new(-(i as i32) - 555);
+        }
+
+        let target = 3u32;
+        world.voxel(&t.rx(), &p, target);
+
+        assert_eq!(
+            world.xi(&p, 0, target),
+            4,
+            "the extent was added to what was in the cell instead of replacing it"
+        );
+        assert_eq!(
+            world.xi(&p, 1, target),
+            0,
+            "a reaction that did not run left the previous value standing"
+        );
+        for idx in 0..N_VOXELS {
+            if idx == target {
+                continue;
+            }
+            for r in 0..2 {
+                let at = (idx as usize) * 2 + r;
+                assert_eq!(
+                    world.xi[at],
+                    M32::new(-(at as i32) - 555),
+                    "voxel {target} wrote into the block of voxel {idx}"
                 );
             }
         }

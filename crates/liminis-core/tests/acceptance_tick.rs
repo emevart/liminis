@@ -46,7 +46,7 @@
 //! (ADR-056).
 
 use liminis_core::config;
-use liminis_core::ledger::{Channel, DomainSums, Ledger};
+use liminis_core::ledger::{Channel, DomainSums, Ledger, Nu};
 use liminis_core::numeric::{M32, M64, Q, qadd};
 use liminis_core::process::{
     ProcessId, ROSTER_LEN, RosterEntry, STEP_ORDER, Scratch, Step, Tick, default_roster,
@@ -531,6 +531,254 @@ fn a_tick_without_the_fold_leaves_solar_in_untouched() {
     assert!(world.solar_in().iter().all(|c| c.to_i64() == 0));
 }
 
+/// `ACCEPTANCE.md`, section "Conservation" (ADR-080).
+///
+/// The second term of the matter identity has to vanish on a tick that ran no
+/// chemistry, and vanish *by construction* rather than because nothing wrote to
+/// it. `Ledger::begin_tick` clears the extent table exactly as it snapshots the
+/// counters, and the clear is the one line this name guards.
+///
+/// The extent is planted before the run rather than left at its initial zero,
+/// and that is the whole test. A table that is cleared only by its constructor
+/// passes every version of this written the easy way — allocate, advance, assert
+/// zero — because the value it would have carried over is a value nothing put
+/// there. What it fails is a tick after a tick that reacted: last tick's `Xi`
+/// standing while the field does not move is a residual that reports a
+/// conversion nobody performed, which is the stale-accumulator failure ADR-045
+/// removed the clearing pass for, arriving through the door built to detect it.
+#[test]
+fn a_tick_without_chemistry_leaves_every_extent_total_at_zero() {
+    const N_REACTIONS: u32 = 2;
+
+    let derived = derived();
+    let mut world = world(&derived);
+    let tick = Tick::new(&world, &derived, &roster(&DISPATCHABLE), DT, DX).expect("folding");
+    let mut ledger =
+        Ledger::with_reactions(N_SUBSTANCES, N_REACTIONS).expect("a ledger with room for extent");
+    let mut scratch = Scratch::new(&world, &tick).expect("the scratch");
+
+    // The premise: this roster dispatches no chemistry. `Tick::new` refuses an
+    // enabled `reactions` outright today, so there is no other kind of roster to
+    // compare against — which is stated here rather than left for a reader to
+    // infer from a passing test.
+    assert!(!DISPATCHABLE.contains(&ProcessId::Reactions));
+
+    // A previous tick's chemistry, reduced into the table the way phase 5 would
+    // reduce it. Two reactions and different totals, so a clear that zeroed only
+    // the first slot is visible.
+    let planted = [M32::new(3), M32::new(11), M32::new(5), M32::new(0)];
+    ledger.reduce_extent(&planted, 2);
+    assert_eq!(ledger.extent(0), 8, "the fixture did not plant anything");
+    assert_eq!(ledger.extent(1), 11);
+
+    for t in 0..4 {
+        tick.advance(&mut world, &mut ledger, &mut scratch, t, 0);
+        for r in 0..N_REACTIONS {
+            assert_eq!(
+                ledger.extent(r),
+                0,
+                "reaction {r} carried an extent of {} into tick {t}, which no \
+                 dispatch put there",
+                ledger.extent(r)
+            );
+        }
+    }
+}
+
+/// `ACCEPTANCE.md`, section "Conservation" (ADR-080).
+///
+/// The third arm of `Conservation` belongs to step `h` and to nothing else, on
+/// **both** axes. Two mistakes are guarded and they are not the same mistake:
+///
+/// - a transport process, or the temperature operator, quietly declaring
+///   `Transmutes` — which would be a claim that its changes are whole multiples
+///   of load-checked vectors, and there are none;
+/// - anything declaring it for **energy**. ADR-080 gives the arm content on the
+///   matter axis only; on the energy axis ADR-081 leaves step `h` declaring
+///   `Conserved`, because the weighted left side of that record does not move
+///   under a reaction and there is nothing to report. The enum is one enum, so
+///   the wrong axis type-checks.
+///
+/// Every operator of the roster is built here rather than looped over, because
+/// there is no table from a `ProcessId` to an `Invariant` — the declarations live
+/// on the operators, and a loop could only compare one of them with itself. The
+/// two grids are both used: the transport arms depend on whether the lid vents,
+/// and `ChangedThrough` is the arm that would hide a `Transmutes` written one
+/// line above it.
+#[test]
+fn only_the_reaction_step_declares_transmutes() {
+    use liminis_core::process::light::{Light, Modulation};
+    use liminis_core::process::pressure::Pressure;
+    use liminis_core::process::velocity::{VelocityConfig, VelocityField};
+    use liminis_core::process::{
+        AdvectPhase, Conservation, DiffusePhase, Grain, Invariant, Medium, SettlePhase,
+        Temperature, channels, phase, react,
+    };
+
+    let config = config::parse(SCENARIO).expect("the fixture must parse");
+    let derived = derived();
+    let world = world(&derived);
+    let sealed = Grid::new(N, N, N, [Boundary::Closed; 6]).expect("a sealed grid");
+    let venting = Grid::new(
+        N,
+        N,
+        N,
+        [
+            Boundary::Closed,
+            Boundary::Closed,
+            Boundary::Closed,
+            Boundary::Closed,
+            Boundary::Closed,
+            Boundary::Exchange,
+        ],
+    )
+    .expect("a venting grid");
+
+    const K_EX: f64 = 1.0e-6;
+    const D: f64 = 1.0e-9;
+
+    let medium = Medium {
+        rho_medium: 1_000.0,
+        g: 9.81,
+        mu: 1.0e-3,
+    };
+    // A grain that does not settle at all, so that no number here has to be one
+    // the corpus refuses to name (ADR-067, `TODO` in `process/settle.rs`).
+    let grain = Grain {
+        settling_radius: 0.0,
+        molar_mass: 2_650.0,
+        partial_molar_volume: 1.0e-3,
+    };
+    let velocity_cfg = VelocityConfig {
+        u_conv_max: DX / (6.0 * DT),
+        // `r = round(l_c / (2 * dx_coarse))` cells of the enthalpy grid, and
+        // `dx_coarse` is `4 * dx` at `lod = 2`, so this is exactly one cell.
+        l_c: 8.0 * DX,
+        stir_fraction: 0.0,
+        stir_period: None,
+        dt: DT,
+        dx: DX,
+        t_min: 273.15,
+        t_max: 313.15,
+        units_per_joule: 1.0,
+        every_n_ticks: 1,
+    };
+
+    let mut declared: Vec<(&str, Invariant)> = Vec::new();
+    // The two transport processes over both grids: theirs is the only arm in the
+    // roster that depends on the boundary, and `ChangedThrough` on the venting
+    // one is the neighbour a stray `Transmutes` would hide behind.
+    for (name, grid) in [("sealed", &sealed), ("venting", &venting)] {
+        declared.push((
+            name,
+            AdvectPhase::new_32(grid, 1, DT, DX)
+                .expect("advection folds")
+                .invariant(),
+        ));
+        declared.push((
+            name,
+            DiffusePhase::new_32(grid, 1, &[D], DT, DX, K_EX)
+                .expect("diffusion folds")
+                .invariant(),
+        ));
+    }
+    // The other three take the sealed grid and no other: settling, pressure and
+    // the velocity field **refuse** an exchange face outright, because no record
+    // says what they do at one (ADR-059, ADR-067). That refusal is a fact about
+    // those operators rather than an inconvenience of this fixture, and asking
+    // for the venting grid here would only assert it a second time.
+    declared.push((
+        "settling",
+        SettlePhase::new_32(&sealed, 1, &[grain], &medium, DT, DX)
+            .expect("settling folds")
+            .invariant(),
+    ));
+    declared.push((
+        "light",
+        Light::new(&sealed, &[], 0.0, Modulation::NONE, DX)
+            .expect("light folds")
+            .invariant(),
+    ));
+    // `theta_max` and `v_voxel` are a positive number each: the record that
+    // assigns the first does not exist (`TODO(theta-max)`), and the arm below
+    // does not depend on either.
+    declared.push((
+        "pressure",
+        Pressure::new(&sealed, 1.0, &[], DX * DX * DX)
+            .expect("pressure folds")
+            .invariant(),
+    ));
+    // Three grids of its own rather than the world's: at `N = 4` and `lod = 2`
+    // the enthalpy grid is a single cell, and ADR-069 bounds the half-width of
+    // the wide difference at a quarter of that grid's extent — one cell has no
+    // room for it. Nothing about the arm depends on the size.
+    let fine = Grid::new(16, 16, 16, [Boundary::Closed; 6]).expect("a fine grid");
+    let velocity_grid = Grid::new(8, 8, 8, [Boundary::Closed; 6]).expect("a velocity grid");
+    let enthalpy_grid = Grid::new(4, 4, 4, [Boundary::Closed; 6]).expect("an enthalpy grid");
+    declared.push((
+        "velocity",
+        VelocityField::new(&fine, &velocity_grid, &enthalpy_grid, &velocity_cfg)
+            .expect("the velocity field folds")
+            .invariant(),
+    ));
+    declared.push((
+        "temperature",
+        Temperature::new(
+            world.grid(),
+            world.enthalpy_grid(),
+            2,
+            world.registry(),
+            &derived,
+            &config,
+        )
+        .expect("the temperature operator folds")
+        .invariant(),
+    ));
+    // The two roster entries with no operator at all (ADR-065).
+    declared.push(("phase_transitions", phase::invariant()));
+    declared.push(("external_channels", channels::invariant()));
+
+    // Two transport processes over two grids, five more operators, and the two
+    // roster entries that have none: eleven declarations. The count is written
+    // out so that a process quietly dropped from the list above is a failure
+    // here rather than a silently weaker claim.
+    assert_eq!(declared.len(), 11);
+
+    for (name, invariant) in &declared {
+        assert_ne!(
+            invariant.matter,
+            Conservation::Transmutes,
+            "{name} declares Transmutes for matter, and step `h` is the only step \
+             with load-checked vectors to transmute by (ADR-080)"
+        );
+        assert_ne!(
+            invariant.energy,
+            Conservation::Transmutes,
+            "{name} declares Transmutes for energy. The arm has content on the \
+             matter axis only: on the energy axis ADR-081 leaves even step `h` \
+             declaring Conserved, because a reaction does not move the weighted \
+             left side at all"
+        );
+    }
+
+    // And the one that does. Step `h` on the matter axis, from the module that
+    // owns the declaration — and now on **both** axes, because `React::invariant`
+    // finally exists (ADR-081). Until it did, the energy half of the assertion
+    // above had nothing to read: every arm in the loop belonged to a process that
+    // is not step `h`, so "no process declares Transmutes for energy" was true of
+    // a list that did not contain the one process it was about.
+    assert_eq!(react::matter_conservation(), Conservation::Transmutes);
+    assert_eq!(
+        react::invariant(),
+        Invariant {
+            matter: Conservation::Transmutes,
+            energy: Conservation::Conserved,
+        },
+        "step `h` transmutes matter and conserves energy — literally, with no \
+         second term on the right and no channel of its own (ADR-080, ADR-081)"
+    );
+}
+
 // --- the two ledger criteria ---------------------------------------------
 
 #[test]
@@ -558,7 +806,7 @@ fn ledger_residual_is_zero_over_10k_ticks() {
 
         for s in 0..N_SUBSTANCES {
             assert_eq!(
-                ledger.residual_matter(s, &before, &after),
+                ledger.residual_matter(Nu::EMPTY, s, &before, &after),
                 0,
                 "substance {s} did not close on tick {t}"
             );
@@ -587,10 +835,10 @@ fn ledger_residual_is_zero_over_10k_ticks() {
             `i'`, and the two things that used to block it are gone: ADR-076 \
             declares i_surface and derives units_per_intensity, ADR-075 settles \
             what the fold owes the ledger and A-16 is closed. What blocks it now \
-            is that no scenario may be lit at all — refused by two locks, an \
-            energy sink that exists nowhere and the width of a channel counter \
-            (A-20, which ADR-075 and ADR-076 call A-19) — and that step `i'` is \
-            dispatched with step `h` or not at \
+            is that no scenario may be lit at all — refused now by one lock, an \
+            energy sink that exists nowhere; the second, the width of a channel \
+            counter, was answered by ADR-083 — and that step `i'` is dispatched \
+            with step `h` or not at \
             all, while step `h` reads a temperature no operator produces for it. \
             The per-tick half above is no longer vacuous: steps `c` and `d` \
             transport the enthalpy field, so energy moves inside the domain and a \
@@ -957,7 +1205,26 @@ fn the_left_side_of_the_invariant_is_gathered_in_one_place() {
         .map(|v| i128::from(v.to_i64()))
         .sum();
     assert!(enthalpy > 0, "the fixture seeds a non-zero enthalpy");
-    assert_eq!(sums.energy(), enthalpy);
+
+    // And the chemical energy of what the domain holds, which is the other term
+    // of the left side since ADR-081: `H_field + Sum_s w_s * n_s`. It is added by
+    // the **last** door of `Tick::domain_sums`, after every matter door, because
+    // it weighs the accumulators those filled — and nothing but an absolute
+    // number like this one can see a door called too early, since the same short
+    // sum taken before and after cancels in `after - before`.
+    let weights = derived.chemical_weights();
+    let chemical: i128 = (0..N_SUBSTANCES)
+        .map(|s| i128::from(weights[s as usize]) * sums.matter(s))
+        .sum();
+    assert!(
+        chemical < 0,
+        "the fixture's registry declares negative formation enthalpies"
+    );
+    assert!(
+        chemical.abs() > enthalpy.abs() * 10,
+        "the chemical term is the larger of the two on any ordinary registry,          and a fixture where it is not cannot tell the sum from the field"
+    );
+    assert_eq!(sums.energy(), enthalpy + chemical);
 }
 
 #[test]
