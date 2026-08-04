@@ -174,10 +174,13 @@ impl Temperature {
     /// ADR-045 makes for `energy_delta`.
     ///
     /// `enthalpy` is state `N` — `World::enthalpy().read()`, never `write_mut()`.
-    /// `World::temperature_slices_mut` is the accessor that gets this right by
-    /// construction; a caller assembling the five slices by hand can get it wrong,
-    /// and the wrong version produces an entirely plausible temperature that no
-    /// invariant looks at.
+    /// The three inputs come from the world and the two outputs from
+    /// `process::Scratch::temperature_slices_mut` (ADR-086): both of these
+    /// buffers are written and read inside one tick, so neither is state and
+    /// neither is in a snapshot. A caller assembling `enthalpy` by hand can get
+    /// it wrong — `write_mut()` is state `N+1` or whatever the last swap left
+    /// there, `read()` appends the ghost cell of ADR-059 — and the wrong version
+    /// produces an entirely plausible temperature that no invariant looks at.
     ///
     /// # Panics
     ///
@@ -444,6 +447,12 @@ t_max = 323.15
     struct Fixture {
         world: World,
         operator: Temperature,
+        /// The two outputs. Beside the world and not in it since ADR-086: both
+        /// are written and read inside one tick — `C_cell` by step `b`, `T` by
+        /// step `h`, each immediately behind its own recomputation — so
+        /// `process::Scratch` owns them and a kernel-level fixture holds its own.
+        heat_capacity: Vec<Q>,
+        temperature: Vec<Q>,
     }
 
     fn build(text: &str) -> Result<Fixture> {
@@ -485,7 +494,13 @@ t_max = 323.15
             &derived,
             &config,
         )?;
-        Ok(Fixture { world, operator })
+        let cells = operator.n_cells() as usize;
+        Ok(Fixture {
+            world,
+            operator,
+            heat_capacity: vec![Q::ZERO; cells],
+            temperature: vec![Q::ZERO; cells],
+        })
     }
 
     fn fixture() -> Fixture {
@@ -549,12 +564,24 @@ enthalpy_formation = 0.0
         }
     }
 
-    /// One application through the combined accessor, which is how a host runs
-    /// it.
+    /// One application, with the three inputs off the world and the two outputs
+    /// off this fixture — which is how `Tick::advance` runs it, twice a tick
+    /// (ADR-086).
+    ///
+    /// `enthalpy().lane(0)` and neither `read()` nor `write_mut()`: the back
+    /// buffer holds state `N+1` or whatever the last swap left there, and a
+    /// temperature derived from it is entirely plausible and in no invariant;
+    /// `read()` appends the ghost cell of ADR-059, which is not a coarse cell.
     fn apply(f: &mut Fixture) {
-        let (src32, src64, enthalpy, capacity, temperature) = f.world.temperature_slices_mut();
-        f.operator
-            .apply(src32, src64, enthalpy, capacity, temperature);
+        let (src32, src64) = f.world.amount_slices();
+        let enthalpy = f.world.enthalpy().lane(0);
+        f.operator.apply(
+            src32,
+            src64,
+            enthalpy,
+            &mut f.heat_capacity,
+            &mut f.temperature,
+        );
     }
 
     #[test]
@@ -619,7 +646,7 @@ enthalpy_formation = 0.0
             .fill(M64::new(-(1 << 40)));
 
         apply(&mut f);
-        let front = f.world.temperature().to_vec();
+        let front = f.temperature.to_vec();
 
         // The front now holds what the back held, and the temperature has to
         // follow it.
@@ -628,8 +655,7 @@ enthalpy_formation = 0.0
         assert_eq!(front.len(), cells);
         for (cell, was) in front.iter().enumerate() {
             assert_ne!(
-                *was,
-                f.world.temperature()[cell],
+                *was, f.temperature[cell],
                 "coarse cell {cell} did not follow the front buffer"
             );
         }
@@ -637,7 +663,7 @@ enthalpy_formation = 0.0
         // enthalpies were chosen to make visible.
         let t_ref = f.operator.params().t_ref;
         assert!(front[0] > t_ref);
-        assert!(f.world.temperature()[0] < t_ref);
+        assert!(f.temperature[0] < t_ref);
     }
 
     #[test]
@@ -772,10 +798,9 @@ enthalpy_formation = 0.0
 
         // And both outputs really were written, or the assertions above are about
         // a step that did nothing.
-        assert!(f.world.heat_capacity().iter().all(|&c| c > Q::ZERO));
+        assert!(f.heat_capacity.iter().all(|&c| c > Q::ZERO));
         assert!(
-            f.world
-                .temperature()
+            f.temperature
                 .iter()
                 .all(|&t| t != Q::ZERO && t.debug_f64().is_finite())
         );

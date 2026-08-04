@@ -155,6 +155,10 @@ const DIFFUSION_PROCESS: &str = ProcessId::Diffusion.id();
 /// (ADR-065) rather than spelled out here.
 const LIGHT_PROCESS: &str = ProcessId::Light.id();
 
+/// The process that writes the Courant numbers step `c` reads, from the same
+/// roster. Named here for [`check_every_n_ticks`] (ADR-074, ADR-086).
+const VELOCITY_PROCESS: &str = ProcessId::VelocityField.id();
+
 /// The default of `enabled` for the light, taken from the process itself.
 ///
 /// `false`, and by decision rather than by omission since ADR-076: light on by
@@ -162,6 +166,15 @@ const LIGHT_PROCESS: &str = ProcessId::Light.id();
 /// has no sink and whose counter does not hold one tick of it — so every
 /// scenario would be refused by the very record that declared the key.
 use crate::process::light::{ENABLED_BY_DEFAULT as LIGHT_ENABLED_BY_DEFAULT, daily_sample};
+
+/// The default of `enabled` for the velocity field, taken from the process itself
+/// (ADR-065, ADR-069).
+///
+/// `false`, and the arithmetic is in `process/velocity.rs`: `u_conv_max` is
+/// required when the process is on, and ADR-065 materialises the full roster
+/// before hashing, so a default of `true` would refuse every scenario that never
+/// mentions the field.
+use crate::process::velocity::VELOCITY_FIELD_ENABLED_BY_DEFAULT;
 
 /// Everything derived at load, in one value.
 ///
@@ -182,6 +195,9 @@ pub struct Derived {
     /// `None` on a scenario whose light process is off, or on which is on and
     /// declares no `i_surface` — the second of which the validator refuses.
     light: Option<DerivedLight>,
+    /// `None` on a scenario whose velocity field is off, or on which is on and
+    /// declares no `u_conv_max` — the second of which the validator refuses.
+    velocity: Option<DerivedVelocity>,
 }
 
 /// The outside reservoir, folded once at load (ADR-059).
@@ -396,6 +412,18 @@ pub struct DerivedEnergy {
     pub carried_by_diffusion: f64,
     /// `C_cell * max(t_max - T_ref, T_ref - t_min)`, J.
     pub h_max: f64,
+    /// The lower end of the declared working range of the enthalpy field, K.
+    ///
+    /// Read off the `[[field]] id = "enthalpy"` record by [`energy_window`],
+    /// which needs both ends to derive `H_max` and until ADR-087 dropped them on
+    /// the floor. Carried because `process::VelocityConfig` wants them and no
+    /// other section of a [`Derived`] holds a temperature at all: the mobility
+    /// `L` is calibrated so that `|u_conv| <= u_conv_max` at exactly this span
+    /// (ADR-069), and taking them out of the `Config` inside `Tick::new` would
+    /// put a second place deciding which `[[field]]` record is the enthalpy.
+    pub t_min: f64,
+    /// The upper end of the same range, K. See [`DerivedEnergy::t_min`].
+    pub t_max: f64,
     /// The window `[lower, upper]` the three inequalities leave.
     pub window: (u32, u32),
     /// Which reaction set the lower bound — the one with the *smallest quantum
@@ -539,6 +567,35 @@ pub struct DerivedLight {
     pub ticks_to_ceiling: f64,
 }
 
+/// The prescribed velocity field after the derivation (ADR-069, ADR-087).
+///
+/// Present exactly when the process is enabled — by its own record or by the
+/// default its module declares (ADR-065) — and `u_conv_max` is written. The
+/// second half is not a rule: a scenario that enables the field and omits the
+/// speed is refused by `config/validate.rs`, and this module stays derivable on a
+/// config nobody validated.
+///
+/// **Exactly the four keys of ADR-069 and nothing derived from them.** The
+/// mobility `L`, the stencil radius `r`, the octave count and the estimate of
+/// `|u|` are derived in `VelocityField::new` out of the three grids, which this
+/// module does not have; deriving any of them a second time here would give the
+/// world two sources for one number, and the two would part company wherever the
+/// world's enthalpy grid and the `[[field]]` record's `lod` disagree — which is
+/// the discrepancy ADR-069 already names about `r`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct DerivedVelocity {
+    /// The convective speed the mobility is calibrated to, m/s. Required when the
+    /// process is on and has no default (ADR-069).
+    pub u_conv_max: f64,
+    /// The structure length `l_c`, m.
+    pub l_c: f64,
+    /// The stirring amplitude as a fraction of `u_conv_max`, `[0, 1]`. At exactly
+    /// zero the noise kernel is not dispatched at all.
+    pub stir_fraction: f64,
+    /// The stirring period, s. Required when `stir_fraction > 0`.
+    pub stir_period: Option<f64>,
+}
+
 /// One field record after the derivation (ADR-030, ADR-061, ADR-062).
 #[derive(Clone, Debug, PartialEq)]
 pub struct DerivedField {
@@ -636,6 +693,20 @@ impl Derived {
     #[must_use]
     pub fn light(&self) -> Option<&DerivedLight> {
         self.light.as_ref()
+    }
+
+    /// The four keys of the velocity field, or `None` on a scenario whose field
+    /// is off or which declares no `u_conv_max` (ADR-069, ADR-087).
+    ///
+    /// The one door to them. `Tick::new` folds `VelocityConfig` out of this and
+    /// never out of the `Config` it also holds: a second reader of the
+    /// `[[process]]` records standing beside the validator's is precisely what
+    /// `DerivedSubstance::diffusivity` exists to prevent, and the two agree on
+    /// every scenario that validates.
+    #[inline]
+    #[must_use]
+    pub fn velocity(&self) -> Option<&DerivedVelocity> {
+        self.velocity.as_ref()
     }
 
     /// The one record every scenario has: the enthalpy field (ADR-062).
@@ -1002,6 +1073,11 @@ pub fn derive(config: &Config) -> Result<Derived> {
     //     `units_per_intensity` is `dx^2 * 2^k_E` (ADR-076).
     let light = resolve_light(config, field, &energy)?;
 
+    // 12. The velocity field. After nothing in particular: the four keys of
+    //     ADR-069 are carried through unchanged and nothing here is derived from
+    //     them (ADR-087).
+    let velocity = resolve_velocity(config);
+
     Ok(Derived {
         v_voxel,
         substances,
@@ -1010,6 +1086,42 @@ pub fn derive(config: &Config) -> Result<Derived> {
         fields,
         reservoir,
         light,
+        velocity,
+    })
+}
+
+/// Carry the four keys of the velocity field through, and derive nothing
+/// (ADR-069, ADR-087).
+///
+/// Returns `None` when the process record is absent, when it resolves to
+/// disabled against the default the process itself declares (ADR-065), and when
+/// it is on and silent about `u_conv_max` — the last of which is a refusal of
+/// `config/validate.rs` and not of this function, on the division of labour
+/// `resolve_light` writes out: `derive` is public and defined on configs nobody
+/// validated, so it describes what it was given rather than judging it.
+///
+/// Infallible on purpose, and that is the difference from `resolve_light`. That
+/// function has a domain of its own — a modulation period of two ticks divides by
+/// zero — and this one has none: it copies four numbers.
+fn resolve_velocity(config: &Config) -> Option<DerivedVelocity> {
+    let process = config.process.iter().find(|p| p.id == VELOCITY_PROCESS)?;
+    // The default belongs to the process and is read from it (ADR-065): absence
+    // of a record means the process's own default, and a second copy of the value
+    // here would be a second thing to keep in step.
+    if !process.enabled.unwrap_or(VELOCITY_FIELD_ENABLED_BY_DEFAULT) {
+        return None;
+    }
+    let u_conv_max = process.u_conv_max?;
+
+    Some(DerivedVelocity {
+        u_conv_max,
+        // `l_c` is carried as it was declared, absent and all: the radius
+        // `r = round(l_c/(2*dx_coarse))` is derived in `VelocityField::new` from
+        // the grid the world actually has, and a `0.0` substituted here would
+        // reach that refusal as a *declared* zero rather than as a missing key.
+        l_c: process.l_c.unwrap_or(0.0),
+        stir_fraction: process.stir_fraction,
+        stir_period: process.stir_period,
     })
 }
 
@@ -1979,6 +2091,8 @@ fn energy_window(
             conductivity: thermal.conductivity,
             carried_by_diffusion: thermal.carried,
             h_max,
+            t_min,
+            t_max,
             window: (lower as u32, upper as u32),
             window_lower_set_by,
             window_upper_set_by,
@@ -2292,6 +2406,54 @@ fn resolve_field(record: &FieldRecord, dt: f64, dx: f64) -> Result<DerivedField>
 /// not have `every_n_ticks > 1`. ADR-062 makes the enthalpy field a case of it
 /// for the first time.
 fn check_every_n_ticks(config: &Config, fields: &[DerivedField]) -> Result<()> {
+    // **Above the early return below, and that placement is the whole of these
+    // two refusals.** The guard after them answers `Ok(())` on a scenario with no
+    // diffusive field and no diffusing substance, and a light or velocity refusal
+    // written under it would be unreachable on every non-diffusive scenario —
+    // passing only because the fixture that tests it happens to diffuse.
+    //
+    // ADR-086 for the light, ADR-074 for the velocity field, and both for the
+    // same reason: the buffers of steps `a` and `b` live in `process::Scratch`
+    // because their writer and their reader stand in one tick. Separate the two
+    // by a schedule and the buffer becomes inter-tick state of class `Q`, which
+    // no snapshot carries — `light` is 8.39 MB per file at 128^3 and
+    // `face_courant` 25.17 MB, and a restart applies zeros where the run applied
+    // a field.
+    for process in &config.process {
+        if process.every_n_ticks <= 1 {
+            continue;
+        }
+        if process.id == LIGHT_PROCESS {
+            bail!(
+                "process `{}` declares every_n_ticks = {}, and the light field it \
+                 writes is read inside the same tick: step `a` writes it and step \
+                 `i'` folds the absorbed light out of it. A schedule that \
+                 separates the two turns a scratch buffer into inter-tick state \
+                 of class `Q`, which the snapshot does not carry — 8.39 MB per \
+                 file at 128^3 — and a restart would fold a zeroed field \
+                 (ADR-086)",
+                process.id,
+                process.every_n_ticks
+            );
+        }
+        if process.id == VELOCITY_PROCESS {
+            bail!(
+                "process `{}` declares every_n_ticks = {}, and the Courant \
+                 numbers it writes are read inside the same tick: the last stage \
+                 of step `b` writes them and step `c` advects with them. At \
+                 every_n_ticks = {} step `c` would apply, on {} ticks out of {}, \
+                 a face_courant written in some other tick, and a restart would \
+                 apply zeros — 25.17 MB per file at 128^3 otherwise (ADR-074, \
+                 ADR-086)",
+                process.id,
+                process.every_n_ticks,
+                process.every_n_ticks,
+                process.every_n_ticks - 1,
+                process.every_n_ticks
+            );
+        }
+    }
+
     let diffusive: Vec<&str> = fields
         .iter()
         .filter(|f| f.alpha > 0.0)

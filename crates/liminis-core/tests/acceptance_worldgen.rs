@@ -317,14 +317,10 @@ fn same_seed_gives_the_same_initial_state() {
     assert_eq!(a.amounts_32(), b.amounts_32(), "the narrow amounts");
     assert_eq!(a.amounts_64(), b.amounts_64(), "the wide amounts");
     assert_eq!(a.enthalpy(), b.enthalpy(), "the enthalpy field");
-    assert_eq!(a.energy_delta(), b.energy_delta(), "the energy accumulator");
-    assert_eq!(a.light(), b.light(), "the light field");
-    assert_eq!(a.velocity(), b.velocity(), "the velocity field");
-    assert_eq!(
-        a.velocity_potential(),
-        b.velocity_potential(),
-        "the velocity potential"
-    );
+    // Three buffers and not seven: `energy_delta`, the light field, `u` and its
+    // potential left `World` with ADR-086, because none of them has a reader
+    // standing earlier in the tick than its writer. `worldgen` never wrote any of
+    // the four, so comparing them here was comparing two zeroed buffers.
 
     // And the fold happens on the host rather than inside: a world generated
     // from the low half of the seed is not the world generated from its key. If

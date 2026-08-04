@@ -95,4 +95,4 @@ mod world;
 pub use field::{Direction, Field, Field32, Field64, ParitySplit};
 pub use grid::{Axis, Boundary, Face, Grid};
 pub use registry::{MAX_SUBSTANCES, R_MAX, Registry, S_MAX, SubstanceDecl, SubstanceSlot, Width};
-pub use world::{LaneRef, World, WorldLayout, coarse_grid};
+pub use world::{LaneRef, OwnedBuffers, OwnedBuffersMut, World, WorldLayout, coarse_grid};

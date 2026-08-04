@@ -220,25 +220,23 @@ pub struct ReactShape<'a> {
     pub enthalpy_lod: u32,
 }
 
-/// The two columns of a reaction that the corpus declares nowhere in a form this
+/// The one column of a reaction that the corpus declares nowhere in a form this
 /// file could read.
 ///
-/// They arrive from the caller rather than being defaulted to something
+/// It arrives from the caller rather than being defaulted to something
 /// plausible, by the precedent `WorldLayout::velocity_lod` sets for exactly this
 /// situation: a number named in prose and by no key does not get invented at the
 /// point of use, because an invention outlives the task that made it.
+///
+/// **It used to be two, and the second was a drift rather than a gap.**
+/// `t_vmax` — the reference temperature of a Q10 factor (ADR-048) — was carried
+/// here on the claim that `CONFIG_SCHEMA.md` section 6 declared no such key and
+/// that `reaction_without_t_vmax_is_rejected` stood `#[ignore]`d. Both are false
+/// in this tree: the key is a mandatory field of the schema without a default
+/// (`config/schema.rs`, ADR-048), the shipped scenario declares it, and that test
+/// is live — the `#[ignore]` beside it is on the next one. So the column comes
+/// off the config like every other kinetic number (ADR-086).
 pub struct Undeclared<'a> {
-    /// The reference temperature of each reaction's Q10 factor, kelvin
-    /// (ADR-048).
-    ///
-    /// `CONFIG_SCHEMA.md` section 6 declares no such key, and
-    /// `reaction_without_t_vmax_is_rejected` stands `#[ignore]`d in
-    /// `config/validate.rs` with that same sentence on it. Substituting `T_ref`
-    /// is not available and ADR-048 says why: `T_ref` is an arbitrary scenario
-    /// zero of enthalpy *storage*, and tying kinetics to it would make the speed
-    /// of the whole chemistry a function of where that zero was put — "not a
-    /// saving of one key but a mistake".
-    pub t_vmax: &'a [f64],
     /// The identifier of each reaction, folded from its **name** (ADR-027).
     ///
     /// It is the third counter of every draw the kernel takes. ADR-027 fixes
@@ -284,7 +282,7 @@ impl React {
     /// # Errors
     ///
     /// Returns an error if the derivation and the registry describe different
-    /// registries, if either column of [`Undeclared`] is not one entry per
+    /// registries, if the column of [`Undeclared`] is not one entry per
     /// reaction, if the shape's coarse grid is not the fine one at the declared
     /// `lod`, if a storage coefficient does not fit the `i32` the kernel table
     /// holds, if a folded scalar comes out non-finite or zero — and if any
@@ -475,7 +473,7 @@ impl React {
             this.q10
                 .push(finite(record.rate.q10, "rate.q10", &reaction.id)?);
             this.t_vmax
-                .push(finite(undeclared.t_vmax[r], "t_vmax", &reaction.id)?);
+                .push(finite(record.rate.t_vmax, "rate.t_vmax", &reaction.id)?);
         }
 
         Ok(this)
@@ -754,12 +752,9 @@ fn check_registry(registry: &Registry, derived: &Derived) -> Result<()> {
     Ok(())
 }
 
-/// Both undeclared columns are one entry per reaction.
+/// The undeclared column is one entry per reaction.
 fn check_undeclared(undeclared: &Undeclared<'_>, n_reactions: usize) -> Result<()> {
-    for (name, len) in [
-        ("t_vmax", undeclared.t_vmax.len()),
-        ("reaction_id", undeclared.reaction_id.len()),
-    ] {
+    for (name, len) in [("reaction_id", undeclared.reaction_id.len())] {
         if len != n_reactions {
             bail!(
                 "{len} values of `{name}` were given for {n_reactions} reactions. \
@@ -1268,6 +1263,11 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         /// it, for the reason the header of `React::apply` gives: nothing owns
         /// this buffer yet, because nothing dispatches step `h`.
         xi: Vec<M32>,
+        /// The reaction energy accumulator. Beside the world and not in it since
+        /// ADR-086: its writer is step `h` and its reader step `i'`, both inside
+        /// one tick, so `process::Scratch` owns it. A kernel-level fixture holds
+        /// its own, exactly as it already holds its own extent slice.
+        energy: Vec<M64>,
     }
 
     impl Fixture {
@@ -1308,7 +1308,6 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
             )
             .unwrap();
 
-            let t_vmax = vec![T_VMAX; derived.reactions().len()];
             let rid: Vec<u32> = derived.reactions().iter().map(|r| rid_of(&r.id)).collect();
             let react = React::new(
                 &ReactShape {
@@ -1319,19 +1318,18 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
                 world.registry(),
                 &derived,
                 &config,
-                &Undeclared {
-                    t_vmax: &t_vmax,
-                    reaction_id: &rid,
-                },
+                &Undeclared { reaction_id: &rid },
                 seed,
             )?;
 
-            let cells = (world.grid().n_voxels() as usize) * (react.n_reactions() as usize);
+            let world_voxels = world.grid().n_voxels() as usize;
+            let cells = world_voxels * (react.n_reactions() as usize);
             Ok(Self {
                 derived,
                 world,
                 react,
                 xi: vec![M32::ZERO; cells],
+                energy: vec![M64::ZERO; world_voxels],
             })
         }
 
@@ -1395,27 +1393,24 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
                 .collect()
         }
 
-        /// One step, with the accumulator copied around the dispatch the way
-        /// `tests/acceptance_world.rs` does and for the same reason: two mutable
-        /// borrows of one `World` cannot be held at once
-        /// (`TODO(one-borrow-per-dispatch)`).
+        /// One step. Nothing is copied around the dispatch any more: the four
+        /// amount slices come from the world and the accumulator from this
+        /// fixture, and the two owners borrow disjoint things (ADR-086, which
+        /// closed `TODO(one-borrow-per-dispatch)` by moving an owner rather than
+        /// by widening an accessor).
         fn apply(&mut self, tick: u32, temperature: &[Q], catalyst: &[Q]) {
-            let mut energy = self.world.energy_delta().to_vec();
-            {
-                let (src32, src64, dst32, dst64) = self.world.amount_slices_mut();
-                self.react.apply(
-                    tick,
-                    src32,
-                    src64,
-                    dst32,
-                    dst64,
-                    &mut energy,
-                    &mut self.xi,
-                    temperature,
-                    catalyst,
-                );
-            }
-            self.world.energy_delta_mut().copy_from_slice(&energy);
+            let (src32, src64, dst32, dst64) = self.world.react_slices_mut();
+            self.react.apply(
+                tick,
+                src32,
+                src64,
+                dst32,
+                dst64,
+                &mut self.energy,
+                &mut self.xi,
+                temperature,
+                catalyst,
+            );
         }
 
         fn promote(&mut self) {
@@ -1627,7 +1622,7 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
             f.apply(7, &temperature, &[]);
             f.promote();
             let after = f.snapshot();
-            let energy = f.world.energy_delta().to_vec();
+            let energy = f.energy.clone();
             (before, after, energy)
         };
 
@@ -1988,7 +1983,7 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
             + f.derived.reactions()[1].nu_energy * e_dimerisation;
         for idx in 0..f.n_voxels() {
             assert_eq!(
-                f.world.energy_delta()[idx as usize].to_i64(),
+                f.energy[idx as usize].to_i64(),
                 expected,
                 "voxel {idx} does not carry the enthalpy of both reactions"
             );
@@ -2015,7 +2010,7 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
             let rx = g.react.rx();
             let mut params = g.react.params(7);
             params.n_reactions = 1;
-            let (src32, src64, dst32, dst64) = g.world.amount_slices_mut();
+            let (src32, src64, dst32, dst64) = g.world.react_slices_mut();
             for r in 0..2 {
                 let one = only_reaction(&rx, r);
                 for idx in 0..params.n_voxels {
@@ -2120,7 +2115,7 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         f.stage_everywhere(ZED, 1 << 20);
         f.stage_everywhere(ACE, 1 << 20);
         f.commit(0);
-        f.world.energy_delta_mut().fill(M64::new(STALE));
+        f.energy.fill(M64::new(STALE));
 
         let enthalpy_before = f.world.enthalpy().clone();
         let temperature = f.isothermal();
@@ -2136,7 +2131,7 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         let expected = f.derived.reactions()[0].nu_energy * 4;
         for idx in 0..f.n_voxels() {
             assert_eq!(
-                f.world.energy_delta()[idx as usize].to_i64(),
+                f.energy[idx as usize].to_i64(),
                 expected,
                 "voxel {idx}: the accumulator was added to rather than written, \
                  or it was not written at all"
@@ -2145,9 +2140,9 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
 
         // The same inputs a second time: the same increment, not twice it. No
         // clearing pass runs between the two, by decision (ADR-045).
-        let first = f.world.energy_delta().to_vec();
+        let first = f.energy.clone();
         f.apply(7, &temperature, &[]);
-        assert_eq!(first, f.world.energy_delta());
+        assert_eq!(first, f.energy);
     }
 
     /// ADR-058: the tick and the run key are two neighbouring `u32`, and only a

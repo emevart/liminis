@@ -62,6 +62,69 @@
 //! plausible spelling, `idx*3 + axis`, conserves matter exactly and gives a
 //! believable flow at an angle; so does a permutation of the axes. Only
 //! `the_face_courant_layout_matches_the_advection_kernel` separates them.
+//!
+//! # The fold onto the coarse faces adds **flux**, and that is the whole record
+//!
+//! [`coarse_face_courant_voxel`] is the fifth dispatch of step `b` (ADR-087). The
+//! enthalpy field lives on a grid coarser than the velocity grid (`lod = 2`
+//! against `lod = 1`, ADR-062), so [`face_courant_voxel`] cannot serve it: its own
+//! `debug_assert` wants a target grid that is a *refinement* of the velocity grid.
+//! What the coarse faces want is the direction ADR-045 already walks — fine to
+//! coarse, gathered by the coarse cell — but for a **flux** rather than for a
+//! quantity, and that one word is what SPEC section 1.5 does not cover.
+//!
+//! **A Courant number is intensive, and intensive numbers are not added.** Six
+//! tenths and six tenths are not one and two tenths. What adds is the volumetric
+//! flux through a face; the division comes afterwards:
+//!
+//! ```text
+//! Phi_i = u_i * dx_fine^2                     flux through one fine face
+//! A_coarse = 2^(2*lod) * dx_fine^2            the coarse face is tiled by them
+//! u_bar = sum(Phi_i)/A_coarse = 2^(-2*lod) * sum(u_i)
+//! C_coarse = u_bar*dt/dx_coarse = 2^(-3*lod) * sum(C_i)
+//! ```
+//!
+//! At `lod = 2`: **add sixteen and divide by sixty-four.** The averaging is of the
+//! *velocity*, never of the Courant number — the two differ by exactly `2^lod`
+//! because the fine and the coarse face carry different `dx`, and that miss is the
+//! one no residual can see: transport conserves at any Courant number, both
+//! residuals stay at exactly zero, the temperature stays plausible, and the world
+//! gets heat outrunning fourfold the matter that carries it. At the validator's own
+//! ceiling `|C_fine| <= 1/6` the axial sum of the mean-of-Courant form comes out at
+//! a third of the debug threshold, so only
+//! `a_uniform_flow_has_the_same_speed_on_the_fine_and_the_coarse_faces` separates
+//! them.
+//!
+//! Two exponents, and they are not the same one. Sixteen is `(2^lod)^2`, the two
+//! transverse extents of a coarse **face**; sixty-four is `2^(3*lod)`, the fine
+//! **cells** of a coarse cell — the number `kernels/fold.rs` runs its cube over.
+//! The exponent is counted down to the grid of the faces being added, which is the
+//! fine grid of the amounts (`128^3`), and not down to the velocity grid: whoever
+//! adds the four faces of a velocity-grid Courant buffer owes a divisor of eight
+//! instead — and no such buffer exists, so the fine one is the only source there
+//! is. Nothing in the types says so.
+//!
+//! Two more traps live here, both quiet, both borrowed from `kernels/fold.rs` and
+//! moved onto faces. The covering block is a shift **per axis** (SPEC section 1.5):
+//! the linear form `fine = (coarse << (3*lod)) + f` partitions the index space just
+//! as disjointly, passes every conservation test, and credits the coarse face a
+//! stripe of sixteen along X instead of the 4x4 square lying on it. And the fold
+//! runs over the faces **on** the coarse face, not over all the faces inside the
+//! coarse cell: the latter are four times as many and belong to other positions —
+//! a factor in the same direction as the mean-of-Courant miss, so the two would
+//! cancel into a right-looking number for the wrong reason.
+//!
+//! The stability of the coarse step follows from the fine one and needs no third
+//! `SpeedBound` at load, which ADR-087 refuses by name so that the next author does
+//! not add one for safety. The derivation runs off the validator's ceiling and not
+//! off `|C| <= 1`: `config/validate.rs` declares `outgoing_faces: 6`, so
+//! `|C_fine| <= 1/6`, and the divisor grows with the number of terms —
+//! `|C_coarse| <= (1/6)/2^lod = 1/24`, with `2/24 = 1/12` over the two outgoing
+//! faces of an axis under the splitting of ADR-036. Twelve times inside the
+//! condition; from the premise `max|C| <= 1` the derivation does **not** go
+//! through. `a_fine_field_within_the_courant_bound_stays_within_it_after_the_fold`
+//! asserts it directly rather than by argument, because a broken fold breaks it
+//! before any validator sees anything.
 
 use crate::numeric::{Q, qadd, qdiv, qmul, qsub};
 
@@ -293,6 +356,171 @@ pub fn face_courant_voxel(u: &[Q], dst: &mut [Q], p: &SampleParams, idx: u32) {
     }
 }
 
+/// Parameters of the fold onto the faces of the coarse enthalpy grid (ADR-087).
+#[derive(Clone, Copy, Debug)]
+pub struct CoarseCourantParams {
+    /// Voxels along X **of the fine grid**, the one whose faces are added. The
+    /// coarse extents are never passed in: they are `nx >> lod` and so on,
+    /// derived per axis (SPEC section 1.5), and a second set of three numbers
+    /// would be a second place for them to disagree with the first — the rule
+    /// `FoldParams` states and this file obeys.
+    pub nx: u32,
+    /// Voxels along Y of the fine grid.
+    pub ny: u32,
+    /// Voxels along Z of the fine grid.
+    pub nz: u32,
+    /// How many bits coarser the enthalpy grid is than the fine one: `2^(2*lod)`
+    /// fine faces tile one coarse face, sixteen at `lod = 2` (ADR-062).
+    ///
+    /// Checked and never declared: `lod_between` in `process/velocity.rs` derives
+    /// it by comparing the two grids, and this is its third caller.
+    pub lod: u32,
+    /// `2^(-3*lod)`, folded on the host beside `courant_gain`.
+    ///
+    /// One number and one `qmul`, so no bare operator over `Q` appears (ADR-022)
+    /// and the power of two is exact in both modes. The kernel knows neither
+    /// `dt`, nor `dx`, nor the `lod` as a length (ADR-015) — what it knows is
+    /// that the sum of the covering faces has to be divided by this.
+    ///
+    /// `2^(-2*lod)` here is the arithmetic mean of the Courant numbers, which
+    /// overstates the coarse flux by exactly `2^lod` and is seen by neither
+    /// residual; the module header carries the derivation.
+    pub fold_gain: Q,
+}
+
+/// The Courant numbers on the three lower faces of one **coarse** cell.
+///
+/// `coarse` runs over `0..(nx>>lod)*(ny>>lod)*(nz>>lod)` — the coarse grid, which
+/// is what makes this kernel a fold rather than a sampling (ADR-045: "the same
+/// kernel under the same signature, only its linear index runs over the coarse
+/// grid and it reads the fine one"). Reads `2^(2*lod)` cells of `fine` per axis
+/// and writes `dst[axis*(n_coarse + 1) + coarse]` for the three axes and nothing
+/// else: pure gather, no atomic, no write into anybody else's cell (ADR-034).
+///
+/// The ghost cell of the coarse lane — index `n_coarse`, the face of the *domain*
+/// (ADR-059) — is never written, exactly as [`face_courant_voxel`] never writes
+/// the fine one. `TODO(exchange-courant)` stays one hole and does not become two:
+/// a fold that wrote it would give the lid a flux no channel accounts for, and
+/// the enthalpy would leave the domain outside the ledger.
+///
+/// # Which sixteen faces
+///
+/// The ones lying **on** the coarse face, that is the lower faces of the fine
+/// voxels along the coarse cell's lower boundary on that axis: for X, the fine
+/// voxels at `x = cx << lod` spanning the whole `2^lod x 2^lod` square in Y and Z.
+/// Gathering the *upper* covering faces instead (`x0 = (cx + 1) << lod`) shifts
+/// the entire coarse flow by one coarse cell along every axis while conserving
+/// exactly, and nothing in the fine buffer's layout marks which end a face belongs
+/// to except the convention of ADR-054.
+///
+/// # The two lane lengths are different `u32`s
+///
+/// The fine buffer is addressed `axis*(n_fine + 1) + fine`, the coarse one
+/// `axis*(n_coarse + 1) + coarse`; both carry the ghost of ADR-059 and the
+/// compiler cannot tell the two lengths apart. Reading the fine buffer with
+/// `axis*n_fine` shifts the Y-axis Courant by one cell and the Z-axis by two, with
+/// conservation exact and the flow plausible either way.
+pub fn coarse_face_courant_voxel(fine: &[Q], dst: &mut [Q], p: &CoarseCourantParams, coarse: u32) {
+    // The dispatch domain, asserted rather than only documented, on the precedent
+    // of `fold_energy`: a host that dispatched this over the fine grid gets a `cz`
+    // past the coarse field, and the addressing below then reads past the end of
+    // `fine`. Here that is a panic; in WGSL it is an out-of-bounds access the
+    // specification allows to land on another binding.
+    debug_assert!(
+        coarse < n_coarse_cells(p),
+        "coarse_face_courant_voxel is dispatched over coarse cells, not fine \
+         voxels: coarse {coarse} is past their count {}",
+        n_coarse_cells(p)
+    );
+
+    let n_fine = p.nx * p.ny * p.nz;
+    let n_coarse = n_coarse_cells(p);
+    let (cx, cy, cz) = coarse_coords(p, coarse);
+
+    // The origin of the covering block, per axis. The inverse of the shift of
+    // SPEC section 1.5, written per axis for the reason `kernels/fold.rs` writes
+    // its own that way: a linear `coarse << (3*lod)` names a stripe along X.
+    let x0 = cx << p.lod;
+    let y0 = cy << p.lod;
+    let z0 = cz << p.lod;
+    let span = 1u32 << p.lod;
+
+    for axis in 0..3u32 {
+        // A flat sum of the `2^(2*lod)` terms and one division at the end, and
+        // that is the form ADR-087 asks for while the scales of `Q` in `FIXED`
+        // are undecided: a pairwise tree is equally legal in `FLOAT` and has to
+        // decompose its divisor as two per level on the first three levels and
+        // **eight** at the root. Halving at every level gives exactly
+        // `mean(C_i)` — the `2^lod` miss this whole record exists to refuse — so
+        // the form whose divisor cannot be decomposed wrongly is the one written
+        // until that decision is made.
+        let mut flux = Q::ZERO;
+
+        // Two loops over the plane of the face and none along the axis itself:
+        // the faces are the ones lying **on** the coarse face, not the
+        // `2^(3*lod)` faces inside the coarse cell.
+        for b in 0..span {
+            for a in 0..span {
+                let (x, y, z) = if axis == 0 {
+                    (x0, y0 + a, z0 + b)
+                } else if axis == 1 {
+                    (x0 + a, y0, z0 + b)
+                } else {
+                    (x0 + a, y0 + b, z0)
+                };
+                // The stride of the **fine** lane, spelled with the parenthesis
+                // `face_courant_voxel` spells it with: the `kernel-lint` grep
+                // reads a multiplication by a voxel count next to an identifier
+                // as lane-index addressing (ADR-056), which an axis is not.
+                let at = axis * (n_fine + 1) + fine_index(p, x, y, z);
+                flux = qadd(flux, fine[at as usize]);
+            }
+        }
+
+        // The one multiplication, on the folded gain. Its exponent is the whole
+        // of the record: `2^(-3*lod)` and not `2^(-2*lod)`.
+        dst[(axis * (n_coarse + 1) + coarse) as usize] = qmul(p.fold_gain, flux);
+    }
+}
+
+/// The three coarse coordinates of a coarse linear index.
+///
+/// Divided by the **coarse** extents, `nx >> lod` and `ny >> lod`. Dividing by the
+/// fine ones is the mirror of the linear-covering mistake and is partly masked on
+/// a cubic grid, which is why every fixture below runs on a grid whose three
+/// coarse extents are pairwise different. The twin of the function of the same
+/// name in `kernels/fold.rs`.
+#[inline(always)]
+fn coarse_coords(p: &CoarseCourantParams, coarse: u32) -> (u32, u32, u32) {
+    let cnx = p.nx >> p.lod;
+    let cny = p.ny >> p.lod;
+
+    let z = coarse / (cnx * cny);
+    let rest = coarse - z * cnx * cny;
+    let y = rest / cnx;
+    let x = rest - y * cnx;
+
+    (x, y, z)
+}
+
+/// How many cells the coarse grid has: the product of the shifted extents.
+#[inline(always)]
+fn n_coarse_cells(p: &CoarseCourantParams) -> u32 {
+    (p.nx >> p.lod) * (p.ny >> p.lod) * (p.nz >> p.lod)
+}
+
+/// The linear index of a **fine** voxel: `x + y*NX + z*NX*NY` (SPEC section 1.1).
+///
+/// This file's own copy, for the reason every kernel keeps one: `kernels/` depends
+/// on `numeric/` and on nothing else. Held to its authority by
+/// `the_fine_indexing_of_the_fold_agrees_with_the_grid`, the twin of the test of
+/// the same shape in `fold.rs` — a transposed copy would be self-consistent inside
+/// this module and invisible to every other test in it.
+#[inline(always)]
+fn fine_index(p: &CoarseCourantParams, x: u32, y: u32, z: u32) -> u32 {
+    x + y * p.nx + z * p.nx * p.ny
+}
+
 /// The sample point is the lower face of the voxel: its own coordinate exactly.
 const FACE: u32 = 0;
 /// The sample point is the centre of the voxel, half a voxel up from its origin.
@@ -418,6 +646,7 @@ mod tests {
     use crate::kernels::advect::{AdvectParams, advect_voxel_32};
     use crate::numeric::{M32, rand, run_key};
     use crate::world::{Boundary, Grid};
+    use proptest::prelude::*;
 
     /// A deliberately non-cubic velocity grid.
     const NX: u32 = 8;
@@ -751,6 +980,506 @@ mod tests {
                     grid.neighbour(idx, *world_face),
                     "cell {idx}, face {face}"
                 );
+            }
+        }
+    }
+
+    // --- the fold onto the coarse faces (ADR-087) ---------------------------
+
+    /// The coarse grid every fold fixture below runs on: three **pairwise
+    /// different** extents, none of them one.
+    ///
+    /// Pairwise different for the reason `kernels/fold.rs` states about its own
+    /// `2 x 3 x 4`: on a cubic grid every bug that swaps two axes is invisible,
+    /// because all three strides are equal, and a decode of the coarse index by
+    /// the fine extents is masked besides.
+    const CNX: u32 = 2;
+    const CNY: u32 = 3;
+    const CNZ: u32 = 4;
+    const N_COARSE: u32 = CNX * CNY * CNZ;
+
+    /// A fine step that is a power of two, and a tick of one second.
+    ///
+    /// Dyadic on purpose: the tests below recover a velocity out of a stored
+    /// Courant number and form the flux back out of it, so every intermediate is
+    /// exact in `f32` and the assertions are about the fold rather than about
+    /// rounding. The eco regime's `100 um` is not a power of two and would put a
+    /// tolerance where an equality belongs.
+    const DX_FINE: f64 = 1.0 / 1024.0;
+    const DT: f64 = 1.0;
+
+    fn fold_params(lod: u32) -> CoarseCourantParams {
+        CoarseCourantParams {
+            nx: CNX << lod,
+            ny: CNY << lod,
+            nz: CNZ << lod,
+            lod,
+            // `2^(-3*lod)`, built by halving so that the exponent is written once
+            // and the value is exact in both modes.
+            fold_gain: Q::from_f64(0.5f64.powi(3 * lod as i32)),
+        }
+    }
+
+    fn n_fine_cells(p: &CoarseCourantParams) -> u32 {
+        p.nx * p.ny * p.nz
+    }
+
+    /// A zeroed fine Courant buffer of the layout `face_courant_voxel` writes:
+    /// three lanes of `n_fine + 1`, the last cell of each being the ghost of
+    /// ADR-059.
+    fn fine_buffer(p: &CoarseCourantParams) -> Vec<Q> {
+        vec![Q::ZERO; (3 * (n_fine_cells(p) + 1)) as usize]
+    }
+
+    fn coarse_buffer(p: &CoarseCourantParams) -> Vec<Q> {
+        vec![Q::ZERO; (3 * (n_coarse_cells(p) + 1)) as usize]
+    }
+
+    fn fine_at(p: &CoarseCourantParams, axis: u32, x: u32, y: u32, z: u32) -> usize {
+        (axis * (n_fine_cells(p) + 1) + fine_index(p, x, y, z)) as usize
+    }
+
+    fn coarse_at(p: &CoarseCourantParams, axis: u32, coarse: u32) -> usize {
+        (axis * (n_coarse_cells(p) + 1) + coarse) as usize
+    }
+
+    /// The linear index of a coarse cell, by the **coarse** extents.
+    fn coarse_index(cx: u32, cy: u32, cz: u32) -> u32 {
+        cx + cy * CNX + cz * CNX * CNY
+    }
+
+    /// Dispatch the fold over the whole coarse grid.
+    fn fold(fine: &[Q], p: &CoarseCourantParams) -> Vec<Q> {
+        let mut dst = coarse_buffer(p);
+        for coarse in 0..n_coarse_cells(p) {
+            coarse_face_courant_voxel(fine, &mut dst, p, coarse);
+        }
+        dst
+    }
+
+    #[test]
+    fn the_coarse_face_courant_is_the_fine_flux_over_the_coarse_area() {
+        // The divisor, and it is computed here from the *definition of the flux*
+        // rather than from `2^(-3*lod)`: a velocity is recovered out of every
+        // stored Courant number, multiplied by the area of a fine face, summed,
+        // divided by the area of the coarse face and turned back into a Courant
+        // number at the coarse step. If the kernel divides by `2^(2*lod)` — the
+        // arithmetic mean of the Courant numbers — this comes out a factor of
+        // `2^lod` too large; if it does not divide at all, `2^(3*lod)`.
+        //
+        // Both `lod = 1` and `lod = 2`, so that a divisor hard-coded to four or to
+        // sixty-four fails on one of them.
+        for lod in [1u32, 2] {
+            let p = fold_params(lod);
+            let mut fine = fine_buffer(&p);
+            // Pairwise distinct dyadic values: the sum of any sixteen of them has
+            // an integer numerator under 2^24 and is exact in `f32`.
+            for (at, value) in fine.iter_mut().enumerate() {
+                *value = Q::from_f64((at as f64 + 1.0) / 4096.0);
+            }
+
+            let dst = fold(&fine, &p);
+            let span = 1u32 << lod;
+            let area_fine = DX_FINE * DX_FINE;
+            let dx_coarse = DX_FINE * f64::from(span);
+            let area_coarse = dx_coarse * dx_coarse;
+
+            for coarse in 0..n_coarse_cells(&p) {
+                let (cx, cy, cz) = coarse_coords(&p, coarse);
+                for axis in 0..3u32 {
+                    let mut flux = 0.0f64;
+                    for b in 0..span {
+                        for a in 0..span {
+                            let (x, y, z) = match axis {
+                                0 => ((cx << lod), (cy << lod) + a, (cz << lod) + b),
+                                1 => ((cx << lod) + a, cy << lod, (cz << lod) + b),
+                                _ => ((cx << lod) + a, (cy << lod) + b, cz << lod),
+                            };
+                            let courant = fine[fine_at(&p, axis, x, y, z)].debug_f64();
+                            // `C = u*dt/dx_fine`, so `u = C*dx_fine/dt`.
+                            let u = courant * DX_FINE / DT;
+                            flux += u * area_fine;
+                        }
+                    }
+                    let u_bar = flux / area_coarse;
+                    let expected = u_bar * DT / dx_coarse;
+
+                    assert_eq!(
+                        dst[coarse_at(&p, axis, coarse)],
+                        Q::from_f64(expected),
+                        "lod {lod}, coarse cell {coarse}, axis {axis}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn a_uniform_flow_has_the_same_speed_on_the_fine_and_the_coarse_faces() {
+        // The one miss both inequalities of SPEC section 4.2 are blind to. Under a
+        // constant `u` every fine face carries `C_fine = u*dt/dx_fine` and the
+        // coarse face has to carry `C_fine/2^lod`, which is the *same physical
+        // speed* at the coarse step. The arithmetic mean of the Courant numbers
+        // gives `C_fine` here — a flow `2^lod` times faster, with both residuals
+        // still exactly zero and the temperature entirely plausible.
+        for lod in [1u32, 2] {
+            let p = fold_params(lod);
+            let c_fine = Q::from_f64(0.125);
+            let mut fine = fine_buffer(&p);
+            for value in fine.iter_mut() {
+                *value = c_fine;
+            }
+
+            let dst = fold(&fine, &p);
+            let expected = Q::from_f64(0.125 / f64::from(1u32 << lod));
+            assert_ne!(
+                expected, c_fine,
+                "the fixture cannot tell the fold of the flux from the mean of the \
+                 Courant numbers"
+            );
+            for coarse in 0..n_coarse_cells(&p) {
+                for axis in 0..3u32 {
+                    assert_eq!(
+                        dst[coarse_at(&p, axis, coarse)],
+                        expected,
+                        "lod {lod}, coarse cell {coarse}, axis {axis}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn shear_across_a_coarse_face_folds_below_either_fine_face() {
+        // The maximum of `|C_i|` and the sum of the magnitudes, both refused by
+        // ADR-087 and both plausible to whoever is thinking about stability. A
+        // maximum over magnitudes has no sign at all, and under a shear it would
+        // carry heat in a direction the flux does not have.
+        let lod = 2u32;
+        let p = fold_params(lod);
+        let span = 1u32 << lod;
+        let c = 0.0625f64;
+
+        // Balanced: half the covering faces one way, half the other. The flux
+        // through the coarse face is zero and so is its Courant number, while
+        // `max|C_i|` is `c` and `sum|C_i|` is sixteen times it.
+        let mut fine = fine_buffer(&p);
+        for coarse in 0..n_coarse_cells(&p) {
+            let (cx, cy, cz) = coarse_coords(&p, coarse);
+            for b in 0..span {
+                for a in 0..span {
+                    let sign = if a < span / 2 { 1.0 } else { -1.0 };
+                    let at = fine_at(&p, 0, cx << lod, (cy << lod) + a, (cz << lod) + b);
+                    fine[at] = Q::from_f64(sign * c);
+                }
+            }
+        }
+        for (coarse, value) in fold(&fine, &p).iter().enumerate().take(N_COARSE as usize) {
+            assert_eq!(
+                *value,
+                Q::ZERO,
+                "coarse cell {coarse} under a balanced shear"
+            );
+        }
+
+        // Asymmetric: twelve one way, four the other. The folded number is
+        // strictly smaller in magnitude than the largest covering face and than
+        // the sum of the magnitudes.
+        let mut fine = fine_buffer(&p);
+        for coarse in 0..n_coarse_cells(&p) {
+            let (cx, cy, cz) = coarse_coords(&p, coarse);
+            for b in 0..span {
+                for a in 0..span {
+                    let sign = if a < 3 { 1.0 } else { -1.0 };
+                    let at = fine_at(&p, 0, cx << lod, (cy << lod) + a, (cz << lod) + b);
+                    fine[at] = Q::from_f64(sign * c);
+                }
+            }
+        }
+        let dst = fold(&fine, &p);
+        for coarse in 0..n_coarse_cells(&p) {
+            let folded = dst[coarse_at(&p, 0, coarse)].debug_f64();
+            assert!(folded > 0.0, "coarse cell {coarse}: the net flux is upward");
+            assert!(
+                folded < c,
+                "coarse cell {coarse}: the fold gave {folded} against a largest \
+                 covering face of {c} — that is the maximum of the magnitudes"
+            );
+            assert!(
+                folded < 16.0 * c,
+                "coarse cell {coarse}: the fold gave the sum of the magnitudes"
+            );
+        }
+    }
+
+    #[test]
+    fn the_covering_faces_are_the_per_axis_shift() {
+        // The trap `kernels/fold.rs` holds in its header, here on faces. The
+        // linear form `fine = (coarse << (3*lod)) + f` partitions the index space
+        // just as disjointly and passes every conservation test; what it credits
+        // is a stripe of sixteen along X instead of the 4x4 square lying on the
+        // coarse face. Only this test separates them, because `world::Grid` knows
+        // nothing about `lod` and there is no authority in `world/` to check
+        // against.
+        let lod = 2u32;
+        let p = fold_params(lod);
+        let span = 1u32 << lod;
+        // An interior coarse cell, so that a stripe running off the marked square
+        // has somewhere to land.
+        let marked = coarse_index(1, 1, 2);
+        let (cx, cy, cz) = coarse_coords(&p, marked);
+
+        for axis in 0..3u32 {
+            let mut fine = fine_buffer(&p);
+            for b in 0..span {
+                for a in 0..span {
+                    let (x, y, z) = match axis {
+                        0 => (cx << lod, (cy << lod) + a, (cz << lod) + b),
+                        1 => ((cx << lod) + a, cy << lod, (cz << lod) + b),
+                        _ => ((cx << lod) + a, (cy << lod) + b, cz << lod),
+                    };
+                    fine[fine_at(&p, axis, x, y, z)] = Q::ONE;
+                }
+            }
+
+            let dst = fold(&fine, &p);
+            let expected = Q::from_f64(16.0 * 0.5f64.powi(3 * lod as i32));
+            for coarse in 0..n_coarse_cells(&p) {
+                let want = if coarse == marked { expected } else { Q::ZERO };
+                assert_eq!(
+                    dst[coarse_at(&p, axis, coarse)],
+                    want,
+                    "axis {axis}: coarse cell {coarse} against the marked cell \
+                     {marked}"
+                );
+                // And nothing at all reached the other two axes.
+                for other in 0..3u32 {
+                    if other != axis {
+                        assert_eq!(
+                            dst[coarse_at(&p, other, coarse)],
+                            Q::ZERO,
+                            "axis {axis} leaked into axis {other} at coarse cell \
+                             {coarse}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn the_courant_fold_writes_only_its_own_coarse_faces() {
+        // ADR-034 in its operational form: three cells per invocation and not one
+        // more, the coarse ghost cells left alone, and a result independent of the
+        // order the coarse grid is walked in.
+        let p = fold_params(2);
+        let mut fine = fine_buffer(&p);
+        for (at, value) in fine.iter_mut().enumerate() {
+            *value = Q::from_f64((at as f64 + 1.0) / 4096.0);
+        }
+
+        let poison = Q::from_f64(-12345.0);
+        let coarse = coarse_index(1, 2, 1);
+        let mut dst = vec![poison; (3 * (n_coarse_cells(&p) + 1)) as usize];
+        coarse_face_courant_voxel(&fine, &mut dst, &p, coarse);
+
+        let touched: Vec<usize> = dst
+            .iter()
+            .enumerate()
+            .filter(|(_, value)| **value != poison)
+            .map(|(at, _)| at)
+            .collect();
+        assert_eq!(
+            touched,
+            vec![
+                coarse_at(&p, 0, coarse),
+                coarse_at(&p, 1, coarse),
+                coarse_at(&p, 2, coarse),
+            ],
+            "the fold wrote cells other than its own three coarse faces"
+        );
+        // The ghost of each lane is the face of the *domain* (ADR-059), and the
+        // fine kernel does not write its own either: `TODO(exchange-courant)` is
+        // one hole and not two.
+        for axis in 0..3u32 {
+            assert_eq!(
+                dst[coarse_at(&p, axis, n_coarse_cells(&p))],
+                poison,
+                "the fold wrote the coarse ghost cell of axis {axis}"
+            );
+        }
+
+        // And the dispatch is independent of the traversal order, bit for bit.
+        let mut forwards = coarse_buffer(&p);
+        for idx in 0..n_coarse_cells(&p) {
+            coarse_face_courant_voxel(&fine, &mut forwards, &p, idx);
+        }
+        let mut backwards = coarse_buffer(&p);
+        for idx in (0..n_coarse_cells(&p)).rev() {
+            coarse_face_courant_voxel(&fine, &mut backwards, &p, idx);
+        }
+        assert_eq!(forwards, backwards);
+    }
+
+    #[test]
+    fn the_coarse_face_divergence_is_the_sum_of_the_fine_ones() {
+        // The identity a point sample onto the coarse face destroys, and the
+        // reason it matters: a conservative scheme under a divergent field does
+        // not lose matter, it **compresses** — heat piles up in an imaginary
+        // convergence zone with both residuals at exactly zero.
+        //
+        // Stated in flux and not in Courant numbers, because that is where the
+        // cancellation lives: the interior fine faces of a coarse block enter the
+        // sum of the fine divergences twice with opposite signs (antisymmetry,
+        // ADR-034), leaving exactly the faces the six coarse ones tile.
+        let lod = 2u32;
+        let p = fold_params(lod);
+        let span = 1u32 << lod;
+        let mut fine = fine_buffer(&p);
+        for (at, value) in fine.iter_mut().enumerate() {
+            // Signed and dyadic, so that the divergence is not zero by symmetry.
+            let sign = if at % 3 == 0 { -1.0 } else { 1.0 };
+            *value = Q::from_f64(sign * ((at % 37) as f64 + 1.0) / 1024.0);
+        }
+        let dst = fold(&fine, &p);
+
+        let dx_coarse = DX_FINE * f64::from(span);
+        // The flux through a face of area `A` at Courant number `C`:
+        // `u*A = (C*dx/dt)*A`.
+        let fine_flux = |c: f64| c * DX_FINE / DT * DX_FINE * DX_FINE;
+        let coarse_flux = |c: f64| c * dx_coarse / DT * dx_coarse * dx_coarse;
+
+        // An interior coarse cell on every axis, so that both its upper coarse
+        // face and the upper fine faces of its block exist inside the domain.
+        let coarse = coarse_index(0, 1, 1);
+        let (cx, cy, cz) = coarse_coords(&p, coarse);
+        assert!(cx + 1 < CNX && cy + 1 < CNY && cz + 1 < CNZ);
+
+        let mut from_coarse = 0.0f64;
+        for axis in 0..3u32 {
+            let up = match axis {
+                0 => coarse + 1,
+                1 => coarse + CNX,
+                _ => coarse + CNX * CNY,
+            };
+            from_coarse += coarse_flux(dst[coarse_at(&p, axis, up)].debug_f64());
+            from_coarse -= coarse_flux(dst[coarse_at(&p, axis, coarse)].debug_f64());
+        }
+
+        let mut from_fine = 0.0f64;
+        for dz in 0..span {
+            for dy in 0..span {
+                for dx in 0..span {
+                    let (x, y, z) = ((cx << lod) + dx, (cy << lod) + dy, (cz << lod) + dz);
+                    for axis in 0..3u32 {
+                        let (ux, uy, uz) = match axis {
+                            0 => (x + 1, y, z),
+                            1 => (x, y + 1, z),
+                            _ => (x, y, z + 1),
+                        };
+                        from_fine += fine_flux(fine[fine_at(&p, axis, ux, uy, uz)].debug_f64());
+                        from_fine -= fine_flux(fine[fine_at(&p, axis, x, y, z)].debug_f64());
+                    }
+                }
+            }
+        }
+
+        // A relative tolerance and not an equality, for the reason the module
+        // header already gives about `div(curl A)`: the identity is exact in the
+        // *coefficients*, and both sides here are assembled out of numbers `Q`
+        // has already rounded.
+        let scale = from_fine.abs().max(from_coarse.abs());
+        assert!(scale > 0.0, "the fixture has no divergence to compare");
+        assert!(
+            (from_coarse - from_fine).abs() <= 1e-5 * scale,
+            "the divergence of the coarse cell is {from_coarse} against \
+             {from_fine} summed over its {} fine cells",
+            span * span * span
+        );
+    }
+
+    #[test]
+    fn the_fine_indexing_of_the_fold_agrees_with_the_grid() {
+        // The file's own copy of SPEC section 1.1, held to the authority that
+        // owns it. Every fixture above places its inputs through this same
+        // function, so a transposed copy would be self-consistent inside the
+        // module and invisible to all of them.
+        let p = fold_params(2);
+        let grid = Grid::new(p.nx, p.ny, p.nz, [Boundary::Periodic; 6]).unwrap();
+        for z in 0..p.nz {
+            for y in 0..p.ny {
+                for x in 0..p.nx {
+                    assert_eq!(fine_index(&p, x, y, z), grid.index(x, y, z));
+                }
+            }
+        }
+    }
+
+    proptest! {
+        /// The stability of the coarse step, asserted directly instead of by
+        /// argument (ADR-087).
+        ///
+        /// `config/validate.rs::speed_bounds` declares `outgoing_faces: 6`, so a
+        /// scenario that loads has `|u| <= dx/(6*dt)` and every fine face carries
+        /// `|C| <= 1/6`. The fold then owes `|C_coarse| <= (1/6)/2^lod = 1/24` and
+        /// `<= 1/12` over the two outgoing faces of an axis — twelve times inside
+        /// the axis-split condition of ADR-036, four times inside the conservative
+        /// six-face reading. This is the property that makes ADR-087's refusal of
+        /// a third `SpeedBound` sound, and a broken fold breaks it before any
+        /// validator sees anything.
+        #[test]
+        fn a_fine_field_within_the_courant_bound_stays_within_it_after_the_fold(
+            draws in proptest::collection::vec(-1.0f64..=1.0, 3 * (8 * 12 * 16 + 1)),
+        ) {
+            const CEILING: f64 = 1.0 / 6.0;
+            let p = fold_params(2);
+            let mut fine = fine_buffer(&p);
+            prop_assert_eq!(fine.len(), draws.len());
+            for (cell, draw) in fine.iter_mut().zip(&draws) {
+                // At the ceiling and just under it: the draw is a fraction of the
+                // validator's own bound.
+                *cell = Q::from_f64(draw * CEILING);
+            }
+
+            let dst = fold(&fine, &p);
+            // One part in a million of slack, and it is `f32` and not physics: the
+            // fold is fifteen `qadd` over already-rounded numbers.
+            let per_face = CEILING / 4.0 * (1.0 + 1e-6);
+            let per_axis = 2.0 * CEILING / 4.0 * (1.0 + 1e-6);
+            for coarse in 0..n_coarse_cells(&p) {
+                let (cx, cy, cz) = coarse_coords(&p, coarse);
+                for axis in 0..3u32 {
+                    let lower = dst[coarse_at(&p, axis, coarse)].debug_f64();
+                    prop_assert!(
+                        lower.abs() <= per_face,
+                        "coarse cell {} axis {} carries {} over {}",
+                        coarse, axis, lower, per_face
+                    );
+
+                    // The upper face of the cell is the lower face of the cell
+                    // above it, and the sum over the two outgoing faces of the
+                    // axis is what `Advect::fold_courant` compares with one.
+                    let (up, exists) = match axis {
+                        0 => (coarse + 1, cx + 1 < CNX),
+                        1 => (coarse + CNX, cy + 1 < CNY),
+                        _ => (coarse + CNX * CNY, cz + 1 < CNZ),
+                    };
+                    let mut outgoing = 0.0f64;
+                    if lower < 0.0 {
+                        outgoing -= lower;
+                    }
+                    if exists {
+                        let upper = dst[coarse_at(&p, axis, up)].debug_f64();
+                        if upper > 0.0 {
+                            outgoing += upper;
+                        }
+                    }
+                    prop_assert!(
+                        outgoing <= per_axis,
+                        "coarse cell {} gives away {} along axis {} against {}",
+                        coarse, outgoing, axis, per_axis
+                    );
+                }
             }
         }
     }

@@ -35,41 +35,43 @@
 //! scenario that edited one `max_conc` would silently change the meaning of old
 //! files".
 //!
-//! # What is not in the file, and why not
+//! # What is not in the file, and it is a criterion rather than a list
 //!
-//! Every `Q`-valued buffer `world::World` owns, and there are seven of them:
-//! light; the velocity `u`; the three potentials of step `b` — the coarse one on
-//! the enthalpy grid, the one interpolated onto the velocity grid and its stirred
-//! copy; the heat capacity `C_cell`; and the temperature. This is the one file in
-//! the crate whose subject *is* the list of what the format leaves out, so the
-//! list is spelled in full rather than abbreviated: nothing ties it to the fields
-//! of `World`, and an enumeration that has quietly gone short reads to the next
-//! author as exhaustive.
+//! **The file carries `World` and nothing else. `World` is what has a reader
+//! standing earlier in the tick than its writer. Therefore the file holds no
+//! buffer of class `Q` at all** (ADR-086). That replaces the enumeration this
+//! header used to print, and the replacement is not tidying: the enumeration ran
+//! short twice, in the two directions an enumeration can. `solar_in` was a field
+//! of `World` that appeared here neither as a write nor as an exception, and
+//! `energy_delta` was written into every file — 884.7 kB of dead interval on the
+//! shipped 48^3 scenario, 16.6 % of it, 16.78 MB at 128^3 — because its writer
+//! (step `h`) and its reader (step `i'`) stand in the same tick. This header had
+//! warned about exactly that: "an enumeration that has quietly gone short reads
+//! to the next author as exhaustive".
+//!
+//! What replaces the enumeration in code, and not only in prose, is
+//! [`World::owned_buffers`]: both halves below destructure it exhaustively, so a
+//! buffer added to the world is a compile error here rather than a buffer missing
+//! from the file. What that cannot do is force the new field to be *written* — a
+//! `_`-binding compiles — and `every_buffer_the_scratch_owns_is_absent_from_the_snapshot`
+//! is the half that walks the other owner.
 //!
 //! `Q` has a private representation and no byte door: the only way out of it is
 //! `debug_f64`, documented as a debug door, whose value is *mode dependent*.
 //! Writing it would make the format silently different under `FIXED`, in a file
-//! that records no numeric mode.
-//!
-//! The last four joined that list without changing the format, and for the reason
-//! already stated for the light: they are derived and are rewritten in full
-//! before anything reads them. `process::Temperature` recomputes `C_cell` and `T`
-//! once a tick out of the enthalpy field and the amounts, which the file *does*
-//! hold, and ADR-044 requires exactly that — the denominator is recomputed and
-//! never cached, so storing it would be storing a cache the record forbids. The
-//! two potentials are the same case one step further out: `VelocityField::apply`
-//! overwrites all three of its outputs from the enthalpy and `C_cell` on every
-//! tick it runs (ADR-069), so none of them is state that a restart could be
-//! missing.
-// TODO(snapshot-q): three things have to be decided together — a
-// mode-independent byte door for `Q`, a numeric-mode field in the snapshot
-// header, and whether the derived fields need storing at all (light is
-// recomputed by its kernel every tick and the velocity field is prescribed, so
-// they may be reconstructible rather than restorable). None of it is in the
-// corpus; ADR-016 promises "restart from any snapshot" and stops there. Until it
-// is decided this file holds the `M`-valued state, which is the state the
-// invariant of ADR-003 is taken over, and the omission is loud here rather than
-// silent in a restarted run.
+//! that records no numeric mode. Since ADR-086 that costs the format nothing,
+//! because nothing of class `Q` is state — and that is what makes ADR-016's
+//! "restart from any snapshot" satisfiable for S0 instead of provably
+//! unsatisfiable.
+// TODO(snapshot-q): two things are left of the three this note used to hold — a
+// mode-independent byte door for `Q` and a numeric-mode field in the header. The
+// third, "whether the derived fields need storing at all", is answered: none of
+// them does, because none of them is state (ADR-086), and this note therefore no
+// longer blocks restart. It becomes blocking again the day a buffer of class `Q`
+// acquires a reader earlier than its writer, and the corpus already names the
+// candidate — the catalysis field, whose expression is folded in one tick and
+// consumed by step `h` of the next (SPEC section 8, `TODO(catalyst-class)` in
+// `kernels/react.rs`).
 //!
 //! # What is deliberately still missing
 //!
@@ -90,7 +92,7 @@ use anyhow::{Context, Result, bail};
 
 use crate::ledger::{Channel, Ledger};
 use crate::numeric::{M32, M64};
-use crate::world::{Direction, Field, LaneRef, World};
+use crate::world::{Direction, Field, LaneRef, OwnedBuffers, OwnedBuffersMut, World};
 
 /// The first eight bytes of a snapshot.
 pub const SNAPSHOT_MAGIC: [u8; 8] = *b"LIMSNAP\x00";
@@ -112,7 +114,21 @@ pub const SNAPSHOT_MAGIC: [u8; 8] = *b"LIMSNAP\x00";
 /// The cost of that today is zero — no `.limsnap` exists in the tree, and the
 /// format is exercised only by round-trip tests — and it stops being zero with
 /// the first saved run, which is the argument for moving the version now.
-pub const SNAPSHOT_FORMAT_VERSION: u32 = 2;
+///
+/// # Version 3: the reaction energy accumulator leaves the file
+///
+/// ADR-086 moves `energy_delta` to `process::Scratch`, because step `h` writes it
+/// and step `i'` reads it inside the same tick: a dead interval in the file, one
+/// `i64` per **fine** voxel — 884 736 B on the shipped 48^3 scenario, 16.6 % of
+/// it, 16.78 MB at 128^3. It stood between the enthalpy lanes and the counter
+/// block, so a version-2 file read at version 3 is not short but **long**, and
+/// the trailing bytes would be poured straight into `credit_matter` and
+/// `credit_energy`: `get_i128` takes sixteen bytes at a time and nothing checks
+/// the length that is left. The file would load with no error, every channel
+/// counter would hold nonsense, and the residual would break on the next tick
+/// naming nobody — in the debug profile only. Hence the version moves, and the
+/// refusal in [`snapshot_read_into`] is what a version-2 file meets instead.
+pub const SNAPSHOT_FORMAT_VERSION: u32 = 3;
 
 /// How many elements are converted to bytes at a time. A whole lane at 256 cubed
 /// is 134 MB; this is 32 kB.
@@ -157,29 +173,35 @@ pub fn snapshot_write<W: Write>(
     put_u32(&mut sink, world.enthalpy_grid().n_voxels())?;
     put_u32(&mut sink, ledger.n_substances())?;
 
+    // Destructured and never field-accessed, so that a tenth buffer of the world
+    // stops this function from compiling rather than from being complete
+    // (ADR-086). The `..` that would make it compile again is the thing to
+    // refuse in review: it is invisible afterwards.
+    let OwnedBuffers {
+        amounts_32,
+        amounts_64,
+        enthalpy,
+    } = world.owned_buffers();
+
     // Substance index order (ADR-056), both buffers of each (ADR-057).
     for s in 0..registry.n_substances() {
         match world.lane_of(s) {
             LaneRef::Narrow(lane) => {
-                let field = world
-                    .amounts_32()
-                    .expect("a narrow lane exists only where the narrow field does");
+                let field =
+                    amounts_32.expect("a narrow lane exists only where the narrow field does");
                 put_m32(&mut sink, field.lane(lane))?;
                 put_m32(&mut sink, field.lane_write(lane))?;
             }
             LaneRef::Wide(lane) => {
-                let field = world
-                    .amounts_64()
-                    .expect("a wide lane exists only where the wide field does");
+                let field = amounts_64.expect("a wide lane exists only where the wide field does");
                 put_m64(&mut sink, field.lane(lane))?;
                 put_m64(&mut sink, field.lane_write(lane))?;
             }
         }
     }
 
-    put_m64(&mut sink, world.enthalpy().lane(0))?;
-    put_m64(&mut sink, world.enthalpy().lane_write(0))?;
-    put_m64(&mut sink, world.energy_delta())?;
+    put_m64(&mut sink, enthalpy.lane(0))?;
+    put_m64(&mut sink, enthalpy.lane_write(0))?;
 
     for channel in Channel::ALL {
         for s in 0..ledger.n_substances() {
@@ -298,25 +320,39 @@ pub fn snapshot_read_into<R: Read>(
         }
     }
 
-    for s in 0..world.registry().n_substances() {
-        match world.lane_of(s) {
+    // The lane of every substance, taken before the exclusive borrow below:
+    // `World::lane_of` is the one door (ADR-056) and it reads the registry, which
+    // `owned_buffers_mut` does not hand out.
+    let lanes: Vec<LaneRef> = (0..world.registry().n_substances())
+        .map(|s| world.lane_of(s))
+        .collect();
+    // Exhaustive, for the reason `snapshot_write` gives: this is the reading half
+    // of the same format, and a buffer that arrived in the world without arriving
+    // in the file has to break both halves and not one (ADR-086).
+    let OwnedBuffersMut {
+        mut amounts_32,
+        mut amounts_64,
+        enthalpy,
+    } = world.owned_buffers_mut();
+
+    for lane_ref in lanes {
+        match lane_ref {
             LaneRef::Narrow(lane) => {
-                let field = world
-                    .amounts_32_mut()
+                let field = amounts_32
+                    .as_deref_mut()
                     .expect("a narrow lane exists only where the narrow field does");
                 get_field_32(&mut src, field, lane)?;
             }
             LaneRef::Wide(lane) => {
-                let field = world
-                    .amounts_64_mut()
+                let field = amounts_64
+                    .as_deref_mut()
                     .expect("a wide lane exists only where the wide field does");
                 get_field_64(&mut src, field, lane)?;
             }
         }
     }
 
-    get_field_64(&mut src, world.enthalpy_mut(), 0)?;
-    get_m64(&mut src, world.energy_delta_mut())?;
+    get_field_64(&mut src, enthalpy, 0)?;
 
     for channel in Channel::ALL {
         for s in 0..ledger.n_substances() {
@@ -570,10 +606,6 @@ mod tests {
         fill_voxels_64(enthalpy, |i| 11 + i as i64);
         enthalpy.swap();
         fill_voxels_64(enthalpy, |i| -22 - i as i64);
-
-        for (i, value) in world.energy_delta_mut().iter_mut().enumerate() {
-            *value = M64::new(333 + i as i64);
-        }
     }
 
     /// Write every voxel of every lane of the back buffer, skipping the ghost.
@@ -630,7 +662,6 @@ mod tests {
         assert_eq!(restored.amounts_32(), source.amounts_32());
         assert_eq!(restored.amounts_64(), source.amounts_64());
         assert_eq!(restored.enthalpy(), source.enthalpy());
-        assert_eq!(restored.energy_delta(), source.energy_delta());
 
         for channel in Channel::ALL {
             for s in 0..2 {
@@ -663,7 +694,13 @@ mod tests {
         const MATTER: i128 = i64::MAX as i128 + 12_345;
         const ENERGY: i128 = i128::MIN / 2;
 
-        assert_eq!(SNAPSHOT_FORMAT_VERSION, 2, "ADR-083 moved the format");
+        assert_eq!(
+            SNAPSHOT_FORMAT_VERSION, 3,
+            "ADR-083 moved the format to 2 and ADR-086 to 3. A version left \
+             behind is the quietest failure this file has: a version-2 file read \
+             at version 3 is not short but long by one `i64` per fine voxel, and \
+             the trailing bytes are poured straight into the counter block"
+        );
 
         let mut source = world();
         fill(&mut source);

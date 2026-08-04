@@ -79,9 +79,10 @@
 //! touches — which is the half of ADR-034 that matters anyway: a process cannot
 //! reach a buffer it did not name.
 //!
-//! # One file here is not a process
+//! # Two files here are not processes
 //!
-//! [`temperature`] folds an operator and has **no** entry in [`ProcessId`], and
+//! [`temperature`] and [`fold`] each fold an operator and neither has an entry
+//! in [`ProcessId`], and
 //! that is deliberate rather than pending. ADR-065 closed the roster at nine and
 //! counted them out one line at a time; a tenth record would be materialised into
 //! every scenario and would move `config_hash` for every config that exists, so
@@ -90,12 +91,24 @@
 //! [`tick::STEP_ORDER`] with no roster entry, which ADR-065 keeps out on purpose
 //! because it belongs to the energy path of the reactions.
 //!
+//! [`fold`] *is* that step, given a home of its own by ADR-086 so that the
+//! process-layer contract of `i'` — its parameters, its dispatch domain and its
+//! [`Invariant`] — lives on the orchestration layer where ADR-034 puts it, and
+//! not inside `kernels/fold.rs`. Its dispatch condition is assigned by a record
+//! rather than by a roster entry: `i'` runs if and only if `h` runs.
+//!
 //! The temperature operator is the same kind of thing seen from the other side.
 //! It has no `enabled`, because a run with the chemistry on and the temperature
 //! off is not a cheaper world but an undefined one — `T` is an input of the Q10
 //! factor of every reaction (ADR-048) — and it has no `every_n_ticks`, because
-//! ADR-044 says the denominator is recomputed rather than cached and ADR-062
-//! prices that at exactly one recomputation per tick.
+//! ADR-044 says the denominator is recomputed rather than cached. What it does
+//! have is **two dispatches per tick**, one at each of its two readers (ADR-086):
+//! step `b` reads the denominator out of the composition before transport and
+//! step `h` reads `T` after it, and one recomputation serves exactly one of them
+//! correctly. That cancels a placement consequence of ADR-079 and narrows the
+//! formulation of ADR-062 from "once per tick" to "at each reader"; both
+//! decisions otherwise stand entire, and ADR-044 stands precisely because two
+//! recomputations are still not a cache.
 //! `the_temperature_operator_is_not_a_roster_process` holds the count at nine.
 
 // Public modules rather than one private module per process re-exported here,
@@ -106,6 +119,7 @@
 pub mod advect;
 pub mod channels;
 pub mod diffuse;
+pub mod fold;
 pub mod light;
 pub mod phase;
 pub mod pressure;
@@ -117,9 +131,10 @@ pub mod velocity;
 
 pub use advect::{Advect, AdvectPhase};
 pub use diffuse::{Diffuse, DiffusePhase, N_MAX, substeps_and_alpha, substeps_for};
+pub use fold::Fold;
 pub use settle::{Grain, Medium, Settle, SettlePhase};
 pub use temperature::Temperature;
-pub use tick::{STEP_ORDER, Scratch, Step, Tick};
+pub use tick::{Footprint, STEP_ORDER, Scratch, ScratchBuffers, ScratchBuffersMut, Step, Tick};
 
 /// A coarse grid is the fine one at the declared `lod` — checked once, for every
 /// caller that hands a kernel both.

@@ -51,7 +51,12 @@
 //! load; ADR-005 and ADR-030 forbid it for a *diffusive* field, and whether the
 //! ban reaches a hyperbolic one is settled nowhere — the same gap
 //! `kernels/settle.rs` records for settling, and this is the second place that
-//! says so.
+//! says so. What **is** settled is the neighbouring case: the *velocity field*
+//! may not skip ticks, because it writes the Courant buffer this step reads in
+//! the same tick, and the refusal stands at load in
+//! `config/derive.rs::check_every_n_ticks` (ADR-074, ADR-086). Advection itself
+//! keeps its schedule: a sparse reader of a buffer whose writer still stands
+//! earlier in every tick it runs is legal.
 //!
 //! No addition of the pressure velocity to the prescribed one. ADR-069 forbids
 //! it outright: the pressure step already spends the full Courant budget of its
@@ -197,12 +202,16 @@ impl Advect {
     /// One cell per face and not two per face: a face is computed once, in the
     /// canonical orientation from the smaller linear index to the larger, and
     /// both voxels sharing it read the same cell (ADR-054).
-    // TODO(courant-buffer-owner): who allocates it is not decided. At 128^3 it
-    // is 3*128^3*4 = 25.2 MB per run, and no record puts it in the per-voxel
-    // budget: ADR-045 prices scratch fields, ADR-067 and ADR-069 both count
-    // their own traffic without it, and `world::World` allocates no such buffer.
-    // It is a length here rather than a `Vec` for exactly that reason — a
-    // process that owned it would be answering a question nobody has asked.
+    ///
+    /// **Who allocates it is decided: `process::Scratch`** (ADR-086), by the
+    /// criterion that a buffer is state if and only if it has a reader standing
+    /// earlier in the tick than its writer. The last stage of step `b` writes
+    /// this one and step `c` reads it, in the same tick, so no snapshot carries
+    /// it. The record also puts its 12 bytes per voxel — `3*4`, plus twelve for
+    /// the three ghost faces of a run — into the per-voxel budget, where nothing
+    /// had counted it: 25.17 MB at 128^3. It stays a *length* here and not a
+    /// `Vec`, because the owner is `Scratch` and a process that held it would be
+    /// a second owner.
     ///
     /// `lane_len` and not `n_voxels`, because the upper face of the last voxel
     /// of an axis is the ghost cell's *lower* face and is read at

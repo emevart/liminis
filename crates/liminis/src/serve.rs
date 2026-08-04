@@ -52,7 +52,7 @@ use anyhow::{Context, Result};
 use liminis_core::config::{self, Config, Derived};
 use liminis_core::ledger::{DomainSums, Ledger, Nu};
 use liminis_core::numeric::{M32, M64, run_key};
-use liminis_core::process::{ProcessId, ROSTER_LEN, RosterEntry, Scratch, Tick};
+use liminis_core::process::{Footprint, ProcessId, ROSTER_LEN, RosterEntry, Scratch, Tick};
 use liminis_core::version::WORLD_FORMAT_VERSION;
 use liminis_core::world::{Boundary, Face, Grid, LaneRef, Registry, World, WorldLayout};
 use liminis_core::worldgen;
@@ -254,11 +254,27 @@ fn build(scenario: &Config, seed: u64) -> Result<Sim> {
     let tick = Tick::new(
         &world,
         &derived,
+        scenario,
         &roster_of(scenario)?,
         scenario.dt,
         scenario.grid.dx,
+        seed,
     )
     .context("folding the tick")?;
+    // The footprint line of the load report, **above** the allocation it
+    // describes and not below it (ADR-086). ADR-086 refuses a memory ceiling in
+    // bytes — every factor of the product is bounded already and the limit itself
+    // would have to be invented — and offers this line instead, so that a run at
+    // `R = 64` reads its gigabyte before it asks the machine for it. Printed
+    // beside the identity, which is the other thing a run has to be able to
+    // quote afterwards.
+    print!(
+        "{}",
+        Footprint::of(&world, &tick)
+            .context("the memory footprint of the run")?
+            .report()
+    );
+
     let scratch = Scratch::new(&world, &tick).context("the scratch buffers")?;
 
     Ok(Sim {

@@ -583,7 +583,11 @@ fn seeded(registry: Registry) -> World {
 
 /// One tick as a host runs it: a diffusion phase over each width, then one
 /// dispatch of the reaction kernel.
-fn run_a_tick(world: &mut World) {
+///
+/// Returns the reaction energy accumulator, because the world no longer holds
+/// one: its writer is step `h` and its reader step `i'`, both inside one tick,
+/// so it belongs to `process::Scratch` (ADR-086).
+fn run_a_tick(world: &mut World) -> Vec<M64> {
     let grid = *world.grid();
     let n_voxels = grid.n_voxels();
 
@@ -637,12 +641,10 @@ fn run_a_tick(world: &mut World) {
     let temperature = vec![Q::from_f64(300.0); world.enthalpy_grid().n_voxels() as usize];
     let catalyst = vec![Q::ZERO; n_voxels as usize];
 
-    // The energy increment goes into a local buffer and is copied into the
-    // world's afterwards: `amount_slices_mut` and `energy_delta_mut` are two
-    // mutable borrows of one `World` and cannot be held at once. That is a gap
-    // in the aggregate rather than in the test — see the note in the summary of
-    // this wave — and it does not touch what is being asserted here, which is
-    // where the *amounts* were read from and written to.
+    // The energy increment goes into a local buffer and stays there. Nothing is
+    // copied around the dispatch any more — the four amount slices come from the
+    // world and the accumulator from its own owner, and the two borrow disjoint
+    // things (ADR-086, closing `TODO(one-borrow-per-dispatch)`).
     let mut energy = vec![M64::ZERO; n_voxels as usize];
     // One cell per voxel per reaction, and this fixture declares one reaction
     // (ADR-080). Nothing here reads it back: what this test asserts is where the
@@ -650,7 +652,7 @@ fn run_a_tick(world: &mut World) {
     let mut xi = vec![M32::ZERO; n_voxels as usize];
     {
         let rx = tables.rx();
-        let (src32, src64, dst32, dst64) = world.amount_slices_mut();
+        let (src32, src64, dst32, dst64) = world.react_slices_mut();
         for idx in 0..n_voxels {
             react_voxel(
                 src32,
@@ -667,8 +669,6 @@ fn run_a_tick(world: &mut World) {
             );
         }
     }
-    world.energy_delta_mut().copy_from_slice(&energy);
-
     // The reaction wrote state `N+1`; promote it, so that the next reader sees
     // one coherent snapshot (ADR-057).
     if let Some(field) = world.amounts_32_mut() {
@@ -677,6 +677,7 @@ fn run_a_tick(world: &mut World) {
     if let Some(field) = world.amounts_64_mut() {
         field.swap();
     }
+    energy
 }
 
 /// ADR-056, and `ACCEPTANCE.md` under the same name — the host-side half of it.
@@ -717,8 +718,9 @@ fn mixed_width_storage_matches_uniform_width_storage() {
     };
     let before: Vec<i64> = (0..N_SUBSTANCES).map(|s| total(&mixed, s)).collect();
 
+    let mut energy = Vec::new();
     for tick in 0..3 {
-        run_a_tick(&mut mixed);
+        energy = run_a_tick(&mut mixed);
         run_a_tick(&mut uniform);
 
         for s in 0..N_SUBSTANCES {
@@ -753,7 +755,7 @@ fn mixed_width_storage_matches_uniform_width_storage() {
     assert_eq!(total(&mixed, C) - before[C as usize], TURNOVERS * n_voxels);
     assert_eq!(total(&mixed, D) - before[D as usize], 0, "D takes no part");
     assert!(
-        mixed.energy_delta().iter().any(|&e| e != M64::ZERO),
+        energy.iter().any(|&e| e != M64::ZERO),
         "the reaction released no energy"
     );
 

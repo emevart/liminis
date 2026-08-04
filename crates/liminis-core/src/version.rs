@@ -942,4 +942,109 @@
 /// repository today only because step `h` is dispatched by nothing; the day it
 /// is, it is the difference between a reaction that warms its cell and one that
 /// cools it.
-pub const WORLD_FORMAT_VERSION: u32 = 20;
+///
+/// # Version 21: the temperature is recomputed twice a tick, and two steps
+/// become dispatchable slots
+///
+/// ADR-086, and all three halves of it are world semantics rather than
+/// housekeeping (ADR-020, ADR-036).
+///
+/// **The temperature operator is dispatched twice per tick instead of once**,
+/// immediately before step `b` and immediately before step `h`, one at each
+/// reader of the denominator. That cancels a placement consequence of ADR-079
+/// — "the recomputation stands immediately before step `h`" — and the placement
+/// of an operator is world semantics of exactly the standing the *order* of the
+/// operators has. Under the old placement step `b` divided the enthalpy of state
+/// `N` by a denominator computed on state `N-1`; under this one it divides by
+/// its own. Nothing measures either: `C_cell` and `T` are class `Q` and enter no
+/// invariant, so both residuals close at exactly zero on both sides of this
+/// line.
+///
+/// **Steps `h` and `i'` become dispatchable slots.** `Tick::advance` has the two
+/// arms and the gate ADR-045 assigned — `i'` runs if and only if `h` runs — plus
+/// the `SOLAR_IN` credit in both profiles and the reduction of the extent slice
+/// in phase 5. Neither runs on any scenario that builds, because step `h` still
+/// wants the mixer that folds a reaction name into `rid` (ADR-027).
+///
+/// The phase-5 reduction is under the same gate as step `h` itself —
+/// `runs(Step::Reactions, tick)` and not "was the operator folded" — because the
+/// reactions keep their schedule (ADR-086) and `xi_out` is never cleared
+/// (ADR-045): on a skipped tick the weaker gate would credit the previous
+/// dispatch's extents into `Xi_r` while no amount moved, and the matter residual
+/// would break naming a reaction that did not run.
+///
+/// The temperature operator is folded **unconditionally** (ADR-089, cancelling
+/// the conditional folding among the consequences of ADR-086): under that
+/// condition it would be folded on no roster that builds at all.
+///
+/// **Buffer ownership moved and no kernel changed.** Nine fields left `World` for
+/// `process::Scratch` by the criterion "a buffer is state if and only if it has
+/// a reader standing earlier in the tick than its writer", and the WGSL form of
+/// every kernel is untouched (ADR-015). The snapshot format moved with them, on
+/// its own counter: `SNAPSHOT_FORMAT_VERSION` 2 -> 3.
+///
+/// # Version 22: step `b` dispatches, and heat is carried by the field that
+/// carries the matter
+///
+/// ADR-087, and this is where the absolute number of that record is settled: the
+/// journal deliberately refuses to name it, because the guard of ADR-020 judges
+/// commits rather than the final tree and a sister record of the same pack edits
+/// the same watched paths — "from 20 to 21" printed in two append-only records at
+/// once would be right in at most one of them. Twenty-two is what this wave
+/// lands as, and the reasons of the pack are these:
+///
+/// **The Courant number of a coarse face is a fold of the flux.**
+/// `kernels/curl.rs` gains `coarse_face_courant_voxel`, the fifth dispatch of
+/// step `b`: the sum of the volumetric fluxes through the `2^(2*lod)` fine faces
+/// tiling a coarse one, divided by the area of the coarse face and taken at the
+/// coarse step — which over the fine Courant buffer is exactly
+/// `2^(-3*lod) * sum(C_i)`. **Add sixteen, divide by sixty-four.** A Courant
+/// number is intensive and adding intensive numbers is the mistake this record
+/// exists to refuse; what averages is the *velocity*, and the mean of the Courant
+/// numbers overstates the coarse flux by exactly `2^lod` because a fine and a
+/// coarse face carry different `dx`. Neither residual can see either miss —
+/// transport conserves at any Courant number — so the divisor is held by named
+/// tests and by nothing else.
+///
+/// **Step `b` dispatches for the first time.** `Derived` gains a velocity
+/// section, so the four keys of ADR-069 reach `Tick::new` through the same door
+/// `DerivedSubstance::diffusivity` goes through, and `refuse_if_blocked` loses
+/// its `VelocityField` arm outright. From this version a scenario that enables
+/// the velocity field is a world where step `c` moves the amounts **and** the
+/// enthalpy on a field step `b` prescribed; under version 21 such a scenario did
+/// not load at all, so no run changes — the set of admissible worlds grew, which
+/// is the opposite of versions 5 and 6 and the same kind of statement.
+///
+/// **`DerivedEnergy` carries `t_min` and `t_max`.** `energy_window` read them off
+/// the enthalpy `[[field]]` record and dropped them; the mobility `L` is
+/// calibrated to `u_conv_max` at exactly that span, and no other section of a
+/// derivation holds a temperature. Reading them out of the `Config` inside
+/// `Tick::new` instead would be a second place deciding which `[[field]]` record
+/// is the enthalpy.
+///
+/// Three things inside it are semantics in their own right, and each would move
+/// this number on its own:
+///
+/// - **the exponent of the fold.** `2^(-3*lod)` and not `2^(-2*lod)`, counted
+///   down to the grid of the faces being added — the fine grid of the amounts —
+///   and not to the velocity grid, which would owe eight against sixteen terms;
+/// - **the placement of the fifth stage.** It stands after the sampling because
+///   it reads its output, and in step `b` rather than in step `c`, which is
+///   applied three times a tick. Placed before the sampling the coarse field lags
+///   by exactly one tick, conserving and plausible and reported by nothing;
+/// - **`every_n_ticks` reaches `VelocityConfig` from the roster.** Hard-coded to
+///   one, the refusal inside `VelocityField::new` becomes dead code and a roster
+///   running step `b` every fifth tick advects for four ticks out of five on a
+///   field nobody updated (ADR-074).
+///
+/// What this version does **not** buy, and ADR-087 says so itself: any run-time
+/// check of the actual field in a release build, on either grid.
+/// `Advect::fold_courant` is bypassed by both kernels and called from nowhere;
+/// the record forbids deleting it here, because deleting it belongs to whichever
+/// record assigns run-time control or refuses it. `speed_bounds` gains no third
+/// `SpeedBound` either, and that is a derivation rather than an omission: at the
+/// validator's `outgoing_faces = 6` the fine faces carry `|C| <= 1/6`, so the
+/// folded ones carry `|C| <= 1/24` and `1/12` over the two outgoing faces of an
+/// axis — twelve times inside the condition, and a coarse check could only fire
+/// where the fine one already had.
+pub const WORLD_FORMAT_VERSION: u32 = 22;

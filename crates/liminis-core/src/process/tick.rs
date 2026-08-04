@@ -78,15 +78,15 @@
 //!
 //! # Which steps run today, and why the rest refuse
 //!
-//! Two of the nine are dispatched: advection and diffusion, each over all three
-//! transported fields of S0 (see above). The other seven are refused by
-//! [`Tick::new`] when a roster enables them, each naming the number or the
-//! operator that is missing, rather than being skipped quietly:
+//! Three of the nine are dispatched: the velocity field, advection and
+//! diffusion — the last two over all three transported fields of S0 (see above).
+//! The other six are refused by [`Tick::new`] when a roster enables them, each
+//! naming the number or the operator that is missing, rather than being skipped
+//! quietly:
 //!
 //! | step | what is missing |
 //! |---|---|
 //! | `a` light | a lit scenario is refused by one lock: energy has no sink. It was two — the second, the width of a channel counter, was answered by ADR-083 |
-//! | `b` velocity | the four keys of ADR-069 reach no folder, and the Courant fold onto the enthalpy faces is `TODO(courant-fold)`; the buffers and the denominator no longer block it |
 //! | `e` pressure | `theta_max` is declared nowhere (`TODO(theta-max)`) |
 //! | `f` settling | `g` and `rho_medium` are named by no document (ADR-067, ADR-069) |
 //! | `h` reactions | the dispatch wiring, and nothing else: both arches of the invariant closed with ADR-080 and ADR-081. `Tick::new` folds no operator for it and no record says where its three buffers live (`TODO(react-dispatch)`) |
@@ -99,40 +99,41 @@
 //! reading ADR-065 already argued for when it rejected a blanket `enabled = true`
 //! ("it enables processes that do not exist yet").
 //!
-//! # The Courant buffers, which nothing fills
+//! # The Courant buffers, and the one hole that is left in them
 //!
-//! Step `c` is dispatched and its Courant numbers are zeros, and that is a hole
-//! rather than a property. [`Advect::fold_courant`](super::Advect::fold_courant)
-//! is the door — and the only place in the project that checks both inequalities
-//! of SPEC section 4.2 against the velocity a face actually has rather than
-//! against the declared `u_conv_max` — and **nothing in this crate calls it**.
-//! [`Scratch`] allocates the two buffers and leaves them at `Q::ZERO`, so every
-//! application of advection today is an application of a zero flux: a dispatched
-//! step that moves nothing, which is a different thing from a skipped step
-//! (ADR-057 wants the parity of a lane to come from the applications the phase
-//! *ran*) and an indistinguishable thing by its result.
+//! Both are filled by step `b` and read by step `c` of the same tick, which is
+//! what puts them in [`Scratch`] (ADR-086). `VelocityField::apply` writes
+//! `face_courant` with its fourth stage and folds `enthalpy_courant` out of it
+//! with its fifth (ADR-087): the flux through the `2^(2*lod)` fine faces tiling a
+//! coarse face, divided by the area of the coarse face — never the sum, and never
+//! the mean, of the Courant numbers, which are intensive. So the tick that
+//! dispatches step `b` is the tick step `c` starts moving both the amounts and
+//! the enthalpy on, and `TODO(velocity-interpolation)` in `process/advect.rs` is
+//! stale for both halves.
 //!
-//! TODO(courant-fold): the two halves of this are no longer the same size, and
-//! saying so is the point. The **fine** half is written: `kernels/curl.rs` has
-//! `face_courant_voxel`, it reads the `64³` velocity onto the `128³` faces in the
-//! layout `kernels/advect.rs` expects, and `VelocityField::apply` dispatches it as
-//! its last stage — so `TODO(velocity-interpolation)` in `process/advect.rs` is
-//! stale for that half and true only for this one. The **coarse** half is not:
-//! `face_courant_voxel` debug-asserts that its target grid is a *refinement* of
-//! the velocity grid (`nx == vnx << ratio_log2`), the enthalpy grid is coarser
-//! than the velocity grid rather than finer (`lod = 2` against `lod = 1`), and
-//! reading a `64³` field onto `32³` faces is an averaging that no record writes.
-//! ADR-045 gives a precedent for fine-to-coarse folding and step `c` over the
-//! enthalpy wants exactly that direction — but for a *flux* and not for a
-//! quantity, and inventing it here would put a second, silent addressing scheme
-//! underneath the only advective speed the Courant condition has.
+//! On a roster that leaves the velocity field off, both buffers stay at `Q::ZERO`
+//! and every application of advection is an application of a zero flux: a
+//! dispatched step that moves nothing, which is a different thing from a skipped
+//! step (ADR-057 wants the parity of a lane to come from the applications the
+//! phase *ran*) and an indistinguishable thing by its result.
 //!
-//! So `Scratch::enthalpy_courant` stays zero even once step `b` runs, and that is
-//! the quiet version this refusal exists to prevent: matter advected by a field
-//! and heat standing still, with both residuals closing exactly — transport
-//! conserves either way — every "alone" test green, the temperature field
-//! plausible, and the symptom a plume that carries substance without the heat that
-//! raised it. The honest form is a refusal and not a half-dispatch.
+//! TODO(exchange-courant): neither buffer's **ghost** cell is written by anybody.
+//! The last element of each lane is the Courant number of the face of the
+//! *domain* (ADR-059), and what belongs in it is undecided; both kernels
+//! deliberately stop one short, so this is one hole and not two.
+//!
+//! What this costs, said out loud because ADR-087 requires it to be: in a release
+//! build there is now **no run-time check of the actual field on either grid**.
+//! [`Advect::fold_courant`](super::Advect::fold_courant) — the only place in the
+//! project that checks both inequalities of SPEC section 4.2 against the velocity
+//! a face actually has rather than against the declared `u_conv_max` — is bypassed
+//! by both kernels and is called from nowhere in this crate. ADR-087 neither
+//! deletes it nor calls it: deleting it belongs to the record that assigns
+//! run-time control or refuses it outright. Debug keeps
+//! `VelocityField::within_speed_bound` on the field and `within_coarse_courant` on
+//! the folded buffer, and the second of those names its own blind spot — a sum
+//! with no divisor trips it only above `dx/(32*dt)`, 18.75% of the validator's
+//! ceiling.
 //!
 //! # Where the temperature is recomputed, and why it is a decision
 //!
@@ -199,13 +200,14 @@
 use anyhow::{Context, Result, bail};
 
 use super::{
-    AdvectPhase, DiffusePhase, ProcessId, ROSTER_LEN, RosterEntry, advect, diffuse, light,
-    pressure, react, settle, velocity,
+    AdvectPhase, DiffusePhase, Fold, ProcessId, ROSTER_LEN, RosterEntry, Temperature, advect,
+    diffuse, fold, light, pressure, react, settle, velocity,
 };
-use crate::config::Derived;
+use crate::config::{Config, Derived};
 use crate::ledger::{DomainSums, Ledger, Nu};
-use crate::numeric::Q;
-use crate::world::{LaneRef, Width, World};
+use crate::numeric::{M32, M64, Q};
+use crate::process::react::React;
+use crate::world::{LaneRef, OwnedBuffersMut, Width, World};
 
 /// One factor of the Lie-Trotter splitting, in the order of SPEC section 8.
 ///
@@ -251,6 +253,23 @@ pub const STEP_ORDER: [Step; 9] = [
     Step::EnergyFold,
     Step::ExternalChannels,
 ];
+
+/// The steps the temperature is recomputed immediately before, one at each of
+/// the denominator's two readers (ADR-086).
+///
+/// A named constant for the reason [`STEP_ORDER`] is one, and here the reason
+/// used to be sharper: while step `b` did not dispatch, the head pass had no
+/// behavioural witness at all — both recomputations write the same two buffers,
+/// so two passes over an unchanged state are bit-identical to one, and deleting
+/// the head pass left the whole suite green. Since ADR-087 the consumer standing
+/// between them dispatches, and `the_denominator_is_fresh_for_step_b_and_for_step_h`
+/// is a claim about a step that runs. The array stays: `Tick::advance` consults
+/// it rather than matching on the two steps inline, so that "how many
+/// recomputations there are and where" is a datum instead of a shape of code.
+///
+/// No tenth letter appears in `STEP_ORDER` for them: the temperature is a step of
+/// the tick and not a letter of the spec (ADR-079).
+const TEMPERATURE_SLOTS: [Step; 2] = [Step::Velocity, Step::Reactions];
 
 impl Step {
     /// The letter SPEC section 8 prints for this step.
@@ -363,26 +382,89 @@ pub struct Tick {
     /// By substance and not by lane, and reached from a lane through
     /// `substance_of_lane_*` above (ADR-056).
     chemical_weight: Vec<i64>,
+    /// Step `b`, folded when the roster enables it (ADR-069, ADR-087).
+    ///
+    /// `None` on every roster that leaves the velocity field off, and `Some` on
+    /// every roster that turns it on: the two locks of the old refusal are gone —
+    /// `Derived::velocity` carries the four keys of ADR-069 through, and the fold
+    /// onto the faces of the enthalpy grid is the fifth stage of the operator.
+    velocity: Option<velocity::VelocityField>,
     /// Voxels of the fine grid, for the shape of the Courant buffer.
     n_voxels: u32,
     /// Cells of the enthalpy grid, for the shape of the other one.
     n_enthalpy_cells: u32,
+    /// Step `h`, folded when the roster enables it — which it cannot, today.
+    ///
+    /// `refuse_if_blocked` returns an error for an enabled `reactions` entry
+    /// before this line is reached, and it names the one lock that is left: the
+    /// mixer that folds a reaction's **name** into `Undeclared::reaction_id`.
+    /// ADR-027 fixes "from the name and never from the position" and names no
+    /// mixer, and `TODO(reaction-id)` in `kernels/react.rs` records that choosing
+    /// one is world semantics of the same standing as `numeric/rng.rs`. So this
+    /// is `None` on every roster that reaches [`Tick::new`], and the `Some` arm
+    /// arrives with the mixer rather than with the buffers — which is what
+    /// ADR-086 moved and ADR-088 will unlock.
+    react: Option<React>,
+    /// Step `i'`, folded on every run.
+    ///
+    /// Unconditional because [`Fold::new`] refuses nothing a loaded scenario can
+    /// present, and because `i_surface` has to be `Q::ZERO` exactly when the
+    /// light process is off — a fact of the *fold* and not of the roster, which
+    /// is why it is decided once here rather than at each dispatch.
+    fold: Fold,
+    /// The temperature operator, folded on every run and dispatched twice a tick.
+    temperature: Temperature,
+    /// How many reactions the **scenario** declares, whatever the roster says.
+    ///
+    /// The second factor of the extent slice's length (ADR-080). Off the config
+    /// and never off the folded `React`: a buffer whose length depended on a
+    /// process being enabled would move every address in the world when it was
+    /// switched off (ADR-086).
+    n_reactions: u32,
+    /// How many of those reactions name a catalyst.
+    catalyst_columns: u32,
 }
 
-/// The buffers a tick needs and the world does not own.
+/// How many components the prescribed velocity field and its potentials hold per
+/// cell.
+///
+/// Three, because all four are vector fields on a coarse grid: ADR-069 prices `A`
+/// and `u` at `3 * 64^3 * 4 B` each.
+// TODO(velocity-layout): two numbers about this field are undecided and neither
+// can be guessed at from the price. ADR-069 fixes the volume and the grid and
+// leaves open (a) whether the storage is component-major or voxel-major, and
+// (b) whether `u` is three components per cell or one per face. Until they are
+// decided the buffers here are flat and long enough, and nothing indexes into any
+// of the four: an accessor that picked an order would settle (a) in code.
+const VELOCITY_COMPONENTS: u32 = 3;
+
+/// The buffers a tick needs and the world does not own — which, since ADR-086, is
+/// every buffer whose writer stands **earlier in the tick than its reader**.
 ///
 /// Separate from [`World`] because they hold nothing between ticks: every one of
 /// them is written before it is read inside a single [`Tick::advance`]. Separate
 /// from [`Tick`] because `Tick` is shared and these are `&mut`.
+///
+/// That sentence used to be a description of this type and is now the criterion
+/// that assigns every buffer of the project to one of the two owners. Its
+/// operational form is `poisoning_the_scratch_before_a_tick_changes_no_buffer_of_the_world`:
+/// fill everything here with rubbish before a tick and the world after the tick
+/// must match a run whose scratch was zeroed, bit for bit. A buffer classified
+/// here that in truth carries information across a tick boundary fails there and
+/// nowhere else.
+///
+/// **Everything here is allocated on every run**, whatever the roster says, on
+/// the precedent already standing for the Courant buffer ("Three per voxel
+/// whether or not advection runs"): a buffer whose *length* depended on a process
+/// being enabled would move every address in the world when it was switched off,
+/// and `a_disabled_process_leaves_every_buffer_bit_for_bit` would compare buffers
+/// of different lengths.
 #[derive(Clone, Debug)]
 pub struct Scratch {
     /// Three Courant numbers per **fine** voxel, in the layout
-    /// `kernels/advect.rs` reads.
-    ///
-    /// Owned here rather than in `World`, and that is not settled:
-    /// `TODO(courant-buffer-owner)` in `process/advect.rs` prices it at 25.2 MB
-    /// for a 128-cubed run and no record puts it in the per-voxel budget. Here
-    /// it is at least visible — a scratch buffer of one tick, allocated once.
+    /// `kernels/advect.rs` reads. Written by the last stage of step `b`, read by
+    /// step `c` of the same tick — which is what puts it here (ADR-086, closing
+    /// `TODO(courant-buffer-owner)`).
     face_courant: Vec<Q>,
     /// Three more per cell of the **enthalpy** grid, for the same step over the
     /// field of ADR-062.
@@ -393,11 +475,331 @@ pub struct Scratch {
     /// it is a sixty-fourth of the buffer above, which is why it is allocated
     /// rather than argued over.
     enthalpy_courant: Vec<Q>,
+    /// The reaction energy accumulator: fine grid, `i64`, one buffer. Step `h`
+    /// writes it, step `i'` reads it, and the two stand in one tick.
+    ///
+    /// Never cleared, here or anywhere: the reaction kernel **overwrites** its
+    /// cell rather than adding to it, which is the whole of ADR-045's argument
+    /// against a clearing pass. That is also why steps `h` and `i'` are
+    /// dispatched together or not at all — a fold over a stale accumulator
+    /// credits last tick's energy again, and a stale number is indistinguishable
+    /// from a fresh one.
+    energy_delta: Vec<M64>,
+    /// The extent of every reaction in every fine voxel: `n_voxels *
+    /// n_reactions` cells of `M32`, one block per voxel (ADR-080). Step `h`
+    /// writes it and the LEDGER phase reduces it.
+    ///
+    /// Allocated in **both** profiles although only the debug build reduces it,
+    /// and ADR-086 keeps it that way on purpose: gating it on
+    /// `cfg(debug_assertions)` would give the host two signatures and two
+    /// implementations — the class of divergence ADR-015 made the CPU version the
+    /// eternal reference against — and would make the loader's footprint report
+    /// print bytes the release build does not allocate.
+    xi_out: Vec<M32>,
+    /// What the fold of step `i'` owes `SOLAR_IN`, one `M64` per **coarse** cell
+    /// (ADR-075). The reader is the host reduction standing immediately behind
+    /// the writer, on the same step.
+    solar: Vec<M64>,
+    /// The light field: fine grid, one buffer, what **leaves** a voxel through
+    /// its bottom face (`kernels/light.rs`). Step `a` writes it and step `i'`
+    /// reads it, in one tick — which is why `every_n_ticks > 1` on the light
+    /// process is a load error (`config/derive.rs`): a schedule that separated
+    /// the two would turn this into inter-tick state of class `Q` that no
+    /// snapshot carries.
+    light: Vec<Q>,
+    /// The prescribed velocity field `u`, on the velocity grid.
+    velocity: Vec<Q>,
+    /// The potential `u` is the curl of, interpolated onto the velocity grid.
+    velocity_potential: Vec<Q>,
+    /// The wide difference's output, on the **enthalpy** grid: the only one of
+    /// the four sized by the coarser of the two coarse grids (ADR-069).
+    velocity_potential_coarse: Vec<Q>,
+    /// The noised copy of the interpolated potential. A separate buffer and not
+    /// an addition in place: `stir_potential` reads every octave's contribution
+    /// off the source, and a kernel may not read the buffer it writes (ADR-034).
+    velocity_potential_stirred: Vec<Q>,
+    /// `sum(n_i * c_p_i)` of a coarse cell, J/K: enthalpy grid, class `Q`
+    /// (ADR-044, ADR-062).
+    ///
+    /// Here and not in `World`, and that is the load-bearing half of ADR-086.
+    /// Under one recomputation a tick this buffer had a reader — step `b` —
+    /// standing earlier than its writer, so it was state a snapshot had to carry
+    /// and class `Q` has no byte door: the criterion came out false on the day it
+    /// was written. Recomputing at **each** reader removes the reader, not the
+    /// rule. ADR-044 stands entire, and precisely because there is still no
+    /// cache: two recomputations are two computations from state.
+    heat_capacity: Vec<Q>,
+    /// `T_ref + H/C_cell`, kelvin: enthalpy grid, class `Q`. See
+    /// [`Scratch::heat_capacity`].
+    temperature: Vec<Q>,
     /// The left-hand side of the invariant before the tick.
     before: DomainSums,
     /// And after it. Two accumulators reused across ticks rather than allocated
     /// twice a tick (`ledger/mod.rs`).
     after: DomainSums,
+}
+
+/// Every buffer [`Scratch`] owns, shared, as one value — the twin of
+/// [`crate::world::OwnedBuffers`] on the other owner.
+///
+/// **The type is the enumeration**, and it exists for the reason that type does:
+/// a thirteenth buffer added to `Scratch` and forgotten by a walker is `E0027`
+/// here rather than a buffer quietly missing from a bit-for-bit comparison. That
+/// is not a hypothetical shape of defect — it is the one ADR-086 was written
+/// against (`solar_in`, the twelfth buffer of a guard array declared eleven
+/// long), and the outside walkers of this owner are exactly the comparisons on
+/// which `same_seed_and_config_give_byte_identical_state` and
+/// `a_disabled_process_leaves_every_buffer_bit_for_bit` rest.
+///
+/// The two `DomainSums` are **not** here and their absence is the one judgement
+/// this type makes: they are accumulators of the debug LEDGER phase, refilled
+/// from the world before every use, and never a buffer of the run. Everything
+/// else is.
+#[derive(Debug)]
+pub struct ScratchBuffers<'a> {
+    /// Three Courant numbers per fine voxel. See [`Scratch::face_courant`].
+    pub face_courant: &'a [Q],
+    /// Three per cell of the enthalpy grid.
+    pub enthalpy_courant: &'a [Q],
+    /// The reaction energy accumulator.
+    pub energy_delta: &'a [M64],
+    /// The extent of every reaction in every voxel.
+    pub xi_out: &'a [M32],
+    /// What the fold owes `SOLAR_IN`.
+    pub solar: &'a [M64],
+    /// The light field.
+    pub light: &'a [Q],
+    /// The prescribed velocity field.
+    pub velocity: &'a [Q],
+    /// The potential it is the curl of.
+    pub velocity_potential: &'a [Q],
+    /// The wide difference's output on the enthalpy grid.
+    pub velocity_potential_coarse: &'a [Q],
+    /// The noised copy of the interpolated potential.
+    pub velocity_potential_stirred: &'a [Q],
+    /// The denominator of `T = T_ref + H/C_cell`.
+    pub heat_capacity: &'a [Q],
+    /// The temperature.
+    pub temperature: &'a [Q],
+}
+
+/// Every buffer [`Scratch`] owns, mutably. See [`ScratchBuffers`].
+///
+/// The instrument of the poison and of the guards that perturb one buffer at a
+/// time, and not a door around the dispatch accessors: an operator takes the
+/// slices its kernel is written over — `react_slices_mut` and its neighbours —
+/// so that a process cannot reach a buffer it did not name (ADR-034).
+#[derive(Debug)]
+pub struct ScratchBuffersMut<'a> {
+    /// See [`ScratchBuffers::face_courant`].
+    pub face_courant: &'a mut [Q],
+    /// See [`ScratchBuffers::enthalpy_courant`].
+    pub enthalpy_courant: &'a mut [Q],
+    /// See [`ScratchBuffers::energy_delta`].
+    pub energy_delta: &'a mut [M64],
+    /// See [`ScratchBuffers::xi_out`].
+    pub xi_out: &'a mut [M32],
+    /// See [`ScratchBuffers::solar`].
+    pub solar: &'a mut [M64],
+    /// See [`ScratchBuffers::light`].
+    pub light: &'a mut [Q],
+    /// See [`ScratchBuffers::velocity`].
+    pub velocity: &'a mut [Q],
+    /// See [`ScratchBuffers::velocity_potential`].
+    pub velocity_potential: &'a mut [Q],
+    /// See [`ScratchBuffers::velocity_potential_coarse`].
+    pub velocity_potential_coarse: &'a mut [Q],
+    /// See [`ScratchBuffers::velocity_potential_stirred`].
+    pub velocity_potential_stirred: &'a mut [Q],
+    /// See [`ScratchBuffers::heat_capacity`].
+    pub heat_capacity: &'a mut [Q],
+    /// See [`ScratchBuffers::temperature`].
+    pub temperature: &'a mut [Q],
+}
+
+/// How long every buffer of a [`Scratch`] is, before one of them is allocated.
+///
+/// Split out of [`Scratch::new`] for the footprint line of the load report
+/// (ADR-086): a run at `R = 64` has to be able to read its gigabyte **before** it
+/// asks for it, and a projection computed beside the allocation rather than out
+/// of it is the only kind that can be printed first. The duplication that buys is
+/// paid for by `load_reports_the_per_voxel_footprint_of_the_world_and_the_scratch`,
+/// which holds the projection against what an allocated `Scratch` actually
+/// carries, buffer by buffer through [`ScratchBuffers`].
+struct ScratchShape {
+    n_voxels: usize,
+    n_coarse: usize,
+    n_velocity: usize,
+    n_coarse_potential: usize,
+    xi_cells: usize,
+}
+
+impl ScratchShape {
+    /// The lengths a `Scratch` for `world` under `tick` would have.
+    fn of(world: &World, tick: &Tick) -> Result<ScratchShape> {
+        let n_voxels = world.grid().n_voxels() as usize;
+        let n_coarse = world.enthalpy_grid().n_voxels() as usize;
+        let n_velocity = world
+            .velocity_grid()
+            .n_voxels()
+            .checked_mul(VELOCITY_COMPONENTS)
+            .with_context(|| {
+                format!(
+                    "a velocity field of {VELOCITY_COMPONENTS} components over \
+                     {} cells is longer than a u32 index can address",
+                    world.velocity_grid().n_voxels()
+                )
+            })? as usize;
+        // Off the **enthalpy** grid and never off the velocity one: the wide
+        // difference of ADR-069 is taken where the temperature lives. Sized off
+        // the other coarse grid this is eight times too long at the eco layout —
+        // a loud panic in `VelocityField::apply` — and on a layout whose two lods
+        // coincide it is exactly the right length for the wrong grid.
+        let n_coarse_potential = world
+            .enthalpy_grid()
+            .n_voxels()
+            .checked_mul(VELOCITY_COMPONENTS)
+            .with_context(|| {
+                format!(
+                    "a coarse velocity potential of {VELOCITY_COMPONENTS} \
+                     components over {n_coarse} enthalpy cells is longer than a \
+                     u32 index can address"
+                )
+            })? as usize;
+        // `n_voxels * n_reactions`, and the second factor comes from the
+        // *scenario* rather than from the roster: a length that depended on
+        // whether step `h` was enabled would change when it was switched off
+        // (ADR-080, ADR-086).
+        let xi_cells = n_voxels
+            .checked_mul(tick.n_reactions as usize)
+            .with_context(|| {
+                format!(
+                    "an extent slice of {n_voxels} voxels times {} reactions is \
+                     longer than an index can address",
+                    tick.n_reactions
+                )
+            })?;
+
+        Ok(ScratchShape {
+            n_voxels,
+            n_coarse,
+            n_velocity,
+            n_coarse_potential,
+            xi_cells,
+        })
+    }
+
+    /// How many bytes those lengths come to.
+    ///
+    /// Class by class and never `size_of::<Scratch>()`: the struct is twelve
+    /// `Vec` headers and the bytes are behind them. `Q` is four bytes and `M64`
+    /// eight by the same declarations `numeric/` makes, so the two are asked
+    /// rather than written down.
+    fn bytes(&self) -> usize {
+        let q = size_of::<Q>();
+        let m32 = size_of::<M32>();
+        let m64 = size_of::<M64>();
+        3 * (self.n_voxels + 1) * q
+            + 3 * (self.n_coarse + 1) * q
+            + self.n_voxels * m64
+            + self.xi_cells * m32
+            + self.n_coarse * m64
+            + self.n_voxels * q
+            + 2 * self.n_velocity * q
+            + self.n_coarse_potential * q
+            + self.n_velocity * q
+            + 2 * self.n_coarse * q
+    }
+}
+
+/// What a run is about to occupy, in both owners, before the second of them is
+/// allocated.
+///
+/// The loader's answer to a memory ceiling, and ADR-086 chose it over one on
+/// purpose: every factor of the product is bounded already — `S_MAX = 32`,
+/// `R_MAX = 64`, `N_MAX = 64` — so a byte limit would have to come out of a
+/// number the corpus does not name, and as a scenario key it would be raised to
+/// whatever the scenario liked. What is left that helps is the number itself,
+/// printed before the allocation: at `R = 64` and 128 cubed the scratch alone is
+/// 597.95 MB.
+///
+/// **Per fine voxel and in bytes, both.** The per-voxel figure is what the
+/// budget of SPEC section 1.2 is written in and therefore what a divergence from
+/// it is visible in; the total is what the machine has to find.
+#[derive(Clone, Copy, Debug)]
+pub struct Footprint {
+    /// What [`World`] holds: class `M` and nothing else since ADR-086.
+    world: usize,
+    /// What a [`Scratch`] for it would hold — a projection, not a measurement.
+    scratch: usize,
+    /// Fine voxels, the denominator of every per-voxel figure below.
+    n_voxels: usize,
+    /// The second factor of the extent slice, printed because it is the one
+    /// input a scenario can move by a factor of sixty-four (ADR-080).
+    n_reactions: u32,
+}
+
+impl Footprint {
+    /// Measure the world and project the scratch.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if a buffer of the scratch would be longer than an index
+    /// can address — the same failure [`Scratch::new`] reports, arriving one line
+    /// earlier.
+    pub fn of(world: &World, tick: &Tick) -> Result<Footprint> {
+        Ok(Footprint {
+            world: world.footprint_bytes(),
+            scratch: ScratchShape::of(world, tick)?.bytes(),
+            n_voxels: world.grid().n_voxels() as usize,
+            n_reactions: tick.n_reactions,
+        })
+    }
+
+    /// What the world's buffers occupy, in bytes.
+    #[must_use]
+    pub fn world_bytes(&self) -> usize {
+        self.world
+    }
+
+    /// What the scratch buffers will occupy, in bytes.
+    #[must_use]
+    pub fn scratch_bytes(&self) -> usize {
+        self.scratch
+    }
+
+    /// The line the loader prints.
+    ///
+    /// Three per-voxel figures and their totals, because the classification of
+    /// ADR-086 is exactly what moves bytes between the first two: a buffer that
+    /// drifts back into `World` shows up here as a snapshot that grew.
+    ///
+    /// **Two spaces of numbers meet on this line and only one of them is
+    /// printed.** The per-voxel budget of the corpus — 230 B of ADR-062, 250 B
+    /// with the three scratch buffers ADR-086 adds, against the 226 B SPEC
+    /// section 1.2 prints and cannot be edited (ADR-032) — is a *plan*: it counts
+    /// guild and trait fields that exist in no line of code yet. What this line
+    /// prints is what this scenario allocates, at its own `R` and its own
+    /// substance widths. Naming the difference in the line itself is cheaper than
+    /// a reader deciding the budget moved.
+    #[must_use]
+    pub fn report(&self) -> String {
+        let per_voxel = |bytes: usize| bytes as f64 / self.n_voxels as f64;
+        let total = self.world + self.scratch;
+        format!(
+            "memory: world {:.1} B/voxel ({:.2} MB), scratch {:.1} B/voxel \
+             ({:.2} MB), together {:.1} B/voxel ({:.2} MB) over {} voxels at \
+             R = {} — what this scenario allocates, not the per-voxel budget\n",
+            per_voxel(self.world),
+            self.world as f64 / 1.0e6,
+            per_voxel(self.scratch),
+            self.scratch as f64 / 1.0e6,
+            per_voxel(total),
+            total as f64 / 1.0e6,
+            self.n_voxels,
+            self.n_reactions,
+        )
+    }
 }
 
 impl Scratch {
@@ -406,21 +808,309 @@ impl Scratch {
     /// # Errors
     ///
     /// Returns an error if the domain sums cannot be built — a world with no
-    /// substances, which closes against anything (ADR-003).
+    /// substances, which closes against anything (ADR-003) — or if a buffer would
+    /// be longer than a `u32` index can address.
     pub fn new(world: &World, tick: &Tick) -> Result<Scratch> {
-        let n_voxels = world.grid().n_voxels() as usize;
+        let ScratchShape {
+            n_voxels,
+            n_coarse,
+            n_velocity,
+            n_coarse_potential,
+            xi_cells,
+        } = ScratchShape::of(world, tick)?;
+
         Ok(Scratch {
-            // Three per voxel whether or not advection runs. A buffer sized by
-            // the roster would change length when a process is switched off, and
-            // `a_disabled_process_leaves_every_buffer_bit_for_bit` compares
-            // buffers.
             // `lane_len` per axis and not `n_voxels`: the ghost cell owns the
             // Courant number of the face of the domain (ADR-059).
             face_courant: vec![Q::ZERO; 3 * (n_voxels + 1)],
-            enthalpy_courant: vec![Q::ZERO; 3 * (world.enthalpy_grid().n_voxels() as usize + 1)],
+            enthalpy_courant: vec![Q::ZERO; 3 * (n_coarse + 1)],
+            energy_delta: vec![M64::ZERO; n_voxels],
+            xi_out: vec![M32::ZERO; xi_cells],
+            // On the coarse grid, because it is the fold's output and the fold is
+            // dispatched per coarse cell. Sized off the enthalpy grid rather than
+            // off the fine one: at `lod = 2` and 128 cubed the difference is
+            // 262 kB against 16.8 MB (ADR-075).
+            solar: vec![M64::ZERO; n_coarse],
+            light: vec![Q::ZERO; n_voxels],
+            velocity: vec![Q::ZERO; n_velocity],
+            velocity_potential: vec![Q::ZERO; n_velocity],
+            velocity_potential_coarse: vec![Q::ZERO; n_coarse_potential],
+            velocity_potential_stirred: vec![Q::ZERO; n_velocity],
+            // Zeroed because a `Vec` has to start somewhere, and not maintained
+            // at zero afterwards: `Temperature::apply` rewrites both in full
+            // before either is read, twice a tick. A zero heat capacity is not a
+            // neutral initial value — it is the one value the kernel refuses to
+            // divide by — so "the operator has not run yet" and "this cell has no
+            // temperature" are the same bits, and under ADR-079 both read
+            // `T = T_ref`. That is why the operator runs before each of its
+            // consumers rather than after, and not why the buffer starts at zero.
+            heat_capacity: vec![Q::ZERO; n_coarse],
+            temperature: vec![Q::ZERO; n_coarse],
             before: DomainSums::new(tick.n_substances).context("the domain sums before a tick")?,
             after: DomainSums::new(tick.n_substances).context("the domain sums after a tick")?,
         })
+    }
+
+    /// The four slices of `React::apply` this owner holds: `(energy_delta,
+    /// xi_out, temperature, catalyst)`.
+    ///
+    /// The other four — the two source and the two destination amount buffers —
+    /// come from `World::react_slices_mut`, and the two owners borrow disjointly.
+    /// That is how `TODO(one-borrow-per-dispatch)` was closed: by moving an owner
+    /// rather than by widening an accessor, so no host copies the accumulator
+    /// around the dispatch and no host can forget to copy it back (ADR-086).
+    ///
+    /// The fourth slice is empty and its length is not a placeholder for a
+    /// decision that was made.
+    // TODO(catalyst-class): the catalysis field has neither a class nor a column
+    // count. `TODO(catalyst-class)` in `kernels/react.rs` has not chosen between
+    // `Q` and an `M` with its own `conc_per_unit` — 4 or 8 bytes per fine voxel
+    // per column, 8.39-16.78 MB at 128^3 — and ADR-063 legalises two spellings of
+    // `catalyst_form` that one column does not cover. `React::new` refuses a
+    // non-empty `catalyst` outright, so an empty slice here is what every
+    // buildable scenario wants; a buffer allocated to a guessed width would be a
+    // decision taken by accident. By the criterion above the field is future
+    // `World` state, which is when `TODO(snapshot-q)` becomes blocking again.
+    #[inline]
+    pub fn react_slices_mut(&mut self) -> (&mut [M64], &mut [M32], &[Q], &[Q]) {
+        (
+            &mut self.energy_delta,
+            &mut self.xi_out,
+            &self.temperature,
+            &[],
+        )
+    }
+
+    /// The three slices of the fold of step `i'` this owner holds:
+    /// `(energy_delta, light, solar)`.
+    ///
+    /// The remaining pair — state `N` of the enthalpy and the receiver of state
+    /// `N+1` — comes out of `world.enthalpy_mut().pair_mut()`, and has to come
+    /// from one borrow there or the kernel would read the buffer it writes.
+    #[inline]
+    pub fn fold_slices_mut(&mut self) -> (&[M64], &[Q], &mut [M64]) {
+        (&self.energy_delta, &self.light, &mut self.solar)
+    }
+
+    /// The two outputs of `Temperature::apply`: `(heat_capacity, temperature)`.
+    ///
+    /// The three inputs are the world's — `World::amount_slices()` and
+    /// `World::enthalpy().lane(0)` — so this accessor is two slices and not five.
+    /// `lane(0)` and never `read()` on that last one: the enthalpy lane carries
+    /// the ghost cell after the coarse cells (ADR-059), and the reservoir is not
+    /// a coarse cell.
+    #[inline]
+    pub fn temperature_slices_mut(&mut self) -> (&mut [Q], &mut [Q]) {
+        (&mut self.heat_capacity, &mut self.temperature)
+    }
+
+    /// Everything one dispatch of `VelocityField::apply` touches that this owner
+    /// holds, in that function's argument order: `(heat_capacity,
+    /// coarse_potential, potential, stirred, velocity, face_courant,
+    /// enthalpy_courant)`.
+    ///
+    /// One shared borrow beside six exclusive ones out of one aggregate, which
+    /// is why it is one accessor and not seven. The remaining argument, the
+    /// enthalpy's front buffer, is the world's.
+    ///
+    /// The seventh arrived with ADR-087 and it grew this accessor rather than
+    /// standing beside it: both Courant buffers come from `Scratch` by the
+    /// criterion of ADR-086 — writer earlier in the tick than reader — and one
+    /// borrow per dispatch is what keeps two `&mut` out of one aggregate.
+    #[inline]
+    #[allow(clippy::type_complexity)]
+    // Seven slices against a clippy threshold that would rather see a struct, on
+    // the precedent the accessors of `world/world.rs` set and for the same stated
+    // reason: the shape *is* the kernel's argument list, and naming a type for it
+    // hides the dispatch contract from whoever reads the accessor.
+    pub fn velocity_slices_mut(
+        &mut self,
+    ) -> (
+        &[Q],
+        &mut [Q],
+        &mut [Q],
+        &mut [Q],
+        &mut [Q],
+        &mut [Q],
+        &mut [Q],
+    ) {
+        (
+            &self.heat_capacity,
+            &mut self.velocity_potential_coarse,
+            &mut self.velocity_potential,
+            &mut self.velocity_potential_stirred,
+            &mut self.velocity,
+            &mut self.face_courant,
+            &mut self.enthalpy_courant,
+        )
+    }
+
+    /// The light field, mutably: the one output of step `a`.
+    #[inline]
+    pub fn light_mut(&mut self) -> &mut [Q] {
+        &mut self.light
+    }
+
+    /// What the last fold owes `SOLAR_IN`, for the reduction standing behind it.
+    #[inline]
+    #[must_use]
+    pub fn solar(&self) -> &[M64] {
+        &self.solar
+    }
+
+    /// The extent slice, for the reduction of phase 5 (ADR-080).
+    #[inline]
+    #[must_use]
+    pub fn xi_out(&self) -> &[M32] {
+        &self.xi_out
+    }
+
+    /// The denominator of `T = T_ref + H/C_cell`, as the last recomputation left
+    /// it.
+    #[inline]
+    #[must_use]
+    pub fn heat_capacity(&self) -> &[Q] {
+        &self.heat_capacity
+    }
+
+    /// The temperature, as the last recomputation left it.
+    #[inline]
+    #[must_use]
+    pub fn temperature(&self) -> &[Q] {
+        &self.temperature
+    }
+
+    /// Every buffer this owner holds, shared, as one value.
+    ///
+    /// The door every outside walker of this owner goes through — the bit-for-bit
+    /// comparisons of `tests/acceptance_tick.rs` and the footprint line of the
+    /// load report. Through [`ScratchBuffers`] and never through twelve
+    /// accessors, so that the enumeration is the compiler's rather than each
+    /// walker's own (ADR-086).
+    #[must_use]
+    pub fn buffers(&self) -> ScratchBuffers<'_> {
+        let Scratch {
+            face_courant,
+            enthalpy_courant,
+            energy_delta,
+            xi_out,
+            solar,
+            light,
+            velocity,
+            velocity_potential,
+            velocity_potential_coarse,
+            velocity_potential_stirred,
+            heat_capacity,
+            temperature,
+            before: _,
+            after: _,
+        } = self;
+        ScratchBuffers {
+            face_courant,
+            enthalpy_courant,
+            energy_delta,
+            xi_out,
+            solar,
+            light,
+            velocity,
+            velocity_potential,
+            velocity_potential_coarse,
+            velocity_potential_stirred,
+            heat_capacity,
+            temperature,
+        }
+    }
+
+    /// The same, mutably. See [`ScratchBuffersMut`].
+    #[must_use]
+    pub fn buffers_mut(&mut self) -> ScratchBuffersMut<'_> {
+        let Scratch {
+            face_courant,
+            enthalpy_courant,
+            energy_delta,
+            xi_out,
+            solar,
+            light,
+            velocity,
+            velocity_potential,
+            velocity_potential_coarse,
+            velocity_potential_stirred,
+            heat_capacity,
+            temperature,
+            before: _,
+            after: _,
+        } = self;
+        ScratchBuffersMut {
+            face_courant,
+            enthalpy_courant,
+            energy_delta,
+            xi_out,
+            solar,
+            light,
+            velocity,
+            velocity_potential,
+            velocity_potential_coarse,
+            velocity_potential_stirred,
+            heat_capacity,
+            temperature,
+        }
+    }
+
+    /// Fill every buffer this type owns with a non-zero pattern.
+    ///
+    /// The instrument of the criterion, and it exists in the library rather than
+    /// in a test file because it has to be **exhaustive**: it goes through
+    /// [`Scratch::buffers_mut`], whose body destructures `Scratch` with no `..`,
+    /// so a buffer added there and forgotten stops both from compiling. A poison
+    /// that had quietly gone short would make
+    /// `poisoning_the_scratch_before_a_tick_changes_no_buffer_of_the_world`
+    /// green about a buffer it never touched — the same failure ADR-086 found in
+    /// the snapshot guard, in the same shape.
+    ///
+    /// `Q::from_f64` and never a bare cast: `Q` has no arithmetic outside its
+    /// wrappers (ADR-022), and the pattern is turned into a value through the one
+    /// door there is.
+    pub fn poison(&mut self, pattern: u32) {
+        let ScratchBuffersMut {
+            face_courant,
+            enthalpy_courant,
+            energy_delta,
+            xi_out,
+            solar,
+            light,
+            velocity,
+            velocity_potential,
+            velocity_potential_coarse,
+            velocity_potential_stirred,
+            heat_capacity,
+            temperature,
+        } = self.buffers_mut();
+
+        // Non-zero in both classes, and distinct per class so that a buffer read
+        // as the wrong type shows up as a value rather than as a zero. `M64` gets
+        // the pattern itself; `Q` gets it as a magnitude a float can hold exactly.
+        let m = M64::new(i64::from(pattern) + 1);
+        let q = Q::from_f64(f64::from(pattern) + 1.0);
+
+        for cell in energy_delta.iter_mut().chain(solar) {
+            *cell = m;
+        }
+        for cell in xi_out {
+            *cell = M32::from_i64_clamping(i64::from(pattern) + 1);
+        }
+        for cell in face_courant
+            .iter_mut()
+            .chain(enthalpy_courant)
+            .chain(light)
+            .chain(velocity)
+            .chain(velocity_potential)
+            .chain(velocity_potential_coarse)
+            .chain(velocity_potential_stirred)
+            .chain(heat_capacity)
+            .chain(temperature)
+        {
+            *cell = q;
+        }
     }
 
     /// The left-hand side as it stood at the top of the last tick.
@@ -445,23 +1135,39 @@ impl Tick {
     /// Fold every enabled operator of the roster, or refuse and say what is
     /// missing.
     ///
-    /// `dt` and `dx` arrive as arguments rather than being read out of a config,
-    /// on the precedent of every other constructor under `process/`: a folded
-    /// parameter is the host's to compute, and a process that read the scenario
-    /// would be a second place where a coefficient is formed.
+    /// **`dt` and `dx` stay separate arguments although the `Config` now arrives
+    /// too**, and that is deliberate: the check `refolded != (enthalpy.substeps,
+    /// enthalpy.alpha)` below catches exactly a `dt` that is not the one the
+    /// scenario was derived under. Read out of the same `Config`, it would be
+    /// comparing the derivation with itself — a check that passes always and
+    /// looks identical. Seven parameters is exactly the `too_many_arguments`
+    /// threshold (ADR-086).
+    ///
+    /// `&Config` and `seed` arrive because three operators need them and none of
+    /// them may be folded by a caller: `React::new` wants the kinetics and the
+    /// run key (ADR-058), `Temperature::new` wants `t_ref` and `c_p`, and
+    /// `Fold::new` wants the light. Folding them outside and passing them in was
+    /// rejected for the reason this constructor already carries — an operator is
+    /// folded once before the first tick so that a refusal arrives at load rather
+    /// than on tick 4 000, and fifteen call sites would have to keep that
+    /// synchronous for ever.
     ///
     /// # Errors
     ///
     /// Returns an error if a folded operator refuses — a substep count over
-    /// `N_MAX`, an exchange face, a Courant number over one — and, naming what is
-    /// undecided, if the roster enables one of the seven processes this tick
-    /// cannot dispatch. See the table in the module header.
+    /// `N_MAX`, an exchange face, a Courant number over one, a `T_ref` that is
+    /// not a number, an energy scale that makes one storage unit worthless — and,
+    /// naming what is undecided, if the roster enables one of the seven processes
+    /// this tick cannot dispatch. See the table in the module header.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         world: &World,
         derived: &Derived,
+        config: &Config,
         roster: &[RosterEntry; ROSTER_LEN],
         dt: f64,
         dx: f64,
+        seed: u64,
     ) -> Result<Tick> {
         let registry = world.registry();
         if derived.substances().len() != registry.n_substances() as usize {
@@ -611,13 +1317,139 @@ impl Tick {
             (None, None, None)
         };
 
+        // Step `a` is folded by nobody, so step `i'` folds with `i_surface`
+        // exactly `Q::ZERO`, and that is the pairing
+        // `the_fold_credits_no_solar_energy_when_the_light_step_does_not_run`
+        // guards. `refuse_if_blocked` above rejects an enabled light process
+        // outright while energy has no sink (ADR-076), and the attenuator table
+        // `Light::new` wants reaches no folder — the same gap that keeps step `a`
+        // out of the dispatch. The `Some` arrives here on the day step `a` builds,
+        // and it has to be the *same* `Light`: `i_surface` is the one term of the
+        // topmost layer's absorption which is not in the field, and two foldings
+        // of one physical number put a last-bit difference into that voxel and
+        // nowhere else.
+        let light: Option<&light::Light> = None;
+        let fold = fold::Fold::new(
+            grid,
+            enthalpy_grid,
+            u32::from(enthalpy.lod),
+            light,
+            derived,
+            dt,
+        )?;
+
+        // Dispatched twice a tick and folded once, unconditionally.
+        //
+        // **This cancels a placement consequence of ADR-079** — "the
+        // recomputation stands immediately before step `h`" — because there are
+        // two recomputations, one at each reader; the decision itself, two coarse
+        // fields, the answer `T_ref` at a non-positive denominator, no assertion
+        // and the coarse grid, stands entire.
+        //
+        // Unconditionally, **and that cancels a consequence of ADR-086 by the
+        // record ADR-089**, not by this comment. ADR-086 folds the operator only
+        // on a roster that enables the reactions or the velocity field, so that
+        // `Temperature::new` cannot become a new load-time refusal; but both of
+        // those processes are refused at construction, so under that condition
+        // the operator would be folded on no buildable scenario, dispatched
+        // never, and `the_denominator_is_fresh_for_step_b_and_for_step_h` — which
+        // the same record names and which runs a diffusion-only roster — could
+        // not pass. ADR-089 carries the argument and the price.
+        //
+        // The worry the condition was raised against is answered by a test rather
+        // than by assumption, and by the right one: `the_shipped_scenario_survives_a_thousand_ticks`
+        // (`liminis/src/serve.rs`) goes through `build`, which is what calls
+        // `Tick::new`. `every_scenario_in_the_repository_loads` cannot answer it —
+        // `config::load` is `parse` and does not fold a tick.
+        let temperature = Temperature::new(
+            grid,
+            enthalpy_grid,
+            u32::from(enthalpy.lod),
+            registry,
+            derived,
+            config,
+        )?;
+
+        let n_reactions =
+            u32::try_from(config.reaction.len()).context("more reactions than a u32 can count")?;
+
+        // Step `b`, folded when the roster asks for it. Every number comes
+        // through `Derived` and none out of the `Config` standing right here:
+        // reading `[[process]]` keys again would put a second reader of the
+        // process records beside the validator's, which is the thing
+        // `DerivedSubstance::diffusivity` exists to prevent — the two agree on
+        // every scenario that validates and part company on the first one that
+        // does not.
+        let velocity = if enabled[row(ProcessId::VelocityField)] {
+            let Some(declared) = derived.velocity() else {
+                bail!(
+                    "the roster enables process `{}` and the derivation carries no \
+                     velocity section: the scenario's `[[process]]` record is \
+                     absent or disabled, so the four keys of ADR-069 — u_conv_max, \
+                     l_c, stir_fraction, stir_period — have nowhere to come from. \
+                     A roster and a config that disagree about which processes run \
+                     is not a world with a default; `config::materialise` builds \
+                     the two from one another and nothing in this crate turns a \
+                     `Config` into a roster",
+                    ProcessId::VelocityField.id()
+                );
+            };
+            let energy = derived.energy();
+            Some(velocity::VelocityField::new(
+                grid,
+                world.velocity_grid(),
+                enthalpy_grid,
+                &velocity::VelocityConfig {
+                    u_conv_max: declared.u_conv_max,
+                    l_c: declared.l_c,
+                    stir_fraction: declared.stir_fraction,
+                    stir_period: declared.stir_period,
+                    dt,
+                    dx,
+                    t_min: energy.t_min,
+                    t_max: energy.t_max,
+                    // `2^k_E` and never `k_E`: the exponent is what ADR-062
+                    // derives and the multiplier is what the potential divides
+                    // the enthalpy by. Passed as the exponent, the convective
+                    // gain is off by tens of binary orders — caught by
+                    // `within_speed_bound` in debug, and in release the amounts
+                    // go negative and read as the accepted undershoot of ADR-068.
+                    units_per_joule: 2f64.powi(i32::from(energy.k_e)),
+                    // From the roster and never the literal 1: hard-coded, the
+                    // refusal inside `VelocityField::new` becomes dead code and a
+                    // scenario with `every_n_ticks = 5` loads, with step `c`
+                    // moving matter on four ticks out of five over a field step
+                    // `b` did not update (ADR-074).
+                    every_n_ticks: every_n[row(ProcessId::VelocityField)],
+                },
+            )?)
+        } else {
+            None
+        };
+
         Ok(Tick {
+            velocity,
             advect_32,
             advect_64,
             advect_h,
             diffuse_32,
             diffuse_64,
             diffuse_h,
+            react: fold_react(
+                world,
+                derived,
+                config,
+                seed,
+                enabled[row(ProcessId::Reactions)],
+            )?,
+            fold,
+            temperature,
+            n_reactions,
+            catalyst_columns: config
+                .reaction
+                .iter()
+                .filter(|r| !r.catalyst.is_empty())
+                .count() as u32,
             enabled,
             every_n,
             chemical_weight: derived.chemical_weights(),
@@ -650,6 +1482,61 @@ impl Tick {
     #[must_use]
     pub fn steps(&self) -> &'static [Step; 9] {
         &STEP_ORDER
+    }
+
+    /// How many reactions the scenario declares, whatever the roster says.
+    ///
+    /// The length of the extent slice is `n_voxels * n_reactions`, and
+    /// [`Scratch::new`] takes the second factor from here so that it does not
+    /// have to read the config a second time.
+    #[inline]
+    #[must_use]
+    pub fn n_reactions(&self) -> u32 {
+        self.n_reactions
+    }
+
+    /// How many reactions of the scenario name a catalyst.
+    ///
+    /// Zero on every scenario that builds — `React::new` refuses a non-empty
+    /// `catalyst` in `check_unimplemented_keys`, because the folding kernel of
+    /// ADR-050 does not exist. It is not a column count for a buffer: neither the
+    /// class of the catalysis field nor the number of columns is decided, and
+    /// `Scratch::react_slices_mut` says where.
+    #[inline]
+    #[must_use]
+    pub fn catalyst_columns(&self) -> u32 {
+        self.catalyst_columns
+    }
+
+    /// The folded parameters of step `i'`.
+    ///
+    /// Public so that `i_surface` is checkable from a test:
+    /// `the_fold_credits_no_solar_energy_when_the_light_step_does_not_run` reads
+    /// it, and it is the only way that claim can be made from outside the crate.
+    #[inline]
+    #[must_use]
+    pub fn fold_params(&self) -> crate::kernels::fold::FoldParams {
+        self.fold.params()
+    }
+
+    /// Recompute the denominator and the temperature out of the state as it
+    /// stands right now.
+    ///
+    /// Two computations from state and never one computation plus one read of
+    /// something stored, which is why ADR-044 stands entire under ADR-086: what
+    /// that record forbids is a **cache**, and there is none. Nothing between
+    /// these two calls stores `C_cell` anywhere.
+    fn recompute_temperature(&self, world: &World, scratch: &mut Scratch) {
+        let (amounts_32, amounts_64) = world.amount_slices();
+        // `lane(0)` and not `read()`: the enthalpy lane carries the ghost cell
+        // after the coarse cells (ADR-059), and the operator walks cells of the
+        // coarse grid. The front buffer and not the back one — the back holds
+        // state `N+1` or whatever the last swap left there, and a temperature
+        // derived from it is entirely plausible and in no invariant.
+        let enthalpy = world.enthalpy().lane(0);
+        let (heat_capacity, temperature) = scratch.temperature_slices_mut();
+        self.temperature
+            .apply(amounts_32, amounts_64, enthalpy, heat_capacity, temperature);
     }
 
     /// Whether step `step` runs on tick number `tick`.
@@ -706,6 +1593,64 @@ impl Tick {
             "the enthalpy Courant buffer does not have the shape this tick was \
              folded for"
         );
+        // Every buffer this tick reaches into, and one of them is the reason the
+        // list is not "the two Courant buffers" any more. `xi_out` is the one
+        // whose length is not `n_voxels`: a slice of `n_voxels` cells is long
+        // enough for the first voxel of a one-reaction scenario, and past that
+        // the per-voxel blocks overlap and the phase-5 reduction reads one
+        // voxel's extent as another's (ADR-080).
+        assert_eq!(
+            scratch.energy_delta.len(),
+            self.n_voxels as usize,
+            "the reaction energy accumulator does not have the shape this tick \
+             was folded for"
+        );
+        assert_eq!(
+            scratch.xi_out.len(),
+            self.n_voxels as usize * self.n_reactions as usize,
+            "the extent slice holds {} cells against {} voxels times {} reactions",
+            scratch.xi_out.len(),
+            self.n_voxels,
+            self.n_reactions
+        );
+        assert_eq!(
+            scratch.light.len(),
+            self.n_voxels as usize,
+            "the light field does not have the shape this tick was folded for"
+        );
+        assert_eq!(
+            scratch.solar.len(),
+            self.n_enthalpy_cells as usize,
+            "the solar slice does not have the shape this tick was folded for"
+        );
+        assert_eq!(
+            scratch.heat_capacity.len(),
+            self.n_enthalpy_cells as usize,
+            "the heat capacity field does not have the shape this tick was folded \
+             for"
+        );
+        assert_eq!(
+            scratch.temperature.len(),
+            self.n_enthalpy_cells as usize,
+            "the temperature field does not have the shape this tick was folded \
+             for"
+        );
+        assert_eq!(
+            scratch.velocity_potential_coarse.len(),
+            3 * self.n_enthalpy_cells as usize,
+            "the coarse velocity potential lives on the enthalpy grid (ADR-069) \
+             and does not have the shape this tick was folded for"
+        );
+        assert_eq!(
+            scratch.velocity.len(),
+            scratch.velocity_potential.len(),
+            "the velocity field and its potential are the same shape"
+        );
+        assert_eq!(
+            scratch.velocity_potential_stirred.len(),
+            scratch.velocity_potential.len(),
+            "the stirred potential is a copy of the interpolated one"
+        );
 
         // Outside any `cfg`, and that is the point: the counters tick in both
         // profiles, so the snapshot the tick's increment is measured from has to
@@ -716,53 +1661,160 @@ impl Tick {
         #[cfg(debug_assertions)]
         self.domain_sums(world, &mut scratch.before);
 
-        // TODO(stochastic-dispatch): `run_key` is carried through the tick and
-        // consumed by nothing. Its two consumers are `React::params(tick)`
-        // (ADR-058) and `NoiseParams` in the velocity field (ADR-069), and
-        // neither step is dispatchable — see the table in the module header. It
-        // stays in the signature rather than being added later because a tick
-        // that forwards `tick` and forgets `run_key` gives every seed the same
-        // world, `same_seed_and_config_give_byte_identical_state` stays green,
-        // and only `different_seed_gives_different_state` goes red.
+        // TODO(stochastic-dispatch): `run_key` now reaches step `b` and still
+        // reaches nothing else. Its other consumer is `React::params(tick)`
+        // (ADR-058), and step `h` is not dispatchable — see the table in the
+        // module header.
         //
-        // The velocity half is a consumer only on the scenarios that stir, and
-        // that is worth writing down beside the dispatch rather than discovering
-        // from a green test. `VelocityField::apply` branches on `stirs` on the
-        // host (ADR-069), and `run_key` enters `NoiseParams` and nothing else: at
-        // `stir_fraction = 0` a step `b` that dispatched perfectly would still
-        // leave this line true, because the convective half of `A` is a function
-        // of the enthalpy and the heat capacity alone. So the day the criterion
-        // above stops being ignored is the day a *stirring* fixture exists, and
-        // not the day step `b` builds.
-        let _ = run_key;
+        // And step `b` is a consumer only on the scenarios that **stir**, which
+        // is worth writing down beside the dispatch rather than discovering from
+        // a green test. `VelocityField::apply` branches on `stirs` on the host
+        // (ADR-069) and `run_key` enters `NoiseParams` and nothing else: at
+        // `stir_fraction = 0` the convective half of `A` is a function of the
+        // enthalpy and the heat capacity alone, so a perfectly dispatched step
+        // `b` leaves every seed the same world. `different_seed_gives_different_state`
+        // therefore goes red for a stirring fixture and for no other, and until
+        // one exists a tick that forwarded `tick` and forgot `run_key` would look
+        // exactly like this one.
 
         for &step in &STEP_ORDER {
+            // The two recomputations of ADR-086, one at each reader of the
+            // denominator, and they stand **outside** `runs` on purpose. Step `b`
+            // reads `C_cell` and runs every tick; step `h` reads `T` and may run
+            // every third. Gating the tail pass on `runs(Step::Reactions, tick)`
+            // is the tempting saving of 2.94e7 mul-adds on every skipped tick and
+            // is exactly the variant ADR-086 rejects: at `every_n_ticks = 3` step
+            // `b` would divide the enthalpy by a denominator three ticks old,
+            // computed on a composition the cell no longer has, and nothing would
+            // fail — `T` and `C_cell` are class `Q` and enter no invariant.
+            //
+            // No tenth letter appears in `STEP_ORDER` for it: the temperature is a
+            // step of the tick and not a letter of the spec (ADR-079), so both
+            // calls stand in the body of this loop.
+            //
+            // The tail pass is guarded behaviourally by
+            // `the_denominator_is_fresh_for_step_b_and_for_step_h`. The head pass
+            // is guarded by nothing and cannot be: both passes write the same two
+            // buffers, so deleting it leaves the whole suite green and both
+            // residuals at exactly zero (`C_cell` and `T` are class `Q` and enter
+            // no invariant). `the_temperature_has_a_slot_before_step_b_and_before_step_h`
+            // reads the array below — which is why the array exists — and that is
+            // a statement about the table this line consults, not about the tick.
+            // The behavioural witness arrives with step `b`, which is the reader
+            // standing between the two passes.
+            if TEMPERATURE_SLOTS.contains(&step) {
+                self.recompute_temperature(world, scratch);
+            }
             if !self.runs(step, tick) {
                 continue;
             }
             match step {
-                // The seven steps `Tick::new` refuses to build. Unreachable
+                // The four steps `Tick::new` refuses to build. Unreachable
                 // rather than silently skipped: `runs` can only be true for them
                 // if `refuse_if_blocked` let them through.
-                Step::Light
-                | Step::Velocity
-                | Step::Pressure
-                | Step::Settling
-                | Step::Reactions
-                | Step::EnergyFold
-                | Step::ExternalChannels => unreachable!(
-                    "step {} was enabled and Tick::new did not refuse it",
-                    step.letter()
-                ),
+                Step::Light | Step::Pressure | Step::Settling | Step::ExternalChannels => {
+                    unreachable!(
+                        "step {} was enabled and Tick::new did not refuse it",
+                        step.letter()
+                    )
+                }
+                Step::Velocity => {
+                    // `expect` and not `unreachable!`: `runs` is true here only
+                    // if the roster enabled the velocity field, and that is
+                    // exactly the condition `Tick::new` folds the operator under.
+                    let field = self
+                        .velocity
+                        .as_ref()
+                        .expect("Tick::new folds step `b` for every roster that enables it");
+                    // Seven slices from this owner and one from the world, and
+                    // the two borrow disjointly (ADR-086). The enthalpy's
+                    // **front** buffer, because it is the one input here that is
+                    // state — and `lane(0)` and never `read()`, because the lane
+                    // carries the ghost cell after the coarse cells (ADR-059)
+                    // and the reservoir is not a coarse cell.
+                    let enthalpy = world.enthalpy().lane(0);
+                    let (
+                        heat_capacity,
+                        coarse_potential,
+                        potential,
+                        stirred,
+                        velocity,
+                        face_courant,
+                        enthalpy_courant,
+                    ) = scratch.velocity_slices_mut();
+                    field.apply(
+                        enthalpy,
+                        heat_capacity,
+                        coarse_potential,
+                        potential,
+                        stirred,
+                        velocity,
+                        face_courant,
+                        enthalpy_courant,
+                        tick,
+                        run_key,
+                    );
+                }
+                Step::Reactions => {
+                    // `expect` and not `unreachable!`: `runs` is true here only if
+                    // the roster enabled the reactions, and `fold_react` refuses
+                    // that roster — so this is the same statement seen from the
+                    // dispatch, and it names the lock rather than the arm.
+                    let react = self
+                        .react
+                        .as_ref()
+                        .expect("Tick::new refuses an enabled `reactions` entry it could not fold");
+                    // Four slices from each owner, and the two owners borrow
+                    // disjoint things — which is how `TODO(one-borrow-per-dispatch)`
+                    // was closed. Nothing is copied around this call, so the class
+                    // of mistake "forgot to copy the accumulator back", whose
+                    // symptom is step `i'` crediting last tick's energy again, has
+                    // no place left to happen (ADR-086).
+                    let (energy_delta, xi_out, temperature, catalyst) = scratch.react_slices_mut();
+                    let (src32, src64, dst32, dst64) = world.react_slices_mut();
+                    react.apply(
+                        tick,
+                        src32,
+                        src64,
+                        dst32,
+                        dst64,
+                        energy_delta,
+                        xi_out,
+                        temperature,
+                        catalyst,
+                    );
+                    // The process boundary of ADR-057: the front buffer holds
+                    // state `N` again. Through the exhaustive door, because two
+                    // separate `_mut` accessors would be two exclusive borrows of
+                    // one aggregate.
+                    let OwnedBuffersMut {
+                        amounts_32,
+                        amounts_64,
+                        enthalpy: _,
+                    } = world.owned_buffers_mut();
+                    react.promote(amounts_32, amounts_64);
+                }
+                Step::EnergyFold => {
+                    // `runs` answers this step with the roster row of the
+                    // reactions (see `Tick::runs`), so `i'` runs if and only if
+                    // `h` runs — the gate ADR-045 assigned and ADR-086 restated.
+                    let (energy_delta, light, solar) = scratch.fold_slices_mut();
+                    let (src_h, dst_h) = world.enthalpy_mut().pair_mut();
+                    self.fold.apply(energy_delta, light, src_h, dst_h, solar);
+                    world.enthalpy_mut().swap();
+                    // In **both** profiles, and immediately behind its writer.
+                    // `SOLAR_IN` has exactly one writer, and crediting it anywhere
+                    // else would be a second reduction with a rounding of its own
+                    // (ADR-075). Above the LEDGER phase, like every other credit.
+                    react::credit_solar(scratch.solar(), ledger);
+                }
                 Step::Advection => {
-                    // Both Courant buffers are zeros, and nothing folds them:
-                    // `Advect::fold_courant` is called from nowhere in the crate
-                    // because step `b` cannot be dispatched and no stencil maps a
-                    // velocity onto either grid's faces. See "The Courant
-                    // buffers, which nothing fills" in the module header — this
-                    // is therefore one application of a zero flux and not a
-                    // skipped step, and the parity of a lane still has to come
-                    // from the applications the phase *ran* (ADR-057).
+                    // Both Courant buffers come from step `b` of this same tick
+                    // (ADR-086, ADR-087), and on a roster that leaves the
+                    // velocity field off both are zeros — one application of a
+                    // zero flux and not a skipped step, because the parity of a
+                    // lane has to come from the applications the phase *ran*
+                    // (ADR-057). See "The Courant buffers" in the module header.
                     let courant = &scratch.face_courant;
                     if let (Some(phase), Some(field)) = (&self.advect_32, world.amounts_32_mut()) {
                         phase.apply_32(
@@ -836,9 +1888,9 @@ impl Tick {
         // does not reach it.
         //
         // Structurally, and this is the half a comment has to carry: the
-        // reduction runs **if and only if** step `h` was folded into this tick,
+        // reduction runs **if and only if** step `h` ran in this tick,
         // exactly as `i'` is dispatched together with `h` and never apart from it
-        // (ADR-045). Today it is folded into no tick — `Tick::new` refuses an
+        // (ADR-045). Today it runs in no tick — `Tick::new` refuses an
         // enabled `reactions` — so there is no reduction to run and no
         // stoichiometry to multiply by, and `Nu::EMPTY` is what the other eight
         // processes of the roster report. The day step `h` dispatches, three
@@ -851,8 +1903,28 @@ impl Tick {
         // vector for.
         #[cfg(debug_assertions)]
         {
+            // The reduction of the extent, and it runs **if and only if step `h`
+            // ran in this tick** — the same condition step `h` itself is under
+            // and not the weaker "was step `h` folded". The two differ by
+            // `every_n_ticks`, which ADR-086 leaves the reactions ("реакциям и
+            // адвекции расписание остаётся"), and the difference is not academic:
+            // `xi_out` is never cleared (ADR-045, and the field's own comment
+            // says why), so on a skipped tick a reduction would credit the
+            // previous dispatch's extents into `Xi_r` while no amount moved, and
+            // `assert_closed` would break the matter residual naming a reaction
+            // that did not run. `Ledger::begin_tick` zeroes `Xi_r`, so the
+            // skipped tick reduces nothing and reports `Nu::EMPTY` — which is
+            // consistent, because `residual_matter` refuses a reduced extent it
+            // has no vector for and there is none to refuse.
+            let nu = match &self.react {
+                Some(react) if self.runs(Step::Reactions, tick) => {
+                    ledger.reduce_extent(scratch.xi_out(), self.n_voxels);
+                    react.nu()
+                }
+                _ => Nu::EMPTY,
+            };
             self.domain_sums(world, &mut scratch.after);
-            ledger.assert_closed(Nu::EMPTY, &scratch.before, &scratch.after);
+            ledger.assert_closed(nu, &scratch.before, &scratch.after);
         }
     }
 
@@ -978,6 +2050,44 @@ const CELL_STRUCT_MASS: &[crate::numeric::M32] = &[];
 /// [`GUILD_FIELDS`].
 const CELL_ENERGY: &[crate::numeric::M64] = &[];
 
+/// Fold step `h`, or say why it cannot be folded.
+///
+/// Split out of [`Tick::new`] because the answer is one sentence long and the
+/// sentence is the point: `React::new` requires `Undeclared::reaction_id`, a
+/// column that folds each reaction's **name** into a number, and no such fold
+/// exists. ADR-027 fixes "from the name and never from the position in the file"
+/// and names no mixer; `TODO(reaction-id)` in `kernels/react.rs` records that
+/// choosing one is world semantics of the same standing as `numeric/rng.rs`, so a
+/// plausible FNV written here would outlive this file and become irreversible.
+///
+/// `enabled` is therefore always `false` by the time this is called —
+/// `refuse_if_blocked` has already returned an error for that roster, naming the
+/// same lock — and the `bail!` below is the second copy of it rather than the
+/// first. Two copies, because a caller that reached here with `enabled == true`
+/// would have got past the refusal, and folding `None` for it would give the
+/// world a step `h` that silently does nothing.
+fn fold_react(
+    _world: &World,
+    _derived: &Derived,
+    _config: &Config,
+    _seed: u64,
+    enabled: bool,
+) -> Result<Option<React>> {
+    if enabled {
+        bail!(
+            "step `h` cannot be folded: `Undeclared::reaction_id` is the fold of \
+             a reaction's name into a number, ADR-027 fixes that it comes from \
+             the name and never from the position, and no record names the mixer \
+             (`TODO(reaction-id)` in `kernels/react.rs`). Everything else step \
+             `h` needed is done: both arches of the invariant close (ADR-080, \
+             ADR-081), the temperature is recomputed at each of its readers and \
+             the eight slices of `React::apply` come from two owners that borrow \
+             disjointly (ADR-086)"
+        );
+    }
+    Ok(None)
+}
+
 /// Fold one width class, or `None` when the registry declared no substance of it.
 ///
 /// A width class with no substance is not a field of zero lanes: `Field::new`
@@ -1065,37 +2175,15 @@ fn refuse_if_blocked(id: ProcessId) -> Result<()> {
             id.id(),
             light::ENABLED_BY_DEFAULT
         ),
-        ProcessId::VelocityField => bail!(
-            "process `{}` is enabled and step `b` cannot be dispatched, and \
-             neither of the two things that used to block it does so any longer. \
-             The buffers: `world::World` owns all four — the coarse potential on \
-             the enthalpy grid, the potential interpolated onto the velocity grid, \
-             the stirred copy of it and `u` itself — and hands them out together as \
-             `World::velocity_slices_mut` (ADR-069). The denominator: `C_cell` is \
-             identically `Q::ZERO` in every run, because `process::Temperature` is \
-             its only writer and is dispatched by nothing, but ADR-079 answers a \
-             non-positive `C_cell` about the *cell* rather than about one kernel, \
-             and `kernels/potential.rs` now implements that answer beside \
-             `kernels/temperature.rs`: the cell contributes no temperature anomaly \
-             and nothing is divided. Two things are left and only one of them is \
-             code. **Code:** the four keys of ADR-069 — u_conv_max, l_c, \
-             stir_fraction, stir_period — are `[[process]]` keys of the `Config`, \
-             `config/validate.rs` checks them and keeps none, `Derived` has no \
-             velocity section, and `Tick::new` takes a `&Derived`; so nothing \
-             outside `tests/` can build a `VelocityConfig`, and the precedent for \
-             carrying them through is `DerivedSubstance::diffusivity`, copied for \
-             exactly this reason. **A decision:** `TODO(courant-fold)` in the \
-             header of this file. The last stage of `VelocityField::apply` writes \
-             `Scratch::face_courant`, so the tick that dispatches step `b` is the \
-             tick step `c` starts moving the amounts on — while \
-             `Scratch::enthalpy_courant` stays zero, because reading a velocity \
-             onto the faces of the coarser enthalpy grid is a fine-to-coarse fold \
-             of a *flux* that no record writes. Matter carried by the flow and heat \
-             standing still, with both residuals closing exactly. Its default is \
-             enabled = {} (ADR-069)",
-            id.id(),
-            velocity::VELOCITY_FIELD_ENABLED_BY_DEFAULT
-        ),
+        // Step `b` dispatches (ADR-087). The arm is **deleted** and not
+        // rewritten, which is the other of the two shapes this function takes:
+        // the reactions keep an arm because one lock of theirs is still shut,
+        // and the velocity field has none left. The four keys of ADR-069 reach
+        // `Tick::new` through `Derived::velocity`, and the fold onto the faces
+        // of the enthalpy grid is the fifth stage of the operator, so
+        // `Scratch::enthalpy_courant` is written by the same dispatch that
+        // writes `Scratch::face_courant` — matter and heat carried by one field.
+        ProcessId::VelocityField => Ok(()),
         ProcessId::Pressure => bail!(
             "process `{}` is enabled and step `e` cannot be dispatched: the \
              limiting overflow theta_max, from which ADR-055 derives the whole \
@@ -1125,37 +2213,31 @@ fn refuse_if_blocked(id: ProcessId) -> Result<()> {
             id.id(),
             super::phase::ENABLED_BY_DEFAULT
         ),
-        // TODO(react-dispatch): ADR-081 asks for this arm to be **deleted**, not
-        // rewritten, and it is rewritten because deleting it alone is strictly
-        // worse than the state it replaces. `Tick::new` builds no `React`, no
-        // fold operator and no `Temperature`, and `Tick::advance` answers
-        // `Step::Reactions | Step::EnergyFold` with `unreachable!` — so removing
-        // the refusal turns a load-time error naming a missing decision into a
-        // run-time panic naming nothing. What the record costs at "one call plus
-        // five" it does not name: who folds the three operators into `Tick::new`,
-        // and whether `Scratch` grows the `energy_delta`, `xi_out` and `solar`
-        // buffers or `World` hands them out together the way it already does for
-        // the velocity field. Both belong in `DECISIONS.md`; the arm goes with
-        // them, in the same commit as the wiring.
+        // Rewritten and not deleted, and **this cancels a consequence of ADR-081**
+        // ("the arm is deleted ... step `h` becomes dispatchable"); the decision
+        // of ADR-081 — the sign of `nu_E` in the direction of the field, the
+        // chemical energy on the left side of the invariant — stands entire.
+        // What is guarded here is the *content* of the refusal and not the fact
+        // of it: a message naming a lock that has been lifted sends the next
+        // author looking for it, and everything this message used to name is now
+        // done.
         ProcessId::Reactions => bail!(
-            "process `{}` is enabled and step `h` cannot be dispatched, and the \
-             ledger is no longer why. Both arches of the invariant are closed: \
-             ADR-080 gave `ledger::residual_matter` its second term — the kernel \
-             reports the extent of every reaction through a slice and the host \
-             reduces it in phase 5 — and ADR-081 weighted the **left** side of \
-             the energy identity, so the domain holds `H_field + Sum_s w_s*n_s`, \
-             `nu_E` is `-Sum_s nu_s*w_s` in the direction of the field, an \
-             exothermic reaction warms its cell, and `react::invariant()` \
-             declares `Transmutes` for matter and `Conserved` for energy. What is \
-             left is wiring, and it is wiring nobody has decided: `Tick::new` \
-             folds no `React`, no energy fold and no `Temperature`, and no record \
-             says whether the three per-voxel buffers they need come from \
-             `Scratch` or from `World`. ADR-079 fixes the one piece that is \
-             decided — the temperature is recomputed immediately before step `h` \
-             — and ADR-045 fixes the other — `h` and `i'` are dispatched together \
-             or not at all, because the reaction kernel overwrites its \
-             accumulator and a fold over a stale one credits last tick's energy \
-             again. Its default is enabled = {} (`process/react.rs`)",
+            "process `{}` is enabled and step `h` cannot be dispatched, and \
+             exactly one thing is left. It is not the ledger: both arches close \
+             (ADR-080, ADR-081). It is not the temperature: it is recomputed at \
+             each of its two readers, twice a tick (ADR-086). It is not the \
+             buffers: the eight slices of `React::apply` come four from \
+             `World::react_slices_mut` and four from \
+             `Scratch::react_slices_mut`, and the two owners borrow disjointly. \
+             It is not the dispatch wiring: `Tick::advance` has the slot, and \
+             step `i'` has its own beside it. What is left is one column of \
+             `Undeclared` — `reaction_id`, the fold of a reaction's **name** into \
+             a number. ADR-027 fixes 'from the name and never from the position \
+             in the file' and names no mixer, and `TODO(reaction-id)` in \
+             `kernels/react.rs` records that choosing one is world semantics of \
+             the same standing as `numeric/rng.rs`: a plausible FNV written at \
+             the point of use would outlive the task that wrote it. Its default \
+             is enabled = {} (`process/react.rs`, ADR-088)",
             id.id(),
             react::ENABLED_BY_DEFAULT
         ),
@@ -1231,6 +2313,50 @@ mod tests {
                 ),
             }
         }
+    }
+
+    #[test]
+    fn the_temperature_has_a_slot_before_step_b_and_before_step_h() {
+        // **Named for what it checks and not for what the tick does**, and the
+        // difference is the whole reason for the name. What is checked is
+        // `TEMPERATURE_SLOTS`: two slots, at `Step::Velocity` and
+        // `Step::Reactions`, in the order `STEP_ORDER` walks them. What is *not*
+        // checked, here or anywhere, is that `Tick::advance` recomputes at each
+        // of them — both passes write the same two buffers, so a tick with the
+        // head pass deleted leaves this test, every acceptance test and both
+        // residuals exactly as they are. Calling this test the witness of the
+        // head pass would be the failure ADR-086 opens on: a reader told to stop
+        // checking by a name.
+        //
+        // The array is worth reading all the same, and for the reason
+        // `the_step_order_is_the_one_spec_section_8_prints` reads `STEP_ORDER`: a
+        // permutation or a missing entry in a table the loop consults is
+        // invisible to everything else in the repository.
+        let slots: Vec<&str> = STEP_ORDER
+            .iter()
+            .filter(|step| TEMPERATURE_SLOTS.contains(step))
+            .map(|step| step.letter())
+            .collect();
+        assert_eq!(
+            slots,
+            ["b", "h"],
+            "the two recomputations stand immediately before step `b` and \
+             immediately before step `h`, one at each reader of the denominator"
+        );
+        assert_eq!(
+            TEMPERATURE_SLOTS.len(),
+            slots.len(),
+            "a slot names a step the tick does not walk"
+        );
+
+        // And the gate they must **not** be under. Tying the tail pass to
+        // `runs(Step::Reactions, tick)` looks like a saving of 2.94e7 mul-adds on
+        // every skipped tick and is the variant ADR-086 rejects by name: at
+        // `every_n_ticks = 3` on the reactions, step `b` would divide the
+        // enthalpy by a denominator three ticks old. The source is what carries
+        // that, and this line is the reminder beside it.
+        assert_eq!(Step::Velocity.process(), Some(ProcessId::VelocityField));
+        assert_eq!(Step::Reactions.process(), Some(ProcessId::Reactions));
     }
 
     #[test]

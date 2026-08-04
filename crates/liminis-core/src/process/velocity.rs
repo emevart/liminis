@@ -1,4 +1,4 @@
-//! The prescribed velocity field: four dispatches, and every number the three
+//! The prescribed velocity field: five dispatches, and every number the four
 //! kernels are not allowed to know.
 //!
 //! Step `b` of the tick order (SPEC section 8), the operator ADR-069 introduces:
@@ -8,21 +8,33 @@
 //! ```
 //!
 //! ```text
-//! 1. potential_voxel        over the enthalpy grid   (32^3, 2.6e5 reads)
-//! 2. interpolate_potential  over the velocity grid   (64^3, 4.2e6)
-//! 3. stir_potential         over the velocity grid   only if stir_fraction > 0
-//! 4. curl_voxel             over the velocity grid   (2.1e6, 3.15e6 stirred)
-//! 5. face_courant_voxel     over the fine grid       into the advection layout
+//! 1. potential_voxel           over the enthalpy grid   (32^3, 2.6e5 reads)
+//! 2. interpolate_potential     over the velocity grid   (64^3, 4.2e6)
+//! 3. stir_potential            over the velocity grid   only if stir_fraction > 0
+//! 4. curl_voxel                over the velocity grid   (2.1e6, 3.15e6 stirred)
+//! 5. face_courant_voxel        over the fine grid       into the advection layout
+//! 6. coarse_face_courant_voxel over the enthalpy grid   the same, for the field
+//!                                                       step `c` carries beside
+//!                                                       the amounts (1.57e6)
 //! ```
 //!
-//! # Where the five buffers live, and what the composition costs
+//! The fifth stage stands **after** the fourth because it reads its output, and
+//! it lives in step `b` rather than in step `c`: `c` is applied three times a tick
+//! (one axis each, ADR-036), and a fold in there would run either three times for
+//! nothing or under a "first application" flag (ADR-087). Placed before the
+//! sampling it would fold the *previous* tick's faces — zeros on tick 0 — and the
+//! coarse field would lag by exactly one tick, conserving, plausible and
+//! unreported, which is the shape ADR-049 argues about the light.
 //!
-//! [`VelocityField::apply`] takes every buffer by argument and owns none. Four of
-//! the five belong to `world::World` — the coarse potential on the enthalpy grid,
-//! the potential interpolated onto the velocity grid, the stirred copy of it and
-//! `u` — and come out of one call to `World::velocity_slices_mut` in this
-//! function's argument order. The fifth, the Courant numbers of the fine faces,
-//! belongs to `process::Scratch`, and the two owners borrow disjointly.
+//! # Where the six buffers live, and what the composition costs
+//!
+//! [`VelocityField::apply`] takes every buffer by argument and owns none. Since
+//! ADR-086 they all belong to `process::Scratch` — the coarse potential on the
+//! enthalpy grid, the potential interpolated onto the velocity grid, the stirred
+//! copy of it, `u`, and the two Courant buffers — and come out of one call to
+//! `Scratch::velocity_slices_mut` in this function's argument order. Only the
+//! enthalpy's front buffer is the world's, because it is the one input here that
+//! is state.
 //!
 //! ADR-069 priced step `b` at two buffers, `A` and `u`, `3 x 64^3 x 4 B` each:
 //! 6.3 MB, 1.3% of the 482 MB of state. The composition that is implemented has
@@ -90,7 +102,10 @@ use anyhow::{Result, bail};
 use std::collections::BTreeMap;
 
 use super::{Conservation, Invariant};
-use crate::kernels::curl::{CurlParams, SampleParams, curl_voxel, face_courant_voxel};
+use crate::kernels::curl::{
+    CoarseCourantParams, CurlParams, SampleParams, coarse_face_courant_voxel, curl_voxel,
+    face_courant_voxel,
+};
 use crate::kernels::noise::{NOISE_OCTAVE_MAX, NoiseParams, stir_potential};
 use crate::kernels::potential::{
     InterpolateParams, PotentialParams, interpolate_potential, potential_voxel,
@@ -163,6 +178,10 @@ pub struct VelocityField {
     interpolate: InterpolateParams,
     curl: CurlParams,
     sample: SampleParams,
+    /// The fifth stage: the fine faces folded onto the faces of the enthalpy grid
+    /// (ADR-087). Its `lod` is `lod_between(fine, enthalpy)` and never a declared
+    /// number.
+    coarse_courant: CoarseCourantParams,
     /// Everything the noise kernel needs except the tick and the run key, which
     /// arrive per application.
     noise: NoiseParams,
@@ -380,6 +399,28 @@ impl VelocityField {
                 ratio_log2: velocity_lod,
                 courant_gain: Q::from_f64(cfg.dt / cfg.dx),
             },
+            coarse_courant: CoarseCourantParams {
+                // The **fine** extents, and the coarse ones derived per axis from
+                // them inside the kernel (SPEC section 1.5): a second set of three
+                // numbers would be a second place for them to disagree.
+                nx: fine.nx(),
+                ny: fine.ny(),
+                nz: fine.nz(),
+                // The coarsening between the fine grid and the enthalpy grid, not
+                // between the velocity grid and the enthalpy grid: what is being
+                // added is the fine Courant buffer, and the exponent is counted
+                // down to the grid of the faces being added (ADR-087). Taken as
+                // `ratio_log2` here — the velocity-to-enthalpy step — the divisor
+                // would be eight against sixteen terms, a miss of 8 that no
+                // residual sees.
+                lod: enthalpy_lod,
+                // `2^(-3*lod)`, folded on the host beside `courant_gain` and
+                // applied by one `qmul`. `2^(-2*lod)` is the arithmetic mean of
+                // the Courant numbers and overstates the coarse flux by exactly
+                // `2^lod`; the header of `kernels/curl.rs` carries the derivation
+                // and the reason nothing else would report it.
+                fold_gain: Q::from_f64(0.5f64.powi(3 * enthalpy_lod as i32)),
+            },
             noise: NoiseParams {
                 vnx: velocity.nx(),
                 vny: velocity.ny(),
@@ -447,6 +488,22 @@ impl VelocityField {
         self.stencil_l1_norm
     }
 
+    /// `2^(-3*lod)`: what the sum of the covering fine faces is divided by to
+    /// become the Courant number of a coarse face (ADR-087).
+    ///
+    /// Public for the reason `Tick::fold_params` is: it is the only way a test
+    /// outside the crate can make a claim about the exponent, and the exponent is
+    /// the whole of the record. `2^(-2*lod)` — the arithmetic mean of the Courant
+    /// numbers — is one character away, overstates the coarse flux by exactly
+    /// `2^lod`, and is seen by neither residual, by neither inequality of SPEC
+    /// section 4.2 and by no kernel test, because a kernel is handed this number
+    /// rather than choosing it.
+    #[inline]
+    #[must_use]
+    pub fn courant_fold_gain(&self) -> Q {
+        self.coarse_courant.fold_gain
+    }
+
     /// Whether the noise kernel is dispatched at all.
     ///
     /// The branch is on the host and not in the kernel (ADR-069): stirring is 120
@@ -478,11 +535,22 @@ impl VelocityField {
     /// One application: the whole field, from the enthalpy of the previous tick to
     /// the Courant numbers on the faces of the fine grid.
     ///
-    /// The buffers are the caller's, and there are five of them because the noise
+    /// The buffers are the caller's, and there are six of them because the noise
     /// may not be added in place — that would be a read from the buffer being
     /// written (`.claude/rules/kernels.md`). `stirred` is untouched when stirring
     /// is off, which is how `the_noise_kernel_is_not_dispatched_at_zero_stir_fraction`
     /// sees the branch.
+    ///
+    /// Seven of the eight come from `process::Scratch::velocity_slices_mut`, in
+    /// this argument order. Only the enthalpy's **front** buffer still comes from
+    /// the world — `world.enthalpy().lane(0)` — because it is the one quantity
+    /// here that is state: ADR-086 leaves in `World` exactly what has a reader
+    /// standing earlier in the tick than its writer, and every output of this
+    /// dispatch is read inside the tick that wrote it.
+    ///
+    /// `enthalpy_courant` comes **after** `face_courant` because the argument
+    /// order is the dispatch order and the fifth stage reads the fourth stage's
+    /// output (ADR-087).
     ///
     /// # Panics
     ///
@@ -497,6 +565,7 @@ impl VelocityField {
         stirred: &mut [Q],
         velocity: &mut [Q],
         face_courant: &mut [Q],
+        enthalpy_courant: &mut [Q],
         tick: u32,
         run_key: u32,
     ) {
@@ -525,6 +594,13 @@ impl VelocityField {
             "the face Courant buffer is three numbers per **lane** of the fine \
              grid, in the layout kernels/advect.rs reads: `n_voxels` faces and \
              the face of the domain, which belongs to the ghost cell (ADR-059)"
+        );
+        assert_eq!(
+            enthalpy_courant.len(),
+            (COMPONENTS * (self.n_coarse + 1)) as usize,
+            "the enthalpy Courant buffer is three numbers per **lane** of the \
+             enthalpy grid (ADR-062, ADR-087). Its lane is not the fine one: the \
+             two grids differ by `lod`, so a fine face has no cell here at all"
         );
 
         for idx in 0..self.n_coarse {
@@ -572,6 +648,31 @@ impl VelocityField {
         for idx in 0..self.n_voxels {
             face_courant_voxel(velocity, face_courant, &self.sample, idx);
         }
+
+        // The fifth stage, and it stands here and not earlier because it reads
+        // what the fourth just wrote (ADR-087). Its index runs over the **coarse**
+        // grid, which is the whole of what makes it a fold; `face_courant` is
+        // passed as a shared slice, so no kernel reads the buffer it writes.
+        //
+        // Unconditional, like the four above it and unlike the noise: gated behind
+        // `stirs` or behind any other flag, the coarse buffer would stay at
+        // `Q::ZERO`, both residuals would stay at exactly zero, every "alone" test
+        // would stay green, and the symptom would be precisely the one ADR-087 was
+        // written to end — matter carried by the flow and heat standing still.
+        for coarse in 0..self.n_coarse {
+            coarse_face_courant_voxel(face_courant, enthalpy_courant, &self.coarse_courant, coarse);
+        }
+
+        debug_assert!(
+            self.within_coarse_courant(enthalpy_courant),
+            "the folded Courant numbers of the enthalpy grid are outside the \
+             condition of SPEC section 4.2. At the validator's ceiling the fold \
+             owes |C| <= 1/24 per face and 1/12 over the two outgoing faces of an \
+             axis (ADR-087), so this assertion firing means the fold, and not the \
+             scenario: a sum with no divisor at all reaches this threshold only \
+             above |u| = dx/(32*dt), which is 18.75% of the ceiling the validator \
+             checked"
+        );
     }
 
     /// The debug-only check ADR-069 puts **on the field**: three comparisons per
@@ -606,6 +707,100 @@ impl VelocityField {
 
     #[cfg(not(debug_assertions))]
     fn within_speed_bound(&self, _velocity: &[Q]) -> bool {
+        true
+    }
+
+    /// The debug-only check ADR-087 puts on the **folded buffer**: the magnitude
+    /// of every coarse face, and the sum over the two outgoing faces of an axis,
+    /// against one.
+    ///
+    /// A different threshold from [`VelocityField::within_speed_bound`] and the
+    /// difference is not cosmetic. That one compares a *speed* against the
+    /// scenario's declared `(1 + stir_fraction)*u_conv_max`; this buffer carries
+    /// *Courant numbers*, so the threshold is the corpus one for that quantity —
+    /// the convention of `Advect::fold_courant`, where under the splitting of
+    /// ADR-036 an axis has **two** outgoing faces and not six. Written per face
+    /// instead of per axial pair the threshold is looser in exactly the direction
+    /// that matters, and it is not the convention the project already carries.
+    ///
+    /// What it honestly catches, because the number belongs beside the code: a
+    /// sum with no divisor at all — the `2^(3*lod) = 64` miss — gives `16*|C_fine|`
+    /// per face and trips this at `32*|C_fine| > 1`, that is at
+    /// `|u| > dx/(32*dt) = 3.125 um/s`, **18.75% of the validator's ceiling**
+    /// `dx/(6*dt) = 16.7 um/s`. A scenario running under a fifth of its own
+    /// ceiling carries that error in silence. The `2^lod = 4` miss — the mean of
+    /// the Courant numbers — this never catches at any speed: at the ceiling the
+    /// axial sum comes out at `2/6 = 1/3`. Which is why the main error is guarded
+    /// by a named test and not by an inequality.
+    ///
+    /// `3 * 32768 = 98 304` comparisons on the magnitude and `196 608` on the
+    /// axial sums, which is a sixty-fourth of what the same check would cost on
+    /// the fine buffer. Absent in release, like its neighbour, and required never
+    /// to fire.
+    #[cfg(debug_assertions)]
+    fn within_coarse_courant(&self, enthalpy_courant: &[Q]) -> bool {
+        let cnx = self.coarse_courant.nx >> self.coarse_courant.lod;
+        let cny = self.coarse_courant.ny >> self.coarse_courant.lod;
+        let cnz = self.coarse_courant.nz >> self.coarse_courant.lod;
+        // The lane of the coarse buffer, ghost cell included (ADR-059). The fine
+        // lane is a different `u32` of the same type and the compiler cannot tell
+        // them apart.
+        let lane = self.n_coarse + 1;
+
+        for idx in 0..self.n_coarse {
+            let plane = cnx * cny;
+            let z = idx / plane;
+            let within_plane = idx - z * plane;
+            let y = within_plane / cnx;
+            let x = within_plane - y * cnx;
+
+            for axis in 0..COMPONENTS {
+                let lower = enthalpy_courant[(axis * lane + idx) as usize].debug_f64();
+                // `>` and not `!(<=)`: a `NaN` here is a defect of the fold and
+                // not a face inside the condition, and it has to come out as a
+                // firing assertion rather than as a silent pass.
+                if lower.abs() > 1.0 || lower.is_nan() {
+                    return false;
+                }
+
+                let (coord, extent, stride) = match axis {
+                    0 => (x, cnx, 1),
+                    1 => (y, cny, cnx),
+                    _ => (z, cnz, plane),
+                };
+                // Positive points up the index (ADR-054), so the lower face takes
+                // matter out of this cell when it is negative and the upper one
+                // when it is positive. The upper face of a cell *is* the lower
+                // face of the cell above it; at the top of a closed axis there is
+                // no cell above, and a face nobody crosses must not be counted —
+                // the reading `Advect::fold_courant` already gives.
+                let mut outgoing = 0.0f64;
+                if lower < 0.0 {
+                    outgoing -= lower;
+                }
+                let above = if coord + 1 < extent {
+                    Some(idx + stride)
+                } else if (self.curl.periodic_mask >> (2 * axis + 1)) & 1 == 1 {
+                    Some(idx - coord * stride)
+                } else {
+                    None
+                };
+                if let Some(above) = above {
+                    let upper = enthalpy_courant[(axis * lane + above) as usize].debug_f64();
+                    if upper > 0.0 {
+                        outgoing += upper;
+                    }
+                }
+                if outgoing > 1.0 {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
+    #[cfg(not(debug_assertions))]
+    fn within_coarse_courant(&self, _enthalpy_courant: &[Q]) -> bool {
         true
     }
 }

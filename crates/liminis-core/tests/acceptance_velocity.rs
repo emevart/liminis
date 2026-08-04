@@ -16,7 +16,7 @@
 //! and the layouts; these pin that the mechanism moves matter, and by how much
 //! against what.
 
-use liminis_core::kernels::advect::{AdvectParams, advect_voxel_32};
+use liminis_core::kernels::advect::{AdvectParams, advect_voxel_32, advect_voxel_64};
 use liminis_core::kernels::diffuse::{DiffuseParams, diffuse_voxel_32};
 use liminis_core::numeric::{M32, M64, Q, run_key};
 use liminis_core::process::substeps_and_alpha;
@@ -34,6 +34,13 @@ const LANE_LEN: u32 = N_VOXELS + 1;
 const VN: u32 = NX / 2;
 const CN: u32 = NX / 4;
 const N_COARSE: u32 = CN * CN * CN;
+/// The coarsening between the fine grid and the enthalpy grid, in bits: the
+/// exponent the fold of ADR-087 is counted at. Two, and not the one that
+/// separates the fine grid from the velocity grid.
+const ENTHALPY_LOD: u32 = 2;
+/// The stride of one axis of the **coarse** Courant buffer. A different `u32`
+/// from [`LANE_LEN`], and the compiler cannot tell the two apart.
+const COARSE_LANE_LEN: u32 = N_COARSE + 1;
 
 /// A tick of a second, and a voxel that keeps the domain the size the arithmetic
 /// of ADR-069 is written for: `16 * 800 um = 12.8 mm`. The eco regime reaches the
@@ -183,6 +190,7 @@ fn face_courant_of(field: &VelocityField, enthalpy: &[M64], tick: u32, seed: u64
     let mut stirred = vec![Q::ZERO; potential.len()];
     let mut velocity = vec![Q::ZERO; potential.len()];
     let mut face_courant = vec![Q::ZERO; (3 * LANE_LEN) as usize];
+    let mut enthalpy_courant = vec![Q::ZERO; (3 * COARSE_LANE_LEN) as usize];
 
     field.apply(
         enthalpy,
@@ -192,10 +200,36 @@ fn face_courant_of(field: &VelocityField, enthalpy: &[M64], tick: u32, seed: u64
         &mut stirred,
         &mut velocity,
         &mut face_courant,
+        &mut enthalpy_courant,
         tick,
         run_key(seed),
     );
     face_courant
+}
+
+/// The same application, keeping the **coarse** buffer instead: the Courant
+/// numbers step `c` carries the enthalpy field with (ADR-062, ADR-087).
+fn enthalpy_courant_of(field: &VelocityField, enthalpy: &[M64], tick: u32, seed: u64) -> Vec<Q> {
+    let mut coarse_potential = vec![Q::ZERO; (3 * N_COARSE) as usize];
+    let mut potential = vec![Q::ZERO; (3 * VN * VN * VN) as usize];
+    let mut stirred = vec![Q::ZERO; potential.len()];
+    let mut velocity = vec![Q::ZERO; potential.len()];
+    let mut face_courant = vec![Q::ZERO; (3 * LANE_LEN) as usize];
+    let mut enthalpy_courant = vec![Q::ZERO; (3 * COARSE_LANE_LEN) as usize];
+
+    field.apply(
+        enthalpy,
+        &unit_capacity(),
+        &mut coarse_potential,
+        &mut potential,
+        &mut stirred,
+        &mut velocity,
+        &mut face_courant,
+        &mut enthalpy_courant,
+        tick,
+        run_key(seed),
+    );
+    enthalpy_courant
 }
 
 /// The velocity field itself, for the assertions that are about `u` rather than
@@ -206,6 +240,7 @@ fn velocity_of(field: &VelocityField, enthalpy: &[M64], tick: u32, seed: u64) ->
     let mut stirred = vec![Q::ZERO; potential.len()];
     let mut velocity = vec![Q::ZERO; potential.len()];
     let mut face_courant = vec![Q::ZERO; (3 * LANE_LEN) as usize];
+    let mut enthalpy_courant = vec![Q::ZERO; (3 * COARSE_LANE_LEN) as usize];
 
     field.apply(
         enthalpy,
@@ -215,6 +250,7 @@ fn velocity_of(field: &VelocityField, enthalpy: &[M64], tick: u32, seed: u64) ->
         &mut stirred,
         &mut velocity,
         &mut face_courant,
+        &mut enthalpy_courant,
         tick,
         run_key(seed),
     );
@@ -461,6 +497,7 @@ fn the_noise_kernel_is_not_dispatched_at_zero_stir_fraction() {
     let mut stirred = vec![sentinel; potential.len()];
     let mut velocity = vec![Q::ZERO; potential.len()];
     let mut face_courant = vec![Q::ZERO; (3 * LANE_LEN) as usize];
+    let mut enthalpy_courant = vec![Q::ZERO; (3 * COARSE_LANE_LEN) as usize];
 
     field.apply(
         &heated_bottom(),
@@ -470,6 +507,7 @@ fn the_noise_kernel_is_not_dispatched_at_zero_stir_fraction() {
         &mut stirred,
         &mut velocity,
         &mut face_courant,
+        &mut enthalpy_courant,
         0,
         run_key(42),
     );
@@ -559,5 +597,443 @@ fn the_speed_bound_is_the_one_the_validator_checked() {
         "the measured l1 norm of the composed stencil is {worst} against the \
          derived {}: the estimate of |u| and the kernels disagree",
         field.stencil_l1_norm()
+    );
+}
+
+// --- the fold onto the faces of the enthalpy grid (ADR-087) -----------------
+
+/// The Courant numbers of the `2^(2*lod)` fine faces tiling one coarse face.
+///
+/// The covering block is a shift **per axis** (SPEC section 1.5), and the faces
+/// are the ones lying **on** the coarse face — the lower faces of the fine voxels
+/// along the coarse cell's lower boundary on that axis — not the `2^(3*lod)`
+/// faces inside the coarse cell, of which there are four times as many.
+fn covering_faces(face_courant: &[Q], axis: u32, cx: u32, cy: u32, cz: u32) -> Vec<Q> {
+    let span = 1u32 << ENTHALPY_LOD;
+    let (x0, y0, z0) = (cx << ENTHALPY_LOD, cy << ENTHALPY_LOD, cz << ENTHALPY_LOD);
+    let mut faces = Vec::with_capacity((span * span) as usize);
+    for b in 0..span {
+        for a in 0..span {
+            let (x, y, z) = match axis {
+                0 => (x0, y0 + a, z0 + b),
+                1 => (x0 + a, y0, z0 + b),
+                _ => (x0 + a, y0 + b, z0),
+            };
+            faces.push(face_courant[(axis * LANE_LEN + fine_index(x, y, z)) as usize]);
+        }
+    }
+    faces
+}
+
+#[test]
+fn the_coarse_courant_is_the_folded_flux_not_the_folded_courant() {
+    // The one exponent that lives on the host, and the only place a test outside
+    // this crate can reach it. The kernel is *handed* `fold_gain`, so no kernel
+    // test can tell `2^(-3*lod)` from `2^(-2*lod)`: whoever folds the wrong one
+    // gets a coarse flux overstated by exactly `2^lod = 4`, with both residuals
+    // at exactly zero, the temperature plausible, and heat outrunning fourfold
+    // the matter that carries it (ADR-087).
+    //
+    // ADR-087 names this claim `the_coarse_face_courant_is_the_fine_flux_over_the_coarse_area`
+    // and `kernels/curl.rs` carries that name for the kernel's half of it — the
+    // divisor applied to the right sixteen faces. This is the host's half: the
+    // divisor itself.
+    let cfg = config(DOMAIN / 2.0, 0.0);
+    let field = field(&cfg);
+
+    // `2^(-3*lod)` and not `2^(-2*lod)`: sixteen faces tile a coarse face and the
+    // divisor is sixty-four, because the fine and the coarse face carry different
+    // `dx`. The exponent is counted down to the grid of the faces being added.
+    let gain = field.courant_fold_gain();
+    assert_eq!(gain, Q::from_f64(0.5f64.powi(3 * ENTHALPY_LOD as i32)));
+    assert_ne!(
+        gain,
+        Q::from_f64(0.5f64.powi(2 * ENTHALPY_LOD as i32)),
+        "the fold divides by the count of the covering faces, which is the mean \
+         of the Courant numbers"
+    );
+
+    let enthalpy = heated_bottom();
+    let fine = face_courant_of(&field, &enthalpy, 0, 42);
+    let coarse = enthalpy_courant_of(&field, &enthalpy, 0, 42);
+    assert!(
+        fine.iter().any(|v| *v != Q::ZERO),
+        "the fixture has no flow at all"
+    );
+
+    let mut seen_a_difference = false;
+    for cz in 0..CN {
+        for cy in 0..CN {
+            for cx in 0..CN {
+                let at = coarse_index(cx, cy, cz);
+                for axis in 0..3u32 {
+                    let faces = covering_faces(&fine, axis, cx, cy, cz);
+                    assert_eq!(faces.len(), 16);
+                    let sum: f64 = faces.iter().map(|v| v.debug_f64()).sum();
+                    let folded = coarse[(axis * COARSE_LANE_LEN + at) as usize].debug_f64();
+
+                    // The flux fold, computed here out of the fine buffer.
+                    let expected = sum * gain.debug_f64();
+                    let scale = sum.abs().max(1e-30);
+                    assert!(
+                        (folded - expected).abs() <= 1e-5 * scale,
+                        "coarse cell ({cx}, {cy}, {cz}) axis {axis}: the fold gave \
+                         {folded} against {expected}"
+                    );
+
+                    // And it is not the mean of the Courant numbers, which is the
+                    // same sum over sixteen instead of sixty-four. Recorded once
+                    // over the whole grid rather than per face, because a face
+                    // whose sixteen happen to cancel is zero under both.
+                    let mean = sum / 16.0;
+                    if (mean - folded).abs() > 1e-5 * scale {
+                        seen_a_difference = true;
+                    }
+                }
+            }
+        }
+    }
+    assert!(
+        seen_a_difference,
+        "no coarse face separates the fold of the flux from the mean of the \
+         Courant numbers: this fixture cannot fail"
+    );
+}
+
+#[test]
+fn the_fifth_stage_of_step_b_reads_the_fourth_stage_output() {
+    // Order inside one application. The fold reads what the sampling just wrote;
+    // placed before it, it would fold the *previous* tick's faces — zeros on tick
+    // zero — and the coarse field would lag by exactly one tick, conserving,
+    // plausible and reported by nothing. The same shape as the light-before-fold
+    // argument of ADR-049.
+    let cfg = config(DOMAIN / 2.0, 0.0);
+    let field = field(&cfg);
+
+    let first = heated_bottom();
+    // A second, different driving field: half the anomaly, so the flow is half as
+    // fast and every coarse face differs.
+    let second: Vec<M64> = first.iter().map(|h| M64::new(h.raw() / 2)).collect();
+
+    let alone = enthalpy_courant_of(&field, &second, 0, 42);
+    let previous = enthalpy_courant_of(&field, &first, 0, 42);
+    assert_ne!(
+        alone, previous,
+        "the two driving fields give the same coarse Courant numbers, so this \
+         fixture cannot see a one-tick lag"
+    );
+
+    // Two applications through **one** set of buffers, poisoned first: what the
+    // second leaves behind has to be the fold of its own faces.
+    let poison = Q::from_f64(-12345.0);
+    let mut coarse_potential = vec![Q::ZERO; (3 * N_COARSE) as usize];
+    let mut potential = vec![Q::ZERO; (3 * VN * VN * VN) as usize];
+    let mut stirred = vec![Q::ZERO; potential.len()];
+    let mut velocity = vec![Q::ZERO; potential.len()];
+    let mut face_courant = vec![poison; (3 * LANE_LEN) as usize];
+    let mut enthalpy_courant = vec![poison; (3 * COARSE_LANE_LEN) as usize];
+
+    for enthalpy in [&first, &second] {
+        field.apply(
+            enthalpy,
+            &unit_capacity(),
+            &mut coarse_potential,
+            &mut potential,
+            &mut stirred,
+            &mut velocity,
+            &mut face_courant,
+            &mut enthalpy_courant,
+            0,
+            run_key(42),
+        );
+    }
+
+    // Cell by cell and per axis, because the lane is `N_COARSE + 1` long and the
+    // last element of each is the ghost the loop below checks instead.
+    for axis in 0..3u32 {
+        for cell in 0..N_COARSE {
+            let at = (axis * COARSE_LANE_LEN + cell) as usize;
+            assert_eq!(
+                enthalpy_courant[at], alone[at],
+                "axis {axis}, coarse cell {cell} is the fold of some other \
+                 application's faces"
+            );
+        }
+    }
+    // The ghost cell of every lane is the face of the *domain* (ADR-059) and no
+    // kernel writes it: `TODO(exchange-courant)` is one hole and not two.
+    for axis in 0..3u32 {
+        assert_eq!(
+            enthalpy_courant[(axis * COARSE_LANE_LEN + N_COARSE) as usize],
+            poison,
+            "the fold wrote the coarse ghost cell of axis {axis}"
+        );
+    }
+}
+
+// --- one field, two grids (ADR-087, "Observable behaviour") -----------------
+
+/// A second fixture, twice the edge of the one above on every axis: fine 32^3,
+/// velocity 16^3, enthalpy 8^3.
+///
+/// Bigger for one reason, and it is not thoroughness. The test below compares two
+/// centroids *in metres* and calls them equal within one coarse cell; at `CN = 4`
+/// a coarse cell is a quarter of the domain, and a claim about a displacement
+/// smaller than a quarter of the world is no claim at all.
+const NX_BIG: u32 = 32;
+const VN_BIG: u32 = NX_BIG / 2;
+const CN_BIG: u32 = NX_BIG / 4;
+const N_VOXELS_BIG: u32 = NX_BIG * NX_BIG * NX_BIG;
+const LANE_LEN_BIG: u32 = N_VOXELS_BIG + 1;
+const N_COARSE_BIG: u32 = CN_BIG * CN_BIG * CN_BIG;
+const COARSE_LANE_LEN_BIG: u32 = N_COARSE_BIG + 1;
+const DOMAIN_BIG: f64 = NX_BIG as f64 * DX;
+
+/// [`heated_bottom`] on an enthalpy grid of a declared edge.
+fn heated_bottom_on(cn: u32) -> Vec<M64> {
+    let mut enthalpy = vec![M64::ZERO; (cn * cn * cn) as usize];
+    let bump = |coord: u32| -> f64 {
+        0.5 * (1.0 - (2.0 * std::f64::consts::PI * (f64::from(coord) + 0.5) / f64::from(cn)).cos())
+    };
+    for z in 0..cn {
+        let amplitude = SPAN * f64::from(cn - z) / f64::from(cn);
+        for y in 0..cn {
+            for x in 0..cn {
+                let value = amplitude * bump(x) * bump(y);
+                enthalpy[(x + y * cn + z * cn * cn) as usize] = M64::new(value as i64);
+            }
+        }
+    }
+    enthalpy
+}
+
+/// `ticks` ticks of advection over one grid: three axis applications a tick, in
+/// the fixed order that is world semantics in its own right (ADR-036).
+///
+/// One function for both widths would need a generic over behaviour, which is
+/// what the two macro-generated kernels exist instead of; two functions is the
+/// shape `process/advect.rs` already carries.
+fn advect_64(src: &[M64], courant: &[Q], n: u32, ticks: u32) -> Vec<M64> {
+    let n_voxels = n * n * n;
+    let mut src = src.to_vec();
+    src.resize((n_voxels + 1) as usize, M64::ZERO);
+    let mut dst = vec![M64::ZERO; (n_voxels + 1) as usize];
+    for _ in 0..ticks {
+        for axis in 0..3u32 {
+            let params = AdvectParams {
+                exchange_mask: 0,
+                nx: n,
+                ny: n,
+                nz: n,
+                periodic_mask: 0b00_1111,
+                axis,
+            };
+            for idx in 0..n_voxels {
+                advect_voxel_64(&src, courant, &mut dst, &params, idx);
+            }
+            std::mem::swap(&mut src, &mut dst);
+        }
+    }
+    src.truncate(n_voxels as usize);
+    src
+}
+
+/// The same for the narrow field, on a grid of a declared edge.
+fn advect_32_on(src: &[M32], courant: &[Q], n: u32, ticks: u32) -> Vec<M32> {
+    let n_voxels = n * n * n;
+    let mut src = src.to_vec();
+    src.resize((n_voxels + 1) as usize, M32::ZERO);
+    let mut dst = vec![M32::ZERO; (n_voxels + 1) as usize];
+    for _ in 0..ticks {
+        for axis in 0..3u32 {
+            let params = AdvectParams {
+                exchange_mask: 0,
+                nx: n,
+                ny: n,
+                nz: n,
+                periodic_mask: 0b00_1111,
+                axis,
+            };
+            for idx in 0..n_voxels {
+                advect_voxel_32(&src, courant, &mut dst, &params, idx);
+            }
+            std::mem::swap(&mut src, &mut dst);
+        }
+    }
+    src.truncate(n_voxels as usize);
+    src
+}
+
+/// The centroid of a field, in **metres**, so that two grids of different steps
+/// are comparable at all.
+fn centroid(weights: &[f64], n: u32, step: f64) -> [f64; 3] {
+    let mut total = 0.0;
+    let mut moment = [0.0f64; 3];
+    for (idx, weight) in weights.iter().enumerate() {
+        let idx = idx as u32;
+        let (x, y, z) = (idx % n, (idx / n) % n, idx / (n * n));
+        total += weight;
+        for (axis, coord) in [x, y, z].into_iter().enumerate() {
+            moment[axis] += weight * (f64::from(coord) + 0.5) * step;
+        }
+    }
+    assert!(total > 0.0, "an empty field has no centroid");
+    [moment[0] / total, moment[1] / total, moment[2] / total]
+}
+
+/// The coarse cell covering the fastest cell of the velocity grid.
+fn fastest_coarse_cell(velocity: &[Q]) -> (u32, u32, u32) {
+    let cells = (VN_BIG * VN_BIG * VN_BIG) as usize;
+    let mut best = (0.0f64, 0usize);
+    for at in 0..cells {
+        let speed: f64 = (0..3)
+            .map(|c| velocity[c * cells + at].debug_f64().powi(2))
+            .sum::<f64>()
+            .sqrt();
+        if speed > best.0 {
+            best = (speed, at);
+        }
+    }
+    let at = best.1 as u32;
+    let (vx, vy, vz) = (at % VN_BIG, (at / VN_BIG) % VN_BIG, at / (VN_BIG * VN_BIG));
+    // From the velocity grid to the enthalpy grid: one more bit of coarsening.
+    (vx >> 1, vy >> 1, vz >> 1)
+}
+
+#[test]
+fn heat_and_matter_travel_the_same_distance_under_one_velocity_field() {
+    // The operational form of the refusal `process/tick.rs` held for two waves
+    // instead of half-dispatching step `b`: one prescribed field, a marked amount
+    // on the fine grid and a marked enthalpy anomaly on the coarse one, and the
+    // two have to move together.
+    //
+    // How it fails, which is the whole reason the name exists: at **zero**
+    // displacement for the heat under a `Scratch::enthalpy_courant` nobody fills;
+    // at `2^lod = 4` times the displacement under the mean of the Courant
+    // numbers; at `2^(3*lod) = 64` times under the plain sum. All three conserve
+    // exactly, close both residuals and leave the temperature plausible.
+    let cfg = VelocityConfig {
+        l_c: DOMAIN_BIG / 2.0,
+        ..config(DOMAIN / 2.0, 0.0)
+    };
+    let field =
+        VelocityField::new(&floored(NX_BIG), &floored(VN_BIG), &floored(CN_BIG), &cfg).unwrap();
+
+    let enthalpy = heated_bottom_on(CN_BIG);
+    let mut coarse_potential = vec![Q::ZERO; (3 * N_COARSE_BIG) as usize];
+    let mut potential = vec![Q::ZERO; (3 * VN_BIG * VN_BIG * VN_BIG) as usize];
+    let mut stirred = vec![Q::ZERO; potential.len()];
+    let mut velocity = vec![Q::ZERO; potential.len()];
+    let mut face_courant = vec![Q::ZERO; (3 * LANE_LEN_BIG) as usize];
+    let mut enthalpy_courant = vec![Q::ZERO; (3 * COARSE_LANE_LEN_BIG) as usize];
+    field.apply(
+        &enthalpy,
+        &vec![Q::ONE; N_COARSE_BIG as usize],
+        &mut coarse_potential,
+        &mut potential,
+        &mut stirred,
+        &mut velocity,
+        &mut face_courant,
+        &mut enthalpy_courant,
+        0,
+        run_key(42),
+    );
+
+    // The marker: one **coarse** cell of the enthalpy grid and the `4^3` fine
+    // voxels covering it, so that the two markers occupy exactly the same volume
+    // of the world at tick zero and their centroids start equal to the last bit.
+    // Placed off the axis of the plume and at mid-height, where the flow is
+    // strongest and not up against a wall.
+    let (mx, my, mz) = fastest_coarse_cell(&velocity);
+    let mut heat = vec![M64::ZERO; N_COARSE_BIG as usize];
+    heat[(mx + my * CN_BIG + mz * CN_BIG * CN_BIG) as usize] = M64::new(1 << 40);
+    let mut matter = vec![M32::ZERO; N_VOXELS_BIG as usize];
+    let span = 1u32 << ENTHALPY_LOD;
+    for dz in 0..span {
+        for dy in 0..span {
+            for dx in 0..span {
+                let (x, y, z) = (
+                    (mx << ENTHALPY_LOD) + dx,
+                    (my << ENTHALPY_LOD) + dy,
+                    (mz << ENTHALPY_LOD) + dz,
+                );
+                matter[(x + y * NX_BIG + z * NX_BIG * NX_BIG) as usize] = M32::new(1 << 24);
+            }
+        }
+    }
+
+    let dx_coarse = DX * f64::from(span);
+    let before_heat = centroid(
+        &heat.iter().map(|v| v.to_i64() as f64).collect::<Vec<_>>(),
+        CN_BIG,
+        dx_coarse,
+    );
+    let before_matter = centroid(
+        &matter.iter().map(|v| v.to_i64() as f64).collect::<Vec<_>>(),
+        NX_BIG,
+        DX,
+    );
+    for axis in 0..3 {
+        assert!((before_heat[axis] - before_matter[axis]).abs() < 1e-12);
+    }
+
+    // Long enough that the matter crosses more than one coarse cell — a run that
+    // moved less than the tolerance would pass with the fold deleted, because a
+    // zeroed coarse buffer leaves the heat exactly where it started — and short
+    // enough that neither marker reaches the wrap. Measured off the field rather
+    // than assumed: `u_conv_max` is the ceiling the mobility is *calibrated* to
+    // and a smooth source of domain scale runs at a fraction of it.
+    let fastest = velocity
+        .iter()
+        .fold(0.0f64, |m, v| m.max(v.debug_f64().abs()));
+    assert!(fastest > 0.0, "the field is identically zero");
+    let ticks = (0.3 * DOMAIN_BIG / (fastest * DT)).ceil() as u32;
+
+    let carried_heat = advect_64(&heat, &enthalpy_courant, CN_BIG, ticks);
+    let carried_matter = advect_32_on(&matter, &face_courant, NX_BIG, ticks);
+
+    let after_heat = centroid(
+        &carried_heat
+            .iter()
+            .map(|v| v.to_i64() as f64)
+            .collect::<Vec<_>>(),
+        CN_BIG,
+        dx_coarse,
+    );
+    let after_matter = centroid(
+        &carried_matter
+            .iter()
+            .map(|v| v.to_i64() as f64)
+            .collect::<Vec<_>>(),
+        NX_BIG,
+        DX,
+    );
+
+    let heat_moved: f64 = (0..3)
+        .map(|a| (after_heat[a] - before_heat[a]).powi(2))
+        .sum::<f64>()
+        .sqrt();
+    let matter_moved: f64 = (0..3)
+        .map(|a| (after_matter[a] - before_matter[a]).powi(2))
+        .sum::<f64>()
+        .sqrt();
+
+    // The matter has to have gone somewhere, or "they agree" is a statement about
+    // two markers standing still.
+    assert!(
+        matter_moved > dx_coarse,
+        "the matter moved {matter_moved} m in {ticks} ticks, under one coarse \
+         cell of {dx_coarse} m: this run cannot tell a fold from a zeroed buffer"
+    );
+    let apart: f64 = (0..3)
+        .map(|a| (after_heat[a] - after_matter[a]).powi(2))
+        .sum::<f64>()
+        .sqrt();
+    assert!(
+        apart <= dx_coarse,
+        "after {ticks} ticks the heat is {apart} m from the matter, over one \
+         coarse cell of {dx_coarse} m. The matter travelled {matter_moved} m and \
+         the heat {heat_moved} m, a ratio of {:.3}",
+        heat_moved / matter_moved
     );
 }

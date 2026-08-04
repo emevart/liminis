@@ -3422,6 +3422,52 @@ composition = { C = 106, N = 16, P = 1 }
     // --- the two contracts over all of the above -----------------------------
 
     #[test]
+    fn every_n_ticks_on_the_velocity_field_is_rejected() {
+        // ADR-074 assigned this name and the refusal, and never applied it:
+        // `check_every_n_ticks` compared `process.id` against the diffusion
+        // process alone. ADR-086 adds the second argument and the same address —
+        // the validator, not `Tick::new`, so that the refusal stays a refusal of
+        // *load* and stays in the table above.
+        //
+        // At `every_n_ticks = 4` step `c` would advect, on three ticks out of
+        // four, with a `face_courant` written in some other tick, and a restart
+        // would advect with zeros — the buffer is `Scratch`'s and no snapshot
+        // carries it (25.17 MB per file at 128^3 otherwise).
+        let text = swap(
+            WORKED_EXAMPLE,
+            "id = \"velocity_field\"\nenabled = true",
+            "id = \"velocity_field\"\nenabled = true\nevery_n_ticks = 4",
+        );
+        let message = refusal(&text);
+        assert!(
+            message.contains("velocity_field") && message.contains("face_courant"),
+            "the refusal has to name the process and the buffer; it said:\n{message}"
+        );
+    }
+
+    #[test]
+    fn every_n_ticks_on_the_light_process_is_rejected() {
+        // The light field is written by step `a` and read by step `i'` of the
+        // **same** tick, so a schedule that separates them turns a `Scratch`
+        // buffer into inter-tick state of class `Q` the snapshot does not carry —
+        // 8.39 MB per file at 128^3 (ADR-086).
+        //
+        // The scenario declares the process disabled: the refusal is about the
+        // schedule and not about the process running, and a light process that is
+        // *enabled* is refused earlier and for another reason entirely (ADR-076).
+        let text = swap(
+            WORKED_EXAMPLE,
+            "id = \"pressure\"\nenabled = false",
+            "id = \"pressure\"\nenabled = false\n\n[[process]]\nid = \"light\"\nenabled = false\nevery_n_ticks = 3",
+        );
+        let message = refusal(&text);
+        assert!(
+            message.contains("light") && message.contains("every_n_ticks = 3"),
+            "the refusal has to name the process and the schedule; it said:\n{message}"
+        );
+    }
+
+    #[test]
     fn every_refusal_names_the_numbers_it_compared() {
         // The mechanical form of the load-bearing requirement of this wave: a
         // refusal names the culprit — or the pair, where ADR-039 asks for a pair
@@ -3530,6 +3576,29 @@ composition = { C = 106, N = 16, P = 1 }
                 "T_ref outside the range",
                 swap(WORKED_EXAMPLE, "T_ref = 298.15", "T_ref = 400.0"),
                 vec!["T_ref", "400", "273.15", "323.15"],
+            ),
+            // The two refusals ADR-086 adds beside the diffusive one. They belong
+            // in this table by ADR-074's own consequence — "a refusal by
+            // every_n_ticks does have numbers and does go in the table" — and the
+            // numbers they compare are the schedule and the tick it separates the
+            // writer from the reader by.
+            (
+                "every_n_ticks on the velocity field",
+                swap(
+                    WORKED_EXAMPLE,
+                    "id = \"velocity_field\"\nenabled = true",
+                    "id = \"velocity_field\"\nenabled = true\nevery_n_ticks = 4",
+                ),
+                vec!["velocity_field", "4", "3 ticks out of 4", "face_courant"],
+            ),
+            (
+                "every_n_ticks on the light",
+                swap(
+                    WORKED_EXAMPLE,
+                    "id = \"pressure\"\nenabled = false",
+                    "id = \"pressure\"\nenabled = false\n\n[[process]]\nid = \"light\"\nenabled = false\nevery_n_ticks = 3",
+                ),
+                vec!["light", "3", "step `a`", "step `i'`"],
             ),
         ];
         for (label, text, wanted) in cases {

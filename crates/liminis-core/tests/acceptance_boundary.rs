@@ -877,7 +877,8 @@ fn a_tick_over_a_venting_world_closes_both_residuals() {
         entry.enabled = entry.id == ProcessId::Diffusion;
     }
 
-    let tick = Tick::new(&world, &derived, &roster, DT, DX).expect("folding the tick");
+    let config = config::parse(SCENARIO).expect("the fixture must parse");
+    let tick = Tick::new(&world, &derived, &config, &roster, DT, DX, 42).expect("folding the tick");
     let mut scratch = Scratch::new(&world, &tick).expect("the scratch buffers");
     let mut ledger = Ledger::new(n_substances).unwrap();
 
@@ -988,15 +989,16 @@ fn substance_by_lane(world: &World, wide: bool) -> Vec<u32> {
 /// the counter survives a run is a different question and belongs to ADR-083 and
 /// ADR-084.
 ///
-/// **Both paths, and the second one cannot be reached by any scenario.** There
-/// are two places where `BOUNDARY_EXCHANGE` is credited per substance —
-/// `process/diffuse.rs` and `process/advect.rs` — and today `Scratch::face_courant`
-/// is never filled (`TODO(courant-fold)`), so step `c` applies a zero flux and
-/// credits nothing. "Credited in `process/advect.rs`" and "forgotten in
-/// `process/advect.rs`" are byte-identical on every run this build can produce,
-/// and become a real leak the day step `b` dispatches. The only defence available
-/// today is the direct `Advect::advance_lane_32` fixture at the bottom of this
-/// test, with a Courant number written by hand.
+/// **Both paths, and the second one is not reached by this fixture.** There are
+/// two places where `BOUNDARY_EXCHANGE` is credited per substance —
+/// `process/diffuse.rs` and `process/advect.rs` — and `Scratch::face_courant` is
+/// filled by step `b`, which a scenario reaches only by declaring the four keys
+/// of ADR-069 (ADR-087). This one does not, so its step `c` applies a zero flux
+/// and credits nothing: "credited in `process/advect.rs`" and "forgotten in
+/// `process/advect.rs`" are byte-identical over this scenario, and are a real
+/// leak over one that flows. The defence here is therefore the direct
+/// `Advect::advance_lane_32` fixture at the bottom of this test, with a Courant
+/// number written by hand.
 #[test]
 fn the_exchange_face_credits_the_chemical_energy_of_what_it_moves() {
     let derived = derived();

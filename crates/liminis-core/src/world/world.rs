@@ -24,28 +24,34 @@
 //! spelled once per **role** rather than once with a `lod` argument — see
 //! [`World::enthalpy_cell_of`].
 //!
-//! # Which fields are double buffered, and which are not
+//! # Which buffers live here at all, and it is a criterion rather than a list
+//!
+//! **A buffer lives in `World` if and only if it has a reader standing earlier
+//! in the tick than its writer — the reader of the next tick included** — which
+//! is exactly when a snapshot has to carry it for a run to continue from the
+//! middle bit for bit. Everything else lives in [`process::Scratch`]. That is
+//! ADR-086, and it is the reason this table has three rows and not twelve: every
+//! buffer of class `Q` the type used to own is written and read inside one
+//! [`process::Tick::advance`], so none of them is state and none of them is
+//! here.
+//!
+//! [`process::Scratch`]: crate::process::Scratch
+//! [`process::Tick::advance`]: crate::process::Tick::advance
 //!
 //! | field | grid | buffers | width |
 //! |---|---|---|---|
 //! | amounts | fine | two | `i32` and `i64`, derived (ADR-040) |
 //! | enthalpy | coarse | two | `i64` (ADR-062) |
-//! | reaction energy | fine | **one** | `i64` (ADR-045, ADR-062) |
-//! | light | fine | one | `Q` |
-//! | velocity, potential, stirred potential | velocity | one each | `Q` (ADR-069) |
-//! | coarse potential | coarse (enthalpy) | one | `Q` (ADR-069) |
-//! | heat capacity `C_cell` | coarse (enthalpy) | one | `Q` (ADR-062) |
-//! | temperature `T` | coarse (enthalpy) | one | `Q` (ADR-044, ADR-062) |
 //!
 //! Two buffers are for gather transport: a kernel may not read the buffer it
-//! writes (ADR-034). A quantity that no kernel gathers over needs one. The
-//! reaction accumulator is the interesting entry: ADR-045 keeps it single
-//! buffered on purpose, because the reaction kernel **overwrites** its cell
-//! rather than adding to it, "and no separate clearing pass appears". A second
-//! buffer would make a forgotten clear invisible — the other buffer holds last
-//! tick's numbers rather than rubbish — cost 16.8 MB at 128^3, and quietly take
-//! the voxel past the 230 bytes ADR-062 budgets for it. So this type never
-//! zeroes it, at any call.
+//! writes (ADR-034). A quantity that no kernel gathers over needs one, and every
+//! such quantity of this world is now `Scratch`'s.
+//!
+//! The consequence worth stating on its own, because it is what makes the
+//! criterion worth having: **no buffer of class `Q` is left here**, so the
+//! snapshot format needs no byte door for `Q` at all (`TODO(snapshot-q)` in
+//! `observe/snapshot.rs`), and the promise of ADR-016 — restart from any
+//! snapshot — becomes satisfiable for S0 rather than provably unsatisfiable.
 //!
 //! # What is deliberately not here
 //!
@@ -64,80 +70,20 @@
 //! exists in the journal without a home. Putting it here is a decision, not a
 //! detail, so it is named and not allocated.
 //!
-//! Its former companion, the temperature denominator `C_cell` of ADR-062, *is*
-//! allocated now, and so is the temperature itself — see
-//! [`World::heat_capacity`] and [`World::temperature`]. The second of those is a
-//! divergence from the price ADR-062 printed: that record budgets "a `Q` field on
-//! the coarse grid, 131 kB without a second buffer" for the denominator and says
-//! nothing about a field for `T`, while `process::React::apply` takes
-//! `temperature: &[Q]` and so presumes a buffer. Two of those is 262 kB on the
-//! coarse grids rather than 131, and the coarse line of ADR-062 moves from
-//! +393 kB to +524 kB. That is a divergence from a record rather than from a
-//! frozen document, so it is settled by a record: **ADR-079**, which also says
-//! why the denominator is not enough on its own — `VelocityField::apply` divides
-//! the enthalpy by it cell for cell and never looks at `T`.
+//! Its former companion, the temperature denominator `C_cell` of ADR-062, is
+//! not here either, and that is the decision rather than an omission: ADR-086
+//! recomputes the denominator **at each of its two readers**, so
+//! `process::Temperature` is dispatched twice a tick and both of its outputs are
+//! written and read inside one `Tick::advance`. ADR-044 stands entire and is the
+//! reason the arrangement is legal — two recomputations are two computations
+//! from state, not one computation and one read of something stored.
 
 use anyhow::{Context, Result, bail};
 
 use super::field::{Field, Field32, Field64};
 use super::grid::{Axis, Face, Grid};
 use super::registry::{Registry, Width};
-use crate::numeric::{M32, M64, Q};
-
-/// How many components the prescribed velocity field and its potentials hold per
-/// cell.
-///
-/// Three, because all four are vector fields on a coarse grid: ADR-069 prices `A`
-/// and `u` at `3 * 64^3 * 4 B` each.
-///
-/// # What the four buffers cost, since the record priced two
-///
-/// `Q` is an `f32`, four bytes (`numeric/float.rs`). At the 128^3 base grid of
-/// SPEC section 1.1 the velocity grid is `64^3 = 262 144` cells and the enthalpy
-/// grid `32^3 = 32 768`, so one three-component `Q` buffer is
-/// `262 144 * 3 * 4 = 3 145 728 B = 3.146 MB` on the first and
-/// `32 768 * 3 * 4 = 393 216 B = 393.2 kB` on the second.
-///
-/// | buffer | grid | bytes at 128^3 | at 48^3 |
-/// |---|---|---|---|
-/// | `velocity_potential_coarse` | enthalpy | 393 216 (393.2 kB) | 20 736 (20.74 kB) |
-/// | `velocity_potential` | velocity | 3 145 728 (3.146 MB) | 165 888 (165.9 kB) |
-/// | `velocity_potential_stirred` | velocity | 3 145 728 (3.146 MB) | 165 888 (165.9 kB) |
-/// | `velocity` | velocity | 3 145 728 (3.146 MB) | 165 888 (165.9 kB) |
-///
-/// Step `b` entire is therefore `9 830 400 B = 9.830 MB` at 128^3, of which the
-/// two buffers this type gained last are `3 538 944 B = 3.539 MB`. The second
-/// column is `configs/scenarios/h2s-oxidation.toml`, whose 48^3 domain puts the
-/// velocity grid at `24^3 = 13 824` cells and the enthalpy grid at `12^3 = 1 728`:
-/// `518 400 B = 518.4 kB` for the four, `186 624 B = 186.6 kB` for the two.
-///
-/// Beside them stand the two coarse fields of ADR-079, `32 768 * 4 = 131 072 B =
-/// 131.1 kB` each and `262 144 B = 262.1 kB` together — `6 912 B` each at 48^3 —
-/// so the whole block is `10 092 544 B = 10.09 MB` at 128^3 and
-/// `532 224 B = 532.2 kB` at 48^3 — which is **2.09%** of the 482 MB of state
-/// ADR-069 counts against. That record printed 1.3% for its two
-/// buffers, and the gap is not an overrun in the sense of a mistake: the closed
-/// form it priced has no interpolation stage, so it has no coarse potential, and
-/// the noise may not be added in place (ADR-034), so it has no stirred copy
-/// either. A divergence from a record is a new record and never an edit to that
-/// one (ADR-032), and this comment is not it.
-// TODO(velocity-layout): two numbers about this field are undecided and neither
-// can be guessed at from the price. ADR-069 fixes the volume and the grid and
-// leaves open (a) whether the storage is component-major or voxel-major, and
-// (b) whether `u` is three components per cell or one per face. Until they are
-// decided the buffers here are flat and long enough, and nothing indexes into any
-// of the four: an accessor that picked an order would settle (a) in code.
-//
-// Item (c) — who owns the buffer of Courant numbers on the **fine** faces that
-// `kernels/advect.rs` needs after the trilinear interpolation — is still open and
-// has moved: `process::Scratch` holds it, and `TODO(courant-buffer-owner)` in
-// `process/advect.rs` is where it is argued. The four buffers above are here and
-// not there for a reason that is about the tests rather than about the physics —
-// ADR-069 calls them working buffers that no snapshot holds (ADR-037), which
-// argues for `Scratch`; `snapshot()` in `tests/acceptance_tick.rs` walks a
-// `World`, and a field whose four buffers lived in two owners would be a field
-// whose bit-for-bit comparison covered three of them.
-const VELOCITY_COMPONENTS: u32 = 3;
+use crate::numeric::{M32, M64};
 
 /// Which coarse grid each role lives on, in bits of coarsening relative to the
 /// fine grid.
@@ -203,36 +149,53 @@ pub struct World {
     amounts_64: Option<Field64>,
     enthalpy_grid: Grid,
     enthalpy_lod: u32,
-    /// Double buffered: the field diffuses, and thermal diffusion is the fastest
-    /// transport in the system (ADR-062).
-    enthalpy: Field64,
-    /// One buffer, on the fine grid, `i64`, never cleared here (ADR-045,
-    /// ADR-062).
-    energy_delta: Vec<M64>,
-    /// What the fold of step `i'` owes `SOLAR_IN`, one `M64` per **coarse** cell
-    /// (ADR-075). One buffer and never cleared, for the reason `energy_delta`
-    /// is: the kernel overwrites its element rather than adding to it.
-    solar_in: Vec<M64>,
-    /// One buffer, on the fine grid: what leaves a voxel through its bottom face
-    /// (`kernels/light.rs`).
-    light: Vec<Q>,
-    /// `sum(n_i * c_p_i)` of a coarse cell, J/K: one buffer, on the **enthalpy**
-    /// grid, class `Q` (ADR-044, ADR-062).
-    heat_capacity: Vec<Q>,
-    /// `T_ref + H/C_cell`, kelvin: one buffer, on the enthalpy grid, class `Q`.
-    temperature: Vec<Q>,
+    /// The grid of the prescribed velocity field. Shape and not a buffer: the
+    /// four buffers of step `b` are `process::Scratch`'s since ADR-086, and the
+    /// extents they are sized by are still this world's.
     velocity_grid: Grid,
     velocity_lod: u32,
-    velocity: Vec<Q>,
-    velocity_potential: Vec<Q>,
-    /// The wide difference's output, on the **enthalpy** grid: the only one of
-    /// the four sized by the coarser of the two coarse grids (ADR-069).
-    velocity_potential_coarse: Vec<Q>,
-    /// The noised copy of the interpolated potential, on the velocity grid. A
-    /// separate buffer and not an addition in place: `stir_potential` reads every
-    /// octave's contribution off the source, and a kernel may not read the buffer
-    /// it writes (ADR-034).
-    velocity_potential_stirred: Vec<Q>,
+    /// Double buffered: the field diffuses, and thermal diffusion is the fastest
+    /// transport in the system (ADR-062).
+    ///
+    /// The last field of this struct, and the last row of [`OwnedBuffers`]. The
+    /// two destructurings have to be read together — see
+    /// [`World::owned_buffers`].
+    enthalpy: Field64,
+}
+
+/// Every buffer [`World`] owns, shared, as one value.
+///
+/// **The type is the enumeration.** Built by an exhaustive destructuring of
+/// `World` with no rest pattern, so a tenth field added to the world is
+/// `E0027` here rather than a buffer quietly missing from the snapshot — which
+/// is the failure ADR-086 found twice in the file that writes it (`solar_in`
+/// written nowhere and guarded by nothing, `energy_delta` written and dead).
+///
+/// What it cannot do is the other half, and saying so is the point: it catches a
+/// new **field** of `World`, not a new **lane** inside a field, and it cannot
+/// force the new field to be *written* — a `_`-binding compiles. It converts
+/// "forgot" into "decided, in a visible diff line". `config/hash.rs`'s `Hashed`
+/// carries the same limit, and ADR-076 states it in the same words.
+#[derive(Debug)]
+pub struct OwnedBuffers<'a> {
+    /// The 32-bit amount field, or `None` where the registry declared no 32-bit
+    /// substance.
+    pub amounts_32: Option<&'a Field32>,
+    /// The 64-bit amount field.
+    pub amounts_64: Option<&'a Field64>,
+    /// The enthalpy field.
+    pub enthalpy: &'a Field64,
+}
+
+/// Every buffer [`World`] owns, mutably. See [`OwnedBuffers`].
+#[derive(Debug)]
+pub struct OwnedBuffersMut<'a> {
+    /// The 32-bit amount field.
+    pub amounts_32: Option<&'a mut Field32>,
+    /// The 64-bit amount field.
+    pub amounts_64: Option<&'a mut Field64>,
+    /// The enthalpy field.
+    pub enthalpy: &'a mut Field64,
 }
 
 impl World {
@@ -287,35 +250,6 @@ impl World {
 
         let enthalpy = Field::new(&enthalpy_grid, 1).context("the enthalpy field")?;
 
-        let n_voxels = grid.n_voxels() as usize;
-        let n_enthalpy_cells = enthalpy_grid.n_voxels() as usize;
-        let n_velocity = velocity_grid
-            .n_voxels()
-            .checked_mul(VELOCITY_COMPONENTS)
-            .with_context(|| {
-                format!(
-                    "a velocity field of {VELOCITY_COMPONENTS} components over \
-                     {} cells is longer than a u32 index can address",
-                    velocity_grid.n_voxels()
-                )
-            })? as usize;
-        // Off the **enthalpy** grid and never off the velocity one: the wide
-        // difference of ADR-069 is taken where the temperature lives. Sized off
-        // the other coarse grid this is eight times too long at the eco layout —
-        // a loud panic in `VelocityField::apply` — and on a layout whose two lods
-        // coincide it is exactly the right length for the wrong grid.
-        let n_coarse_potential = enthalpy_grid
-            .n_voxels()
-            .checked_mul(VELOCITY_COMPONENTS)
-            .with_context(|| {
-                format!(
-                    "a coarse velocity potential of {VELOCITY_COMPONENTS} \
-                     components over {} enthalpy cells is longer than a u32 index \
-                     can address",
-                    enthalpy_grid.n_voxels()
-                )
-            })? as usize;
-
         Ok(Self {
             grid,
             registry,
@@ -323,41 +257,9 @@ impl World {
             amounts_64,
             enthalpy_grid,
             enthalpy_lod: layout.enthalpy_lod,
-            enthalpy,
-            energy_delta: vec![M64::ZERO; n_voxels],
-            // On the coarse grid, because it is the fold's output and the fold is
-            // dispatched per coarse cell. Sized off the enthalpy grid rather than
-            // off the fine one: at `lod = 2` and 128 cubed the difference is
-            // 262 kB against 16.8 MB (ADR-075).
-            solar_in: vec![M64::ZERO; n_enthalpy_cells],
-            light: vec![Q::ZERO; n_voxels],
-            // Zeroed here because a `Vec` has to start somewhere, and **not**
-            // maintained at zero afterwards. Both are rewritten in full by
-            // `process::Temperature::apply` before anything reads them, once a
-            // tick, which is the same argument ADR-045 uses to do without a
-            // clearing pass over `energy_delta`. A zero heat capacity is not a
-            // neutral initial value either — it is the one value the kernel
-            // refuses to divide by — so "the operator has not run yet" and "this
-            // cell has no temperature" are the same bits, and nothing tells them
-            // apart: under ADR-079 both read `T = T_ref` in every profile. That
-            // is why the operator runs before its consumer rather than after
-            // (`process/tick.rs`), and not why the buffer starts at zero.
-            heat_capacity: vec![Q::ZERO; n_enthalpy_cells],
-            temperature: vec![Q::ZERO; n_enthalpy_cells],
             velocity_grid,
             velocity_lod: layout.velocity_lod,
-            velocity: vec![Q::ZERO; n_velocity],
-            velocity_potential: vec![Q::ZERO; n_velocity],
-            // Zeroed because a `Vec` has to start somewhere, and never zeroed
-            // again: one `VelocityField::apply` writes every cell of both before
-            // anything reads them, which is the argument ADR-045 makes for
-            // `energy_delta`. The stirred copy is allocated whether or not the
-            // scenario stirs — a buffer sized by the roster changes length when a
-            // process is switched off, and
-            // `a_disabled_process_leaves_every_buffer_bit_for_bit` compares
-            // buffers.
-            velocity_potential_coarse: vec![Q::ZERO; n_coarse_potential],
-            velocity_potential_stirred: vec![Q::ZERO; n_velocity],
+            enthalpy,
         })
     }
 
@@ -452,23 +354,22 @@ impl World {
     /// The snapshot of state `N` and the receiver of state `N+1`, both widths:
     /// `(src32, src64, dst32, dst64)`, in the argument order of
     /// `kernels::react::react_voxel`.
-    // TODO(one-borrow-per-dispatch): the reaction kernel takes these four slices
-    // *and* `energy_delta` in one call, and these are two `&mut self` borrows of
-    // one `World`, so a caller cannot hold both. Until then a host copies the
-    // accumulator in and out around the dispatch — `tests/acceptance_world.rs`
-    // does exactly that and says so.
-    //
-    // Half of what this TODO used to say is answered. It said that a combined
-    // accessor could not be designed yet, because the kernel also wants a
-    // temperature field derived from enthalpy by an operator nothing in `process/`
-    // performed — so a signature invented before that operator existed would be
-    // wrong by the time it had a caller. The operator exists
-    // (`process::Temperature`), and [`World::temperature_slices_mut`] is the
-    // accessor it wanted. What is left is this one: the reaction dispatch needs
-    // the amounts *mutably* beside the accumulator, which is a different set of
-    // borrows, and the temperature it reads is by then an ordinary shared slice.
+    ///
+    /// **Four of the eight slices `process::React::apply` takes, and never more
+    /// than four.** `TODO(one-borrow-per-dispatch)` used to stand here: the
+    /// reaction kernel wants these *and* the accumulator in one call, they were
+    /// two `&mut` borrows of one aggregate, and a host had to copy the
+    /// accumulator around the dispatch — leaving a class of mistake, "forgot to
+    /// copy it back", whose symptom is step `i'` crediting last tick's energy
+    /// again. ADR-086 closed it by moving the owner rather than by widening the
+    /// accessor: `energy_delta`, `xi_out`, the temperature and the catalysis are
+    /// `process::Scratch`'s, and the two owners borrow disjoint things.
+    ///
+    /// Named for the dispatch and no longer for the field, because that is what
+    /// it now is: the other half of the same call is
+    /// `process::Scratch::react_slices_mut`.
     #[inline]
-    pub fn amount_slices_mut(&mut self) -> (&[M32], &[M64], &mut [M32], &mut [M64]) {
+    pub fn react_slices_mut(&mut self) -> (&[M32], &[M64], &mut [M32], &mut [M64]) {
         let (src32, dst32) = match self.amounts_32.as_mut() {
             Some(field) => field.pair_mut(),
             None => (&[][..], &mut [][..]),
@@ -497,290 +398,76 @@ impl World {
         &mut self.enthalpy
     }
 
-    /// The reaction energy accumulator: fine grid, `i64`, **one** buffer.
+    /// Every buffer this type owns, shared, as one value.
     ///
-    /// Measured in the same joules as the enthalpy field, because the fold of
-    /// ADR-045 is a sum and a unit conversion in the middle of it would make it
-    /// a rounding (ADR-062).
-    #[inline]
+    /// **The body is an exhaustive destructuring with no `..`**, and that is the
+    /// whole mechanism: a tenth field added to [`World`] fails to compile here,
+    /// then in [`OwnedBuffers`], then in `observe::snapshot_write`,
+    /// `observe::snapshot_read_into` and the acceptance helper — all of which
+    /// destructure the struct rather than reach into it by field. A single `..`
+    /// anywhere in that chain turns the whole thing back into decoration, and the
+    /// failure is invisible, because everything still compiles (ADR-086).
+    ///
+    /// The criterion the chain guards is on the module header: a buffer is here
+    /// if and only if the snapshot has to carry it.
     #[must_use]
-    pub fn energy_delta(&self) -> &[M64] {
-        &self.energy_delta
+    pub fn owned_buffers(&self) -> OwnedBuffers<'_> {
+        let World {
+            grid: _,
+            registry: _,
+            amounts_32,
+            amounts_64,
+            enthalpy_grid: _,
+            enthalpy_lod: _,
+            velocity_grid: _,
+            velocity_lod: _,
+            enthalpy,
+        } = self;
+        OwnedBuffers {
+            amounts_32: amounts_32.as_ref(),
+            amounts_64: amounts_64.as_ref(),
+            enthalpy,
+        }
     }
 
-    /// The reaction energy accumulator, mutably. Never cleared by this type: the
-    /// reaction kernel overwrites its own cell, which is why ADR-045 has no
-    /// clearing pass.
-    #[inline]
-    pub fn energy_delta_mut(&mut self) -> &mut [M64] {
-        &mut self.energy_delta
+    /// Every buffer this type owns, mutably. See [`World::owned_buffers`] for why
+    /// the body is a destructuring.
+    pub fn owned_buffers_mut(&mut self) -> OwnedBuffersMut<'_> {
+        let World {
+            grid: _,
+            registry: _,
+            amounts_32,
+            amounts_64,
+            enthalpy_grid: _,
+            enthalpy_lod: _,
+            velocity_grid: _,
+            velocity_lod: _,
+            enthalpy,
+        } = self;
+        OwnedBuffersMut {
+            amounts_32: amounts_32.as_mut(),
+            amounts_64: amounts_64.as_mut(),
+            enthalpy,
+        }
     }
 
-    /// What the fold owes `SOLAR_IN`: **coarse** grid, `i64`, one buffer
-    /// (ADR-075).
+    /// How many bytes this world's buffers hold, for the footprint line of the
+    /// load report (`process::Footprint`, ADR-086).
     ///
-    /// Not state, which is why one buffer suffices and why the process-boundary
-    /// invariant of ADR-057 does not reach it: no kernel reads it, the writer is
-    /// the fold of step `i'` and the reader is the host reduction standing
-    /// immediately behind it, on the same step. A second buffer would cost
-    /// another 262 kB at 128 cubed and would add the one failure it looks like
-    /// insurance against — reducing the wrong one, and so losing or doubling a
-    /// tick's credit.
-    #[inline]
+    /// Through [`World::owned_buffers`] and never through `size_of::<World>()`:
+    /// the struct is two `Option`s and a `Field` header, and the bytes are behind
+    /// them. **Both** buffers of every field, because both are allocated — the
+    /// snapshot writes both for the same reason (ADR-057).
     #[must_use]
-    pub fn solar_in(&self) -> &[M64] {
-        &self.solar_in
-    }
-
-    /// Everything one dispatch of the fold of step `i'` touches, in the argument
-    /// order of `kernels::fold::fold_energy`: `(energy_delta, light,
-    /// enthalpy_read, enthalpy_write, solar)`.
-    ///
-    /// The other half of the pattern [`World::temperature_slices_mut`] set: five
-    /// borrows of one aggregate that a caller could not otherwise hold at once,
-    /// handed over as slices rather than as a `&mut World`, so that no accumulator
-    /// has to be copied around the dispatch (`TODO(one-borrow-per-dispatch)`).
-    ///
-    /// The two outputs are the pair ADR-075 requires to be addressed by the same
-    /// `coarse`, and they are handed out together for that reason: a caller that
-    /// obtained them separately would be a caller that could dispatch one without
-    /// the other.
-    #[inline]
-    #[allow(clippy::type_complexity)]
-    // Five slices against a clippy threshold that would rather see a struct, and
-    // the same trade `temperature_slices_mut` makes: the shape is the kernel's
-    // argument list, and naming a type for it hides the dispatch contract from
-    // whoever reads the accessor.
-    pub fn fold_slices_mut(&mut self) -> (&[M64], &[Q], &[M64], &mut [M64], &mut [M64]) {
-        // `pair_mut` and not `lane(0)`/`write_mut` separately: the fold reads
-        // state `N` of the enthalpy and writes state `N+1`, and the two have to
-        // come out of one borrow or the kernel would be reading the buffer it
-        // writes. The lane carries the ghost cell after the coarse cells
-        // (ADR-059); the fold never indexes past `n_coarse`, and the reservoir is
-        // not a coarse cell.
-        let (src_h, dst_h) = self.enthalpy.pair_mut();
-        (
-            &self.energy_delta,
-            &self.light,
-            src_h,
-            dst_h,
-            &mut self.solar_in,
-        )
-    }
-
-    /// The light field: fine grid, one buffer. A cell holds what **leaves** the
-    /// voxel through its bottom face (`kernels/light.rs`).
-    #[inline]
-    #[must_use]
-    pub fn light(&self) -> &[Q] {
-        &self.light
-    }
-
-    /// The light field, mutably.
-    #[inline]
-    pub fn light_mut(&mut self) -> &mut [Q] {
-        &mut self.light
-    }
-
-    /// The heat capacity of each coarse cell, J/K: **enthalpy** grid, one buffer,
-    /// class `Q`.
-    ///
-    /// The denominator of `T = T_ref + H/C_cell` (ADR-044), recomputed once a tick
-    /// from the composition the voxels actually hold and never cached — the
-    /// folded `Derived::energy().c_cell` is a different number for a different
-    /// purpose, the derivation of `k_E`, and using it in a tick would reverse
-    /// ADR-044 without saying so.
-    ///
-    /// One buffer, because no kernel gathers over it: `kernels/temperature.rs`
-    /// writes a cell it does not read.
-    #[inline]
-    #[must_use]
-    pub fn heat_capacity(&self) -> &[Q] {
-        &self.heat_capacity
-    }
-
-    /// The heat capacity field, mutably.
-    #[inline]
-    pub fn heat_capacity_mut(&mut self) -> &mut [Q] {
-        &mut self.heat_capacity
-    }
-
-    /// The temperature of each coarse cell, kelvin: enthalpy grid, one buffer,
-    /// class `Q`.
-    ///
-    /// **A quantity of the coarse cell** — `2^(3*lod)` fine voxels share one `T`,
-    /// and the Q10 factor of a reaction reads the covering one (ADR-062, and
-    /// [`World::enthalpy_cell_of`] is the mapping). The enthalpy grid and never
-    /// the velocity one: they differ, and the wrong one hands a reaction the
-    /// temperature of a plausible neighbour, which appears in no invariant because
-    /// this is class `Q`.
-    #[inline]
-    #[must_use]
-    pub fn temperature(&self) -> &[Q] {
-        &self.temperature
-    }
-
-    /// The temperature field, mutably.
-    #[inline]
-    pub fn temperature_mut(&mut self) -> &mut [Q] {
-        &mut self.temperature
-    }
-
-    /// Everything one dispatch of `process::Temperature::apply` touches, in its
-    /// argument order: `(src32, src64, enthalpy_read, heat_capacity, temperature)`.
-    ///
-    /// Half of `TODO(one-borrow-per-dispatch)` on [`World::amount_slices_mut`],
-    /// closed. That TODO said outright that a combined accessor could not be
-    /// designed before the temperature operator existed, because nobody knew what
-    /// it would want; it exists now, and this is the signature it wants. Five
-    /// borrows of one aggregate that a caller could not otherwise hold at once —
-    /// two shared reads of the amount fields, one shared read of the enthalpy
-    /// field's **front** buffer, and the two coarse outputs.
-    ///
-    /// `enthalpy().read()` and not `write_mut()`, and the difference is invisible
-    /// to the compiler and to a grep. The back buffer holds state `N+1` or
-    /// whatever the last swap left there; a temperature derived from it is
-    /// entirely plausible, is in no invariant, and is caught only by
-    /// `the_enthalpy_is_read_from_the_front_buffer`.
-    ///
-    /// The other half of the TODO is still open: the reaction kernel wants these
-    /// amount slices *mutably* together with `energy_delta`, and that is a
-    /// different set of borrows and a different accessor.
-    #[inline]
-    #[allow(clippy::type_complexity)]
-    // Five slices against a clippy threshold that would rather see a struct. The
-    // shape is the kernel's argument list, and naming a type for it would buy a
-    // lint and cost the property that a reader can see the dispatch contract at
-    // the accessor — the same trade `amount_slices_mut` makes one function up.
-    pub fn temperature_slices_mut(&mut self) -> (&[M32], &[M64], &[M64], &mut [Q], &mut [Q]) {
-        (
-            self.amounts_32.as_ref().map_or(&[][..], Field::read),
-            self.amounts_64.as_ref().map_or(&[][..], Field::read),
-            // `lane(0)` and not `read()`: the enthalpy field is one lane and its
-            // buffer carries the ghost cell after it (ADR-059). The operator
-            // walks cells of the coarse grid and the reservoir is not one.
-            self.enthalpy.lane(0),
-            &mut self.heat_capacity,
-            &mut self.temperature,
-        )
-    }
-
-    /// The prescribed velocity field: coarse grid, one buffer,
-    /// [`VELOCITY_COMPONENTS`] entries per cell.
-    #[inline]
-    #[must_use]
-    pub fn velocity(&self) -> &[Q] {
-        &self.velocity
-    }
-
-    /// The prescribed velocity field, mutably.
-    #[inline]
-    pub fn velocity_mut(&mut self) -> &mut [Q] {
-        &mut self.velocity
-    }
-
-    /// The stored potential the velocity is the curl of (ADR-069): same grid,
-    /// same shape, one buffer.
-    #[inline]
-    #[must_use]
-    pub fn velocity_potential(&self) -> &[Q] {
-        &self.velocity_potential
-    }
-
-    /// The stored potential, mutably.
-    #[inline]
-    pub fn velocity_potential_mut(&mut self) -> &mut [Q] {
-        &mut self.velocity_potential
-    }
-
-    /// The wide difference's output: **enthalpy** grid, three components per cell,
-    /// one buffer.
-    ///
-    /// `3 * enthalpy_grid().n_voxels()` and never `3 *
-    /// velocity_grid().n_voxels()`. ADR-069 takes the wide difference of the
-    /// temperature with a half-step of `l_c` on the grid the temperature lives on,
-    /// and interpolates the result as a potential onto the velocity grid; a world
-    /// has two coarse grids and they differ. Sized off the wrong one it is eight
-    /// times too long at the eco layout, which panics — and exactly right on a
-    /// layout whose lods coincide, where the difference is then silently taken at
-    /// twice the radius, that is one octave off in the selected wavelength.
-    #[inline]
-    #[must_use]
-    pub fn velocity_potential_coarse(&self) -> &[Q] {
-        &self.velocity_potential_coarse
-    }
-
-    /// The coarse potential, mutably.
-    #[inline]
-    pub fn velocity_potential_coarse_mut(&mut self) -> &mut [Q] {
-        &mut self.velocity_potential_coarse
-    }
-
-    /// The noised copy of the interpolated potential: velocity grid, one buffer,
-    /// the same length as [`World::velocity_potential`] and [`World::velocity`].
-    ///
-    /// A fourth buffer rather than an addition in place, and that is not a
-    /// preference: `kernels/noise.rs::stir_potential` reads the source at every
-    /// octave and a kernel may not read the buffer it writes (ADR-034,
-    /// `.claude/rules/kernels.md`). Aliasing it onto the interpolated potential
-    /// saves 3.146 MB and buys a field that is still an exact curl, still
-    /// divergence-free to the bit and still inside its speed bound — what it
-    /// changes is the sum over the octaves, and nothing in the corpus measures the
-    /// spectrum of the noise.
-    ///
-    /// Allocated whether or not the scenario stirs. At `stir_fraction = 0` the
-    /// kernel is not dispatched (ADR-069) and this buffer is untouched, but a
-    /// buffer whose *length* depended on the roster would move every address in
-    /// the world when a process was switched off.
-    #[inline]
-    #[must_use]
-    pub fn velocity_potential_stirred(&self) -> &[Q] {
-        &self.velocity_potential_stirred
-    }
-
-    /// The stirred potential, mutably.
-    #[inline]
-    pub fn velocity_potential_stirred_mut(&mut self) -> &mut [Q] {
-        &mut self.velocity_potential_stirred
-    }
-
-    /// Everything one dispatch of `process::VelocityField::apply` touches that
-    /// this type owns, in that function's argument order: `(enthalpy_front,
-    /// heat_capacity, coarse_potential, potential, stirred, velocity)`.
-    ///
-    /// The third accessor of the pattern [`World::temperature_slices_mut`] set,
-    /// and the one place the four buffers of step `b` are visible together. The
-    /// fifth argument of `apply`, the Courant buffer of the fine faces, is
-    /// deliberately **absent**: it belongs to `process::Scratch`, and the two
-    /// owners borrow disjointly, so a caller holds this tuple and that buffer at
-    /// once without either of them being copied around the dispatch
-    /// (`TODO(one-borrow-per-dispatch)`).
-    ///
-    /// `enthalpy.lane(0)` and neither `read()` nor `write_mut()`, and the three
-    /// are indistinguishable to the compiler. `write_mut()` is state `N+1` or
-    /// whatever the last swap left there, and a velocity field derived from it is
-    /// smooth, divergence-free, inside its speed bound and out by exactly one tick
-    /// with nothing measuring it. `read()` appends the ghost cell of ADR-059,
-    /// which would make the reservoir a coarse cell of the domain — and ADR-069
-    /// wants the front buffer here in as many words, because step `b` reads the
-    /// enthalpy the fold of step `i'` left at the end of the previous tick.
-    #[inline]
-    #[allow(clippy::type_complexity)]
-    // Six slices against a clippy threshold that would rather see a struct, on the
-    // precedent of `temperature_slices_mut` and `fold_slices_mut` and for the same
-    // stated reason: the shape *is* the kernel's argument list, and naming a type
-    // for it hides the dispatch contract from whoever reads the accessor.
-    pub fn velocity_slices_mut(
-        &mut self,
-    ) -> (&[M64], &[Q], &mut [Q], &mut [Q], &mut [Q], &mut [Q]) {
-        (
-            self.enthalpy.lane(0),
-            &self.heat_capacity,
-            &mut self.velocity_potential_coarse,
-            &mut self.velocity_potential,
-            &mut self.velocity_potential_stirred,
-            &mut self.velocity,
-        )
+    pub fn footprint_bytes(&self) -> usize {
+        let OwnedBuffers {
+            amounts_32,
+            amounts_64,
+            enthalpy,
+        } = self.owned_buffers();
+        let narrow = amounts_32.map_or(0, |f| 2 * f.read().len() * size_of::<M32>());
+        let wide = amounts_64.map_or(0, |f| 2 * f.read().len() * size_of::<M64>());
+        narrow + wide + 2 * enthalpy.read().len() * size_of::<M64>()
     }
 
     /// Fill the ghost cell of every lane of every field from the reservoir
@@ -1276,38 +963,30 @@ mod tests {
         assert!(narrow.is_empty());
         assert_eq!(wide.len(), (2 * (NX * NY * NZ + 1)) as usize);
 
-        let (src32, src64, dst32, dst64) = world.amount_slices_mut();
+        let (src32, src64, dst32, dst64) = world.react_slices_mut();
         assert!(src32.is_empty() && dst32.is_empty());
         assert_eq!(src64.len(), (2 * (NX * NY * NZ + 1)) as usize);
         assert_eq!(dst64.len(), src64.len());
     }
 
     #[test]
-    fn the_energy_accumulator_is_single_buffered_and_sixty_four_bit() {
-        // Both halves are pinned, because three places in the corpus say `i32`
-        // for this quantity (ADR-045, `QUANTITIES.md` section 3, the old skeleton
-        // in `ARCHITECTURE.md`) and ADR-062 revokes them in prose one has to read
-        // to the end of. `M32::from_i64_clamping` asserts in debug and
-        // **saturates silently in release**.
+    fn the_enthalpy_field_is_coarse_wide_and_double_buffered() {
+        // `i64` and not `i32`, because three places in the corpus say `i32` for
+        // this quantity (ADR-045, `QUANTITIES.md` section 3, the old skeleton in
+        // `ARCHITECTURE.md`) and ADR-062 revokes them in prose one has to read to
+        // the end of. Double buffered because it diffuses, and thermal diffusion
+        // is the fastest transport in the system.
+        //
+        // What this test used to assert about the reaction accumulator, the light
+        // field and the four buffers of step `b` has moved with them, to
+        // `process::Scratch` (ADR-086): none of the five has a reader standing
+        // earlier in the tick than its writer, so none of them is state and none
+        // of them is here.
         let mut world = world();
-        assert_eq!(world.energy_delta().len(), (NX * NY * NZ) as usize);
-        assert_eq!(world.light().len(), (NX * NY * NZ) as usize);
 
         // A value no `i32` holds: the declared span of one voxel for one tick is
         // 3.08e16 units (ADR-062).
         let span = M64::new(30_800_000_000_000_001);
-        world.energy_delta_mut()[7] = span;
-        assert_eq!(world.energy_delta()[7], span);
-
-        // One buffer, and this type never clears it: ADR-045 keeps it single
-        // buffered precisely because the reaction kernel overwrites its cell, so
-        // no clearing pass exists to be forgotten.
-        let _ = world.amount_slices_mut();
-        let _ = world.enthalpy_mut();
-        assert_eq!(world.energy_delta()[7], span);
-
-        // The enthalpy field is the other way round: coarse, wide and double
-        // buffered, because it diffuses.
         assert_eq!(
             world.enthalpy().n_voxels(),
             world.enthalpy_grid().n_voxels()
@@ -1320,143 +999,47 @@ mod tests {
     }
 
     #[test]
-    fn the_two_derived_fields_are_single_buffered_on_the_enthalpy_grid() {
-        // Both halves matter and neither follows from the other. The **grid** is
-        // the enthalpy one and not the velocity one: a world has two coarse grids
-        // and they differ, and a temperature buffer sized by the wrong one is
-        // still a plausible length — here 96 cells against 384, which is a panic,
-        // and on a cubic grid nothing at all. The **buffer count** is one, because
-        // no kernel gathers over either: `kernels/temperature.rs` writes cells it
-        // does not read.
+    fn owned_buffers_hands_out_every_buffer_and_the_amount_doors_agree_with_it() {
+        // The value form of the criterion: three buffers, and the same three the
+        // field-by-field accessors reach. What the compiler guarantees here is the
+        // *count* — `World::owned_buffers` destructures with no `..`, so a tenth
+        // field is `E0027` there and in every consumer — and what it cannot
+        // guarantee is that a new field is also **written** into the file. That
+        // half is `every_buffer_the_scratch_owns_is_absent_from_the_snapshot` and
+        // `snapshot_covers_every_buffer_the_world_owns` in `tests/`.
         let mut world = world();
-        let cells = world.enthalpy_grid().n_voxels() as usize;
-        assert_eq!(world.heat_capacity().len(), cells);
-        assert_eq!(world.temperature().len(), cells);
-        assert_ne!(cells, world.velocity_grid().n_voxels() as usize);
-        assert_ne!(cells, world.grid().n_voxels() as usize);
-
-        // No swap, no second buffer, and nothing here clears them between ticks —
-        // the operator rewrites both in full before anything reads them, which is
-        // the argument ADR-045 makes for `energy_delta`.
-        world.temperature_mut()[3] = Q::from_f64(310.0);
-        world.heat_capacity_mut()[3] = Q::from_f64(2.5);
-        let _ = world.amount_slices_mut();
-        world.enthalpy_mut().swap();
-        assert_eq!(world.temperature()[3], Q::from_f64(310.0));
-        assert_eq!(world.heat_capacity()[3], Q::from_f64(2.5));
-
-        // And the combined accessor hands out the same two buffers plus the
-        // **front** of the enthalpy field, which is what the operator reads.
-        world.enthalpy_mut().write_mut()[3] = M64::new(77);
-        let (_, _, enthalpy, capacity, temperature) = world.temperature_slices_mut();
-        assert_eq!(enthalpy.len(), cells);
-        assert_eq!(enthalpy[3], M64::ZERO, "the read buffer, not the write one");
-        assert_eq!(capacity.len(), cells);
-        assert_eq!(temperature[3], Q::from_f64(310.0));
-    }
-
-    #[test]
-    fn the_velocity_field_owns_four_buffers_across_two_grids() {
-        // Step `b` of ADR-069 is a composition of four buffers and the record
-        // prices two: the wide difference of the temperature lands on the
-        // **enthalpy** grid, is interpolated as a potential onto the velocity
-        // grid, is stirred there into a second copy, and is differentiated by the
-        // narrow curl into `u`. Only the first of the four is sized by the coarser
-        // of the two coarse grids.
-        //
-        // The fixture is non-cubic and its two lods differ, and both are
-        // load-bearing here: sized off the velocity grid the coarse potential
-        // comes out eight times too long and panics in `VelocityField::apply`'s
-        // shape assertion, while on a fixture whose lods coincide the two lengths
-        // are equal and the mistake is invisible — the wide difference is then
-        // taken on the wrong grid, `r` is out by exactly one octave, and
-        // `kernels/potential.rs` writes down that nothing sees it. The argument of
-        // `the_two_coarse_grids_are_told_apart_by_role`, applied to lengths.
-        let world = world();
-        let coarse = world.enthalpy_grid().n_voxels() as usize;
-        let velocity = world.velocity_grid().n_voxels() as usize;
-        assert_ne!(
-            coarse, velocity,
-            "the two coarse grids agree on this fixture, so it cannot tell the \
-             two potentials apart"
-        );
-
-        assert_eq!(
-            world.velocity_potential_coarse().len(),
-            3 * coarse,
-            "the coarse potential is sized off the enthalpy grid (ADR-069)"
-        );
-        assert_eq!(world.velocity_potential_stirred().len(), 3 * velocity);
-        assert_eq!(world.velocity_potential().len(), 3 * velocity);
-        assert_eq!(world.velocity().len(), 3 * velocity);
-        assert_ne!(
-            world.velocity_potential_coarse().len(),
-            world.velocity_potential_stirred().len()
-        );
-    }
-
-    #[test]
-    fn the_new_velocity_buffers_survive_a_swap_and_are_never_cleared_here() {
-        // The shape of `the_two_derived_fields_are_single_buffered_on_the_enthalpy_grid`,
-        // applied to the two buffers of ADR-069 that arrive with step `b`. One
-        // buffer each and no swap, because no kernel gathers over either; and
-        // nothing here clears them, because every cell of both is written before it
-        // is read inside one `VelocityField::apply` — the argument ADR-045 makes
-        // for `energy_delta`.
-        //
-        // A clearing pass would be the quiet half: a stale potential and a zeroed
-        // one are both plausible fields, both are class `Q`, and neither appears in
-        // either arch of the invariant.
-        let mut world = world();
-        world.velocity_potential_coarse_mut()[5] = Q::from_f64(1.5);
-        world.velocity_potential_stirred_mut()[5] = Q::from_f64(-2.25);
-
-        let _ = world.amount_slices_mut();
-        world.enthalpy_mut().swap();
-
-        assert_eq!(world.velocity_potential_coarse()[5], Q::from_f64(1.5));
-        assert_eq!(world.velocity_potential_stirred()[5], Q::from_f64(-2.25));
-    }
-
-    #[test]
-    fn velocity_slices_mut_hands_out_the_front_enthalpy_buffer() {
-        // The exact twin of the last block of
-        // `the_two_derived_fields_are_single_buffered_on_the_enthalpy_grid`, and
-        // for the sharper of the two reasons: a velocity field derived from state
-        // `N+1` is smooth, divergence-free and inside its speed bound, and lags or
-        // leads by exactly one tick with nothing measuring it. `read()` would be
-        // the other miss — it appends the ghost cell of ADR-059, and the reservoir
-        // is not a cell of the coarse domain.
-        let mut world = world();
-        let cells = world.enthalpy_grid().n_voxels() as usize;
-        let velocity = world.velocity_grid().n_voxels() as usize;
         world.enthalpy_mut().write_mut()[3] = M64::new(77);
 
-        let (enthalpy, capacity, coarse, potential, stirred, field) = world.velocity_slices_mut();
-        assert_eq!(enthalpy.len(), cells, "the cells, not the lane");
-        assert_eq!(enthalpy[3], M64::ZERO, "the read buffer, not the write one");
-        assert_eq!(capacity.len(), cells);
-        assert_eq!(coarse.len(), 3 * cells);
-        assert_eq!(potential.len(), 3 * velocity);
-        assert_eq!(stirred.len(), 3 * velocity);
-        assert_eq!(field.len(), 3 * velocity);
-    }
+        let OwnedBuffers {
+            amounts_32,
+            amounts_64,
+            enthalpy,
+        } = world.owned_buffers();
+        assert!(
+            amounts_32.is_some(),
+            "the fixture declares a narrow substance"
+        );
+        assert!(amounts_64.is_some(), "and a wide one");
+        assert_eq!(enthalpy.n_voxels(), world.enthalpy_grid().n_voxels());
+        assert_eq!(enthalpy.read()[3], M64::ZERO, "the front buffer");
 
-    #[test]
-    fn the_velocity_field_is_three_components_of_its_own_grid() {
-        // ADR-069 prices `A` and `u` at `3 * 64^3 * 4 B` each. The order of the
-        // components is undecided, so nothing here indexes into the buffer — see
-        // `TODO(velocity-layout)`.
-        let world = world();
-        let cells = world.velocity_grid().n_voxels();
-        assert_eq!(
-            cells,
-            (NX >> VELOCITY_LOD) * (NY >> VELOCITY_LOD) * (NZ >> VELOCITY_LOD)
-        );
-        assert_eq!(
-            world.velocity().len(),
-            (cells * VELOCITY_COMPONENTS) as usize
-        );
-        assert_eq!(world.velocity_potential().len(), world.velocity().len());
+        // The mutable door is the same three, and `react_slices_mut` — the rename
+        // of `amount_slices_mut` — still hands out the pair of each amount field
+        // out of one borrow.
+        let (src32, src64, dst32, dst64) = world.react_slices_mut();
+        assert_eq!(src32.len(), dst32.len());
+        assert_eq!(src64.len(), dst64.len());
+
+        let OwnedBuffersMut {
+            amounts_32,
+            amounts_64,
+            enthalpy,
+        } = world.owned_buffers_mut();
+        assert!(amounts_32.is_some());
+        assert!(amounts_64.is_some());
+        // The front buffer, and the write buffer still holds what was put there:
+        // nothing in this type swaps on its own.
+        assert_eq!(enthalpy.read()[3], M64::ZERO);
+        assert_eq!(enthalpy.write_mut()[3], M64::new(77));
     }
 }
