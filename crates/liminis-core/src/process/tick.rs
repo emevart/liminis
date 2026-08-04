@@ -78,20 +78,20 @@
 //!
 //! # Which steps run today, and why the rest refuse
 //!
-//! Three of the nine are dispatched: the velocity field, advection and
-//! diffusion — the last two over all three transported fields of S0 (see above).
-//! The other six are refused by [`Tick::new`] when a roster enables them, each
+//! Four of the nine are dispatched: the velocity field, advection, diffusion —
+//! the last two over all three transported fields of S0 (see above) — and
+//! settling, whose medium became a section of the scenario with ADR-085. The
+//! other five are refused by [`Tick::new`] when a roster enables them, each
 //! naming the number or the operator that is missing, rather than being skipped
 //! quietly:
 //!
 //! | step | what is missing |
 //! |---|---|
-//! | `a` light | a lit scenario is refused by one lock: energy has no sink. It was two — the second, the width of a channel counter, was answered by ADR-083 |
-//! | `e` pressure | `theta_max` is declared nowhere (`TODO(theta-max)`) |
-//! | `f` settling | `g` and `rho_medium` are named by no document (ADR-067, ADR-069) |
+//! | `a` light | the attenuator measure: `Light::new` wants a table of `Attenuator`, and what `conc_per_unit` multiplies is settled by no document (`TODO(attenuation-measure)`). Both locks of ADR-076 are gone — ADR-084 ratifies the `exchange` face as the sink, ADR-083 the counter width |
+//! | `e` pressure | five locks, and `theta_max` is no longer one of them (ADR-082 declares it): no owner for the overflow field and no `partial_molar_volume` or `Occupant` table in `Derived`; no behaviour on an `exchange` face; one-sidedness undecided; `energy: Conserved` standing on `TODO(enthalpy-of-transport)` |
 //! | `h` reactions | the dispatch wiring, and nothing else: both arches of the invariant closed with ADR-080 and ADR-081. `Tick::new` folds no operator for it and no record says where its three buffers live (`TODO(react-dispatch)`) |
 //! | `i'` fold | step `h`, which it is dispatched with or not at all |
-//! | `j` channels | there are no events, and no emissivity or vent composition |
+//! | `j` channels | three, and not the four this used to read: there are no events, `RADIATIVE_OUT` has no emissivity and `GEOTHERMAL_IN` no heat flux or vent composition. The sign of a counter left the list with ADR-084 |
 //!
 //! A refusal rather than a skip, because a skipped step is a different world that
 //! looks like the same one. The one thing a refusal costs is that the roster's
@@ -351,6 +351,16 @@ pub struct Tick {
     /// Step `d` over the enthalpy field: one lane, its own `alpha`, its own
     /// substep count (ADR-062).
     diffuse_h: Option<DiffusePhase>,
+    /// Step `f` over the narrow field, absent when the scenario has no narrow
+    /// substance or settling is off (ADR-067, ADR-085).
+    ///
+    /// No enthalpy twin beside these two, and the absence is the decision:
+    /// **no** transport process in this project carries enthalpy along with the
+    /// matter it moves, and the field is transported on its own grid by steps
+    /// `c` and `d` (ADR-062, ADR-067).
+    settle_32: Option<settle::SettlePhase>,
+    /// Step `f` over the wide field.
+    settle_64: Option<settle::SettlePhase>,
     /// The roster, flattened by [`row`]: whether each process runs at all.
     enabled: [bool; ROSTER_LEN],
     /// And how often. `1` is every tick.
@@ -1317,13 +1327,58 @@ impl Tick {
             (None, None, None)
         };
 
+        // Step `f`, folded when the roster asks for it (ADR-067, ADR-085). Every
+        // number comes through `Derived` and none out of the `Config` standing
+        // right here, for the reason step `b` gives one screen down: a second
+        // reader of `[physics]` beside the validator's agrees with it on every
+        // scenario that validated and parts company on the first one that did
+        // not.
+        let (settle_32, settle_64) = if enabled[row(ProcessId::Settling)] {
+            let Some(declared) = derived.medium() else {
+                bail!(
+                    "the roster enables process `{}` and the derivation carries \
+                     no medium: the scenario's `[[process]]` record is absent or \
+                     disabled, or `[physics]` declares no mu — and the viscosity \
+                     is required when the process is on, with no default \
+                     (ADR-085). A roster and a config that disagree about which \
+                     processes run is not a world with a default; \
+                     `config::materialise` builds the two from one another and \
+                     nothing in this crate turns a `Config` into a roster",
+                    ProcessId::Settling.id()
+                );
+            };
+            let medium = settle::Medium {
+                rho_medium: declared.rho_medium,
+                g: declared.g,
+                mu: declared.mu,
+            };
+            // Per lane and never per substance (ADR-056). A substance-indexed
+            // array here is the quiet failure: the wrong lane sinks, matter is
+            // conserved exactly, both residuals stay at zero, and the only
+            // witness is which lane moved.
+            let g32 = grains_by_lane(world, derived, Width::Bits32);
+            let g64 = grains_by_lane(world, derived, Width::Bits64);
+            (
+                fold_per_width(lanes_32, |lanes| {
+                    settle::SettlePhase::new_32(grid, lanes, &g32, &medium, dt, dx)
+                })?,
+                fold_per_width(lanes_64, |lanes| {
+                    settle::SettlePhase::new_64(grid, lanes, &g64, &medium, dt, dx)
+                })?,
+            )
+        } else {
+            (None, None)
+        };
+
         // Step `a` is folded by nobody, so step `i'` folds with `i_surface`
         // exactly `Q::ZERO`, and that is the pairing
         // `the_fold_credits_no_solar_energy_when_the_light_step_does_not_run`
         // guards. `refuse_if_blocked` above rejects an enabled light process
-        // outright while energy has no sink (ADR-076), and the attenuator table
-        // `Light::new` wants reaches no folder — the same gap that keeps step `a`
-        // out of the dispatch. The `Some` arrives here on the day step `a` builds,
+        // outright while the attenuator table `Light::new` wants reaches no
+        // folder — the measure `conc_per_unit` multiplies is settled nowhere —
+        // which is the same gap that keeps step `a` out of the dispatch. The sink
+        // is no longer part of that gap: ADR-084 ratifies the `exchange` face as
+        // it. The `Some` arrives here on the day step `a` builds,
         // and it has to be the *same* `Light`: `i_surface` is the one term of the
         // topmost layer's absorption which is not in the field, and two foldings
         // of one physical number put a last-bit difference into that voxel and
@@ -1435,6 +1490,8 @@ impl Tick {
             diffuse_32,
             diffuse_64,
             diffuse_h,
+            settle_32,
+            settle_64,
             react: fold_react(
                 world,
                 derived,
@@ -1709,10 +1766,10 @@ impl Tick {
                 continue;
             }
             match step {
-                // The four steps `Tick::new` refuses to build. Unreachable
+                // The three steps `Tick::new` refuses to build. Unreachable
                 // rather than silently skipped: `runs` can only be true for them
                 // if `refuse_if_blocked` let them through.
-                Step::Light | Step::Pressure | Step::Settling | Step::ExternalChannels => {
+                Step::Light | Step::Pressure | Step::ExternalChannels => {
                     unreachable!(
                         "step {} was enabled and Tick::new did not refuse it",
                         step.letter()
@@ -1843,6 +1900,29 @@ impl Tick {
                             &scratch.enthalpy_courant,
                             ledger,
                         );
+                    }
+                }
+                Step::Settling => {
+                    // One application over the full step and no substeps:
+                    // settling is a factor of the splitting in its own right, so
+                    // it gets by on its own condition, and a grain that would
+                    // need more than one voxel a tick is refused at load rather
+                    // than divided into pieces (ADR-036, ADR-067).
+                    //
+                    // No credit to any channel and no enthalpy: the process
+                    // conserves matter by construction — a face is one integer
+                    // applied to both sides with opposite signs — and carries no
+                    // energy, which is not an exception but the rule for every
+                    // transport process here (ADR-062, ADR-067). What crosses an
+                    // `exchange` face is not handled at all and cannot be
+                    // reached: `settle::periodic_mask` refuses such a face when
+                    // the phase is folded, which is `TODO(channels)` in
+                    // `process/settle.rs` seen from this side.
+                    if let (Some(phase), Some(field)) = (&self.settle_32, world.amounts_32_mut()) {
+                        phase.apply_32(field);
+                    }
+                    if let (Some(phase), Some(field)) = (&self.settle_64, world.amounts_64_mut()) {
+                        phase.apply_64(field);
                     }
                 }
                 Step::Diffusion => {
@@ -2145,6 +2225,47 @@ fn diffusivity_by_lane(world: &World, derived: &Derived, width: Width) -> Vec<f6
     by_lane
 }
 
+/// The grain of every lane of one width class, in lane order.
+///
+/// The mirror of [`diffusivity_by_lane`], and it exists for the same reason
+/// (ADR-056): the index is a **lane** and never a substance. Water is first in
+/// the registry of SPEC section 2.3 and takes lane 0, so a substance-indexed
+/// array is right at `s == 0` and off by one from there on — and
+/// `SettlePhase::fold` checks only the length, so the wrong lane would sink with
+/// matter conserved exactly, both residuals at zero and every "alone" test green.
+///
+/// A lane no substance of this width class occupies keeps a grain of zero
+/// radius, which `settling_velocity` answers with `w = 0` and the phase does not
+/// dispatch at all.
+fn grains_by_lane(world: &World, derived: &Derived, width: Width) -> Vec<settle::Grain> {
+    let lanes = world.registry().lanes(width) as usize;
+    let mut by_lane = vec![
+        settle::Grain {
+            settling_radius: 0.0,
+            molar_mass: 0.0,
+            partial_molar_volume: 0.0,
+        };
+        lanes
+    ];
+    for (s, substance) in derived.substances().iter().enumerate() {
+        // `s` is the substance index the derivation and the registry share: both
+        // are built in declaration order and `Tick::new` has just checked that
+        // they are the same length.
+        let s = s as u32;
+        match (world.lane_of(s), width) {
+            (LaneRef::Narrow(lane), Width::Bits32) | (LaneRef::Wide(lane), Width::Bits64) => {
+                by_lane[lane as usize] = settle::Grain {
+                    settling_radius: substance.settling_radius,
+                    molar_mass: substance.molar_mass,
+                    partial_molar_volume: substance.partial_molar_volume,
+                };
+            }
+            _ => {}
+        }
+    }
+    by_lane
+}
+
 /// Refuse a process whose operator cannot be dispatched, naming what is missing.
 ///
 /// One message per process, and each of them names the record or the open
@@ -2155,23 +2276,40 @@ fn diffusivity_by_lane(world: &World, derived: &Derived, width: Width) -> Vec<f6
 fn refuse_if_blocked(id: ProcessId) -> Result<()> {
     match id {
         ProcessId::Advection | ProcessId::Diffusion => Ok(()),
+        // Rewritten and not deleted, and both halves of that matter. The two
+        // locks this message used to name are gone — ADR-084 ratifies the built
+        // `exchange` face as the energy sink of S0, ADR-083 answers the counter
+        // width — so a message that went on naming them would send the next
+        // author hunting holes that are not there. What is left is a different
+        // lock and a real one, and **deleting the arm because the old reasons
+        // expired would be the quiet disaster this function exists to prevent**:
+        // `Light::new` takes `&[Attenuator]`, an attenuator carries
+        // `conc_per_unit`, and what that multiplies is settled by no document
+        // (`TODO(attenuation-measure)` in `process/light.rs`; `CONFIG_SCHEMA.md`
+        // says outright that `k_w`…`k_m` reach no table). `Derived` therefore
+        // carries no such table, so the only way to build a tick would be
+        // `Light::new(grid, &[], ..)` — a lit world that absorbs nothing, with
+        // step `i'` dispatched alongside step `h` and so not running at all,
+        // `SOLAR_IN` never credited, and both residuals zero. A world that looks
+        // configured and is not, green all the way down and without a panic.
         ProcessId::Light => bail!(
             "process `{}` is enabled and step `a` cannot be dispatched, and what \
-             blocks it is no longer a missing number: ADR-076 declares `i_surface` \
-             and derives `units_per_intensity`, and ADR-075 settles what the fold \
-             owes the ledger. What blocks it is **one** open question, where there \
-             used to be two. Energy has no sink in any scenario — `RADIATIVE_OUT` \
-             is unimplemented and step `j` has nothing to write — so absorbed \
-             light accumulates without bound and crosses the declared temperature \
-             range in about 42 ticks at full sun, taking the Courant bound proved \
-             at load with it. The other lock, the width of a channel counter, was \
-             answered by ADR-083: the counter is i128 and holds \
+             blocks it is neither of the two locks it used to be. ADR-084 \
+             ratifies the sink: absorbed energy leaves through the built \
+             `exchange` face, credited to BOUNDARY_EXCHANGE by steps `c` and `d`, \
+             and `config/validate.rs` now refuses a lit scenario only for a \
+             sealed box or a steady state past the declared range. ADR-083 \
+             answers the width: the counter is i128 and holds \
              2^127/2^k_E = 1.15e18 J at k_E = 67, against 0.16384 J for one lit \
-             tick of a 128^3 domain, so it is no longer what keeps the light off. \
-             `config/validate.rs` refuses a scenario with i_surface > 0 by the \
-             same remaining lock; a dark box, i_surface = 0, is legal there and \
-             pointless here. Its default is enabled = {} (`process/light.rs`, \
-             ADR-076)",
+             tick of a 128^3 domain. What is left is the **attenuation measure**: \
+             `Light::new` wants a table of attenuators, an attenuator is a `k` per \
+             unit of some dimensionless measure of storage, and which measure that \
+             is no document decides (`TODO(attenuation-measure)` in \
+             `process/light.rs`, A-22 in `OPEN_QUESTIONS.md`) — so `Derived` \
+             carries no such table and there is nothing to build the operator \
+             from. Building it with an empty table instead would give a lit world \
+             that absorbs nothing and reports no error. Its default is \
+             enabled = {} (`process/light.rs`, ADR-076)",
             id.id(),
             light::ENABLED_BY_DEFAULT
         ),
@@ -2184,26 +2322,58 @@ fn refuse_if_blocked(id: ProcessId) -> Result<()> {
         // `Scratch::enthalpy_courant` is written by the same dispatch that
         // writes `Scratch::face_courant` — matter and heat carried by one field.
         ProcessId::VelocityField => Ok(()),
+        // Rewritten and not deleted, and the rewrite is the point. ADR-082
+        // declares the limiting overflow, so the lock this message used to name is
+        // lifted — and a refusal that goes on naming a lifted lock sends the next
+        // author hunting a hole that is not there, which is exactly what ADR-081
+        // forced to be rewritten in the reactions arm below. Five locks are left
+        // and the message names all five, because the reader's next move is to go
+        // and shut one.
+        //
+        // The key's spelling is deliberately absent from the text. The `light` arm
+        // above does name `i_surface`, and that is the shape this one used to
+        // copy; here the name is left out so that
+        // `an_enabled_pressure_scenario_is_refused_until_step_e_has_an_owner_and_a_boundary`
+        // can assert the absence mechanically rather than by reading the sentence
+        // it sits in. Whoever adds it back will find out which of the two
+        // properties they cared about.
         ProcessId::Pressure => bail!(
-            "process `{}` is enabled and step `e` cannot be dispatched: the \
-             limiting overflow theta_max, from which ADR-055 derives the whole \
-             mobility, is declared by no key and no record \
-             (`TODO(theta-max)` in `process/pressure.rs`). A plausible number put \
-             here would be indistinguishable from a decision, and the scheme \
-             conserves exactly, so both residuals would close over it for ever. \
-             Its default is enabled = {} (`process/pressure.rs`)",
+            "process `{}` is enabled and step `e` cannot be dispatched, and what \
+             blocks it is no longer a missing number: ADR-082 makes the limiting \
+             overflow a required key of the pressure record, with a floor of \
+             6*Theta_sup and a ceiling from the declared run horizon, and \
+             `Derived::pressure` carries it. Five things are left. (1) This \
+             dispatch: `Tick::run` holds `Step::Pressure` in an unreachable arm. \
+             (2) The overflow field has no owner — nothing allocates it — and \
+             `Derived` carries neither partial_molar_volume nor an Occupant \
+             table, so the occupancy table cannot be assembled at all. (3) What \
+             pressure does at an `exchange` face is decided by nothing, and \
+             `periodic_mask` in `process/pressure.rs` refuses one outright while \
+             the shipped scenario declares z_max = \"exchange\". (4) Whether the \
+             field is one-sided is undecided (`TODO(one-sided)`), and on four \
+             substances with no solvent the one-sided reading is identically \
+             zero. (5) `energy: Conserved` on this step rests on the absence of a \
+             number rather than on one (`TODO(enthalpy-of-transport)`). Its \
+             default is enabled = {} (`process/pressure.rs`, ADR-082)",
             id.id(),
             pressure::ENABLED_BY_DEFAULT
         ),
-        ProcessId::Settling => bail!(
-            "process `{}` is enabled and step `f` cannot be dispatched: \
-             `Medium` wants g and rho_medium, and no document assigns either a \
-             value or a place (ADR-067, ADR-069) — which is why \
-             `config/validate.rs` refuses a substance with settling_radius > 0 \
-             outright. Its default is enabled = {} (`process/settle.rs`)",
-            id.id(),
-            settle::ENABLED_BY_DEFAULT
-        ),
+        // Step `f` dispatches (ADR-085). The arm is **deleted** and not
+        // rewritten, which is the shape the velocity field took one screen up
+        // and the opposite of the shape the light and pressure keep: `Medium`
+        // wanted `g` and `rho_medium`, `[physics]` declares both with defaults,
+        // and `Derived::medium` carries them to `Tick::new` through the door
+        // `DerivedSubstance::diffusivity` goes through. The grain itself arrives
+        // the same way — `settling_radius`, `molar_mass` and
+        // `partial_molar_volume` are fields of a derived substance now — so
+        // there is nothing left for this arm to name.
+        //
+        // Deleting it and leaving `Step::Settling` in the unreachable arm of
+        // `Tick::advance` is the half-lift that panics on the first tick;
+        // keeping it and writing the dispatch is the half-lift that is silent —
+        // dead code, and an enabled settling process refused by a message that
+        // has become false.
+        ProcessId::Settling => Ok(()),
         ProcessId::PhaseTransitions => bail!(
             "process `{}` is enabled and line `g` has no operator at all: it is \
              one of the nine records ADR-065 materialises and it appears in no \
@@ -2249,9 +2419,12 @@ fn refuse_if_blocked(id: ProcessId) -> Result<()> {
              every substep (ADR-059). The temperature field is no longer among \
              them either, but the two heat channels ADR-059 does assign here \
              are: \
-             `RADIATIVE_OUT` wants an emissivity nothing declares, `GEOTHERMAL_IN` \
-             a heat flux and a vent composition, and the sign convention of a \
-             counter is `TODO(counter-sign)` in `ledger/mod.rs`. Its default is \
+             `RADIATIVE_OUT` wants an emissivity nothing declares, and \
+             `GEOTHERMAL_IN` a heat flux and a vent composition — one blocker and \
+             not two, because it is one channel and one record lifts both. That \
+             makes three, where there used to be four: the sign of a counter left \
+             the list with ADR-084, which ratifies it as the increment of the \
+             domain. The shape of the radiative boundary is A-25. Its default is \
              enabled = {} (`process/channels.rs`)",
             id.id(),
             super::channels::ENABLED_BY_DEFAULT

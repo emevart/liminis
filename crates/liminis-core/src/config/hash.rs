@@ -47,7 +47,9 @@ use anyhow::{Context, Result};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
-use super::schema::{Boundary, Config, Field, Grid, Initial, Process, Reaction, Substance};
+use super::schema::{
+    Boundary, Config, Field, Grid, Initial, Physics, Process, Reaction, Substance,
+};
 
 /// Root sections of the schema that the canonical form leaves out.
 ///
@@ -62,7 +64,7 @@ use super::schema::{Boundary, Config, Field, Grid, Initial, Process, Reaction, S
 /// one line here (ADR-066).
 pub const NOT_HASHED: &[&str] = &["calibration"];
 
-/// The hashed projection of a [`Config`]: the twelve root keys the simulator
+/// The hashed projection of a [`Config`]: the thirteen root keys the simulator
 /// reads.
 ///
 /// Private on purpose. The test takes its paths from the output of [`canonical`]
@@ -85,6 +87,11 @@ struct Hashed<'a> {
     conserved: &'a BTreeMap<String, f64>,
     grid: &'a Grid,
     boundary: &'a Boundary,
+    /// Among the tables and between `[boundary]` and `[[substance]]`, which is
+    /// where `Config` puts it and where `CONFIG_SCHEMA.md` numbers it (ADR-085).
+    /// The position is a decision of the schema and not of this file — see the
+    /// note in the module header about what does *not* enforce it.
+    physics: &'a Physics,
     substance: &'a [Substance],
     reaction: &'a [Reaction],
     field: &'a [Field],
@@ -117,6 +124,7 @@ fn project(config: &Config) -> Hashed<'_> {
         conserved,
         grid,
         boundary,
+        physics,
         substance,
         reaction,
         field,
@@ -135,6 +143,7 @@ fn project(config: &Config) -> Hashed<'_> {
         conserved,
         grid,
         boundary,
+        physics,
         substance,
         reaction,
         field,

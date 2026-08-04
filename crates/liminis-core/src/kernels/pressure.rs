@@ -4,40 +4,48 @@
 //! fits in it pushes the surplus at its neighbours:
 //!
 //! ```text
-//! P     = k*(V_occ/V_voxel - 1)
+//! theta = V_occ/V_voxel - 1                                  (ADR-082)
 //! V_occ = sum_i (amount_i / units_per_mol_i) * V_bar_i        (ADR-067)
 //! ```
+//!
+//! Dimensionless, and no pascal anywhere. SPEC section 3 prints
+//! `P = k*(V_occ/V_voxel - 1)`; after ADR-082 the quantity described there is not
+//! in the model at all, because the stiffness cancels out of the derivation of
+//! the mobility and there is nothing left to make a pascal out of. The spec is
+//! frozen and is not edited (ADR-032) — the divergence lives here and in
+//! `ACCEPTANCE.md`.
 //!
 //! ADR-006 hangs biofilm growth, sediment compaction, rising gas bubbles and the
 //! capacity of a voxel on that one mechanism, and this file may not know which
 //! of the four it is computing. There is no biology here and no branch on what
 //! the matter is: a difference of occupancies drives a flux, and that is all.
 //!
-//! # What is folded, and the one thing that cancels
+//! # What is folded, and the one thing that was cancelled
 //!
-//! ADR-055 declares `k` in pascals — the bulk modulus of the artificial medium —
-//! and **derives** the mobility at load time from the Courant condition, so that
-//! at the declared limiting overflow the displacement over one tick is exactly
-//! one voxel. Two things follow at once: no number in the config knows about a
-//! voxel (SPEC section 10), and the response is always the fastest of the stable
-//! ones rather than quietly slower.
+//! ADR-055 makes the mechanism artificial compressibility and **derives** the
+//! mobility at load time from the Courant condition, so that at the declared
+//! limiting overflow the displacement over one tick is exactly one voxel. Two
+//! things follow at once: no number in the config knows about a voxel (SPEC
+//! section 10), and the response is the fastest of the stable ones *for the
+//! declared* `theta_max` — the wording ADR-082 corrected, because the literal
+//! maximum of the stable ones is the floor of the window and leaves no margin.
 //!
 //! So the kernel receives one number, [`PressureParams::courant_per_overflow`],
-//! and neither the stiffness, nor the mobility, nor `dt`, nor `dx` appears in
-//! this file (ADR-034, ADR-015).
+//! and neither a stiffness, nor the mobility, nor `dt`, nor `dx` appears in this
+//! file (ADR-034, ADR-015).
 //!
-//! **The stiffness cancels, and that has to be said out loud.** With
-//! `u = -L*grad P` the courant number of a face is
+//! **The stiffness does not merely cancel: ADR-082 cancelled the key with it.**
+//! With `u = -L*grad P` the courant number of a face is
 //! `L*k*dt/dx^2 * (theta_low - theta_high)`; deriving `L` from "one voxel per
 //! tick at `theta_max`" fixes the whole product `L*k*dt/dx^2` at `1/theta_max`.
-//! The folded number is therefore `1/theta_max` and `k` takes no part in the
-//! arithmetic whatsoever. The consequence is uncomfortable and belongs in this
-//! file rather than in a commit message: a wrong `k` — bars instead of pascals, a
-//! factor of `1e5` — changes not one bit of any run, the only declared pressure
-//! key turns out to be inert, and calibrating it calibrates nothing. Guarding
-//! that is the host's job; naming it is this file's, because ADR-055 closed the
-//! unit of `k` precisely against "for years compensated by calibration", and a
-//! quantity that cancels is the same disease approached from the other side.
+//! The folded number is therefore `1/theta_max`, and `k` takes no part in the
+//! arithmetic whatsoever — a wrong `k`, bars instead of pascals, a factor of
+//! `1e5`, would have changed not one bit of any run. ADR-055 closed the *unit* of
+//! `k` precisely against "for years compensated by calibration", and a quantity
+//! that cancels is the same disease one step deeper, so ADR-082 cancels the
+//! second half of the decision of ADR-055 outright: `k` stops being a key of the
+//! schema and a row of `QUANTITIES.md`, and the only declared knob left is
+//! `theta_max`. The rest of ADR-055 stands.
 //!
 //! # `V_occ` is amounts times partial molar volumes, and nothing else
 //!
@@ -73,23 +81,41 @@
 //! and the voxel's own from the `dst` it has just written: the two sides of a
 //! face then disagree and matter flows.
 //!
-//! # One voxel per tick is a ceiling, not slowness
+//! # One voxel per tick is a ceiling on **one face**, and the response is
+//! diffusive
 //!
-//! ADR-055 answers the objection that local relaxation is too slow by measuring
-//! against the source of volume rather than against a Poisson projection: the
-//! signal crosses the domain in 128 ticks against 1200 ticks per bacterial
-//! generation (SPEC section 1.7). One voxel per tick is **the Courant ceiling** —
-//! pressure cannot drive a flux faster without leaving stability — so several
-//! relaxation iterations per tick buy nothing, and ADR-055 rejects them by name
-//! ("the same as raising `k`, by a detour"). The honest price the same record
-//! names: while the signal settles, an overflow of order `128/1200 ~ 11%`
-//! accumulates, and measuring it is the job of a golden test with a piston.
+//! ADR-055 answered the objection that local relaxation is too slow by measuring
+//! against the source of volume rather than against a Poisson projection, and
+//! estimated the crossing of the domain at 128 ticks against 1200 ticks per
+//! bacterial generation (SPEC section 1.7). **ADR-082 cancels that consequence
+//! and leaves the decision standing.** One voxel per tick is the ceiling of the
+//! flux through *one* face at `delta_theta = theta_max` — on six such faces a
+//! voxel would give away six of its pools — and not the speed of a signal. The
+//! linearised operator is explicit diffusion with `alpha = Theta/theta_max`, so a
+//! disturbance over `l` voxels relaxes in `l^2*theta_max/(pi^2*Theta)`
+//! applications: `1.40e3` across a 48-cubed domain and `3.99e4` across a
+//! 256-cubed one, not 128.
+//!
+//! The effective diffusivity is `alpha*dx^2/dt`, which at the floor of the window
+//! is `1.663e-9 m^2/s` against the ceiling `dx^2/(6*dt) = 1.667e-9` — the same
+//! ceiling every diffusive field has (ADR-030). At **no** admissible `theta_max`
+//! does volume spread faster than carbon dioxide. Several relaxation iterations
+//! per tick still buy nothing: each is bound by the same `alpha <= 1/6`, so `m`
+//! passes buy a factor of `m` at best, and getting 128 ticks back on a 128-cubed
+//! grid would take 78 passes of step `e` per tick.
+//!
+//! The comparison ADR-055 wanted is not wrong, only its left-hand side was: a
+//! biofilm relaxes on **its own** length, and at `l = 5` voxels that is 15.2
+//! ticks, deep inside a generation. What length is the right one once cells are
+//! the source of volume is `OPEN_QUESTIONS.md` A-29 and is not settled here.
 //!
 //! The kernel cannot know it is being run once every `n` ticks, and that would
 //! multiply the effective step of a number already derived at the ceiling.
 //! ADR-030 forbids `every_n_ticks > 1` for a diffusive field for exactly this
-//! reason; whether the ban extends to this operator is settled nowhere, and
-//! `settle.rs` already records the same gap for its own.
+//! reason, and ADR-082 settles that the ban **does** extend to this operator: the
+//! rule is stated over the field, and this one moves the same `amount[]` whose
+//! substances declare a `diffusivity`. `config/derive.rs` enforces it, under the
+//! existing name rather than a new one.
 //!
 //! # Conservation rests on the layout, and the rounding trap is inverted
 //!
@@ -240,16 +266,10 @@ pub struct PressureParams {
     /// ADR-067 states the form word for word: the number is folded on the host in
     /// `f64` and arrives as one `Q`, with no bare operators over `Q` inside
     /// (ADR-022).
-    // TODO(theta-max): the limiting overflow ADR-055 derives the mobility from is
-    // **declared nowhere**. `CONFIG_SCHEMA.md` section 7 carries only the
-    // stiffness `k` on the pressure row — and not even an ASCII name for it,
-    // section 13 item 23 — while `QUANTITIES.md` section 4 has `k` and the
-    // mobility as derived. Without `theta_max` this number has no value at all,
-    // and a plausible one invented here would be indistinguishable from a
-    // decision. It is settled by a record in the journal plus a key in
-    // `CONFIG_SCHEMA.md` section 7, together with the question this work raises
-    // anew: since `k` cancels, is it still a key of the scenario, and what does
-    // it observe.
+    ///
+    /// `theta_max` is a declared key since ADR-082 — `[[process]] id = "pressure"`,
+    /// required when the process is on, with no default — and it reaches a host
+    /// through `Derived::pressure`, which is also where its window is checked.
     pub courant_per_overflow: Q,
 }
 
@@ -331,9 +351,10 @@ pub struct Occupants<'a> {
 // decision yet. The precedent for the price is ADR-045 — four bytes per voxel, on
 // a base that ADR-062 and ADR-067 have already moved to 234 bytes and 490 MB at
 // 128^3 — and no record has budgeted it; `[[field]]` in `CONFIG_SCHEMA.md`
-// section 6 does not know it. The same place has to answer whether the stored
-// field holds pascals or the dimensionless overflow, because the observability of
-// `k` depends on the answer.
+// section 6 does not know it. **What the field holds is settled** and is the
+// dimensionless `V_occ/V_voxel - 1` (ADR-082): the stiffness cancels out of the
+// derivation of the mobility, so there is nothing left to make a pascal out of.
+// Only the owner and the budget are open.
 pub fn overflow_voxel(
     src32: &[M32],
     src64: &[M64],
@@ -398,19 +419,24 @@ pub fn overflow_voxel(
 // one voxel"; ADR-069 counts "at most 1 voxel from pressure" inside a sum of
 // 2.17; neither picks.
 //
-// Worse, and separately: for pressure the courant number is a function of the
+// Separately: for pressure the courant number of a *face* is a function of the
 // **state**, not of the config, so the load-time check that guards advection and
-// settling does not exist here and cannot be built. And a third condition, which
-// neither of the two named ones implies, is the one under which this relaxation
-// actually relaxes: the donor factor of the flux is the whole pool, so
-// linearising about a uniform state gives an effective `alpha` of
+// settling does not exist here. It does not follow that no load-time check can be
+// built, and ADR-082 built one — see below. And a third condition, which neither
+// of the two named ones implies, is the one under which this relaxation actually
+// relaxes: the donor factor of the flux is the whole pool, so linearising about a
+// uniform state gives an effective `alpha` of
 // `courant_per_overflow * (theta + 1)` — the **occupancy**, not the difference —
 // and the seven-point stability limit is `6*alpha <= 1`. Above it neighbouring
 // voxels swap pools every tick, conserving matter exactly, with antisymmetry, the
 // closed face, the uniform fixed point and both axes of the ledger all green.
-// `pressure_relaxation_reaches_hydrostatic_equilibrium` is the only test in this
-// file that can see it, and it picks its number from this third condition because
-// the corpus does not offer it one.
+// `the_relaxation_oscillates_once_the_occupancy_exceeds_a_sixth_of_theta_max` is
+// what sees it, and `config/derive.rs` refuses the floor of that condition at
+// load: `Theta_sup` is an upper estimate of the occupancy over the declared
+// `max_conc` and `V_bar`, so `theta_max >= 6*Theta_sup` is checkable exactly the
+// way the Courant number of advection is (ADR-082). Which of the two conditions
+// of SPEC section 4.2 the derived mobility satisfies stays open: the third one
+// picks neither.
 #[inline(always)]
 pub fn face_courant(low: Q, high: Q, p: &PressureParams) -> Q {
     qmul(qsub(low, high), p.courant_per_overflow)
@@ -992,6 +1018,17 @@ mod tests {
     /// central claim of ADR-055. Two assertions, and neither alone is what that
     /// record requires.
     ///
+    /// **Renamed, not replaced** (ADR-082). The old name,
+    /// `pressure_signal_crosses_the_domain_at_one_voxel_per_tick`, lied: one voxel
+    /// per tick is the ceiling of the flux through **one** face at
+    /// `delta_theta = theta_max`, not the speed of a signal — on six such faces a
+    /// voxel would give away six of its pools. The response is diffusive, and
+    /// `pressure_crosses_the_domain_in_diffusive_time_not_at_one_voxel_per_tick`
+    /// below is what measures it. The body is untouched, because the body never
+    /// lied: `assert_reached_at_most` is about the support of one application,
+    /// which is a property of the stencil and holds at any Courant number, and it
+    /// is the only check of the width of the stencil in this file.
+    ///
     /// **The ceiling holds.** After `n` applications the set of voxels that differ
     /// from the initial state is contained in the `n`-th face neighbourhood of the
     /// perturbed voxel — at **any** overflow, including one far past the declared
@@ -1003,16 +1040,18 @@ mod tests {
     /// backward one.
     ///
     /// **The ceiling is reached.** ADR-055 derives the mobility so that the
-    /// response is "always the fastest of the stable ones, rather than quietly
-    /// slower by oversight", which means the folded number is `1/theta_max`: a
-    /// face whose overflow difference equals the declared limit carries the
-    /// donor's whole pool. This is the direct analogue of
+    /// response is the fastest of the stable ones *for the declared*
+    /// `theta_max` — ADR-082 reworded that consequence, because the literal
+    /// maximum of the stable ones is the floor of the window and leaves no margin
+    /// at all — which means the folded number is `1/theta_max`: a face whose
+    /// overflow difference equals the declared limit carries the donor's whole
+    /// pool. This is the direct analogue of
     /// `at_courant_one_the_flux_is_pure_donor_transfer` in `advect.rs`, and it is
     /// what a mobility understated by a factor of six fails — the sixth being the
     /// gap between the two conditions of SPEC section 4.2 that nobody has chosen
     /// between (see `TODO(courant-condition)`).
     #[test]
-    fn pressure_signal_crosses_the_domain_at_one_voxel_per_tick() {
+    fn one_application_of_pressure_reaches_at_most_one_voxel() {
         // The ceiling holds, at a courant the host would actually fold. A uniform
         // world with one voxel disturbed, relaxed repeatedly, with the overflow
         // field recomputed every time off the state it is about to move.
@@ -1110,12 +1149,17 @@ mod tests {
     ///
     /// **The name promises more than the mechanism has, and that has to be said
     /// here rather than discovered later.** Hydrostatics needs gravity, and there
-    /// is no `g` in any formula of this file or of ADR-055: gravity enters only
-    /// the settling velocity (ADR-067) and is not a key of the schema at all
-    /// (`CONFIG_SCHEMA.md` section 13 item 23 exists so that nobody hard-codes
-    /// 9.81 in silence). Either the name means the fixed point of a uniform
-    /// occupancy, which is what is asserted below, or it needs step `f` standing
-    /// next to it — and the corpus does not say which.
+    /// is still no `g` in any formula of this file or of ADR-055: gravity enters
+    /// the settling velocity and nothing else (ADR-067). The second half of this
+    /// caveat used to read "and it is not a key of the schema at all", and
+    /// ADR-085 made that false — `physics.g` is a key now, with a declared
+    /// default of `9.80665 m/s^2`. What the record did not answer is the
+    /// question the caveat was serving: whether hydrostatics has a carrier in
+    /// this model besides settling, that is whether the declared `g` belongs in
+    /// this operator at all (**A-27** in `OPEN_QUESTIONS.md`). Either the name
+    /// means the fixed point of a uniform occupancy, which is what is asserted
+    /// below, or it needs step `f` standing next to it — and the corpus still
+    /// does not say which.
     ///
     /// This is also the one test in the file that can see a checkerboard: a state
     /// where two neighbours swap pools every tick, conserving matter exactly and
@@ -1169,6 +1213,245 @@ mod tests {
         // And it got there by moving, or the assertions above hold over a chain
         // that never started.
         assert_ne!(lane_of_32(&src32), start);
+    }
+
+    // --- the window of ADR-082, measured -----------------------------------
+    //
+    // The two tests below run on a fixture of their own rather than on
+    // `filled()`, and the reason is arithmetic rather than tidiness. Both are
+    // statements about the **linearisation** of the scheme — the growth factor of
+    // a mode, and the time constant of the slowest one — and the linearisation is
+    // only visible where the rounding of a face flux to a whole storage unit is
+    // negligible against the flux itself. So: one occupant, a coefficient of
+    // `2^-20`, and a base amount of `2^20` that makes the occupancy exactly one.
+    // Every occupancy below is then a small dyadic number, exact in `f32`, and
+    // every face carries thousands of units where `filled()` would carry tens.
+
+    /// `V_bar/(units_per_mol*V_voxel)` of the single occupant these two tests
+    /// fold. A negative power of two, so every product below is exact.
+    const LINEAR_COEFF: f64 = 1.0 / 1_048_576.0;
+
+    /// The amount at which that occupant fills a voxel exactly: `Theta = 1`,
+    /// `theta = 0`. Under `2^24`, so an amount is exact in `f32` as well.
+    const LINEAR_BASE: i32 = 1 << 20;
+
+    fn linear_params(
+        nx: u32,
+        ny: u32,
+        nz: u32,
+        periodic_mask: u32,
+        theta_max: f64,
+    ) -> PressureParams {
+        let n_voxels = nx * ny * nz;
+        PressureParams {
+            nx,
+            ny,
+            nz,
+            n_voxels,
+            lane_len: n_voxels,
+            n_occupants: 1,
+            width_mask: 0,
+            periodic_mask,
+            courant_per_overflow: Q::from_f64(1.0 / theta_max),
+        }
+    }
+
+    /// The overflow field of the single-occupant fixture.
+    fn linear_overflow(src: &[M32], p: &PressureParams) -> Vec<Q> {
+        let lane = [0u32];
+        let coeff = [Q::from_f64(LINEAR_COEFF)];
+        let occ = Occupants {
+            lane: &lane,
+            coeff: &coeff,
+        };
+        let mut dst = vec![Q::ZERO; p.n_voxels as usize];
+        for idx in 0..p.n_voxels {
+            // `src64` is empty and never read: `width_mask` is zero, so the branch
+            // is uniform and takes the narrow side for every entry.
+            overflow_voxel(src, &[], &mut dst, &occ, p, idx);
+        }
+        dst
+    }
+
+    /// One application over the single lane.
+    fn linear_apply(src: &[M32], p: &PressureParams) -> Vec<M32> {
+        let overflow = linear_overflow(src, p);
+        let mut dst = vec![M32::ZERO; p.n_voxels as usize];
+        for idx in 0..p.n_voxels {
+            relax_voxel_32(src, &overflow, &mut dst, p, idx);
+        }
+        dst
+    }
+
+    /// `ACCEPTANCE.md`, section "Conservation" (ADR-082).
+    ///
+    /// The condition that actually binds this operator is neither of the two of
+    /// SPEC section 4.2. The donor of a face is the whole pool, so linearising
+    /// about a uniform state gives explicit diffusion with
+    /// `alpha = Theta/theta_max` — the **occupancy**, not the overflow and not the
+    /// difference across the face — whose checkerboard growth factor is
+    /// `g = 1 - 12*alpha`. Hence `|g| <= 1` iff `alpha <= 1/6` iff
+    /// `theta_max >= 6*Theta`, which is the floor the loader now checks
+    /// `theta_max` against, using `Theta_sup` for `Theta`.
+    ///
+    /// At `Theta = 1` the numbers are 0.93548 at `theta_max = 6.2`, 1.00000 at 6.0
+    /// and 1.06897 at 5.8. Only the two ends are asserted: at a finite amplitude
+    /// the donor carries a factor `(1 + d)`, which puts the exact boundary 0.4% on
+    /// the unstable side of one, and a test that pretended otherwise would be
+    /// asserting the amplitude rather than the threshold.
+    ///
+    /// **This is the only test in the project that can see the failure the floor
+    /// exists to prevent.** Above the limit neighbouring voxels swap pools every
+    /// tick: matter is conserved exactly, the flux stays antisymmetric, a closed
+    /// face still carries nothing, a uniform occupancy is still a fixed point and
+    /// both halves of the ledger stay green — while the field diverges. The
+    /// conservation assertion below sits inside the unstable branch on purpose, so
+    /// that this reads as a statement rather than as a hope.
+    #[test]
+    fn the_relaxation_oscillates_once_the_occupancy_exceeds_a_sixth_of_theta_max() {
+        // Four voxels on a side: a checkerboard closes on a torus only where every
+        // extent is even, and this file's own 3x4x5 has an odd one.
+        const EDGE: u32 = 4;
+        const N: u32 = EDGE * EDGE * EDGE;
+        // `theta = +-2^-8`: small enough that `(1 + d)` moves the growth factor by
+        // 0.4%, large enough that a face carries thousands of units.
+        const AMPLITUDE: i32 = 1 << 12;
+
+        let checkerboard = || -> Vec<M32> {
+            (0..N)
+                .map(|idx| {
+                    let x = idx % EDGE;
+                    let y = (idx / EDGE) % EDGE;
+                    let z = idx / (EDGE * EDGE);
+                    let sign = if (x + y + z).is_multiple_of(2) { 1 } else { -1 };
+                    M32::new(LINEAR_BASE + sign * AMPLITUDE)
+                })
+                .collect()
+        };
+        let total = |lane: &[M32]| -> i64 { lane.iter().map(|v| v.to_i64()).sum() };
+
+        // Below the limit the mode decays, monotonically and at every step.
+        let p = linear_params(EDGE, EDGE, EDGE, TORUS, 6.2);
+        let mut src = checkerboard();
+        let mut spread = spread_of(&linear_overflow(&src, &p));
+        for step in 0..8 {
+            src = linear_apply(&src, &p);
+            let after = spread_of(&linear_overflow(&src, &p));
+            assert!(
+                after < spread,
+                "at theta_max = 6.2 the checkerboard grew from {spread} to \
+                 {after} at step {step}: 6*Theta/theta_max = {} < 1",
+                6.0 / 6.2
+            );
+            spread = after;
+        }
+
+        // Above it the same mode grows, and every invariant the project has stays
+        // green while it does.
+        let p = linear_params(EDGE, EDGE, EDGE, TORUS, 5.8);
+        let mut src = checkerboard();
+        let start = total(&src);
+        let mut spread = spread_of(&linear_overflow(&src, &p));
+        for step in 0..8 {
+            src = linear_apply(&src, &p);
+            assert_eq!(total(&src), start, "step {step} lost matter");
+            let after = spread_of(&linear_overflow(&src, &p));
+            assert!(
+                after > spread,
+                "at theta_max = 5.8 the checkerboard decayed from {spread} to \
+                 {after} at step {step}: 6*Theta/theta_max = {} > 1, so the \
+                 scheme has to oscillate",
+                6.0 / 5.8
+            );
+            spread = after;
+        }
+
+        // And the uniform occupancy the mode sits on is a fixed point, or the
+        // growth above could be anything at all.
+        let uniform = vec![M32::new(LINEAR_BASE); N as usize];
+        assert_eq!(linear_apply(&uniform, &p), uniform);
+    }
+
+    /// `ACCEPTANCE.md`, section "Conservation" (ADR-082).
+    ///
+    /// The response of this operator is **diffusive**, and that cancels the
+    /// consequence ADR-055 drew about "128 ticks to cross the domain". One voxel
+    /// per tick is the ceiling of the flux through **one** face at
+    /// `delta_theta = theta_max`, not the speed of a signal; the linearised
+    /// operator is explicit diffusion with `alpha = Theta/theta_max`, so a
+    /// disturbance over a closed column of `l` voxels relaxes in
+    /// `tau = l^2*theta_max/(pi^2*Theta)` applications and not in `l` of them.
+    ///
+    /// The effective diffusivity that follows is `alpha*dx^2/dt`, which at the
+    /// floor of the window on the shipped registry is `1.663e-9 m^2/s` against a
+    /// ceiling of `dx^2/(6*dt) = 1.667e-9` — the same ceiling every diffusive
+    /// field has (ADR-030), and below the `1.9e-9` of carbon dioxide at **any**
+    /// admissible `theta_max`.
+    ///
+    /// The initial state is the slowest mode itself, `cos(pi*(i + 1/2)/l)`, and
+    /// not a single disturbed voxel. A delta contains every mode, the short ones
+    /// die within a few applications, and the amplitude would be a quarter of its
+    /// initial value after `l` steps for reasons that have nothing to do with the
+    /// question — the test would be measuring the decay of the short modes and
+    /// calling it the crossing time.
+    #[test]
+    fn pressure_crosses_the_domain_in_diffusive_time_not_at_one_voxel_per_tick() {
+        // Closed on all six faces and one voxel across in X and Y. An axis one
+        // voxel deep is its own neighbour and carries nothing, so this is exactly
+        // the one-dimensional problem the formula is written for.
+        const LENGTH: u32 = 8;
+        const THETA_MAX: f64 = 6.2;
+        // `theta` runs over `+-2^-4`. Larger than the checkerboard fixture allows,
+        // because in one dimension the growth factor is `1 - 4*alpha` and the
+        // amplitude has room.
+        const AMPLITUDE: f64 = 0.0625;
+
+        let p = linear_params(1, 1, LENGTH, CLOSED, THETA_MAX);
+        let mode = |i: u32| -> f64 {
+            (std::f64::consts::PI * (f64::from(i) + 0.5) / f64::from(LENGTH)).cos()
+        };
+        let mut src: Vec<M32> = (0..LENGTH)
+            .map(|i| {
+                let delta = AMPLITUDE * mode(i) * f64::from(LINEAR_BASE);
+                M32::new(LINEAR_BASE + delta.round() as i32)
+            })
+            .collect();
+
+        // `tau = l^2*theta_max/(pi^2*Theta)` at `Theta = 1`: 40.2 applications
+        // against the eight the old name promised.
+        let tau = f64::from(LENGTH * LENGTH) * THETA_MAX / std::f64::consts::PI.powi(2);
+        assert!(
+            tau > 5.0 * f64::from(LENGTH),
+            "the fixture does not separate the two claims: tau = {tau}"
+        );
+
+        let start = spread_of(&linear_overflow(&src, &p));
+        let mut reached = None;
+        for step in 1..=(2.0 * tau) as u32 {
+            src = linear_apply(&src, &p);
+            let spread = spread_of(&linear_overflow(&src, &p));
+
+            // The disturbance has *not* crossed the column after `l` applications.
+            if step == LENGTH {
+                assert!(
+                    spread > start / 2.0,
+                    "after {LENGTH} applications the disturbance is already down \
+                     to {spread} from {start}, which is what one voxel per tick \
+                     would look like"
+                );
+            }
+            if reached.is_none() && spread < start / std::f64::consts::E {
+                reached = Some(step);
+            }
+        }
+
+        let reached = reached.expect("the column never relaxed within two tau");
+        assert!(
+            f64::from(reached) > tau / 2.0,
+            "the column relaxed in {reached} applications against a predicted tau \
+             of {tau}: the response is faster than diffusion, which no stencil of \
+             this shape can be"
+        );
     }
 
     /// Obligatory for every new flux function (`.claude/rules/kernels.md`) — and

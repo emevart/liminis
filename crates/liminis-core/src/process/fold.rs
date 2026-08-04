@@ -22,8 +22,12 @@
 //! on and the reactions off gets no fold at all, absorbed light reaches neither
 //! the enthalpy nor `SOLAR_IN`, and the world does not warm from illumination.
 //! Today that state is unreachable — `refuse_if_blocked` rejects the light
-//! process outright while energy has no sink (ADR-076) — and the day it becomes
-//! reachable the gate opens by a record, not by an edit to the condition.
+//! process outright while the attenuator table it needs can be built from
+//! nothing (`TODO(attenuation-measure)` in `process/light.rs`) — and the day it
+//! becomes reachable the gate opens by a record, not by an edit to the
+//! condition. The reason named here used to be "energy has no sink"; ADR-084
+//! ratifies the built `exchange` face as that sink, so no argument in this
+//! corpus may rest on its absence any more.
 //!
 //! # The one number this file must not invent
 //!

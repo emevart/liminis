@@ -51,7 +51,7 @@ use std::collections::BTreeMap;
 
 /// A scenario configuration, after defaults have been applied.
 ///
-/// Thirteen root keys. `seed` is not among them and cannot be: the seed is a run
+/// Fourteen root keys. `seed` is not among them and cannot be: the seed is a run
 /// parameter (`--seed`), reaches the generator as the fourth counter of the
 /// mixer, and stays out of `config_hash` so that the identity triple does not
 /// degenerate (ADR-058, `CONFIG_SCHEMA.md` section 2). A `seed` line in a
@@ -95,6 +95,23 @@ pub struct Config {
     pub grid: Grid,
     #[serde(default)]
     pub boundary: Boundary,
+    /// The constants of the medium the world sits in (ADR-085).
+    ///
+    /// Not an `Option`, and for the reason [`Config::initial`] and
+    /// [`Config::calibration`] give: an absent section and an empty one would
+    /// become two configurations with one hash. The `#[serde(default)]` is what
+    /// lets a scenario omit it, and what makes the omission print Earth and
+    /// fresh water into the canonical form rather than vanish from it
+    /// (ADR-065).
+    ///
+    /// Between `[boundary]` and `[[substance]]`, among the tables and not among
+    /// the scalars (`CONFIG_SCHEMA.md` section 11 item 3). **The position itself
+    /// is a choice made here**: ADR-085 fixes only that the field stands among
+    /// the tables, and moving it later compiles, changes the `config_hash` of
+    /// every scenario in existence and turns nothing red — the note in the
+    /// header of `config/hash.rs` is about exactly this.
+    #[serde(default)]
+    pub physics: Physics,
     #[serde(default)]
     pub substance: Vec<Substance>,
     #[serde(default)]
@@ -191,6 +208,109 @@ impl Default for Boundary {
     }
 }
 
+/// The constants of the medium every grain of the world falls through
+/// (ADR-085).
+///
+/// Three keys, two defaults and one `Option`, and the asymmetry is measured
+/// rather than chosen. Over the temperature range a scenario declares — 50 K in
+/// the worked example — the viscosity of water moves by a factor of **3.27**,
+/// the density of water by **1.18 %**, and `g` by nothing at all. So `mu` has no
+/// defensible default and the other two do; ADR-085 makes `mu` required when the
+/// settling process is on, which is a rule of the validator and is why the type
+/// is an `Option` and not a plain field.
+///
+/// The section exists rather than three root scalars, and that is not tidiness:
+/// scalars have to stand ahead of every table (section 11 item 3), the root
+/// already carries four, and `mu` is a calibrated key that would have no place
+/// among them — leaving the three inputs of one formula in two places, which is
+/// the state ADR-085 was written to end.
+///
+/// **`rho_medium` is a declared constant and never the mixture density of a
+/// voxel** (ADR-067, confirmed by ADR-085). The per-voxel reading is a quotient
+/// whose denominator has no lower bound — partial molar volumes are legally
+/// negative — so it has a pole, and with it the one property the settling
+/// velocity has today: being known exactly at load, which is what makes the
+/// Courant condition provable there. The price is named: the constant lies by
+/// 0.85 % in the water column and by a factor of 2.5 in laid sediment, and the
+/// second of those ADR-067 already handed to compaction in the geology.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Physics {
+    /// Gravitational acceleration, m/s^2. Default `9.80665` (ADR-085).
+    ///
+    /// The standard acceleration of CGPM 1901, which is an exactly defined
+    /// quantity with an edition behind it — and not `9.81`, which is a rounding
+    /// with no source. The difference is 0.034 %, invisible in any picture and
+    /// wholly absorbed by the calibration of the sedimentation rate, which is
+    /// precisely why the choice cannot be made by its consequences (ADR-055).
+    ///
+    /// Zero is legal, and deliberately: a scenario without gravity settles
+    /// nothing, and forbidding it would be a statement about physics that
+    /// ADR-085 does not make. The precedent is `partial_molar_volume = 0`
+    /// (ADR-067) and `i_surface = 0` (ADR-076). The cost is that a typo and a
+    /// decision are then indistinguishable from outside the file.
+    ///
+    /// Addressable by a `[[calibration]]` path like any other key (ADR-038).
+    /// ADR-085 permits that by silence and says so out loud: forbidding it would
+    /// need a list of non-calibratable paths that no record keeps.
+    #[serde(default = "default_g")]
+    pub g: f64,
+    /// Density of the medium, kg/m^3. Default `1000.0` (ADR-085).
+    ///
+    /// Fresh water, and derived from the project's own registry rather than
+    /// quoted: the shipped `typical_conc = 55500 mol/m^3` at
+    /// `molar_mass = 18.01528 g/mol` gives `999.848`, and the declared
+    /// `partial_molar_volume = 1.807e-5` gives `996.97`. The default stands
+    /// 0.015 % above the first and 0.30 % above the second, both inside the
+    /// 1.18 % the declared temperature range spans on its own.
+    ///
+    /// Not `1025` — sea water — because the solutes of this model are already
+    /// substances with a declared `partial_molar_volume`: the extra 25 kg/m^3
+    /// either sits in the registry, and declaring it again counts it twice, or
+    /// does not, and is then salt no `[[substance]]` declared.
+    #[serde(default = "default_rho_medium")]
+    pub rho_medium: f64,
+    /// Dynamic viscosity of the medium, Pa*s. **Required when the settling
+    /// process is enabled**, with no default (ADR-085).
+    ///
+    /// The predicate is the process and never "some substance declares a
+    /// radius", and the code dictates it rather than taste: `SettlePhase::fold`
+    /// builds a `Settle` for **every** lane so that a bad declaration is refused
+    /// at load rather than ignored for sitting beside a zero, and
+    /// `settling_velocity` checks the viscosity *before* the branch on a zero
+    /// radius. A phase built at all therefore wants a usable `mu` whatever the
+    /// radii are, and the predicate `CONFIG_SCHEMA.md` used to print is
+    /// unexecutable in that shape.
+    ///
+    /// It moved here from the pressure process's parameters (ADR-067) and then
+    /// out of `[[process]]` altogether: at `pressure.enabled = false` settling
+    /// had nowhere to take a viscosity from, and a `[[process]]` record is a
+    /// structure that can be switched off, while the medium is not.
+    pub mu: Option<f64>,
+}
+
+/// Written out by hand and **never** `#[derive(Default)]`, which is the one
+/// mistake in this file that no other test can see.
+///
+/// Derived, the two defaults would have two doors that disagree: a section
+/// missing from the file would materialise as `g = 0, rho_medium = 0`, while a
+/// section present and silent about `g` would get `9.80665` from serde. Both
+/// worlds load, both conserve exactly, both close either half of the ledger, and
+/// the first simply settles nothing.
+/// `an_omitted_physics_section_hashes_as_earth_and_fresh_water` is what notices.
+impl Default for Physics {
+    fn default() -> Self {
+        Self {
+            g: default_g(),
+            rho_medium: default_rho_medium(),
+            // Absent and not zero, on the model of `theta_max` (ADR-082). A
+            // materialised `Some(_)` here would be a default ADR-085 does not
+            // assign, printed into a hashed document.
+            mu: None,
+        }
+    }
+}
+
 /// The condition on one face of the domain.
 ///
 /// Not `world::Boundary`, which is the same three cases on the runtime side.
@@ -228,6 +348,14 @@ pub struct Reservoir {
     pub t_out: f64,
     /// Exchange velocity, m/s. One number for every substance is a declared
     /// simplification (ADR-059); physically it scales as `D^(1/2)…D^(2/3)`.
+    ///
+    /// **Since ADR-084 this one number works for two.** It is the piston velocity
+    /// of the gas exchange it was declared for, and it is also the thermal
+    /// conductance of the lid — `k_ex * sum(conc_out * c_p)`, W/(m^2*K) — against
+    /// which a lit scenario's steady state is judged. That is two different
+    /// physics under one key, and the coincidence of magnitudes is not designed.
+    /// Splitting the thermal exchange rate from the gaseous one is **A-26** in
+    /// `OPEN_QUESTIONS.md`, not a second key invented here without an operator.
     pub k_ex: f64,
     /// Outside concentration, mol/m^3, per substance of the registry.
     ///
@@ -442,6 +570,15 @@ pub struct Field {
 /// no ADR assigns a refusal to it — so two runs differing by a stray key on an
 /// unrelated process are declared different runs.
 ///
+/// **There is no field `k` here and there will not be** (ADR-082). The stiffness
+/// of the artificial medium cancels out of the derivation of the mobility
+/// together with `dt` and `dx`, so declaring it would name a number that changes
+/// not one bit of a run. The caveat ADR-082 writes down, without which the claim
+/// is false: the same flat structure **accepts** `k_w … k_m` on any process
+/// record, pressure included, so "a stiffness cannot be declared" rests on the
+/// choice of letter and not on the shape of the schema — and no acceptance name
+/// should be built on it.
+///
 /// Absence of a record means the process's *default*, not the process's absence
 /// (ADR-065). The trap is exactly one, and it is worth repeating here: deleting
 /// a block no longer switches a process off. The only way off is
@@ -463,9 +600,6 @@ pub struct Process {
     /// ticks multiplies the effective `dt` (ADR-030).
     #[serde(default = "default_every_n_ticks")]
     pub every_n_ticks: u32,
-    /// Viscosity of the medium, Pa·s. Needed wherever `w_sed` is derived, that
-    /// is with at least one substance at `settling_radius > 0` (ADR-067).
-    pub mu: Option<f64>,
     /// Upper bound on the convective speed, m/s (ADR-069). Required when the
     /// velocity-field process is on, with no default.
     pub u_conv_max: Option<f64>,
@@ -510,10 +644,19 @@ pub struct Process {
     /// discrete normalisation `A_N` of ADR-076 is what makes that exact rather
     /// than approximate.
     ///
-    /// Zero is legal and is the closed-box scenario. Anything above zero is
-    /// refused for now (ADR-076), because energy has no sink in any scenario.
-    /// That used to be one of two locks; the other, the width of a channel
-    /// counter, was answered by ADR-083.
+    /// Zero is legal and is the dark-box scenario. Above zero the key is subject
+    /// to two narrow rules rather than to the blanket refusal it used to meet
+    /// (ADR-084), because the sink of S0 is now named: it is the **built
+    /// `exchange` face**, whose enthalpy flux steps `c` and `d` credit to
+    /// `BOUNDARY_EXCHANGE` on every substep. `RADIATIVE_OUT` stays unwritten and
+    /// is not the sink.
+    ///
+    /// The rules are: a lit scenario needs at least one `exchange` face and the
+    /// `[boundary.reservoir]` section that face obliges; and `i_surface` may not
+    /// exceed the flux that face can carry away in steady state,
+    /// `k_ex * sum(conc_out * c_p) * (t_max - t_out)`, past which the domain
+    /// settles outside the declared temperature range that `k_E` was derived
+    /// from.
     pub i_surface: Option<f64>,
     /// Amplitude of the daily modulation as a fraction of `i_surface`, in
     /// `[0, 1]`. Default `0` (ADR-076), on the model of `stir_fraction`.
@@ -539,6 +682,31 @@ pub struct Process {
     /// Its mean needs no normalisation: `sum sin` over a whole number of ticks is
     /// an exact zero, so `1 + f_s*sin` averages to exactly one.
     pub seasonal_period: Option<f64>,
+    /// The limiting overflow of the pressure process, **dimensionless**
+    /// (ADR-082). Required when the process is on, with no default — the
+    /// precedent is `i_surface` (ADR-076) and `u_conv_max` (ADR-069).
+    ///
+    /// No `#[serde(default)]`, and the absence is the decision. ADR-065 rejected
+    /// a default in `config/` in as many words — this file is not covered by the
+    /// CI guard of ADR-020, so moving the number would change the semantics of
+    /// every run without moving `WORLD_FORMAT_VERSION` — and ADR-082 adds the
+    /// second half: a plausible number here is indistinguishable from a decision,
+    /// and because the scheme conserves exactly, both halves of the invariant of
+    /// ADR-028 would close over it for ever. The flat structure adds a third:
+    /// a default would print `theta_max` on all nine records of the canonical
+    /// form, claiming in a hashed document that diffusion and light have a
+    /// limiting overflow.
+    ///
+    /// Dimensionless and never in pascals. The whole mobility is derived from
+    /// this one number — the kernel is handed `1/theta_max`, and `L`, `k`, `dt`
+    /// and `dx` collapse into it without remainder — so the only knob a
+    /// `[[calibration]]` can address is this one.
+    ///
+    /// The window it has to lie in is `6*Theta_sup <= theta_max` and
+    /// `N_max^2*theta_max/(pi^2*Theta_typ) <= 1e6` ticks, both derived from the
+    /// declared registry and the grid in `config/derive.rs`. Neither is a
+    /// property of this key alone, which is why neither is here.
+    pub theta_max: Option<f64>,
 }
 
 /// The initial state, as far as a scenario declares it (ADR-077).
@@ -649,6 +817,18 @@ fn default_dt() -> f64 {
 
 fn default_beta() -> f64 {
     0.015625
+}
+
+/// Standard gravity, `g_n = 9.80665 m/s^2` (CGPM, 1901), and the one door both
+/// halves of the default go through — see [`Physics::default`] for why there is
+/// exactly one.
+fn default_g() -> f64 {
+    9.806_65
+}
+
+/// Fresh water at the temperature the corpus's own registry implies (ADR-085).
+fn default_rho_medium() -> f64 {
+    1000.0
 }
 
 /// The five default conserved quantities, name to molar mass in g/mol.

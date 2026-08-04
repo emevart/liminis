@@ -162,9 +162,10 @@ const VELOCITY_PROCESS: &str = ProcessId::VelocityField.id();
 /// The default of `enabled` for the light, taken from the process itself.
 ///
 /// `false`, and by decision rather than by omission since ADR-076: light on by
-/// default would put an energy input into every scenario in the repository that
-/// has no sink and whose counter does not hold one tick of it — so every
-/// scenario would be refused by the very record that declared the key.
+/// default would put an energy input into every scenario in the repository, and
+/// step `a` does not dispatch — so `Tick::new` would refuse every one of them.
+/// Neither the sink nor the counter width is the reason any more (ADR-084,
+/// ADR-083); the whole argument lives at the definition in `process/light.rs`.
 use crate::process::light::{ENABLED_BY_DEFAULT as LIGHT_ENABLED_BY_DEFAULT, daily_sample};
 
 /// The default of `enabled` for the velocity field, taken from the process itself
@@ -175,6 +176,45 @@ use crate::process::light::{ENABLED_BY_DEFAULT as LIGHT_ENABLED_BY_DEFAULT, dail
 /// before hashing, so a default of `true` would refuse every scenario that never
 /// mentions the field.
 use crate::process::velocity::VELOCITY_FIELD_ENABLED_BY_DEFAULT;
+
+/// The process whose limiting overflow carries the window of ADR-082, from the
+/// same closed roster (ADR-065).
+///
+/// Named here for [`pressure`] and for [`check_every_n_ticks`], whose ban of
+/// ADR-030 reaches it: the rule is stated over the *field*, and pressure moves
+/// the same `amount[]` whose substances declare a `diffusivity`.
+const PRESSURE_PROCESS: &str = ProcessId::Pressure.id();
+
+/// The default of `enabled` for pressure, taken from the process itself
+/// (ADR-065, ADR-082).
+///
+/// `false`, and assigned by ADR-082 rather than left over: five locks are shut on
+/// step `e` and `process/pressure.rs` names them one by one.
+use crate::process::pressure::ENABLED_BY_DEFAULT as PRESSURE_ENABLED_BY_DEFAULT;
+
+/// The process the medium of `[physics]` belongs to, from the same closed
+/// roster (ADR-065, ADR-085).
+const SETTLING_PROCESS: &str = ProcessId::Settling.id();
+
+/// The default of `enabled` for settling, taken from the process itself.
+///
+/// `false`, and assigned by ADR-085 rather than left over. The record checked
+/// the flip and refused it on four counts, of which the mechanical one is the
+/// shortest: `SettlePhase::fold` builds a `Settle` for every lane and
+/// `settling_velocity` wants a viscosity before it looks at a radius, so
+/// settling on by default would make `physics.mu` required of **every** scenario
+/// in the repository.
+use crate::process::settle::ENABLED_BY_DEFAULT as SETTLING_ENABLED_BY_DEFAULT;
+
+/// The declared run horizon of stage S0, in ticks (SPEC section 13).
+///
+/// `1e6` and not `1e7`. ADR-004 states the horizon as the *range* `1e6 … 1e7`,
+/// and the two ends are used by different records for different quantities:
+/// ADR-083 takes the upper end for the width of a channel counter, ADR-082 takes
+/// the lower one — the acceptance criterion of S0 — for this ceiling.
+/// Substituting `1e7` here loosens the ceiling tenfold, cites the journal just as
+/// plausibly, and fails no test but the one that names the number.
+const RUN_HORIZON_TICKS: f64 = 1.0e6;
 
 /// Everything derived at load, in one value.
 ///
@@ -198,6 +238,12 @@ pub struct Derived {
     /// `None` on a scenario whose velocity field is off, or on which is on and
     /// declares no `u_conv_max` — the second of which the validator refuses.
     velocity: Option<DerivedVelocity>,
+    /// `None` on a scenario whose pressure process is off, or on which is on and
+    /// declares no `theta_max` — the second of which the validator refuses.
+    pressure: Option<DerivedPressure>,
+    /// `None` on a scenario whose settling process is off, or on which is on and
+    /// declares no `physics.mu` — the second of which the validator refuses.
+    medium: Option<DerivedMedium>,
 }
 
 /// The outside reservoir, folded once at load (ADR-059).
@@ -250,6 +296,45 @@ pub struct DerivedReservoir {
     /// sign of the flux is right and the energy residual closes — the counter
     /// records whatever moved. Only the magnitude lies.
     pub enthalpy_out: i64,
+    /// The thermal conductance of the `exchange` face, W/(m^2*K) (ADR-084):
+    /// `k_ex * sum_i(conc_out_i * c_p,i)`.
+    ///
+    /// Not folded here — obtained by calling `validate::boundary_conductance`,
+    /// the same function the refusal judges by. Writing the product a second time
+    /// would let the refusal and the report print different numbers, both
+    /// plausible, which is the drift that doc names in five other places.
+    pub conductance: f64,
+    /// The largest absorbed flux the lid can carry away in steady state, W/m^2
+    /// (ADR-084): [`DerivedReservoir::conductance`] times `t_max - t_out`. The
+    /// threshold `i_surface` is refused above.
+    pub flux_ceiling: f64,
+    /// An **upper bound** on the enthalpy the `exchange` faces credit to
+    /// `BOUNDARY_EXCHANGE` over one tick of a world at `T_ref`, in the storage
+    /// units of the energy scale (ADR-084).
+    ///
+    /// `alpha_ex_coarse * |enthalpy_out| * (coarse cells on the exchanging
+    /// faces)`, and every piece of that needs saying.
+    ///
+    /// **A bound and not the number a run produces**, which is why the report
+    /// prints it as one. The gap the face trades across decays inside the tick —
+    /// the field takes its own substeps, each one moving a fraction of what is
+    /// left — and the neighbours pull the boundary cell back, so a loader cannot
+    /// reproduce the run's figure without running it. On the shipped scenario
+    /// this bound is `1.4182e18` against the `1.4058e18` ADR-084 measured, which
+    /// is the size of the error: under a percent, and on the safe side.
+    ///
+    /// **From `T_ref` and not from the widest legal gap.** The world starts at
+    /// `H = 0`, so this is the first tick's traffic, which is the largest of any
+    /// tick a dark scenario has and the one ADR-084 measured. A world whose light
+    /// or chemistry drives the field to `t_max` trades more, and the ceiling
+    /// above is what bounds that case.
+    ///
+    /// **`alpha_ex` at the coarse `dx`.** The enthalpy field is the one that
+    /// carries energy through the face, and `Tick::new` folds it at
+    /// `enthalpy.coarse_dx`; the `alpha_ex` beside this field is at the fine one,
+    /// where the same `k_ex` gives a number `2^lod` larger. See the note on
+    /// [`Derived::reservoir`] for why the two exist at all.
+    pub lid_credit_per_tick: f64,
 }
 
 /// One substance after the derivation (ADR-039, ADR-040).
@@ -293,6 +378,30 @@ pub struct DerivedSubstance {
     /// the substance order of a `Config` and the substance order of a `Derived`
     /// agree only because nothing has yet had a reason to reorder either.
     pub diffusivity: f64,
+    /// The declared settling radius, m, carried through unchanged (ADR-067,
+    /// ADR-085).
+    ///
+    /// Here for the reason [`DerivedSubstance::diffusivity`] gives about its
+    /// own, and the three of these arrive together because they are the three
+    /// inputs of one `settle::Grain`: the host that folds a `SettlePhase` holds
+    /// a `Derived` and a `World` and no `Config`, so without them step `f`
+    /// cannot be built at any default at all — which is what
+    /// `refuse_if_blocked(Settling)` used to say and what ADR-085 required to be
+    /// finished in the same commit.
+    pub settling_radius: f64,
+    /// The declared molar mass in **grams** per mole, carried through unchanged.
+    ///
+    /// The unit is not free: the `1e-3` in `settle::grain_density` is the
+    /// conversion from grams and admits no other (ADR-067). Read as kg/mol the
+    /// grain density is off by a thousand — one way round that is a loud Courant
+    /// refusal and the other way round settling simply never happens.
+    pub molar_mass: f64,
+    /// The declared partial molar volume, m^3/mol, carried through unchanged.
+    ///
+    /// Zero and negative are both legal in general and neither is legal for a
+    /// grain that settles: the density is derived by dividing by it (ADR-067).
+    /// The conditional refusal is the validator's.
+    pub partial_molar_volume: f64,
     /// `w_s = round(enthalpy_formation * 2^(k_E - k))`: the chemical energy of
     /// **one storage unit** of this substance, in the storage units of the
     /// enthalpy field (ADR-081).
@@ -596,6 +705,87 @@ pub struct DerivedVelocity {
     pub stir_period: Option<f64>,
 }
 
+/// The pressure process after the derivation (ADR-082).
+///
+/// Present exactly when the process is enabled — by its own record or by the
+/// default its module declares (ADR-065) — and `theta_max` is written. The second
+/// half is not a rule: a scenario that enables pressure and omits the limiting
+/// overflow is refused by `config/validate.rs`, and this module stays derivable on
+/// a config nobody validated.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct DerivedPressure {
+    /// The declared limiting overflow, dimensionless. Required when the process
+    /// is on, with no default (ADR-082).
+    pub theta_max: f64,
+    /// `Theta_sup = sum over V_bar > 0 of max_conc * V_bar`: the peak
+    /// **occupancy** `V_occ/V_voxel` the declared ceilings allow.
+    ///
+    /// The occupancy and never the overflow `theta = Theta - 1`, and the
+    /// difference is not a nicety. On the registry the project ships the two are
+    /// `1.005285` and `5.285e-3`, so a floor built on the overflow is a hundred
+    /// and ninety times too low: every `theta_max` passes it, the scheme
+    /// oscillates, matter is conserved exactly, a closed face stays closed, a
+    /// uniform occupancy stays a fixed point and both halves of the ledger close.
+    /// Only `the_relaxation_oscillates_once_the_occupancy_exceeds_a_sixth_of_theta_max`
+    /// can see it.
+    ///
+    /// A **negative** `V_bar` does not enter. Electrostriction lowers the
+    /// occupancy (ADR-067: `PO4^3-` near `-4.0e-5`), so including it would lower
+    /// an upper estimate, lower the floor and let an unstable `theta_max` load.
+    /// The unfiltered `map(|s| s.max_conc * s.partial_molar_volume).sum()` looks
+    /// more correct than the filtered form and compiles the same;
+    /// `the_peak_occupancy_ignores_negative_partial_molar_volumes` is the only
+    /// thing in the way.
+    pub occupancy_sup: f64,
+    /// `Theta_typ`, the same expression over `typical_conc`: the working
+    /// occupancy the relaxation time is measured at.
+    ///
+    /// A **separate input** from [`DerivedPressure::occupancy_sup`] and never the
+    /// same one twice. On the shipped registry the two differ by 0.2%
+    /// (`1.005285` against `1.003288`), so swapping them moves no number in the
+    /// report and fails no other test — and inverts the window on a registry
+    /// whose dynamic range is wide, which ADR-039 allows up to `2^14`.
+    pub occupancy_typ: f64,
+    /// `N_max^2*theta_max/(pi^2*Theta_typ)`: how many applications the longest
+    /// mode of the closed domain needs to relax by `1/e`.
+    ///
+    /// `N_max` is the **longest axis of this grid**, not [`N_MAX`] of
+    /// `process/diffuse.rs` — a different quantity with the same spelling, the
+    /// bound on a substep count (ADR-061), and one this module already imports.
+    /// Written with that one the ceiling is the 64-cubed ceiling on every grid.
+    pub relaxation_ticks: f64,
+    /// How far below the oscillation threshold the declared `theta_max` sits, as
+    /// a fraction: `1 - alpha/(1/6)` at `alpha = Theta_typ/theta_max`.
+    ///
+    /// Printed together with the threshold it is measured against and never
+    /// alone: an `alpha` of `8e-4` reads as "small" exactly as well as it reads
+    /// as "large" (ADR-082).
+    pub stability_margin: f64,
+}
+
+/// The medium of `[physics]` after the derivation (ADR-085).
+///
+/// Present exactly when the settling process is enabled — by its own record or
+/// by the default its module declares (ADR-065) — and `mu` is written. The
+/// second half is not a rule of this module: a scenario that enables settling
+/// and omits the viscosity is refused by `config/validate.rs`, and this module
+/// stays derivable on a config nobody validated.
+///
+/// **Three numbers carried through and nothing derived from them**, on the model
+/// of [`DerivedVelocity`]. `k = 2r^2/9`, the grain density and `w` are folded in
+/// `process/settle.rs` out of the grid a world actually has; deriving any of
+/// them here would give one velocity two sources.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct DerivedMedium {
+    /// Gravitational acceleration, m/s^2, as declared or defaulted.
+    pub g: f64,
+    /// Density of the medium, kg/m^3, as declared or defaulted.
+    pub rho_medium: f64,
+    /// Dynamic viscosity, Pa*s. Required when the process is on, with no
+    /// default (ADR-085).
+    pub mu: f64,
+}
+
 /// One field record after the derivation (ADR-030, ADR-061, ADR-062).
 #[derive(Clone, Debug, PartialEq)]
 pub struct DerivedField {
@@ -707,6 +897,43 @@ impl Derived {
     #[must_use]
     pub fn velocity(&self) -> Option<&DerivedVelocity> {
         self.velocity.as_ref()
+    }
+
+    /// The limiting overflow and the window it passed, or `None` on a scenario
+    /// whose pressure process is off or which declares no `theta_max` (ADR-082).
+    ///
+    /// **The one door to `theta_max`.** `Pressure::new` takes it as an argument
+    /// and has to be handed it from here: a host that picked a number of its own
+    /// would be inventing the single input the whole mobility is derived from,
+    /// and the scheme conserves exactly, so both halves of the invariant would
+    /// close over the invention for ever. The precedent is `Derived::light` and
+    /// `units_per_intensity`.
+    ///
+    /// What is deliberately **not** carried beside it: `partial_molar_volume` and
+    /// the `Occupant` table step `e` needs to build an occupancy field. ADR-082
+    /// leaves both out — they are the work of the record that lifts the five
+    /// locks, and carrying them here would make this derivation look ready for a
+    /// dispatch that does not exist.
+    #[inline]
+    #[must_use]
+    pub fn pressure(&self) -> Option<&DerivedPressure> {
+        self.pressure.as_ref()
+    }
+
+    /// The three constants of the medium, or `None` on a scenario whose settling
+    /// process is off or which declares no `physics.mu` (ADR-085).
+    ///
+    /// **The one door to `g` and `rho_medium`.** `Tick::new` builds
+    /// `settle::Medium` out of this and never out of the `Config` it also holds:
+    /// a second reader of `[physics]` standing beside the validator's would
+    /// agree with it on every scenario that was validated and part company on
+    /// the first one that was not. The argument is `DerivedSubstance::diffusivity`'s,
+    /// word for word, and `Derived::light` and `Derived::pressure` are the two
+    /// nearest precedents.
+    #[inline]
+    #[must_use]
+    pub fn medium(&self) -> Option<&DerivedMedium> {
+        self.medium.as_ref()
     }
 
     /// The one record every scenario has: the enthalpy field (ADR-062).
@@ -845,6 +1072,49 @@ impl Derived {
             "energy: channel counter ceiling {:e} J (2^127/2^k_E, ADR-083)\n",
             self.energy.counter_ceiling_joules
         ));
+        // The sink of S0 and its price, three numbers (ADR-084). It is printed
+        // rather than refused, and the record says why in as many words: a
+        // refusal on "the lid trades and `t_out != T_ref`" would cover the only
+        // scenario that runs today and nearly every venting world worth writing.
+        //
+        // The **margin in bits** and deliberately not "the tick the counter
+        // overflows on". After ADR-083 the counter is `i128` and no declared
+        // world has such a tick — `1.4e18` a tick against `2^127` is `1.2e20`
+        // ticks, and the whole integral of a decaying transient stops at about
+        // seventy bits long before that — so a line printing an overflow tick
+        // would print a number that does not exist. That is the class of decoy
+        // ADR-083 killed `crediting_more_solar_than_the_counter_holds_is_refused_not_wrapped`
+        // for.
+        if let Some(reservoir) = &self.reservoir {
+            out.push_str(&format!(
+                "boundary: the exchange face conducts {:e} W/(m^2*K) and carries \
+                 away at most {:e} W/m^2 in steady state — the sink of S0 \
+                 (ADR-084)\n",
+                reservoir.conductance, reservoir.flux_ceiling
+            ));
+            // `log2` of a positive number and a plain `127` otherwise. A world
+            // with no exchanging face has no lid traffic and a full counter to
+            // spend, which is a true statement and not a special case; taking
+            // `log2(0)` for it would print `inf` bits of margin instead.
+            let bits = if reservoir.lid_credit_per_tick > 0.0 {
+                127.0 - reservoir.lid_credit_per_tick.log2()
+            } else {
+                127.0
+            };
+            // The ghost enthalpy stands beside the credit rather than in a line
+            // of its own, and that pairing is the point: the credit is a bound
+            // and the two are a factor apart that a reader can check by hand —
+            // `alpha_ex` times the coarse cells of the exchanging faces — so
+            // printing one without the other would leave the bound unauditable
+            // without a second run.
+            out.push_str(&format!(
+                "boundary: the ghost cell holds {} units of enthalpy at t_out, \
+                 and the lid credits at most {:e} units per tick from T_ref, \
+                 leaving {bits:.1} bits of margin in the channel counter \
+                 (ADR-084)\n",
+                reservoir.enthalpy_out, reservoir.lid_credit_per_tick
+            ));
+        }
         if let Some(light) = &self.light {
             out.push_str(&format!(
                 "light: i_surface = {:e} W/m^2 (period mean), units_per_intensity = {:e} \
@@ -886,6 +1156,29 @@ impl Derived {
             self.energy.conductivity,
             self.energy.carried_by_diffusion * 100.0
         ));
+        // Four numbers and not one, and the count is the decision (ADR-082).
+        // Both inputs of the window are printed because they differ by 0.2% on the
+        // shipped registry — swapped, they move nothing visible and fail no test,
+        // and they invert the window wherever the dynamic range is wide. The
+        // margin is printed together with the limit it is measured against,
+        // because `alpha = 8e-4` reads as "small" exactly as well as it reads as
+        // "large". And the relaxation time is what cancels the "128 ticks" of
+        // ADR-055: the response is diffusive, not ballistic.
+        if let Some(pressure) = &self.pressure {
+            out.push_str(&format!(
+                "pressure: theta_max = {}, Theta_sup = {:.4e} (from max_conc), \
+                 Theta_typ = {:.4e} (from typical_conc)\n",
+                pressure.theta_max, pressure.occupancy_sup, pressure.occupancy_typ
+            ));
+            out.push_str(&format!(
+                "pressure: the longest mode relaxes in {:.4e} ticks, at {:.1}% of \
+                 margin below the oscillation limit alpha = 1/6 \
+                 (alpha = {:.4e})\n",
+                pressure.relaxation_ticks,
+                pressure.stability_margin * 100.0,
+                pressure.occupancy_typ / pressure.theta_max
+            ));
+        }
         for f in &self.fields {
             out.push_str(&format!(
                 "field {}: lod {}, {} substeps, alpha {:e}\n",
@@ -1078,6 +1371,18 @@ pub fn derive(config: &Config) -> Result<Derived> {
     //     them (ADR-087).
     let velocity = resolve_velocity(config);
 
+    // 13. Pressure. After nothing in particular either: the window of ADR-082 is
+    //     a function of the declared concentrations, the declared partial molar
+    //     volumes and the grid, and none of those depends on a scale.
+    let pressure = pressure(config)?;
+
+    // 14. The medium of `[physics]`, and after nothing in particular for the
+    //     third time: the three constants of ADR-085 are carried through
+    //     unchanged and nothing here is derived from them. The chain
+    //     `r -> k -> rho_bar -> w -> c` lives in `process/settle.rs` and is
+    //     folded against the grid a world actually has.
+    let medium = resolve_medium(config);
+
     Ok(Derived {
         v_voxel,
         substances,
@@ -1087,7 +1392,192 @@ pub fn derive(config: &Config) -> Result<Derived> {
         reservoir,
         light,
         velocity,
+        pressure,
+        medium,
     })
+}
+
+/// Carry the three constants of `[physics]` through, and derive nothing
+/// (ADR-085).
+///
+/// Returns `None` when the settling process resolves to disabled against the
+/// default the process itself declares (ADR-065), and when it is on and the
+/// scenario is silent about `mu` — the last of which is a refusal of
+/// `config/validate.rs` and not of this function, on the division of labour
+/// `resolve_velocity` writes out: `derive` is public and defined on configs
+/// nobody validated, so it describes what it was given rather than judging it.
+///
+/// An absent `[[process]]` record resolves to the process's own default rather
+/// than to "off", and after `parse` there is no such case at all — the roster is
+/// materialised before the hash. `validate` is public and defined on a `Config`
+/// somebody assembled by hand, which is the case `pressure` guards the same way.
+///
+/// Infallible on purpose, exactly as `resolve_velocity` is: it copies three
+/// numbers and has no domain of its own. The domain of the three lives in
+/// `config/validate.rs` among the other rules of section 10.
+fn resolve_medium(config: &Config) -> Option<DerivedMedium> {
+    let record = config.process.iter().find(|p| p.id == SETTLING_PROCESS);
+    let enabled = match record {
+        Some(process) => process.enabled.unwrap_or(SETTLING_ENABLED_BY_DEFAULT),
+        None => SETTLING_ENABLED_BY_DEFAULT,
+    };
+    if !enabled {
+        return None;
+    }
+    let mu = config.physics.mu?;
+
+    Some(DerivedMedium {
+        g: config.physics.g,
+        rho_medium: config.physics.rho_medium,
+        mu,
+    })
+}
+
+/// `Theta_sup = sum over V_bar > 0 of max_conc * V_bar`, dimensionless
+/// (ADR-082).
+///
+/// The filter is the decision. See [`DerivedPressure::occupancy_sup`] for what
+/// the unfiltered sum costs and for which test stands in its way.
+fn occupancy_sup(config: &Config) -> f64 {
+    config
+        .substance
+        .iter()
+        .filter(|s| s.partial_molar_volume > 0.0)
+        .map(|s| s.max_conc * s.partial_molar_volume)
+        .sum()
+}
+
+/// `Theta_typ`, the same expression over `typical_conc` (ADR-082).
+///
+/// The same filter, in the record's own words — "computed by the same
+/// expression" — and the direction of that choice is worth naming rather than
+/// leaving to be discovered: a negative `V_bar` left in would lower `Theta_typ`,
+/// raise the relaxation time and *tighten* the ceiling, so the filtered form is
+/// the permissive one of the two and the conservative reading is the one not
+/// taken.
+fn occupancy_typ(config: &Config) -> f64 {
+    config
+        .substance
+        .iter()
+        .filter(|s| s.partial_molar_volume > 0.0)
+        .map(|s| s.typical_conc * s.partial_molar_volume)
+        .sum()
+}
+
+/// The window of the limiting overflow, and the two numbers a report prints
+/// beside it (ADR-082).
+///
+/// Returns `None` when the process resolves to disabled against the default its
+/// own module declares (ADR-065), and when it is on and silent about
+/// `theta_max` — the last of which is a refusal of `config/validate.rs` and not
+/// of this function, on the division of labour [`resolve_light`] writes out.
+///
+/// # Errors
+///
+/// Returns an error when the declared `theta_max` falls outside the window: below
+/// `6*Theta_sup`, where the checkerboard mode of the relaxation grows rather than
+/// decays, or above the value at which the longest mode of the domain no longer
+/// relaxes inside the declared run horizon.
+///
+/// **The window can be empty, and this function does not say so.** The floor is
+/// `6*Theta_sup` and the ceiling is `1e6*pi^2*Theta_typ/N^2`, so the two cross at
+/// `N^2 > 1.6449e6 * Theta_typ/Theta_sup` — on a 64-cubed grid that is a ratio of
+/// about 402, and ADR-039 allows `max_conc/typical_conc` up to `2^14`. A scenario
+/// there gets whichever of the two messages is checked first, and neither says
+/// "no legal value exists". ADR-082 assigns no message for the case; the order
+/// below is the floor first, because it is the one that is about stability rather
+/// than about patience.
+fn pressure(config: &Config) -> Result<Option<DerivedPressure>> {
+    // The default belongs to the process and is read from it (ADR-065). An absent
+    // record resolves to that default rather than to "off": after `parse` there is
+    // no such case, because `config::materialise` writes all nine records before
+    // the hash, but `derive` is public and defined on a hand-built `Config`.
+    let record = config.process.iter().find(|p| p.id == PRESSURE_PROCESS);
+    let enabled = match record {
+        Some(process) => process.enabled.unwrap_or(PRESSURE_ENABLED_BY_DEFAULT),
+        None => PRESSURE_ENABLED_BY_DEFAULT,
+    };
+    if !enabled {
+        return Ok(None);
+    }
+    let Some(theta_max) = record.and_then(|p| p.theta_max) else {
+        return Ok(None);
+    };
+
+    let occupancy_sup = occupancy_sup(config);
+    let occupancy_typ = occupancy_typ(config);
+
+    // The floor. Linearising the relaxation about a uniform state gives explicit
+    // diffusion with `alpha = Theta/theta_max` — the occupancy, because the donor
+    // of a face is the whole pool — whose checkerboard growth factor is
+    // `1 - 12*alpha`, so `|g| <= 1` exactly at `alpha <= 1/6`.
+    let floor = 6.0 * occupancy_sup;
+    let above_floor = theta_max.is_finite() && theta_max >= floor;
+    if !above_floor {
+        bail!(
+            "process `{PRESSURE_PROCESS}` declares theta_max = {theta_max}, and \
+             the rule is theta_max >= {floor:.4e}, which is 6*Theta_sup at \
+             Theta_sup = {occupancy_sup:.4e} — the peak occupancy V_occ/V_voxel \
+             the declared max_conc and partial_molar_volume allow. The occupancy \
+             and not the overflow theta = Theta - 1: the donor of a face is the \
+             whole pool, so the linearised operator is explicit diffusion with \
+             alpha = Theta/theta_max, whose checkerboard growth factor is \
+             1 - 12*alpha (ADR-082). Below the floor neighbouring voxels swap \
+             pools every tick with matter conserved exactly and both halves of \
+             the invariant closed, so nothing downstream of the load can see it. \
+             Raise theta_max, or lower the max_conc of whatever fills the voxel"
+        );
+    }
+
+    // The domain of the ceiling, and it is arithmetic rather than policy: a
+    // registry where nothing takes up room has no relaxation time, because the
+    // formula divides by `Theta_typ`. The author's next move is to declare a
+    // partial molar volume, so the message is short.
+    if !(occupancy_typ.is_finite() && occupancy_typ > 0.0) {
+        bail!(
+            "process `{PRESSURE_PROCESS}` is enabled over a registry whose \
+             typical occupancy is {occupancy_typ}: no substance declares a \
+             positive partial_molar_volume, so nothing takes up room, the \
+             overflow field is identically -1 everywhere and the relaxation time \
+             N_max^2*theta_max/(pi^2*Theta_typ) is not defined at all (ADR-067, \
+             ADR-082)"
+        );
+    }
+
+    // `N_max` is the longest axis of **this** grid. Named `n_side` and never
+    // `N_MAX`, which is imported into this module and means the bound on a
+    // substep count (ADR-061): spelled that way the ceiling is the 64-cubed
+    // ceiling on every grid, which on the two grids the project ships is either
+    // exactly right or wrong in the permissive direction.
+    let n_side = f64::from(config.grid.nx.max(config.grid.ny).max(config.grid.nz));
+    let relaxation_ticks =
+        n_side * n_side * theta_max / (std::f64::consts::PI.powi(2) * occupancy_typ);
+    let within_horizon = relaxation_ticks.is_finite() && relaxation_ticks <= RUN_HORIZON_TICKS;
+    if !within_horizon {
+        bail!(
+            "process `{PRESSURE_PROCESS}` declares theta_max = {theta_max}: the \
+             longest mode of a domain {n_side} voxels across then relaxes in \
+             {relaxation_ticks:.4e} ticks — N_max^2*theta_max/(pi^2*Theta_typ) at \
+             Theta_typ = {occupancy_typ:.4e}, the working occupancy the declared \
+             typical_conc gives — against the declared run horizon of \
+             {RUN_HORIZON_TICKS:e} ticks (SPEC section 13, criterion S0). A domain \
+             that never equilibrates inside the horizon it is measured over has no \
+             pressure in it, only a drift nobody will watch to the end (ADR-082). \
+             Lower theta_max, or coarsen the grid: the ceiling falls as N^2"
+        );
+    }
+
+    Ok(Some(DerivedPressure {
+        theta_max,
+        occupancy_sup,
+        occupancy_typ,
+        relaxation_ticks,
+        // `1 - alpha/(1/6)` at `alpha = Theta_typ/theta_max`, computed from the
+        // declared concentrations and never written down as a literal: ADR-082
+        // prints `1.997e-3` for the shipped registry where an independent
+        // recomputation gives `1.986e-3`, and a literal would freeze one of them.
+        stability_margin: 1.0 - 6.0 * occupancy_typ / theta_max,
+    }))
 }
 
 /// Carry the four keys of the velocity field through, and derive nothing
@@ -1300,12 +1790,68 @@ fn resolve_reservoir(
         );
     };
 
+    // The three numbers of ADR-084, and the first two come from the validator's
+    // own functions rather than from a second folding here — see
+    // `DerivedReservoir::conductance`. Both are `Option` there and neither can be
+    // `None` at this point: `boundary_conductance` answers `None` exactly when
+    // there is no `[boundary.reservoir]`, and this function returned early in
+    // that case; `absorbed_flux_ceiling` adds the `t_min`/`t_max` pair, which
+    // `energy_window` refused a scenario for lacking before `derive` reached
+    // here. `unwrap_or(NAN)` rather than `expect` all the same, because the price
+    // of being wrong about that is a report line reading `NaN` and not a panic in
+    // a loader.
+    let conductance = super::validate::boundary_conductance(config).unwrap_or(f64::NAN);
+    let flux_ceiling = super::validate::absorbed_flux_ceiling(config).unwrap_or(f64::NAN);
+
     Ok(Some(DerivedReservoir {
         alpha_ex: reservoir.k_ex * config.dt / config.grid.dx,
         k_ex: reservoir.k_ex,
         amount_out,
         enthalpy_out,
+        conductance,
+        flux_ceiling,
+        lid_credit_per_tick: lid_credit_per_tick(config, field.lod, enthalpy_out, coarse_dx),
     }))
+}
+
+/// An upper bound on what the `exchange` faces credit to `BOUNDARY_EXCHANGE` in
+/// one tick of a world at `T_ref`, in storage units of the energy scale
+/// (ADR-084).
+///
+/// See [`DerivedReservoir::lid_credit_per_tick`] for why it is a bound, why the
+/// gap is taken from `T_ref`, and why `alpha_ex` is at the coarse `dx`.
+///
+/// The area counted is the **exchanging** faces and not the lit one. Those can
+/// differ — a world may vent through a side wall under a closed lid, and the grid
+/// need not be cubic — and this is the traffic number, so it counts what actually
+/// trades. The other side of that difference, the one the steady-state ceiling
+/// needs, is `TODO(A-25)` in `config/validate.rs`.
+///
+/// Which faces those are comes from `validate::exchanging_faces` and is not
+/// listed again here. Its doc says why: a second transcription of the six is how
+/// a face added to [`super::Boundary`] gets seen by one rule and not another.
+/// What is written out below is only the mapping from a face to the cells it
+/// covers, and it is exhaustive on purpose — a name that function grows and this
+/// one does not know is a panic at load, not an area of zero.
+fn lid_credit_per_tick(config: &Config, lod: u8, enthalpy_out: i64, coarse_dx: f64) -> f64 {
+    let coarse = |extent: u32| f64::from(extent >> u32::from(lod));
+    let (nx, ny, nz) = (
+        coarse(config.grid.nx),
+        coarse(config.grid.ny),
+        coarse(config.grid.nz),
+    );
+    let cells: f64 = super::validate::exchanging_faces(&config.boundary)
+        .iter()
+        .map(|face| match *face {
+            "x_min" | "x_max" => ny * nz,
+            "y_min" | "y_max" => nx * nz,
+            "z_min" | "z_max" => nx * ny,
+            other => unreachable!("`{other}` is not one of the six faces"),
+        })
+        .sum();
+    let alpha_ex_coarse =
+        config.boundary.reservoir.as_ref().map_or(0.0, |r| r.k_ex) * config.dt / coarse_dx;
+    alpha_ex_coarse * (enthalpy_out as f64).abs() * cells
 }
 
 /// `dx^3`, with the two ways it can fail to be a volume ruled out.
@@ -1640,6 +2186,9 @@ fn resolve_substance(
         amount_at_max,
         amount_at_typical,
         diffusivity: substance.diffusivity,
+        settling_radius: substance.settling_radius,
+        molar_mass: substance.molar_mass,
+        partial_molar_volume: substance.partial_molar_volume,
         // Filled in by step 7 for the reason `nu_energy` is: `w_s` needs `k_E`,
         // and `k_E` needs every `e_r` and every `c_p` (ADR-062, ADR-081).
         chemical_weight: 0,
@@ -2462,14 +3011,32 @@ fn check_every_n_ticks(config: &Config, fields: &[DerivedField]) -> Result<()> {
     if diffusive.is_empty() && !config.substance.iter().any(|s| s.diffusivity > 0.0) {
         return Ok(());
     }
+    // **Below the early return and not above it**, and the placement is a choice
+    // between two mistakes rather than an oversight (ADR-082). Section 10 states
+    // the ban over the *field* — "forbidden to a process that touches a diffusive
+    // field" — so a scenario with no diffusive field and no diffusing substance is
+    // outside the rule, and a branch written above the guard would silently widen
+    // it to scenarios the rule was never about. The price of standing here is the
+    // other mistake, and it is real: on such a scenario pressure at
+    // `every_n_ticks = 8` loads. ADR-082 states the rule over the field, so this
+    // is where it goes.
     for process in &config.process {
-        if process.id == DIFFUSION_PROCESS && process.every_n_ticks > 1 {
+        let moves_a_diffusive_field =
+            process.id == DIFFUSION_PROCESS || process.id == PRESSURE_PROCESS;
+        if moves_a_diffusive_field && process.every_n_ticks > 1 {
             bail!(
                 "process `{}` declares every_n_ticks = {}, and it moves diffusive \
                  fields ({}). Skipping ticks multiplies the effective dt, which \
                  is what the substep count exists to prevent: a rarely updated \
                  diffusive field is unstable by definition, not by oversight \
-                 (ADR-030)",
+                 (ADR-030). Pressure falls under the same rule and gets no \
+                 acceptance name of its own: the rule is stated over the field, \
+                 pressure moves the same amount[] whose substances declare a \
+                 diffusivity, and two names on one rule of section 10 would claim \
+                 in the register that there are two rules (ADR-082). The product \
+                 theta_max*every_n_ticks is not a way round it either — \
+                 every_n_ticks enters neither half of the window, because \
+                 alpha = Theta/theta_max contains neither dt nor dx",
                 process.id,
                 process.every_n_ticks,
                 if diffusive.is_empty() {
@@ -4304,6 +4871,111 @@ t_max = 3.2315e2
         }
     }
 
+    /// [`two_reactions`] with the lid trading against a reservoir ten kelvin
+    /// below `T_ref`, which is the arrangement ADR-084 measured on the shipped
+    /// scenario.
+    ///
+    /// The composition is the shipped one plus water, and water is what makes it
+    /// a fixture rather than a curiosity: it carries 99.9% of the heat capacity,
+    /// so a reservoir without it would have a conductance three orders too small
+    /// and every number below would be about rounding.
+    fn venting(faces: &str) -> String {
+        swap(
+            &two_reactions(),
+            "dx = 1e-4\n",
+            &format!(
+                "dx = 1e-4\n\n[boundary]\n{faces}\n\n[boundary.reservoir]\n\
+                 t_out = 2.8815e2\nk_ex = 1e-5\n\
+                 conc_out = {{ H2S = 0e0, O2 = 2.5e-1, SO4 = 2.8e1, \
+                 H_ION = 1e-4, WATER = 5.55e4 }}\n"
+            ),
+        )
+    }
+
+    #[test]
+    fn load_reports_the_lid_credit_per_tick_and_the_counter_margin_in_bits() {
+        // ADR-084. The sink of S0 is the built `exchange` face, and the record
+        // refuses to hide its price behind a load-time refusal — a world whose
+        // lid trades against a `t_out` unequal to `T_ref` is nearly every venting
+        // world worth writing, including the only shipped one. So the loader
+        // prints what that trade costs the counter, and the two rules beside it
+        // refuse only the lit scenarios that cannot work at all.
+        //
+        // **The margin is in bits and not in ticks**, which is the half of the
+        // name that carries an argument. After ADR-083 the counter is `i128`, and
+        // `1.4e18` units a tick against `2^127` is `1.2e20` ticks — no declared
+        // world has an overflow tick at all, and the whole integral of the
+        // transient stops near seventy bits regardless. A line printing "the tick
+        // the counter overflows on" would print a number that does not exist,
+        // which is the decoy ADR-083 killed a whole acceptance name for.
+        let d = derived(&venting("z_min = \"closed\""));
+        let reservoir = d.reservoir().expect("the fixture declares a reservoir");
+
+        // Recomputed from the fixture rather than read back from the struct, and
+        // not quoted from ADR-084 either — that record's numbers are the shipped
+        // scenario's registry, not this one's.
+        //   sum(conc_out * c_p) = 0*100 + 0.25*100 + 28*100 + 1e-4*100
+        //                       + 55500*75.3
+        //                       = 4 181 975.01 J/(m^3*K)
+        //   conductance         = 1e-5 * that = 41.8197501 W/(m^2*K)
+        //   ceiling             = conductance * (323.15 - 288.15)
+        //                       = 1463.6912535 W/m^2
+        let conductance = 1.0e-5 * (25.0 + 2800.0 + 0.01 + 55500.0 * C_P_WATER);
+        assert!((reservoir.conductance - conductance).abs() < 1e-9);
+        assert!((reservoir.flux_ceiling - conductance * 35.0).abs() < 1e-9);
+
+        // The credit is `alpha_ex * |H_out| * cells`, and every factor is checked
+        // rather than the product: at `lod = 2` a 64-cubed grid has 16^2 = 256
+        // coarse cells on a face, and `alpha_ex` is at the **coarse** `dx`, where
+        // `1e-5 * 1 / 4e-4 = 0.025` — a quarter of the 0.1 the fine-grid
+        // `alpha_ex` beside it carries. Taking the fine one would inflate this by
+        // four while leaving the sign, the residual and every conservation test
+        // untouched.
+        assert_eq!(reservoir.alpha_ex, 0.1);
+        let expected = 0.025 * (reservoir.enthalpy_out as f64).abs() * 256.0;
+        assert_eq!(reservoir.lid_credit_per_tick, expected);
+        assert!(
+            reservoir.enthalpy_out < 0,
+            "a colder reservoir draws heat out"
+        );
+
+        // A **bound**, and on the safe side of the number a run produces: the gap
+        // decays across the substeps inside the tick, so the run credits less.
+        // Stated as an inequality against the pessimal alternative — crediting
+        // the whole ghost enthalpy of every face cell every tick — because the
+        // run's own figure is not reproducible at load.
+        assert!(reservoir.lid_credit_per_tick < (reservoir.enthalpy_out as f64).abs() * 256.0);
+
+        // The area counted is the exchanging faces, not one face. A second
+        // venting face doubles the traffic, and nothing else about the scenario
+        // moves — which is the mistake a single hard-coded lid would hide on
+        // every non-cubic or side-venting world.
+        let both = derived(&venting("z_min = \"exchange\""));
+        let both = both.reservoir().expect("the fixture declares a reservoir");
+        assert_eq!(
+            both.lid_credit_per_tick,
+            2.0 * reservoir.lid_credit_per_tick
+        );
+
+        // And the report says all of it, with the margin in bits: `2.5e18` a tick
+        // is about 61.1 bits, so the margin against 127 is about 65.9.
+        let report = d.report();
+        let bits = 127.0 - reservoir.lid_credit_per_tick.log2();
+        assert!((61.0..70.0).contains(&bits), "{bits}");
+        for expected in [
+            format!("{:e}", reservoir.conductance),
+            format!("{:e}", reservoir.flux_ceiling),
+            format!("{}", reservoir.enthalpy_out),
+            format!("{:e}", reservoir.lid_credit_per_tick),
+            format!("{bits:.1} bits of margin"),
+        ] {
+            assert!(
+                report.contains(&expected),
+                "missing `{expected}`:\n{report}"
+            );
+        }
+    }
+
     #[test]
     fn load_reports_the_ticks_to_the_declared_temperature_ceiling() {
         // ADR-076. Two numbers, **printed apart**: how many ticks the declared
@@ -4317,9 +4989,11 @@ t_max = 3.2315e2
         // unit mean by construction, so the crossing takes the same number of
         // ticks whatever the modulation is.
         //
-        // Called through `derive` directly, because `validate` refuses any
-        // scenario with `i_surface > 0` (ADR-076, two locks) and this line would
-        // otherwise be unreachable from every loadable config.
+        // Called through `derive` directly. The blanket refusal of `i_surface > 0`
+        // is gone (ADR-084), but this fixture declares no `[boundary.reservoir]`
+        // while `z_max` defaults to `exchange`, so `validate` refuses it twice
+        // over — once for the reservoir it owes and once as a lit scenario with
+        // no sink. Giving it one would change `C_cell` and every scale below.
         //
         // The peak is specified against `A_N * max_n max(0, sin(2*pi*n/N))` and
         // not against `pi`: at `N = 4` — legal under this record's own minimum of

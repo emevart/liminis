@@ -24,8 +24,16 @@
 //! (`TODO(diffusing-matter-does-not-move-enthalpy)` in `process/diffuse.rs`
 //! deferred it to exactly this file), and the tests that hold the order of the
 //! splitting, the transport of the enthalpy field, the shape of the left side of
-//! the invariant and the four refusals of [`Tick::new`] in place — none of which
+//! the invariant and the refusals of [`Tick::new`] in place — none of which
 //! `ACCEPTANCE.md` names, because the document predates the roster of ADR-065.
+//!
+//! `the_tick_dispatches_step_f_and_the_residual_stays_closed` is in that
+//! unnamed group too, and the reason is worth one line rather than a guess:
+//! ADR-085 requires step `f` to be dispatched in the same commit that declares
+//! its medium, and assigns the witness no acceptance name — `ACCEPTANCE.md`
+//! deliberately refuses a second name for a check it already has, which is the
+//! same ruling ADR-067 made when it declined `settling_alone_conserves`. So the
+//! name here is a proposal and not a quotation.
 //!
 //! An integration test rather than a unit one, for the reason
 //! `tests/acceptance_diffusion.rs` gives: the outside view may use only what a
@@ -320,11 +328,16 @@ fn seed(world: &mut World, n: u32, heat: Heat) {
     // the first lands one element short of where its substance is — and nothing
     // downstream notices, because a residual compares a field with itself.
     let lane_len = world.grid().lane_len();
-    let base: Vec<i64> = (0..N_SUBSTANCES)
+    // Off the registry and not off [`N_SUBSTANCES`]: the settling fixture at the
+    // bottom of this file declares a sixth substance, and a loop bounded by the
+    // constant would leave its lane at zero — a lane full of zeroes settles
+    // perfectly, conserves exactly and moves no first moment at all.
+    let n_substances = world.registry().n_substances();
+    let base: Vec<i64> = (0..n_substances)
         .map(|s| 1_000_000 + i64::from(s) * 7_919)
         .collect();
 
-    for s in 0..N_SUBSTANCES {
+    for s in 0..n_substances {
         let offset = base[s as usize];
         match world.lane_of(s) {
             LaneRef::Narrow(lane) => {
@@ -390,13 +403,15 @@ fn roster(on: &[ProcessId]) -> [RosterEntry; ROSTER_LEN] {
 
 /// The steps of the tick order **this fixture's scenario** can dispatch.
 ///
-/// Three of the nine have an operator since ADR-087, and the third is missing
-/// from this list on purpose: step `b` folds for a roster that enables it only if
-/// the scenario also declares the four keys of ADR-069, and [`SCENARIO`] writes no
-/// `[[process]]` record at all — which is the shape every file under `configs/`
-/// has. The velocity fixture is [`SCENARIO_WITH_VELOCITY`], at the bottom of this
-/// file. See the table in the header of `process/tick.rs` for what blocks the
-/// other six.
+/// Four of the nine have an operator since ADR-085, and two are missing from
+/// this list on purpose, both for the same reason: the scenario has to declare
+/// something for them. Step `b` folds only if the four keys of ADR-069 are
+/// written, and step `f` only if `[physics] mu` is and a substance carries a
+/// radius; [`SCENARIO`] writes no `[[process]]` record and no `[physics]` at
+/// all — which is the shape every file under `configs/` has. The two fixtures
+/// are [`SCENARIO_WITH_VELOCITY`] and [`SCENARIO_WITH_SETTLING`], at the bottom
+/// of this file. See the table in the header of `process/tick.rs` for what
+/// blocks the remaining five.
 const DISPATCHABLE: [ProcessId; 2] = [ProcessId::Advection, ProcessId::Diffusion];
 
 /// How many ticks the two ledger criteria run for.
@@ -776,13 +791,18 @@ fn only_the_reaction_step_declares_transmutes() {
     const K_EX: f64 = 1.0e-6;
     const D: f64 = 1.0e-9;
 
+    // The declared medium and not a quoted one: `g` and `rho_medium` are keys of
+    // `[physics]` with defaults since ADR-085, so a literal here would be a
+    // second source for two numbers a run reads from the schema. `mu` has no
+    // default and is this fixture's own.
+    let declared = config::Physics::default();
     let medium = Medium {
-        rho_medium: 1_000.0,
-        g: 9.81,
+        rho_medium: declared.rho_medium,
+        g: declared.g,
         mu: 1.0e-3,
     };
-    // A grain that does not settle at all, so that no number here has to be one
-    // the corpus refuses to name (ADR-067, `TODO` in `process/settle.rs`).
+    // A grain that does not settle at all: what this test looks at is the
+    // invariant a phase declares, and a moving grain would add nothing to it.
     let grain = Grain {
         settling_radius: 0.0,
         molar_mass: 2_650.0,
@@ -838,9 +858,11 @@ fn only_the_reaction_step_declares_transmutes() {
             .expect("light folds")
             .invariant(),
     ));
-    // `theta_max` and `v_voxel` are a positive number each: the record that
-    // assigns the first does not exist (`TODO(theta-max)`), and the arm below
-    // does not depend on either.
+    // `theta_max` and `v_voxel` are a positive number each, and neither is taken
+    // from a scenario here. Since ADR-082 the limiting overflow *is* a declared
+    // key with a window at both ends, and `Derived::pressure` is the one door to
+    // it — but this fixture folds an operator to read its declared invariant and
+    // nothing else, so any number in the domain of `Pressure::new` will do.
     declared.push((
         "pressure",
         Pressure::new(&sealed, 1.0, &[], DX * DX * DX)
@@ -980,13 +1002,13 @@ fn ledger_residual_is_zero_over_10k_ticks() {
 #[test]
 #[ignore = "the last assertion cannot pass as it stands, and weakening it would \
             make the criterion unfailable. `SOLAR_IN` needs the fold of step \
-            `i'`, and the two things that used to block it are gone: ADR-076 \
+            `i'`, and the things that used to block it are gone: ADR-076 \
             declares i_surface and derives units_per_intensity, ADR-075 settles \
-            what the fold owes the ledger and A-16 is closed. What blocks it now \
-            is that no scenario may be lit at all — refused now by one lock, an \
-            energy sink that exists nowhere; the second, the width of a channel \
-            counter, was answered by ADR-083 — and that step `i'` is dispatched \
-            with step `h` or not at \
+            what the fold owes the ledger and A-16 is closed, and a lit scenario \
+            now loads — ADR-084 ratifies the built `exchange` face as the energy \
+            sink and ADR-083 widens the counter, so `no scenario may be lit at \
+            all` stopped being true and is not the reason any more. The reason is \
+            that step `i'` is dispatched with step `h` or not at \
             all, while step `h` reads a temperature no operator produces for it. \
             The per-tick half above is no longer vacuous: steps `c` and `d` \
             transport the enthalpy field, so energy moves inside the domain and a \
@@ -1905,12 +1927,14 @@ fn every_roster_default_comes_from_its_own_module() {
 #[test]
 fn an_enabled_process_without_an_operator_is_refused() {
     // The other half of "the roster is closed": a scenario may name any of the
-    // nine, and on **this** scenario seven of them refuse. Six have no operator;
-    // the seventh, the velocity field, has one since ADR-087 and refuses here for
-    // a different reason — [`SCENARIO`] declares none of the four keys of
-    // ADR-069, so the derivation carries no velocity section. Refused at fold
-    // time either way, naming what is missing: a silent skip would make "switched
-    // on" and "switched off" the same world with different hashes.
+    // nine, and on **this** scenario seven of them refuse. Five have no operator;
+    // the other two have one and refuse for a different reason — the scenario
+    // declares nothing for them. The velocity field wants the four keys of
+    // ADR-069 (ADR-087), settling wants `[physics] mu` (ADR-085), and
+    // [`SCENARIO`] writes neither, so the derivation carries no velocity section
+    // and no medium. Refused at fold time either way, naming what is missing: a
+    // silent skip would make "switched on" and "switched off" the same world with
+    // different hashes.
     let derived = derived();
     let world = world(&derived);
     for id in ProcessId::ALL {
@@ -2538,4 +2562,257 @@ fn the_four_velocity_keys_reach_the_fold_unchanged() {
     let energy = with_velocity.energy();
     assert_eq!(energy.t_min, 273.15);
     assert_eq!(energy.t_max, 323.15);
+}
+
+// --- step `e` is still refused, and for five reasons that are not `theta_max` ---
+
+/// The fixture with pressure enabled and a legal `theta_max` (ADR-082).
+///
+/// `8.0` is inside the window this registry leaves: the floor is
+/// `6*Theta_sup = 6.0155`, summed over the declared `max_conc` and the positive
+/// `partial_molar_volume`s, and the ceiling from the declared run horizon is
+/// `1e6*pi^2*Theta_typ/N^2` — six orders above it on a grid four voxels across.
+/// It is a property of this fixture and not a recommendation.
+const SCENARIO_WITH_PRESSURE: &str = r#"
+[[process]]
+id = "pressure"
+enabled = true
+theta_max = 8.0
+"#;
+
+#[test]
+fn an_enabled_pressure_scenario_is_refused_until_step_e_has_an_owner_and_a_boundary() {
+    // ADR-082 declares `theta_max` and leaves the operator switched off, so the
+    // two halves of this test are the whole of the record's shape: the **load**
+    // now passes, and the **fold** still refuses.
+    let mut text = SCENARIO.to_string();
+    text.push_str(SCENARIO_WITH_PRESSURE);
+    let config = config::parse(&text).expect("the pressure fixture must parse");
+    let derived = config::validate(&config).expect("a declared theta_max inside the window loads");
+
+    let world = world(&derived);
+    let message = format!(
+        "{:#}",
+        Tick::new(
+            &world,
+            &derived,
+            &config,
+            &roster(&[ProcessId::Pressure]),
+            DT,
+            DX,
+            42,
+        )
+        .expect_err("step `e` has no owner for its field and no behaviour on an exchange face")
+    );
+
+    // The assertion with teeth is the negative one. A refusal that goes on naming
+    // a lock somebody has since lifted sends the next author looking for a hole
+    // that is not there — which is exactly what ADR-081 forced to be rewritten in
+    // the reactions arm of the same function.
+    assert!(
+        !message.contains("theta_max"),
+        "the refusal still names `theta_max`, which ADR-082 declared; it said:\n{message}"
+    );
+
+    // And the five that are left, each named so that the reader knows where to go.
+    for wanted in [
+        ProcessId::Pressure.id(),
+        "overflow",
+        "partial_molar_volume",
+        "exchange",
+        "one-sided",
+        "TODO(enthalpy-of-transport)",
+    ] {
+        assert!(
+            message.contains(wanted),
+            "the refusal has to name `{wanted}`; it said:\n{message}"
+        );
+    }
+}
+
+// --- step `f` dispatches (ADR-067, ADR-085) ---------------------------------
+
+/// The fixture with a grain that settles: the medium of `[physics]`, a sixth
+/// substance carrying a radius, and the process record switched on.
+///
+/// A second string and not an edit to [`SCENARIO`], for the reason
+/// [`SCENARIO_WITH_VELOCITY`] gives: every test above goes on running against a
+/// scenario with no `[[process]]` record at all, which is the shape every file
+/// under `configs/` has.
+///
+/// **Every number of the grain is a fixture and none is a project constant.**
+/// No substance of the corpus declares a radius and `MINERAL` cannot — ADR-046
+/// leaves its density undeclared and nothing names its partial molar volume
+/// (ADR-085) — so a demonstration of step `f` is a closed box written here and
+/// never `cargo run` over `configs/`, which is also blocked from the other side:
+/// `settle::periodic_mask` refuses an `exchange` face and both shipped scenarios
+/// have one.
+///
+/// `partial_molar_volume = 1e-3 m^3/mol` makes `rho_bar = molar_mass*1e-3/V_bar`
+/// numerically equal to the molar mass in g/mol, so the excess over fresh water
+/// is exactly `1353 kg/m^3`; at `r = 3 um`, `mu = 1e-3 Pa*s` and the schema's own
+/// `g` the Courant number is `0.265`, comfortably inside the limit of one that
+/// the same radius would reach at `5.82 um`.
+///
+/// `mu` is the only key of `[physics]` written here: the other two have defaults
+/// and this fixture is also the demonstration that they arrive without being
+/// typed.
+const SCENARIO_WITH_SETTLING: &str = r#"
+[physics]
+mu = 1.0e-3
+
+[[substance]]
+id = "GRAIN"
+molar_mass = 2353.0
+typical_conc = 0.1
+max_conc = 1.0
+partial_molar_volume = 1.0e-3
+settling_radius = 3.0e-6
+diffusivity = 0.0
+c_p = 100.0
+enthalpy_formation = 0.0
+composition = {}
+
+[[process]]
+id = "settling"
+enabled = true
+"#;
+
+/// The substance index of the grain, and the count with it.
+const GRAIN: u32 = 5;
+const N_SUBSTANCES_WITH_GRAIN: u32 = 6;
+
+fn config_with_settling() -> config::Config {
+    config::parse(&format!("{SCENARIO}{SCENARIO_WITH_SETTLING}"))
+        .expect("the settling fixture must parse")
+}
+
+fn derived_with_settling() -> config::Derived {
+    config::validate(&config_with_settling()).expect("the settling fixture must validate")
+}
+
+/// The first moment of one substance's lane along Z, `sum z*amount`. Falls when
+/// matter sinks and rises when it floats.
+fn first_moment(world: &World, s: u32) -> i128 {
+    let grid = world.grid();
+    let n = grid.nx();
+    let read = |idx: u32| -> i128 {
+        match world.lane_of(s) {
+            LaneRef::Narrow(lane) => i128::from(
+                world.amounts_32().expect("a narrow field").lane(lane)[idx as usize].to_i64(),
+            ),
+            LaneRef::Wide(lane) => i128::from(
+                world.amounts_64().expect("a wide field").lane(lane)[idx as usize].to_i64(),
+            ),
+        }
+    };
+    (0..grid.n_voxels())
+        .map(|idx| i128::from(idx / (n * n)) * read(idx))
+        .sum()
+}
+
+/// The total a substance's lane holds, for the per-lane half of conservation.
+fn lane_total(world: &World, s: u32) -> i128 {
+    let grid = world.grid();
+    (0..grid.n_voxels())
+        .map(|idx| match world.lane_of(s) {
+            LaneRef::Narrow(lane) => i128::from(
+                world.amounts_32().expect("a narrow field").lane(lane)[idx as usize].to_i64(),
+            ),
+            LaneRef::Wide(lane) => i128::from(
+                world.amounts_64().expect("a wide field").lane(lane)[idx as usize].to_i64(),
+            ),
+        })
+        .sum()
+}
+
+#[test]
+fn the_tick_dispatches_step_f_and_the_residual_stays_closed() {
+    // The witness that step `f` runs at all. Until ADR-085 a roster with
+    // `settling` enabled was refused by `Tick::new` — `Medium` wanted two numbers
+    // no document assigned — so a scenario could not tell a world that settles
+    // from one that does not, and the refusal it met named a lock that this
+    // record has since opened.
+    let derived = derived_with_settling();
+    let config = config_with_settling();
+    let mut world = world_sized(&derived, N, Heat::Varying);
+
+    let medium = derived
+        .medium()
+        .expect("an enabled settling process with a declared mu carries a medium");
+    assert_eq!(medium.mu, 1.0e-3);
+    assert_eq!(medium.g, config.physics.g);
+    assert_eq!(medium.rho_medium, config.physics.rho_medium);
+
+    let tick = Tick::new(
+        &world,
+        &derived,
+        &config,
+        &roster(&[ProcessId::Settling]),
+        DT,
+        DX,
+        42,
+    )
+    .expect("a roster that enables settling folds");
+
+    let mut ledger = Ledger::new(N_SUBSTANCES_WITH_GRAIN).expect("the ledger");
+    let mut scratch = Scratch::new(&world, &tick).expect("the scratch");
+    let mut before = DomainSums::new(N_SUBSTANCES_WITH_GRAIN).expect("before");
+    let mut after = DomainSums::new(N_SUBSTANCES_WITH_GRAIN).expect("after");
+
+    let moment_before = first_moment(&world, GRAIN);
+    let totals_before: Vec<i128> = (0..N_SUBSTANCES_WITH_GRAIN)
+        .map(|s| lane_total(&world, s))
+        .collect();
+    // The lane of a substance with no radius, byte for byte. Settling is
+    // dispatched per lane, and an array of grains built by substance index
+    // instead of by lane would move this one and leave the grain where it was —
+    // with every sum, both residuals and every channel still perfect (ADR-056).
+    let quiet_before = amounts_snapshot(&world);
+
+    for t in 0..10 {
+        tick.domain_sums(&world, &mut before);
+        tick.advance(&mut world, &mut ledger, &mut scratch, t, 0);
+        tick.domain_sums(&world, &mut after);
+        for s in 0..N_SUBSTANCES_WITH_GRAIN {
+            assert_eq!(
+                ledger.residual_matter(Nu::EMPTY, s, &before, &after),
+                0,
+                "substance {s} did not close on tick {t}"
+            );
+        }
+        assert_eq!(
+            ledger.residual_energy(&before, &after),
+            0,
+            "the energy ledger did not close on tick {t}"
+        );
+    }
+
+    assert!(
+        first_moment(&world, GRAIN) < moment_before,
+        "ten ticks of step `f` did not move the grain downward"
+    );
+    for s in 0..N_SUBSTANCES_WITH_GRAIN {
+        assert_eq!(
+            lane_total(&world, s),
+            totals_before[s as usize],
+            "settling moved the total of substance {s}"
+        );
+    }
+    for channel in Channel::ALL {
+        for s in 0..N_SUBSTANCES_WITH_GRAIN {
+            assert_eq!(
+                ledger.matter(channel, s),
+                0,
+                "{} credited substance {s} on a closed domain",
+                channel.name()
+            );
+        }
+    }
+    assert_ne!(
+        amounts_snapshot(&world),
+        quiet_before,
+        "nothing moved at all: a settling process that transports nothing \
+         satisfies every assertion above"
+    );
 }

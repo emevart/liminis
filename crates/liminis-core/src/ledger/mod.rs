@@ -77,11 +77,18 @@
 //! `process::Conservation::ChangedThrough(Channel)` is the arm the transport
 //! processes declare when the grid they were folded for vents.
 //!
-//! What is still open here is the **sign**, and it is open in the record rather
-//! than in the code: `TODO(counter-sign)` below. It stopped being untestable
-//! with the face: `boundary_outflow_appears_in_channel_counter` is the one place
-//! where the other convention can fail, because on a closed domain both give
-//! zero.
+//! The **sign** is no longer open either. ADR-084 ratifies it as the increment
+//! of the domain — inbound positive, outbound negative — which is the convention
+//! this module already implemented and the one under which SPEC section 2.1 and
+//! the residual formula of ADR-059 both read as printed. The record cancels the
+//! antisymmetry paragraph of ADR-059, where the counter took `-f`, and leaves the
+//! rest of ADR-059 standing whole. Nothing here changed to make that true, which
+//! is precisely why it is held by tests rather than by this paragraph:
+//! `a_counter_is_signed_from_the_domains_point_of_view` below, in both directions
+//! and on the stored number as well as on the residual, and
+//! `boundary_outflow_appears_in_channel_counter` from outside — on a closed
+//! domain either convention gives zero, so those are the only two places where
+//! getting it backwards can fail at all.
 
 use anyhow::{Context, Result, bail};
 
@@ -505,21 +512,26 @@ impl DomainSums {
 ///
 /// # Signed, and which way
 ///
-/// **A credit is positive when the quantity entered the domain.** Under that
-/// convention the invariant of ADR-003 reads literally — `delta(fields + cells)
-/// == sum(flows)` — and so does the residual formula of ADR-059. The
-/// antisymmetry paragraph of that same record describes the *pairing* (the
-/// domain and the counter are the two sides of one exchange, and their sum over
-/// a flow is zero), not the sign of the stored number.
-// TODO(counter-sign): ADR-059 states both conventions in one record — the
-// antisymmetry paragraph has the counter take `-f` where the voxel takes `+f`,
-// the residual paragraph has `residual = delta(domain) - sum(counters) == 0`,
-// and those differ by exactly a sign. The choice above is the one that makes
-// both SPEC section 2.1 and the residual formula true as written, but the record
-// does not make it, and existing records are not edited: this needs a new entry
-// in `DECISIONS.md`. Until it exists, the convention lives in
-// `a_counter_is_signed_from_the_domains_point_of_view` — the only place where
-// getting it backwards can fail, since on a closed domain both sides are zero.
+/// **A counter holds the increment of the domain** (ADR-084): positive when the
+/// quantity entered, negative when it left. Under that convention the invariant
+/// of ADR-003 reads literally — `delta(fields + cells) == sum(flows)` — and so
+/// does the residual formula of ADR-059, with no sign correction anywhere.
+///
+/// ADR-059 stated both conventions in one record and picked neither: its
+/// antisymmetry paragraph had the counter take `-f` where the voxel took `+f`,
+/// its residual paragraph had `residual = delta(domain) - sum(counters) == 0`,
+/// and the two differ by exactly a sign. ADR-084 cancels the first and ratifies
+/// the second, so the antisymmetry of ADR-059 is left describing what it is
+/// actually about — the *pairing* of the domain and the counter as two sides of
+/// one exchange — and not the sign of the stored number.
+///
+/// The ratification cost zero lines here, and that is a fact about the code
+/// rather than a saving: it had guessed right. The reverse convention would have
+/// wanted a negation at four dispatched credit sites (matter and energy in each
+/// of `process/diffuse.rs` and `process/advect.rs`) plus `process::credit_solar`,
+/// and in the residual formula; a missed one shows up as a residual of **exactly
+/// twice the flow**, which reads as broken transport rather than as a flipped
+/// sign.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Ledger {
     n_substances: u32,
@@ -733,8 +745,9 @@ impl Ledger {
         total
     }
 
-    /// Credit `units` of `substance` to `channel`: positive when the matter
-    /// entered the domain.
+    /// Credit `units` of `substance` to `channel`: **the increment of the
+    /// domain**, positive when the matter entered and negative when it left
+    /// (ADR-059, ADR-084).
     ///
     /// Outside any `cfg`, on purpose. ADR-059 puts the *reduction* in the debug
     /// build; the counters tick in release too, and folding both into one
@@ -759,15 +772,18 @@ impl Ledger {
                 "ledger counter overflowed: channel {}, substance {substance}, \
                  {counter} + {units}. Wrapping here would change the sign of a \
                  counter and leave the ledger closing against a right-hand side \
-                 that is no longer the truth (ADR-059).",
+                 that is no longer the truth (ADR-059, ADR-084).",
                 channel.name()
             );
         };
         self.matter[slot] = sum;
     }
 
-    /// Credit `joules` to `channel`: positive when the energy entered the
-    /// domain. The rules of [`Ledger::credit_matter`] apply unchanged.
+    /// Credit `joules` to `channel`: the increment of the domain, positive when
+    /// the energy entered and negative when it left (ADR-059, ADR-084). The rules
+    /// of [`Ledger::credit_matter`] apply unchanged, and the outward direction is
+    /// the one the shipped scenario runs — its lid carries enthalpy out through
+    /// `BOUNDARY_EXCHANGE` on every substep.
     ///
     /// # Panics
     ///
@@ -780,7 +796,7 @@ impl Ledger {
                 "ledger counter overflowed: channel {}, energy, {counter} + \
                  {joules}. Wrapping here would change the sign of a counter and \
                  leave the ledger closing against a right-hand side that is no \
-                 longer the truth (ADR-059).",
+                 longer the truth (ADR-059, ADR-084).",
                 channel.name()
             );
         };
@@ -1243,13 +1259,20 @@ mod tests {
 
     #[test]
     fn a_counter_is_signed_from_the_domains_point_of_view() {
-        // ADR-059 names two opposite conventions and picks neither; this is the
-        // one place where getting it backwards can fail at all, because on a
-        // closed domain both sides of the residual are zero.
+        // ADR-084 ratifies the convention ADR-059 stated twice and picked
+        // neither time: a counter holds the **increment of the domain**. This is
+        // the one place inside the crate where getting it backwards can fail at
+        // all, because on a closed domain both sides of the residual are zero.
+        //
+        // Ratifying it cost zero lines of logic — the code had guessed right —
+        // and that is exactly why the assertions below have to be this wide. A
+        // comment declaring the convention stays green under either one; only a
+        // test holds it.
         const K: i32 = 7_000;
         let before = sums_of_one(1_000);
         let after = sums_of_one(1_000 + K);
 
+        // Inbound: the domain grew by K, and the counter says so.
         let mut ledger = Ledger::new(1).unwrap();
         ledger.begin_tick();
         ledger.credit_matter(Channel::BoundaryExchange, 0, i128::from(K));
@@ -1265,7 +1288,7 @@ mod tests {
             i128::from(2 * K)
         );
 
-        // Energy reads the same way.
+        // Energy reads the same way inbound.
         let mut before_e = DomainSums::new(1).unwrap();
         before_e.add_enthalpy_lane_32(&[M32::new(50)]);
         let mut after_e = DomainSums::new(1).unwrap();
@@ -1275,6 +1298,41 @@ mod tests {
         energy.begin_tick();
         energy.credit_energy(Channel::SolarIn, i128::from(K));
         assert_eq!(energy.residual_energy(&before_e, &after_e), 0);
+
+        // **Outbound**, which is the half the shipped scenario actually runs:
+        // the lid of `configs/scenarios/h2s-oxidation.toml` carries enthalpy out
+        // through `BOUNDARY_EXCHANGE` on every substep, so that counter is
+        // negative all run long. A ledger that stored the magnitude of what it
+        // was handed would pass the inbound half entire and fail here.
+        let mut out_before = DomainSums::new(1).unwrap();
+        out_before.add_enthalpy_lane_32(&[M32::new(50 + K)]);
+        let mut out_after = DomainSums::new(1).unwrap();
+        out_after.add_enthalpy_lane_32(&[M32::new(50)]);
+
+        let mut leaving = Ledger::new(1).unwrap();
+        leaving.begin_tick();
+        leaving.credit_energy(Channel::BoundaryExchange, -i128::from(K));
+        assert_eq!(leaving.residual_energy(&out_before, &out_after), 0);
+
+        // And the sign of the **stored** number, not only of the residual.
+        // Negating the credit and the residual formula together moves no
+        // residual at all, so every assertion above stays green while
+        // `/api/state` (ADR-071) and the metric stream (ADR-037) publish a
+        // counter whose sign is the opposite of the one `QUANTITIES.md`
+        // section 3 declares. These two assertions are what catches that
+        // *inside* the crate; the other guard against it is
+        // `boundary_outflow_appears_in_channel_counter`
+        // (`tests/acceptance_boundary.rs`), and that one is the stronger of the
+        // pair — it reads the counter a dispatched `DiffusePhase::apply_32` left
+        // behind, so the sign it judges is one a call site chose rather than one
+        // a test handed in. Two places, and the module doc above names both:
+        // deleting either on the grounds that the other covers it leaves the
+        // convention held by prose.
+        assert!(
+            leaving.energy(Channel::BoundaryExchange) < 0,
+            "an outward channel holds a negative counter (ADR-084)"
+        );
+        assert_eq!(ledger.matter(Channel::BoundaryExchange, 0), i128::from(K));
     }
 
     #[test]

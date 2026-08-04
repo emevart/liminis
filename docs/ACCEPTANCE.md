@@ -20,11 +20,40 @@
 
 ### Валидатор отказывается грузить
 
-Шестьдесят пять отказов. Каждый — класс ошибки, который иначе проявится как
+Шестьдесят девять отказов. Каждый — класс ошибки, который иначе проявится как
 странная динамика через сто тысяч тиков. Порядок тот же, что в таблице §10
 `CONFIG_SCHEMA.md`, и число получено пересчётом обоих перечней, а не сложением
 дельт из записей журнала: каждая из ADR-056 … ADR-069 берёт базой одно и то же
 число девятнадцать.
+
+Три имени пришли с ADR-082 и все три про давление: `theta_max` обязателен
+при включённом процессе, пол окна `6·Θ_sup` и потолок по объявленному горизонту
+прогона. Четвёртого имени — про `every_n_ticks` на давлении — здесь нет
+намеренно, и это следствие того же выбора: правило §10 сформулировано по
+**полю**, а не по оператору, поэтому у `every_n_ticks_on_diffusive_field_is_rejected`
+расширилась область (третий вход, давление), а имя-двойник рядом с ним
+утверждало бы в перечне, что правил два.
+
+**Одно имя ушло и два встали на его место, и это минус один плюс два, а не
+переформулировка** (ADR-084 вместе с ADR-083).
+`a_lit_scenario_is_refused_until_an_energy_sink_exists` был двухзамковым: он
+снимался записью, дающей энергии сток, **и** ответом на разрядность счётчика.
+ADR-083 сняла второй замок (`i128`), ADR-084 — первый, объявив стоком S0 уже
+построенную грань `exchange`, чей счётчик энтальпии пополняют шаги `c` и `d`.
+После обеих замков не осталось, поэтому имя **удалено вместе со своим правилом**,
+а не переименовано: напрашивающееся взамен
+`a_lit_scenario_is_refused_until_the_counter_width_is_answered` было бы ложно по
+посылке в тот самый день, когда его написали бы. На место широкого отказа встали
+два узких — `a_lit_scenario_without_an_exchange_face_is_refused` (освещённый
+сценарий в запечатанной коробке) и
+`a_lit_scenario_whose_steady_state_leaves_the_declared_range_is_refused`
+(`i_surface` выше того, что крышка уносит в стационаре). Оба достижимы **ровно с
+этого коммита**: пока стоял широкий отказ, он срабатывал раньше любого из них, а
+недостижимый сторож есть то же самое, что его отсутствие. Порядок между ними
+значим и назначен ADR-084 — сперва «есть ли вообще грань `exchange` и секция
+`[boundary.reservoir]`», потом «лежит ли стационар в диапазоне», — потому что
+второй предикат считает по `k_ex`, которого без первой проверки может не быть
+вовсе.
 
 Двое новых стоят не в конце, а по порядку таблицы §10 — сразу за
 `reaction_without_t_vmax_is_rejected`: `every_n_ticks_on_the_light_process_is_rejected`
@@ -44,8 +73,8 @@ ADR-086). Второй ADR-074 назвал и в этот перечень не
 `initial_layer_naming_an_unknown_substance_is_rejected` и
 `initial_layer_side_outside_the_enumeration_is_rejected` пришли с ADR-077 и стоят
 ниже, в «Начальных условиях», рядом с остальными именами про сторону слоя: там
-они читаются вместе с тем, что стерегут. §10 после них насчитывает шестьдесят
-семь строк.
+они читаются вместе с тем, что стерегут. §10 после них насчитывает семьдесят
+одну строку.
 
 Последние два имени пришли с ADR-081, и оба про левую часть энергетического
 инварианта. `summed_energy_coefficient_disagreeing_with_the_declared_enthalpy_is_rejected`
@@ -94,6 +123,9 @@ energy_scale_incompatible_with_a_reaction_enthalpy_is_rejected
 substance_count_over_s_max_is_rejected
 reaction_count_over_r_max_is_rejected
 every_n_ticks_on_diffusive_field_is_rejected
+pressure_without_theta_max_is_rejected
+theta_max_below_six_times_the_declared_peak_occupancy_is_rejected
+theta_max_beyond_the_declared_run_horizon_is_rejected
 field_over_n_max_substeps_is_rejected
 thermal_diffusivity_below_the_fastest_substance_is_rejected
 t_ref_outside_the_declared_temperature_range_is_rejected
@@ -115,7 +147,8 @@ a_negative_surface_irradiance_is_rejected
 a_modulation_fraction_outside_the_unit_interval_is_rejected
 a_modulation_period_that_is_not_a_whole_number_of_ticks_is_rejected
 a_modulation_period_under_three_ticks_is_rejected
-a_lit_scenario_is_refused_until_an_energy_sink_exists
+a_lit_scenario_without_an_exchange_face_is_refused
+a_lit_scenario_whose_steady_state_leaves_the_declared_range_is_refused
 a_duplicate_id_in_any_section_is_refused
 a_reservoir_naming_an_unknown_substance_is_rejected
 every_domain_rule_refuses_its_own_violation
@@ -125,7 +158,8 @@ stir_period_missing_with_stirring_on_is_rejected
 a_calibration_window_that_is_not_an_interval_is_rejected
 a_grid_not_divisible_by_its_coarsest_lod_is_rejected
 a_periodic_face_without_its_partner_is_rejected
-a_settling_substance_is_refused_until_g_and_the_medium_density_are_named
+a_settling_substance_in_a_scenario_with_settling_disabled_is_rejected
+a_scenario_that_enables_settling_without_a_viscosity_is_rejected
 summed_energy_coefficient_disagreeing_with_the_declared_enthalpy_is_rejected
 chemical_energy_of_the_domain_past_the_ledger_accumulator_is_rejected
 ```
@@ -153,9 +187,23 @@ ADR-039 требует пару), обе стороны нарушенного �
 атрибут уже не носят, а `requires_naming_an_unknown_field_is_rejected` снято
 записью ADR-073 вместе с правилом — непустой `requires` стал ошибкой загрузки,
 поэтому разрешать имя больше не во что, и на его месте стоит
-`a_requires_window_is_rejected_until_the_gate_exists`. Умолчания `enabled` семи
-процессов из девяти по-прежнему не назначены ничем (§13 п. 23); свет и поле
-скоростей — те два, у которых умолчание назначено решением (ADR-069, ADR-076).
+`a_requires_window_is_rejected_until_the_gate_exists`. Умолчания `enabled`
+пяти процессов из девяти по-прежнему не назначены ничем (§13 п. 23); свет, поле
+скоростей, давление и оседание — те четыре, у которых умолчание назначено
+решением (ADR-069, ADR-076, ADR-082, ADR-085).
+
+Тем же ходом ADR-085 снял `a_settling_substance_is_refused_until_g_and_the_medium_density_are_named`
+— **вместе с правилом**, как ADR-073 снял своё: `g` и плотность среды объявлены
+ключами `[physics]`, поэтому отвергать зерно из-за неназванного числа больше не
+за что. На его месте два узких имени, и второе легко потерять. **Зерно при
+выключенном оседании** отвергается потому, что осадок, который никогда не
+оседает при полностью зелёном корпусе, неотличим от честного нуля — довод,
+которым ADR-067 отказал `settling_radius` в умолчании, и цена, которой ADR-085
+платит за сохранённое умолчание `enabled = false`. **Включённое оседание без
+`physics.mu`** отвергается даже тогда, когда ни одно вещество радиуса не
+объявляет: фаза строит скорость для каждой полосы и проверяет вязкость до ветки
+нулевого радиуса, поэтому предикат «есть вещество с радиусом» неисполним, а
+написанный по радиусу отказ уехал бы с загрузки на сборку тика.
 
 `courant_violation_is_rejected` и `outflow_bound_violation_is_rejected` — разные проверки. Первая про линейную устойчивость, `max(|u|·dt/dx) ≤ 1`. Вторая про неотрицательность: воксель с расходящимся течением отдаёт сумму по исходящим граням, а не максимум, и условие там строже (SPEC §4.2). Конфиг, проходящий первую и валящий вторую, существует, и он даёт отрицательные количества. У знакопеременного поля второе неравенство сторожит не неотрицательность, а отсутствие нового экстремума: энтальпия `H = C_cell·(T − T_ref)` знакопеременна по построению, потому что `T_ref` обязан лежать внутри `[t_min, t_max]` (ADR-062), и «уйти в минус» ей разрешено — что покупает `Σ|C| ≤ 1` на грубой сетке, так это выпуклость, то есть донорная схема выдаёт комбинацию ячейки и её соседей и ячейка не может стать холоднее самого холодного соседа (ADR-087).
 
@@ -172,9 +220,30 @@ ADR-039 требует пару), обе стороны нарушенного �
 `u_conv_max` поля скоростей проверяется условием шага `c`, `w_sed` оседания —
 собственным одноосевым `w·dt/dx ≤ 1` шага `f`: при расщеплении Ли — Троттера
 (ADR-036) каждому оператору достаточно собственного условия. Смещение за тик
-складывается из трёх слагаемых — 0.167 вокселя от адвекции, не более одного от
+складывается из трёх слагаемых — 0.167 вокселя от адвекции, не более 0.167 от
 давления, не более одного от оседания, — и это утверждение о модели, а не
 неустойчивость.
+
+**Третье условие, диффузионное, принадлежит давлению и с первыми двумя не
+складывается тоже** (ADR-082). Донором грани служит весь пул, поэтому
+линеаризация около однородного состояния даёт явную диффузию с
+`α = Θ/theta_max` — **занятость**, а не разность и не перезаполнение, — а
+множитель усиления шахматной моды есть `g = 1 − 12α`, откуда `|g| ≤ 1 ⟺ α ≤ 1/6
+⟺ theta_max ≥ 6·Θ`. Ни `max|c| ≤ 1`, ни `Σ|c| ≤ 1` в рабочей точке не связывают:
+при `Θ ≈ 1` и `theta_max ≈ 6` они дают `Δθ ≤ 6` и `Δθ ≤ 1`, тогда как схема
+колеблется уже на `Δθ = 0`. Третьего `SpeedBound` валидатор поэтому не получает —
+складывать нечего, — а связывающая проверка стоит в `config/derive.rs` окном по
+`theta_max`.
+
+**Расхождение с замороженной спекой, операционной формой** (ADR-032: SPEC не
+правится, расхождение печатается здесь). SPEC §4.2 требует проверить два условия
+Куранта и третьего не содержит вовсе, хотя для давления связывает только оно;
+именами это `theta_max_below_six_times_the_declared_peak_occupancy_is_rejected`
+при загрузке и `the_relaxation_oscillates_once_the_occupancy_exceeds_a_sixth_of_theta_max`
+в ядре. Второе расхождение того же решения: SPEC §3 печатает `P = k·(V_occ/V_voxel − 1)`
+и отдельно обсуждает необъявленную единицу `k`; после ADR-082 описанной там
+величины в модели нет — жёсткость сокращается при выводе подвижности, поле хранит
+безразмерное `θ`, и наблюдаемого паскаля не остаётся.
 
 `reaction_without_t_vmax_is_rejected` стоит здесь с ADR-048, а пары в §10
 `CONFIG_SCHEMA.md` не имел до этой правки. Теперь имеет, но ключа `t_vmax` схема
@@ -224,6 +293,8 @@ n_max_refusal_names_the_field_and_the_lod_that_fixes_it
 enthalpy_at_default_lod_is_rejected_over_n_max
 settling_coefficient_is_derived_from_radius_not_declared
 stokes_velocity_uses_radius_not_diameter
+the_settling_courant_is_compared_the_same_way_in_the_validator_and_in_the_process
+the_medium_constants_have_one_source
 ```
 
 `extent_exponent_is_derived_from_the_scarcest_participant` — прямая защита от
@@ -289,6 +360,31 @@ stokes_velocity_uses_radius_not_diameter
 запись `k = r²/18` под именем `settling_radius` даёт скорость ровно вчетверо
 меньше истинной, а множитель четыре тише множителя тысяча и переживает
 калибровку скорости осадконакопления так же незаметно.
+
+Два имени рядом с ними пришли с ADR-085.
+`the_settling_courant_is_compared_the_same_way_in_the_validator_and_in_the_process`
+про одностороннее расхождение, невидимое на рабочем примере: валидатор считает
+`u·dt/dx` в `f64`, а процесс сворачивает то же число в `Q`, то есть в `f32`, и
+сравнивает **его**, потому что именно `Q` получает ядро. Перебором по целым
+избыткам плотности от 1 до 4000 кг/м³ при `g = 9.80665` f64-Курант в точке
+предела больше единицы **в 2632 случаях**, максимум `1.0000000000000007` при
+`Δρ = 1353`. Оставленный в `f64` валидатор отверг бы для двух третей объявляемых
+избытков ровно то зерно, которое его же сообщение печатает как самое тяжёлое из
+грузящихся, — поэтому он зовёт `settling_velocity` и `settling_courant`, а не
+повторяет цепочку вторым текстом, и `transport` бонд оседания повторно не судит.
+Свидетель у теста — `Δρ = 1353`, а не учебные 1650: на них f64-Курант в точке
+предела равен ровно единице, то есть попадает в ведро, где обе стороны согласны и
+свидетельствовать нечем.
+
+`the_medium_constants_have_one_source` — прецедент `the_incident_irradiance_has_one_source`
+(ADR-076), и заведён он против дрейфа, который сам же и породил фикстуру: `9.81`
+стояло в тесте `process/settle.rs` три записи подряд с честной оговоркой «цитировать
+в тесте не значит решать». Тест требует, чтобы фикстура читала
+`config::Physics::default()`, и — половина, которую легко потерять, — чтобы обе
+двери умолчания давали одно число: отсутствующая секция и секция, написанная без
+`g`. При `#[derive(Default)]` они расходятся на 9.80665, оба мира грузятся, оба
+консервативны, у обоих обе невязки нулевые, и мир без гравитации просто ничего не
+осаждает.
 
 `reaction_energy_delta_is_integral_after_load` — про то, что энтальпия участвует
 в реакции наравне с веществом (ADR-041), и содержание у него другое с ADR-081.
@@ -357,10 +453,14 @@ competition_scaling_conserves_each_element_exactly
 charge_is_tracked_as_a_conserved_quantity_of_zero_mass
 pressure_relaxation_conserves_exactly
 pressure_relaxation_reaches_hydrostatic_equilibrium
-pressure_signal_crosses_the_domain_at_one_voxel_per_tick
+one_application_of_pressure_reaches_at_most_one_voxel
+the_relaxation_oscillates_once_the_occupancy_exceeds_a_sixth_of_theta_max
+pressure_crosses_the_domain_in_diffusive_time_not_at_one_voxel_per_tick
+an_enabled_pressure_scenario_is_refused_until_step_e_has_an_owner_and_a_boundary
 sedimentation_conserves_exactly
 settling_out_of_the_top_face_appears_in_boundary_exchange
 boundary_outflow_appears_in_channel_counter
+a_counter_is_signed_from_the_domains_point_of_view
 exchange_face_carries_enthalpy_into_the_energy_counter
 the_ghost_cell_is_the_same_value_in_both_buffers
 a_domain_reduction_skips_the_ghost_element
@@ -386,6 +486,8 @@ only_the_reaction_step_declares_transmutes
 a_reacting_tick_closes_the_energy_ledger_with_no_channel
 the_exchange_face_credits_the_chemical_energy_of_what_it_moves
 load_reports_the_chemical_energy_of_the_domain_in_joules
+load_reports_the_pressure_relaxation_time_and_the_stability_margin
+load_reports_the_lid_credit_per_tick_and_the_counter_margin_in_bits
 an_exothermic_reaction_warms_its_cell
 a_closed_domain_leaves_every_channel_counter_at_zero
 domain_sums_do_not_overflow_for_water_at_256_cubed
@@ -509,6 +611,24 @@ flux-form схемы. Ограничитель ван Леера этого не
 объявленного горизонта. Это подставляет
 `a_boundary_flux_of_one_percent_of_the_pool_survives_the_declared_horizon`.
 
+**Измеренный вход у этой пары появился с ADR-084, и он не солнечный.**
+Поставляемый `h2s-oxidation.toml` переполнял `BOUNDARY_EXCHANGE` **на седьмом
+тике в темноте**: мир стартует при `H = 0`, то есть при `T_ref = 298.15`,
+резервуар объявлен при `t_out = 288.15`, и десять кельвинов разницы гонят через
+крышку измеренные `1.4058·10¹⁸` единиц за первый тик — `0.152` потолка `2⁶³` за
+тик, — ни света, ни излучения, ни одного включённого процесса кроме диффузии.
+Рядом с этим числом обязан стоять честный потолок накопления, потому что соблазн
+умножить его на горизонт велик и **неверен**: поток крышки — затухающий
+переходник, а не постоянный приток, коробка релаксирует к `t_out` за
+`L/k_ex = 480` тиков, и весь интеграл ограничен её собственной энтальпией над
+`t_out` — `4.1710·10⁶ Дж/(м³·К) · 1.10592·10⁻⁷ м³ · 10 К = 4.613 Дж`, то есть
+`6.807·10²⁰` единиц, **около семидесяти бит со знаком**. Тёмная коробка
+доказывает измерением, что `i64` узок (73.8 потолка против одного), и **не
+доказывает, сколько бит нужно**; требуемую ширину задаёт солнечный случай выше.
+Различие несёт вес и для отвергнутых вариантов A-20: на семидесяти битах дешёвые
+ответы — отдельный масштаб счётчика, периодическое сведение — остались бы
+живыми, и убивает их солнце, а не крышка.
+
 Корпусное «10⁶ тиков по тысяче единиц дают 10⁹» из `QUANTITIES.md` §3 —
 заглушка, а не худший случай, и она сохранена под своим именем: половина её
 довода («`i32` безнадёжен, и молча») верна и остаётся. Операционная форма,
@@ -533,6 +653,37 @@ a_snapshot_round_trips_a_counter_past_the_i64_range
 счётчик» недостижимо никаким солнцем в объявленном размахе, и имя стало бы
 зелёным всегда и ни о чём. Его отказ переехал на границу `i128` внутрь
 `a_credit_past_the_i128_counter_still_panics_rather_than_wrapping`.
+
+**`a_counter_is_signed_from_the_domains_point_of_view` существовал в коде
+задолго до того, как его назвал документ, и это ровно то, против чего написано
+правило этого файла.** Соглашение о знаке — счётчик хранит **приращение
+домена**, входящий поток положителен, исходящий отрицателен, `Δ(домен) ==
+Σ(счётчики)` читается как напечатано — ратифицировано ADR-084 и стоило **нуля
+строк логики**: код угадал верно и честно пометил выбор `TODO`, потому что
+ADR-059 объявил в одной записи два взаимоисключающих соглашения. Ноль строк
+логики означает, что держат соглашение тесты и больше ничто, поэтому их надо
+называть по счёту: этот — изнутри крейта, на обе стороны и на **хранимое** число,
+а не только на невязку; `boundary_outflow_appears_in_channel_counter` — снаружи,
+и он сильнее, потому что судит знак, выбранный диспетчеризованным вызовом, а не
+поданный тестом. Больше нигде обратное соглашение упасть не может: на закрытом
+домене оба дают ноль, а согласованное отрицание кредита и формулы невязки не
+двигает невязку вовсе.
+
+`load_reports_the_lid_credit_per_tick_and_the_counter_margin_in_bits` — цена
+стока, сделанная измеримой (ADR-084). Загрузка печатает проводимость крышки,
+потолок поглощённого потока, энтальпию ghost-ячейки и потиковое зачисление с
+запасом счётчика **в битах**. Имя названо так, а не «тик, на котором счётчик
+переполнится», и это не косметика: после ADR-083 счётчик `i128`, и тика
+переполнения у крышки нет ни при каком объявленном мире (`1.4·10¹⁸` за тик против
+`2¹²⁷` дают `1.2·10²⁰` тиков, а весь интеграл затухающего переходника упирается в
+семьдесят бит), — строка, печатающая «тик переполнения», печатала бы число,
+которого не бывает, то есть была бы обманкой ровно того класса, за который
+ADR-083 убил `crediting_more_solar_than_the_counter_holds_is_refused_not_wrapped`.
+Само зачисление — **верхняя граница**, а не число прогона, и тест требует именно
+её: зазор затухает внутри тика по подшагам, поэтому воспроизвести цифру прогона
+загрузчик не может, а `alpha_ex·|H_out|·(грубые ячейки обменивающихся граней)` её
+ограничивает сверху и на поставляемом сценарии промахивается меньше чем на
+процент.
 
 **`the_shipped_scenario_survives_a_thousand_ticks`** — то, чего у приёмки не было
 по **роду**, а не по покрытию: `every_scenario_in_the_repository_loads` проверяет
@@ -768,6 +919,7 @@ the_projection_covers_every_simulated_key
 the_canonical_form_reloads_to_the_same_hash
 an_omitted_process_section_hashes_as_the_full_default_roster
 the_canonical_form_names_every_process_in_the_roster
+an_omitted_physics_section_hashes_as_earth_and_fresh_water
 ```
 
 Три имени ADR-058 стоят здесь потому, что сид дошёл до генератора: `rand`
@@ -802,6 +954,18 @@ the_canonical_form_names_every_process_in_the_roster
 что именно получилось»: `config::canonical` публична, но наружу её не выводит
 никто, и без флага `--print-canonical` пользователь, забывший запись, не видит
 вообще ничего.
+
+`an_omitted_physics_section_hashes_as_earth_and_fresh_water` — то же правило,
+применённое к секции целиком (ADR-085, ADR-065), и второе его утверждение важнее
+первого. Равенство хешей выполнилось бы и в мире, где `[physics]` выброшена из
+проекции вовсе, поэтому тест разбирает каноническую форму обратно в `toml::Value`
+и требует наличия `physics.g = 9.80665` и `physics.rho_medium = 1000.0` у
+сценария, который не написал ни того, ни другого. Третье утверждение — зеркало:
+`physics.mu` в канонической форме **отсутствует**, пока её не объявили, по
+образцу `theta_max`, потому что материализованное `Some(_)` было бы умолчанием,
+которого решение не назначало. Падает он при `#[derive(Default)]` для `Physics`
+(пропущенная секция даёт `g = 0`), при `Option<Physics>` в `Config` (секция не
+попадает в канонический вид вовсе) и при материализации после хеширования.
 
 `reaction_id_is_stable_under_reordering_in_toml` — прямое следствие ADR-027:
 если идентификатор берётся от позиции в файле, перестановка двух реакций меняет

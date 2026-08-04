@@ -54,12 +54,24 @@
 //! ADR-039 — name a *substance and a reaction*, because a config whose fault
 //! lies in a pair cannot be fixed by looking at one name.
 //!
-//! # `Q` does not appear here
+//! # Where the border actually runs
 //!
-//! The validator works in declared units and `f64`. That is a border, not an
-//! oversight: the one conversion into integers lives in
-//! [`super::derive`](super::derive), and `NUMERIC.md` puts the wrappers of
-//! ADR-022 on the other side of it.
+//! This section used to read "`Q` does not appear here", and since ADR-085 that
+//! is false in one place and in exactly one. The border that *is* true: **the
+//! validator produces no value of class `M` at all** — the one conversion into
+//! storage units lives in [`super::derive`](super::derive), and `NUMERIC.md`
+//! puts the wrappers of ADR-022 on the other side of it — and class `Q` reaches
+//! it once, in the fold of settling's Courant number.
+//!
+//! That once is not a slip. `process::settle::settling_courant` compares the
+//! number **the kernel receives**, folded into `Q`, and the validator's own
+//! `f64` comparison is one-sidedly stricter: over the whole excess densities
+//! from 1 to 4000 kg/m^3 the `f64` Courant number at the derived radius limit is
+//! over one in 2632 cases. Left in `f64` here, the refusal would print a limit
+//! that the same refusal then rejects. So the settling bound is judged by the
+//! process — this file calls `settling_velocity` and `settling_courant` rather
+//! than writing the chain `r -> k -> rho_bar -> w -> c` a second time — and
+//! [`transport`] does not judge it again.
 
 use anyhow::{Context, Result, bail};
 use std::collections::BTreeMap;
@@ -67,7 +79,9 @@ use std::collections::BTreeMap;
 use super::derive::MASS_EPSILON;
 use super::{Config, Derived, Face, Reaction, Scale, Substance, derive};
 use crate::ledger::Channel;
+use crate::numeric::{Q, qsub};
 use crate::process::ProcessId;
+use crate::process::settle::{Grain, Medium, settling_courant, settling_velocity};
 
 /// The field id whose `lod` fixes the grid the wide temperature difference is
 /// taken on (ADR-062, ADR-069).
@@ -103,11 +117,55 @@ const LIGHT_PROCESS: &str = ProcessId::Light.id();
 
 /// The default of `enabled` for the light, taken from the process (ADR-065).
 ///
-/// `false`, and assigned by ADR-076 rather than left over: light on by default
-/// would put an energy input into every scenario in the repository, and that
-/// input has no sink and a counter that does not hold one tick of it — so every
-/// scenario would be refused by the rule two functions down.
+/// `false`, and assigned by ADR-076 rather than left over. The argument it used
+/// to carry here — no sink and a counter too narrow for one tick — is spent:
+/// ADR-084 ratifies the `exchange` face as the sink and ADR-083 widens the
+/// counter. What keeps the value is that step `a` still does not dispatch, so a
+/// default of `true` would refuse every scenario in the repository at tick
+/// assembly. The argument is written out at the definition and never copied here.
 use crate::process::light::ENABLED_BY_DEFAULT as LIGHT_ENABLED_BY_DEFAULT;
+
+/// The process id of pressure, from the same closed roster and for the same
+/// reason as [`VELOCITY_FIELD_PROCESS`].
+const PRESSURE_PROCESS: &str = ProcessId::Pressure.id();
+
+/// The default of `enabled` for pressure, taken from the process (ADR-065,
+/// ADR-082).
+///
+/// `false`, and assigned by ADR-082 rather than left over: five locks are shut on
+/// step `e`, and `process/pressure.rs` names them one by one. Read from there and
+/// never copied, so that the day the locks come off and the default flips, the
+/// predicate below follows without an edit.
+use crate::process::pressure::ENABLED_BY_DEFAULT as PRESSURE_ENABLED_BY_DEFAULT;
+
+/// The process id of settling, from the same closed roster and for the same
+/// reason as [`VELOCITY_FIELD_PROCESS`].
+const SETTLING_PROCESS: &str = ProcessId::Settling.id();
+
+/// The default of `enabled` for settling, taken from the process (ADR-065,
+/// ADR-085).
+///
+/// `false`, and assigned by ADR-085 rather than left over. The record weighed the
+/// flip and refused it on four counts; what this file pays for the choice is the
+/// refusal one function down, of a substance that declares a radius in a scenario
+/// where nothing settles.
+use crate::process::settle::ENABLED_BY_DEFAULT as SETTLING_ENABLED_BY_DEFAULT;
+
+/// How the Courant number of one bound was compared, and by whom.
+///
+/// Two arms and not a `bool`, because the difference is *who* judged rather than
+/// *whether* (ADR-085). A bound the operator folded carries the `Q` it folded, so
+/// that a reader can see the number the kernel will run on; a bound this file
+/// judges carries nothing and meets the two inequalities of [`transport`].
+enum CourantVerdict {
+    /// Judged here, in `f64`, against the declared upper bound on `|u|`.
+    InF64,
+    /// Judged by the operator's own fold, on the `Q` the kernel receives — and
+    /// therefore **not** judged again in [`transport`], where the same number in
+    /// `f64` is stricter by up to three ULP and would refuse what the message
+    /// beside it prints as legal.
+    FoldedByTheOperator(Q),
+}
 
 /// One transport operator and the speed bound that belongs to it.
 ///
@@ -131,6 +189,9 @@ struct SpeedBound {
     /// settling: transport runs along a single axis, there is one outgoing face,
     /// and the two inequalities of section 4.2 coincide (ADR-067).
     outgoing_faces: u32,
+    /// Who compared this bound's Courant number against one, and on what
+    /// (ADR-085).
+    courant: CourantVerdict,
 }
 
 /// Check a scenario against every rule of `CONFIG_SCHEMA.md` section 10 and
@@ -412,6 +473,28 @@ fn domains(config: &Config) -> Result<()> {
         demand_non_negative(*mass, &format!("conserved.{name}"), "the scenario")?;
     }
 
+    // The three constants of the medium (ADR-085). Zero is legal for the first
+    // two and the permission is deliberate: `g = 0` is a lawful scenario that
+    // settles nothing, and a ban would be a statement about physics this project
+    // has not made — the same move `partial_molar_volume = 0` (ADR-067) and
+    // `i_surface = 0` (ADR-076) got. The price is that a typo and a decision are
+    // then indistinguishable from outside the file.
+    demand_non_negative(config.physics.g, "physics.g", "the scenario")?;
+    demand_non_negative(
+        config.physics.rho_medium,
+        "physics.rho_medium",
+        "the scenario",
+    )?;
+    // Unconditional, like every other rule in this function, and that is the
+    // half worth stating: written instead inside the "settling is on" branch, a
+    // negative viscosity would pass validation whole on every scenario in the
+    // repository — settling is off in all of them — and the table of
+    // `every_domain_rule_refuses_its_own_violation` could not tell, because the
+    // refusal `settling_velocity` raises names `mu` as well.
+    if let Some(mu) = config.physics.mu {
+        demand_positive(mu, "physics.mu", "the scenario")?;
+    }
+
     for substance in &config.substance {
         let owner = format!("substance `{}`", substance.id);
         demand_positive(substance.molar_mass, "molar_mass", &owner)?;
@@ -501,11 +584,20 @@ fn domains(config: &Config) -> Result<()> {
                 process.every_n_ticks
             );
         }
-        if let Some(mu) = process.mu {
-            demand_positive(mu, "mu", &owner)?;
-        }
         if let Some(u_conv_max) = process.u_conv_max {
             demand_positive(u_conv_max, "u_conv_max", &owner)?;
+        }
+        // Unconditional, like every other rule in this function: a `theta_max`
+        // written on the diffusion record is a number nobody reads and it is
+        // checked all the same. What it does **not** get is the window of
+        // ADR-082 — the floor and the ceiling are conditional on the process
+        // being on — so a limiting overflow declared on a *disabled* pressure
+        // record parses, reaches the canonical form and `config_hash`, and never
+        // meets either inequality. That is exactly the hole `u_conv_max` has on
+        // a disabled velocity field; it is inherited knowingly, and closing it
+        // belongs to a record rather than to this line.
+        if let Some(theta_max) = process.theta_max {
+            demand_positive(theta_max, "theta_max", &owner)?;
         }
         if let Some(l_c) = process.l_c {
             demand_positive(l_c, "l_c", &owner)?;
@@ -551,8 +643,6 @@ fn domains(config: &Config) -> Result<()> {
         }
     }
 
-    light(config)?;
-
     if let Some(reservoir) = &config.boundary.reservoir {
         let owner = "[boundary.reservoir]";
         demand_positive(reservoir.k_ex, "k_ex", owner)?;
@@ -561,6 +651,20 @@ fn domains(config: &Config) -> Result<()> {
             demand_non_negative(*conc, &format!("conc_out.{id}"), owner)?;
         }
     }
+
+    // **After the reservoir block and not before it**, which is the same care
+    // [`light`] takes with `t_out` one function down and for the same reason.
+    // The steady-state ceiling of ADR-084 is `k_ex * sum(conc_out * c_p) *
+    // (t_max - t_out)`, so it computes with all three of the keys just checked:
+    // a negative `k_ex` or a negative `conc_out` makes the conductance negative,
+    // the ceiling negative, every positive `i_surface` past it, and the refusal
+    // then blames the light while printing a negative number of watts the lid
+    // can carry away. Both orders refuse the world; only this one names the
+    // culprit. `every_domain_rule_refuses_its_own_violation` cannot see the
+    // difference — its fixtures leave the light off — so the order is held here
+    // and by nothing else.
+    light(config)?;
+    pressure(config)?;
 
     for entry in &config.calibration {
         let owner = format!("[[calibration]] `{}`", entry.path);
@@ -655,27 +759,235 @@ fn light(config: &Config) -> Result<()> {
         }
     }
 
-    if i_surface > 0.0 {
-        // Temporary, and **one lock now, not two**. It was two: the missing sink
-        // and the width of a channel counter. ADR-083 lifted the second — the
-        // counter is `i128` and holds `2^127/2^k_E = 1.15e18 J` at `k_E = 67`,
-        // which is `7.0e11` declared horizons of full sun — and lifting only that
-        // one is deliberate, because lifting the other with it would let a lit
-        // scenario load into a world where absorbed energy has nowhere to go.
-        // ADR-084 is what removes this refusal, and it removes it rather than
-        // reformulating it. The precedent for the shape is
-        // `a_settling_substance_is_refused_until_g_and_the_medium_density_are_named`.
+    if i_surface <= 0.0 {
+        // `i_surface = 0.0` is the legal dark box and owes neither rule below a
+        // thing. Leaving early rather than guarding each rule keeps the two
+        // refusals unreachable for a world that absorbs nothing.
+        return Ok(());
+    }
+
+    // The two rules of ADR-084, replacing the blanket refusal of ADR-076. Their
+    // **order is assigned by that record and is not taste**: the second computes
+    // with `k_ex`, which a scenario without a `[boundary.reservoir]` section does
+    // not have at all, so it would answer `None` and wave a sealed lit box
+    // through if it ran first and this one never ran.
+    let exchanging = exchanging_faces(&config.boundary);
+    if exchanging.is_empty() || config.boundary.reservoir.is_none() {
         bail!(
-            "process `{LIGHT_PROCESS}` declares i_surface = {i_surface} W/m^2, and \
-             a lit scenario is refused for now because energy has no sink in any \
-             scenario (ADR-076): RADIATIVE_OUT is not implemented and step `j` has \
-             nothing to write, so absorbed light accumulates without bound and \
-             crosses the declared temperature range in about 42 ticks at full sun, \
-             taking the Courant bound proved at load with it. This used to be one \
-             of two locks; the other was the width of a channel counter, and \
-             ADR-083 answered it — the counter is i128 and its ceiling is \
-             2^127/2^k_E, so it is no longer what keeps the light off. \
-             Write i_surface = 0.0 for a closed box"
+            "process `{LIGHT_PROCESS}` declares i_surface = {i_surface} W/m^2 and \
+             the domain has {} face(s) declared `exchange`{}: the energy sink of \
+             S0 **is** that face and nothing else (ADR-084). Absorbed light \
+             enters the enthalpy field, steps `c` and `d` carry it to the \
+             boundary, and what crosses an `exchange` face is credited to \
+             BOUNDARY_EXCHANGE — RADIATIVE_OUT is still unwritten and step `j` \
+             has nothing to put in it. In a sealed box the absorbed energy has \
+             nowhere to go, so the field climbs past the declared temperature \
+             range and takes the Courant bound proved at load with it. Declare an \
+             `exchange` face together with its [boundary.reservoir] section, or \
+             write i_surface = 0.0 for a dark box",
+            exchanging.len(),
+            if config.boundary.reservoir.is_some() {
+                " with a [boundary.reservoir] section"
+            } else {
+                " and no [boundary.reservoir] section"
+            }
+        );
+    }
+
+    // Section 6 owns `t_out`, and this function runs at section 2, so a reservoir
+    // above the declared range reaches the ceiling below before anybody has said
+    // it is illegal. There the difference `t_max - t_out` is negative, the
+    // ceiling is negative, every positive `i_surface` fails it, and the refusal
+    // blames the light for a reservoir. The world does not load either way — what
+    // would be wrong is the name of the culprit — so the rule stands aside and
+    // lets `t_out_outside_the_declared_temperature_range_is_rejected` speak.
+    let range = config
+        .field
+        .iter()
+        .find(|f| f.id == ENTHALPY_FIELD)
+        .and_then(|f| f.t_min.zip(f.t_max));
+    if let Some((t_min, t_max)) = range
+        && let Some(reservoir) = &config.boundary.reservoir
+        && t_min <= reservoir.t_out
+        && reservoir.t_out <= t_max
+        && let Some(ceiling) = absorbed_flux_ceiling(config)
+        && i_surface > ceiling
+    {
+        // The comparison is **incident irradiance against a ceiling on absorbed
+        // flux**, which refuses more than it strictly has to. That is deliberate
+        // and has to be said here, because the obvious repair is a trap: scaling
+        // the left side by an absorbed fraction would need a number nobody has
+        // derived — the attenuator measure is `TODO(attenuation-measure)` in
+        // `process/light.rs` — and it would turn a loud over-refusal into a quiet
+        // under-refusal.
+        //
+        // TODO(A-25, `OPEN_QUESTIONS.md`): the inequality is written per unit
+        // area and silently takes the `exchange` face to be the lit lid. An
+        // `exchange` face is legal on any of the six (the check above counts a
+        // *list*), and the grid need not be cubic, so a world that vents through
+        // a side wall under a closed `z_max` gets a sink sized by the area of the
+        // lit face. The right comparison of the two areas — and which coarse
+        // cells face the sky at all — is the shape of the radiative boundary, and
+        // no record settles it; inventing one here would be a number
+        // indistinguishable from a decision.
+        bail!(
+            "process `{LIGHT_PROCESS}` declares i_surface = {i_surface} W/m^2 over \
+             the {ceiling} W/m^2 the lid can carry away in steady state: the \
+             `exchange` face conducts {} W/(m^2*K) — k_ex times the heat capacity \
+             of a cubic metre of the reservoir — against the {} K between t_out = \
+             {} K and t_max = {t_max} K of field `{ENTHALPY_FIELD}` (ADR-084). \
+             Above that the steady state of the domain sits past t_max, where k_E \
+             and the storage width of the enthalpy field stop being derived from \
+             anything (ADR-062). The comparison is the *incident* irradiance \
+             against a ceiling on the *absorbed* flux, so it refuses somewhat more \
+             than it must; lower i_surface, widen the declared range, or raise \
+             k_ex",
+            boundary_conductance(config).unwrap_or(f64::NAN),
+            t_max - reservoir.t_out,
+            reservoir.t_out
+        );
+    }
+
+    Ok(())
+}
+
+/// Which of the six faces are declared `exchange`, in the order of
+/// `CONFIG_SCHEMA.md` section 4.
+///
+/// One transcription of the six-face list for the two rules that count them —
+/// section 2's lit-scenario refusal and section 6's reservoir obligation. Two
+/// transcriptions would be the ordinary way for a face added to
+/// [`super::Boundary`] to be seen by one rule and not the other.
+///
+/// `pub(super)` for a third reader outside this module: `config/derive.rs` needs
+/// the same list to size the traffic through the boundary (ADR-084), and it maps
+/// each name to the cells that face covers rather than listing the six again.
+pub(super) fn exchanging_faces(boundary: &super::Boundary) -> Vec<&'static str> {
+    [
+        ("x_min", boundary.x_min),
+        ("x_max", boundary.x_max),
+        ("y_min", boundary.y_min),
+        ("y_max", boundary.y_max),
+        ("z_min", boundary.z_min),
+        ("z_max", boundary.z_max),
+    ]
+    .into_iter()
+    .filter(|(_, face)| *face == Face::Exchange)
+    .map(|(name, _)| name)
+    .collect()
+}
+
+/// The thermal conductance of the `exchange` face, W/(m^2*K) (ADR-084).
+///
+/// `k_ex * sum_i(conc_out_i * c_p_i)`, and `None` **exactly** when there is no
+/// `[boundary.reservoir]` section — never for any other reason, so a caller that
+/// gets a number gets one it may compare against.
+///
+/// **`V_cell` is not in this formula and must not be put into it.** ADR-084
+/// writes the conductance as `k_ex * C_cell_out / V_cell`, and
+/// `C_cell_out / V_cell` *is* `sum(conc_out * c_p)` identically — the cell volume
+/// cancels because both the amounts and the heat capacity are extensive in it.
+/// Forming it as a ratio would force a choice between `V_voxel` and `V_cell`,
+/// which is a factor of 64 at `lod = 2` (`config/derive.rs` warns about the same
+/// substitution from the other side), and a ceiling 64 times too large would pass
+/// every lit world while still looking like a guard.
+///
+/// The sum runs over the **reservoir's** composition and not over the domain's
+/// `typical_conc`. On the shipped scenario the two agree to every digit — water
+/// is 55500 mol/m^3 in both — so that substitution is invisible there, and only a
+/// fixture whose two compositions differ can see it at all.
+///
+/// A `conc_out` entry naming no substance of the registry contributes nothing:
+/// section 1 refuses such a scenario before this runs, and in the direction the
+/// mistake would take it — a smaller conductance, a tighter ceiling, a louder
+/// refusal — rather than the other way.
+pub(super) fn boundary_conductance(config: &Config) -> Option<f64> {
+    let reservoir = config.boundary.reservoir.as_ref()?;
+    let heat_capacity: f64 = reservoir
+        .conc_out
+        .iter()
+        .filter_map(|(id, conc)| {
+            config
+                .substance
+                .iter()
+                .find(|s| &s.id == id)
+                .map(|s| conc * s.c_p)
+        })
+        .sum();
+    Some(reservoir.k_ex * heat_capacity)
+}
+
+/// The largest absorbed flux the lid can carry away in steady state, W/m^2
+/// (ADR-084): [`boundary_conductance`] times `t_max - t_out`.
+///
+/// `None` when there is no reservoir, or when the `enthalpy` field declares no
+/// `t_min`/`t_max` pair — there is no declared range to leave, and the field's
+/// own rules refuse that scenario for a better reason.
+///
+/// `pub(super)` rather than private on purpose: `config/derive.rs` prints this
+/// number in the load report, and printing it means **calling this**, not
+/// transcribing the product a second time. Two foldings of one coefficient drift
+/// apart in silence — the corpus catches that pattern in five places already
+/// (`Light::i_surface`, `Modulation::daily_norm`, `substeps_and_alpha`,
+/// `DerivedReservoir::k_ex` next to `alpha_ex`) — and here the refusal would
+/// judge by one number while the report printed another, both plausible.
+pub(super) fn absorbed_flux_ceiling(config: &Config) -> Option<f64> {
+    let conductance = boundary_conductance(config)?;
+    let reservoir = config.boundary.reservoir.as_ref()?;
+    let field = config.field.iter().find(|f| f.id == ENTHALPY_FIELD)?;
+    // Both ends are demanded though only `t_max` enters the product: a range with
+    // one end missing is not a declared range, and handing back a ceiling for it
+    // would put a number exactly where the field's own rule is about to refuse.
+    let (_, t_max) = field.t_min.zip(field.t_max)?;
+    Some(conductance * (t_max - reservoir.t_out))
+}
+
+/// The rules that hold only when the pressure process is on (ADR-082).
+///
+/// **The predicate is "enabled", not "wrote `enabled = true`" and not "has a
+/// record".** [`light`] one function up already writes that rule out; it is
+/// repeated here rather than referred to, because the failure it prevents is
+/// invisible today. The default of pressure is `false`, so `enabled == Some(true)`
+/// and this expression give the same answer on every scenario in the repository —
+/// and they part company on the day the five locks come off and the default
+/// flips, letting every scenario that relied on the default load with no
+/// `theta_max` at all. A check for the record's *presence* fails in the other
+/// direction and fails today: it would refuse `hello.toml`, which names no
+/// process at all (ADR-065).
+///
+/// The window itself is not here. `theta_max >= 6*Theta_sup` and the ceiling from
+/// the declared run horizon are functions of the registry and of the grid, so
+/// they live in `config/derive.rs` beside the other things derived from the
+/// declared concentrations.
+fn pressure(config: &Config) -> Result<()> {
+    let record = config.process.iter().find(|p| p.id == PRESSURE_PROCESS);
+    // An absent record resolves to the same default rather than to "off". After
+    // `parse` there is no such case — `config::materialise` writes all nine
+    // records before the hash (ADR-065) — but `validate` is public and defined on
+    // a `Config` somebody assembled by hand, and the early return `light` takes
+    // on a missing record is a latent copy of the default this branch avoids.
+    let enabled = match record {
+        Some(process) => process.enabled.unwrap_or(PRESSURE_ENABLED_BY_DEFAULT),
+        None => PRESSURE_ENABLED_BY_DEFAULT,
+    };
+    if !enabled {
+        return Ok(());
+    }
+
+    if record.and_then(|p| p.theta_max).is_none() {
+        bail!(
+            "process `{PRESSURE_PROCESS}` is enabled and declares no theta_max: \
+             the limiting overflow is dimensionless, is required when the process \
+             is on and has no default (ADR-082, on the precedent of i_surface and \
+             u_conv_max). The whole mobility is derived from it — the kernel is \
+             handed 1/theta_max, and the stiffness, dt and dx do not survive the \
+             derivation — so a plausible number written in as a default would be \
+             indistinguishable from a decision, and because the scheme conserves \
+             exactly, both halves of the invariant would close over it for ever. \
+             Declare theta_max: it has to be at least 6*Theta_sup, the peak \
+             occupancy the declared max_conc and partial_molar_volume allow, and \
+             small enough that N_max^2*theta_max/(pi^2*Theta_typ) stays inside the \
+             declared run horizon (`CONFIG_SCHEMA.md` section 9)"
         );
     }
 
@@ -1017,6 +1329,26 @@ fn superfluous_channel(reaction: &Reaction) -> Result<()> {
 fn transport(config: &Config) -> Result<()> {
     let lod = enthalpy_lod(config);
     for bound in speed_bounds(config, lod)? {
+        // A bound its own module already judged is not judged again here, and
+        // the skip is the decision rather than an optimisation (ADR-085). The
+        // operator compared the `Q` its kernel receives; this function compares
+        // an `f64`, which is stricter by up to three ULP at the bound of one, so
+        // a second pass would refuse the very grain whose limit the message
+        // beside it prints as the heaviest that loads.
+        //
+        // The verdict is carried rather than dropped so that the number the
+        // kernel will run on stands where the comparison used to, and it is read
+        // here: the operator's postcondition restated in the operator's own
+        // domain, which is the one place a `Q` reaches this file.
+        if let CourantVerdict::FoldedByTheOperator(courant) = bound.courant {
+            debug_assert!(
+                qsub(Q::ZERO, Q::ONE) <= courant && courant <= Q::ONE,
+                "operator `{}` handed back a folded Courant number of {courant:?} \
+                 and called it legal",
+                bound.operator
+            );
+            continue;
+        }
         let courant = bound.u_max * config.dt / config.grid.dx;
         let stable = courant <= 1.0;
         if !stable {
@@ -1106,37 +1438,150 @@ fn speed_bounds(config: &Config, derived_lod: u8) -> Result<Vec<SpeedBound>> {
             operator: VELOCITY_FIELD_PROCESS,
             u_max: (1.0 + process.stir_fraction) * u_conv_max,
             outgoing_faces: 6,
+            courant: CourantVerdict::InF64,
         });
     }
 
-    for substance in &config.substance {
-        if substance.settling_radius > 0.0 {
-            // The second input of both Courant conditions, and it is unreachable
-            // in S0 by a refusal rather than by an omission. `w_sed =
-            // k_sed*(rho_bar - rho_medium)*g/mu` needs two numbers the corpus
-            // does not name, and both are plausible enough to be invented: `9.81`
-            // looks like a decision and is not one, and `k = r^2/18` instead of
-            // `2r^2/9` gives a speed exactly four times too small and survives
-            // the calibration of the sedimentation rate unnoticed. This is also
-            // the reason there is no settling substance in the worked example of
-            // section 12.
-            bail!(
-                "substance `{}` declares settling_radius = {} m above zero, and \
-                 its settling velocity cannot be derived: w_sed = k_sed*(rho_bar \
-                 - rho_medium)*g/mu needs two things the corpus does not name \
-                 (`CONFIG_SCHEMA.md` section 13 item 23). First, g: ADR-069 says \
-                 only that it does not become a key, and no document assigns it \
-                 either a value or a place — 9.81 looks like a decision and is \
-                 not one. Second, the density of the medium: ADR-067 makes it a \
-                 declared constant beside `mu` and names no ASCII key for it. \
-                 Until both are decided, declare settling_radius = 0.0",
-                substance.id,
-                substance.settling_radius
-            );
-        }
-    }
+    settling(config, &mut bounds)?;
 
     Ok(bounds)
+}
+
+/// The second input of both Courant conditions: one bound per settling
+/// substance, and the two refusals that surround them (ADR-067, ADR-085).
+///
+/// **The chain is not written here.** `r -> k -> rho_bar -> w -> c` lives in
+/// `process/settle.rs`, and this function calls it: a second text computing the
+/// same velocity would drift from the one the kernel runs on, and the drift
+/// would show up as a refusal printing a limit that the same code then rejects.
+fn settling(config: &Config, bounds: &mut Vec<SpeedBound>) -> Result<()> {
+    let record = config.process.iter().find(|p| p.id == SETTLING_PROCESS);
+    // An absent record resolves to the process's own default and never to "off",
+    // for the reason `pressure` writes out: after `parse` there is no such case,
+    // and `validate` is public and defined on a `Config` somebody assembled by
+    // hand.
+    let enabled = match record {
+        Some(process) => process.enabled.unwrap_or(SETTLING_ENABLED_BY_DEFAULT),
+        None => SETTLING_ENABLED_BY_DEFAULT,
+    };
+
+    if !enabled {
+        // The price ADR-085 pays for keeping the default at `false`, and it is
+        // paid as a message rather than as silence. A declared grain in a world
+        // where nothing settles is exactly the failure ADR-067 refused a default
+        // `settling_radius` for: sediment that never settles, under an entirely
+        // green suite, indistinguishable from an honest zero.
+        for substance in &config.substance {
+            if substance.settling_radius > 0.0 {
+                bail!(
+                    "substance `{}` declares settling_radius = {} m above zero \
+                     and the process `{SETTLING_PROCESS}` is off, so nothing \
+                     will ever move it. Absence of the `[[process]]` record is \
+                     not the same as switching the process off — it means the \
+                     process's own default, which is \
+                     enabled = {SETTLING_ENABLED_BY_DEFAULT} (ADR-065, ADR-085). \
+                     Either write `[[process]] id = \"{SETTLING_PROCESS}\"` with \
+                     enabled = true and a `[physics] mu`, or declare \
+                     settling_radius = 0.0 if `{}` does not settle",
+                    substance.id,
+                    substance.settling_radius,
+                    substance.id
+                );
+            }
+        }
+        return Ok(());
+    }
+
+    // The predicate is the **process** and never "some substance declares a
+    // radius", and the code dictates it rather than taste (ADR-085):
+    // `SettlePhase::fold` builds a `Settle` for every lane so that a bad
+    // declaration is refused at load instead of being ignored for sitting beside
+    // a zero, and `settling_velocity` checks the viscosity before it looks at a
+    // radius. So a scenario with settling on and no grain at all is refused here
+    // too — otherwise the refusal moves from the load to `Tick::new`.
+    let Some(mu) = config.physics.mu else {
+        bail!(
+            "process `{SETTLING_PROCESS}` is enabled and `[physics]` declares no \
+             mu, which is required in that case and has no default (ADR-085). \
+             The other two constants of the medium have defaults and this one \
+             cannot: over the temperature range a scenario declares the viscosity \
+             of water moves by a factor of 3.27, its density by 1.18 %, and g by \
+             nothing at all. Note that the rule is about the *process* and not \
+             about the radii: the settling phase folds a velocity for every lane \
+             and checks the viscosity before the branch on a zero radius, so a \
+             scenario with settling on and no grain in it needs mu just the same. \
+             Declare `[physics] mu = ...` in Pa*s, or switch the process off"
+        );
+    };
+    let medium = Medium {
+        rho_medium: config.physics.rho_medium,
+        g: config.physics.g,
+        mu,
+    };
+
+    for substance in &config.substance {
+        if substance.settling_radius <= 0.0 {
+            continue;
+        }
+        let grain = Grain {
+            settling_radius: substance.settling_radius,
+            molar_mass: substance.molar_mass,
+            partial_molar_volume: substance.partial_molar_volume,
+        };
+        let w = settling_velocity(&grain, &medium)
+            .with_context(|| format!("substance `{}`", substance.id))?;
+        let courant = match settling_courant(w, config.dt, config.grid.dx) {
+            Ok(courant) => courant,
+            Err(error) => {
+                // The bound inverted onto the radius, which is what the author
+                // of the scenario can act on — "the velocity is too large" is
+                // not. Printed from `medium.g` and from the excess density the
+                // process itself derives, so that the limit this message names
+                // and the limit the next load accepts are one number.
+                let excess = (crate::process::settle::grain_density(
+                    substance.molar_mass,
+                    substance.partial_molar_volume,
+                )? - medium.rho_medium)
+                    .abs();
+                let limit = (9.0 * medium.mu * config.grid.dx
+                    / (2.0 * excess * medium.g * config.dt))
+                    .sqrt();
+                bail!(
+                    "substance `{}`: {error}. At mu = {mu} Pa*s, dx = {} m, \
+                     dt = {} s, g = {} m/s^2 and an excess density of {excess} \
+                     kg/m^3 the heaviest grain that loads has \
+                     r <= sqrt(9*mu*dx/(2*d_rho*g*dt)) = {limit} m = {} um, \
+                     against the declared settling_radius = {} m = {} um. The eco \
+                     regime at a one-second tick represents silt and finer, not \
+                     sand, and that is a statement about the working window of the \
+                     model rather than a defect of the scheme (ADR-067)",
+                    substance.id,
+                    config.grid.dx,
+                    config.dt,
+                    medium.g,
+                    limit * 1.0e6,
+                    substance.settling_radius,
+                    substance.settling_radius * 1.0e6
+                );
+            }
+        };
+        bounds.push(SpeedBound {
+            operator: SETTLING_PROCESS,
+            // `|w|` and never `w`. A buoyant grain has `w < 0`, its Courant
+            // number comes out negative, both inequalities of `transport` hold
+            // for any speed at all, and a rising grain of any radius would load.
+            // No substance of the corpus is buoyant, so there is no witness in
+            // the repository — which is why it is said here.
+            u_max: w.abs(),
+            // One outgoing face: transport runs along a single axis, so the sum
+            // over outgoing faces of SPEC section 4.2 degenerates to one term
+            // and the two inequalities coincide (ADR-067).
+            outgoing_faces: 1,
+            courant: CourantVerdict::FoldedByTheOperator(courant),
+        });
+    }
+
+    Ok(())
 }
 
 /// `r = round(l_c/(2*dx_coarse)) >= 1`, where `dx_coarse` is the step of the
@@ -1211,19 +1656,7 @@ fn boundary_and_reservoir(config: &Config) -> Result<()> {
         }
     }
 
-    let faces = [
-        ("x_min", boundary.x_min),
-        ("x_max", boundary.x_max),
-        ("y_min", boundary.y_min),
-        ("y_max", boundary.y_max),
-        ("z_min", boundary.z_min),
-        ("z_max", boundary.z_max),
-    ];
-    let exchanging: Vec<&str> = faces
-        .iter()
-        .filter(|(_, face)| *face == Face::Exchange)
-        .map(|(name, _)| *name)
-        .collect();
+    let exchanging = exchanging_faces(boundary);
 
     let Some(reservoir) = &config.boundary.reservoir else {
         if exchanging.is_empty() {
@@ -1500,6 +1933,11 @@ z_max = "exchange"
 t_out = 298.15
 k_ex = 1.0e-5
 conc_out = { H2S = 0.0, O2 = 0.25, SO4 = 28.0, H_ION = 1.0e-4 }
+
+[physics]
+g = 9.80665
+rho_medium = 1000.0
+mu = 1.0e-3
 
 [[substance]]
 id = "H2S"
@@ -2351,19 +2789,153 @@ composition = { C = 106, N = 16, P = 1 }
         );
     }
 
+    // --- settling: the two refusals and the one comparison (ADR-085) --------
+
+    /// The excess density the Courant witness of ADR-085 is built on,
+    /// `1353 kg/m^3` over fresh water.
+    ///
+    /// Not the `1650` of the worked example of ADR-067, and the difference is
+    /// arithmetic rather than taste. At the derived radius limit the `f64`
+    /// Courant number is exactly `1.0` for `1650` at `g = 9.80665` — the worked
+    /// example lands in the bucket where the two comparisons agree — while
+    /// `1353` is where the excess over one is largest over every whole excess
+    /// density from 1 to 4000: `1.0000000000000007`, three ULP, and still an
+    /// exact one after the fold into `Q`. A witness taken from the "== 1" bucket
+    /// is green and testifies to nothing.
+    const WITNESS_DELTA_RHO: f64 = 1353.0;
+
+    /// A grain of the given radius, whose density is
+    /// `1000 + WITNESS_DELTA_RHO`.
+    ///
+    /// `rho_bar = molar_mass*1e-3/V_bar`, so a partial molar volume of
+    /// `1e-3 m^3/mol` makes the molar mass in g/mol numerically equal to the
+    /// grain density in kg/m^3, and the derivation exact in `f64`. Every number
+    /// here is a fixture: no substance of the corpus declares a radius, and
+    /// `MINERAL` cannot — ADR-046 leaves its density undeclared and its partial
+    /// molar volume is named by nothing (ADR-085).
+    fn grain_record(settling_radius: f64) -> String {
+        format!(
+            r#"
+[[substance]]
+id = "GRAIN"
+molar_mass = {}
+typical_conc = 0.1
+max_conc = 1.0
+partial_molar_volume = 1.0e-3
+settling_radius = {settling_radius:e}
+diffusivity = 0.0
+c_p = 100.0
+enthalpy_formation = 0.0
+composition = {{}}
+"#,
+            1000.0 + WITNESS_DELTA_RHO
+        )
+    }
+
+    /// The whole settling process record, switched on.
+    const SETTLING_ON: &str = "\n[[process]]\nid = \"settling\"\nenabled = true\n";
+
+    /// The heaviest grain the one-axis condition admits at the witness excess
+    /// density: `r <= sqrt(9*mu*dx/(2*d_rho*g*dt))` (ADR-067).
+    ///
+    /// Written out here rather than read off the validator, so that "the limit
+    /// the message prints" and "the limit that loads" are compared against a
+    /// third number instead of against each other.
+    fn witness_radius_limit() -> f64 {
+        (9.0 * 1.0e-3 * 1.0e-4 / (2.0 * WITNESS_DELTA_RHO * 9.806_65 * 1.0)).sqrt()
+    }
+
     #[test]
-    fn a_settling_substance_is_refused_until_g_and_the_medium_density_are_named() {
-        // A temporary refusal, and written as a refusal rather than as a default
-        // on purpose: `9.81` looks like a decision and is not one, and
-        // `k = r^2/18` instead of `2r^2/9` gives a speed exactly four times too
-        // small and survives the calibration of the sedimentation rate unnoticed.
-        let text = swap(
-            WORKED_EXAMPLE,
-            "partial_molar_volume = 1.4e-5\nsettling_radius = 0.0",
-            "partial_molar_volume = 1.4e-5\nsettling_radius = 1.0e-6",
-        );
+    fn a_settling_substance_in_a_scenario_with_settling_disabled_is_rejected() {
+        // ADR-085 keeps the default of the settling process at `false` and pays
+        // for it with this refusal rather than with a flipped roster. The
+        // argument is the one ADR-067 made about `settling_radius` itself:
+        // sediment that never settles under an entirely green suite is
+        // indistinguishable from an honest zero, and the difference has to
+        // arrive as a message rather than as silence.
+        let text = with_substance(WORKED_EXAMPLE, "GRAIN", &grain_record(1.0e-6));
         let message = refusal(&text);
-        assert_names(&message, &["SO4", "g", "density of the medium", "item 23"]);
+        assert_names(&message, &["GRAIN", "settling_radius", "settling"]);
+
+        // The other half, and without it this test is green on a refusal that
+        // arrives from somewhere else entirely.
+        validated(&format!("{text}{SETTLING_ON}"));
+    }
+
+    #[test]
+    fn a_scenario_that_enables_settling_without_a_viscosity_is_rejected() {
+        // The predicate is "the process is on" and never "some substance has a
+        // radius", and that is dictated by the code rather than by taste:
+        // `SettlePhase::fold` builds a `Settle` for **every** lane, and
+        // `settling_velocity` checks `medium.mu <= 0.0` before the branch on a
+        // zero radius. So a phase built at all wants a usable viscosity whatever
+        // the radii are — which is why this fixture declares **no grain**.
+        let no_mu = swap(WORKED_EXAMPLE, "mu = 1.0e-3\n", "");
+        let message = refusal(&format!("{no_mu}{SETTLING_ON}"));
+        assert_names(&message, &["mu", "physics", "settling"]);
+
+        // Written by the radius instead, the fixture above would load and drop
+        // the refusal on `Tick::new` — a load error turned into an assembly
+        // error. The paired half: the same scenario with the viscosity back.
+        validated(&format!("{WORKED_EXAMPLE}{SETTLING_ON}"));
+    }
+
+    #[test]
+    fn the_settling_courant_is_compared_the_same_way_in_the_validator_and_in_the_process() {
+        use crate::process::settle::{Grain, Medium, settling_courant, settling_velocity};
+
+        let limit = witness_radius_limit();
+        let medium = Medium {
+            rho_medium: 1000.0,
+            g: 9.806_65,
+            mu: 1.0e-3,
+        };
+        let grain = Grain {
+            settling_radius: limit,
+            molar_mass: 1000.0 + WITNESS_DELTA_RHO,
+            partial_molar_volume: 1.0e-3,
+        };
+
+        // The premise the whole test rests on, asserted rather than assumed: at
+        // this excess density the `f64` Courant number at the limit is over one,
+        // and the fold into `Q` brings it back to exactly one.
+        let w = settling_velocity(&grain, &medium).expect("the witness velocity");
+        assert!(w * 1.0 / 1.0e-4 > 1.0, "the f64 courant is not over one");
+        assert!(
+            settling_courant(w, 1.0, 1.0e-4).is_ok(),
+            "the process accepts the grain sitting exactly on the limit"
+        );
+
+        // And so does the validator. Compared in `f64` here, the record's own
+        // limit would be unreachable for 2632 of the 4000 whole excess densities
+        // — the message would print a radius the same message then refuses.
+        let at_the_limit = with_substance(WORKED_EXAMPLE, "GRAIN", &grain_record(limit));
+        validated(&format!("{at_the_limit}{SETTLING_ON}"));
+
+        // Past the fold: refused by both, and the refusal names the limit it
+        // will accept. `2^-20` and not one ULP — one ULP of the radius moves the
+        // `f64` Courant by four ULP and the `f32` behind `Q` cannot see it, so a
+        // test written on "one ULP more is refused" would be asserting the
+        // opposite of what this comparison is for.
+        let over = limit * (1.0 + 2.0f64.powi(-20)).sqrt();
+        let w_over = settling_velocity(
+            &Grain {
+                settling_radius: over,
+                ..grain
+            },
+            &medium,
+        )
+        .expect("the velocity past the limit");
+        assert!(settling_courant(w_over, 1.0, 1.0e-4).is_err());
+
+        let past = with_substance(WORKED_EXAMPLE, "GRAIN", &grain_record(over));
+        let message = refusal(&format!("{past}{SETTLING_ON}"));
+        assert_names(&message, &["GRAIN", "settling_radius"]);
+        assert!(
+            message.contains(&format!("{limit}")),
+            "the refusal has to print the limit it will accept, {limit} m; it \
+             said:\n{message}"
+        );
     }
 
     // --- scales, widths and the pair of ADR-039 -----------------------------
@@ -2576,6 +3148,283 @@ composition = { C = 106, N = 16, P = 1 }
             "id = \"transport\"\nenabled = true\nevery_n_ticks = 2",
         );
         assert_names(&refusal(&renamed), &["transport", "roster"]);
+
+        // The third input, and it is an *extension of this name* rather than a
+        // name of its own (ADR-082). Section 10 states the ban over the **field**
+        // and not over the operator, and pressure moves the same `amount[]` whose
+        // substances declare a `diffusivity`; two acceptance names on one rule
+        // would claim in the register that there are two rules, and the next
+        // record to touch the rule would fix one of them.
+        let pressure = swap(
+            WORKED_EXAMPLE,
+            "id = \"pressure\"\nenabled = false",
+            "id = \"pressure\"\nenabled = true\ntheta_max = 0.5\nevery_n_ticks = 2",
+        );
+        let message = refusal(&pressure);
+        assert_names(&message, &["pressure", "every_n_ticks", "2", "field"]);
+
+        // And the hole ADR-082 closes with a number: the product
+        // `theta_max*every_n_ticks` enters neither half of the window. A
+        // `theta_max` under the floor is refused whatever the schedule is, and a
+        // schedule over one is refused whatever `theta_max` is — two independent
+        // refusals, where one inequality over the product would have let
+        // `theta_max = 0.005` at `every_n_ticks = 8` through on a product of 0.04.
+        let both = swap(
+            WORKED_EXAMPLE,
+            "id = \"pressure\"\nenabled = false",
+            "id = \"pressure\"\nenabled = true\ntheta_max = 0.005\nevery_n_ticks = 8",
+        );
+        refusal(&both);
+        let floor_only = swap(
+            WORKED_EXAMPLE,
+            "id = \"pressure\"\nenabled = false",
+            "id = \"pressure\"\nenabled = true\ntheta_max = 0.005",
+        );
+        assert_names(&refusal(&floor_only), &["theta_max", "0.005"]);
+        let schedule_only = swap(
+            WORKED_EXAMPLE,
+            "id = \"pressure\"\nenabled = false",
+            "id = \"pressure\"\nenabled = true\ntheta_max = 0.5\nevery_n_ticks = 8",
+        );
+        assert_names(&refusal(&schedule_only), &["every_n_ticks", "8"]);
+    }
+
+    /// The pressure record with a chosen `theta_max`, and nothing else moved.
+    fn with_pressure(text: &str, theta_max: &str) -> String {
+        swap(
+            text,
+            "id = \"pressure\"\nenabled = false",
+            &format!("id = \"pressure\"\nenabled = true\ntheta_max = {theta_max}"),
+        )
+    }
+
+    /// `Theta_sup` of [`WORKED_EXAMPLE`], recomputed here out of the declared
+    /// `max_conc` and `partial_molar_volume` rather than read back from the
+    /// derivation: `sum over V_bar > 0 of max_conc * V_bar`.
+    ///
+    /// The proton contributes exactly zero — `V_bar(H+) = 0` on the accepted
+    /// single-ion scale (ADR-067) — and there is no water in this fixture, which
+    /// is why the number is three orders below the 1.005 of the shipped registry.
+    fn worked_example_occupancy_sup() -> f64 {
+        10.0 * 3.5e-5 + 1.0 * 3.1e-5 + 100.0 * 1.4e-5
+    }
+
+    /// `Theta_typ` of [`WORKED_EXAMPLE`], the same expression over `typical_conc`.
+    fn worked_example_occupancy_typ() -> f64 {
+        0.1 * 3.5e-5 + 0.25 * 3.1e-5 + 28.0 * 1.4e-5
+    }
+
+    #[test]
+    fn pressure_without_theta_max_is_rejected() {
+        // The limiting overflow is required when the process is on and has no
+        // default (ADR-082, on the precedent of `i_surface` and `u_conv_max`). A
+        // plausible number put in as a default would be indistinguishable from a
+        // decision, and because the scheme conserves exactly both halves of the
+        // invariant would close over it for ever.
+        let enabled = swap(
+            WORKED_EXAMPLE,
+            "id = \"pressure\"\nenabled = false",
+            "id = \"pressure\"\nenabled = true",
+        );
+        let message = refusal(&enabled);
+        assert_names(&message, &["pressure", "theta_max", "no default"]);
+
+        // The predicate, and this is the half with teeth. `enabled.unwrap_or(the
+        // process's own default)` and never `enabled == Some(true)`: a scenario
+        // that writes no pressure record at all is legal today, because the
+        // default is `false` — and on the day the locks come off and the default
+        // flips, the comparison against `Some(true)` would let every such scenario
+        // through with no `theta_max` at all, while a check for the record's
+        // presence refuses this legal one today (ADR-065).
+        let removed = swap(
+            WORKED_EXAMPLE,
+            "\n[[process]]\nid = \"pressure\"\nenabled = false\n",
+            "\n",
+        );
+        validated(&removed);
+    }
+
+    #[test]
+    fn theta_max_below_six_times_the_declared_peak_occupancy_is_rejected() {
+        // The floor of the window is `6*Theta_sup` — over the **occupancy**
+        // `V_occ/V_voxel` and not over the overflow `theta = Theta - 1`. On the
+        // shipped registry the two differ by a factor of 190, and every `theta_max`
+        // would pass a floor built on the overflow while the scheme oscillated
+        // with matter conserved exactly and both ledgers green (ADR-082).
+        let sup = worked_example_occupancy_sup();
+        let floor = 6.0 * sup;
+        let message = refusal(&with_pressure(WORKED_EXAMPLE, "0.005"));
+        assert_names(
+            &message,
+            &[
+                "theta_max",
+                "0.005",
+                &format!("{floor:.4e}"),
+                &format!("{sup:.4e}"),
+            ],
+        );
+        validated(&with_pressure(WORKED_EXAMPLE, "0.5"));
+
+        // The assertion with teeth: the upper estimate is taken over `max_conc`
+        // and never over `typical_conc`. The two differ by 0.2% on the shipped
+        // registry, so swapping them moves no number in the report and fails no
+        // other test — and inverts the window on a registry with the dynamic range
+        // ADR-039 allows.
+        let richer = swap(
+            &with_pressure(WORKED_EXAMPLE, "0.005"),
+            "max_conc = 100.0",
+            "max_conc = 200.0",
+        );
+        let raised = 6.0 * (10.0 * 3.5e-5 + 1.0 * 3.1e-5 + 200.0 * 1.4e-5);
+        assert!(raised > floor * 1.5, "the fixture does not move the floor");
+        assert_names(&refusal(&richer), &[&format!("{raised:.4e}")]);
+
+        let typical = swap(
+            &with_pressure(WORKED_EXAMPLE, "0.005"),
+            "typical_conc = 28.0",
+            "typical_conc = 56.0",
+        );
+        assert_names(&refusal(&typical), &[&format!("{floor:.4e}")]);
+    }
+
+    #[test]
+    fn theta_max_beyond_the_declared_run_horizon_is_rejected() {
+        // The ceiling is derived from the declared horizon rather than set as a
+        // constant: `N_max^2*theta_max/(pi^2*Theta_typ) <= 1e6` ticks (SPEC
+        // section 13, criterion S0). At 64 voxels across and this registry the
+        // ceiling is 0.97, so `theta_max = 2` asks for a domain that never
+        // equilibrates inside the horizon it is measured over (ADR-082).
+        let typ = worked_example_occupancy_typ();
+        let tau = 64.0 * 64.0 * 2.0 / (std::f64::consts::PI.powi(2) * typ);
+        let message = refusal(&with_pressure(WORKED_EXAMPLE, "2.0"));
+        assert_names(&message, &[&format!("{tau:.4e}"), "1e6", "64"]);
+        validated(&with_pressure(WORKED_EXAMPLE, "0.5"));
+
+        // The ceiling is a function of the grid and not a constant. Written with
+        // `N_MAX = 64` from `process/diffuse.rs` — a different quantity with the
+        // same spelling, and one this module already imports — it compiles, gives
+        // the 64-cubed ceiling on every grid, and both shipped grids either agree
+        // with it or are let through.
+        let coarser = swap(
+            &with_pressure(WORKED_EXAMPLE, "2.0"),
+            "nx = 64\nny = 64\nnz = 64",
+            "nx = 32\nny = 32\nnz = 32",
+        );
+        validated(&coarser);
+    }
+
+    #[test]
+    fn load_reports_the_pressure_relaxation_time_and_the_stability_margin() {
+        // ADR-082 asks the loader to print the relaxation time of the longest mode
+        // and the margin the declared `theta_max` leaves against the oscillation
+        // threshold — **with the threshold it is measured against**, because
+        // `alpha = 8e-4` reads as "small" exactly as well as it reads as "large".
+        // Both inputs of the window are printed beside it: on a registry whose
+        // dynamic range is wide the two come apart, and the report is the only
+        // place that is visible.
+        let sup = worked_example_occupancy_sup();
+        let typ = worked_example_occupancy_typ();
+        let theta_max = 0.5;
+        let tau = 64.0 * 64.0 * theta_max / (std::f64::consts::PI.powi(2) * typ);
+        let margin = 1.0 - 6.0 * typ / theta_max;
+
+        let report = validated(&with_pressure(WORKED_EXAMPLE, "0.5")).report();
+        for wanted in [
+            format!("{tau:.4e}"),
+            format!("{:.1}", margin * 100.0),
+            format!("{sup:.4e}"),
+            format!("{typ:.4e}"),
+            "1/6".to_string(),
+        ] {
+            assert!(
+                report.contains(&wanted),
+                "the report has to name `{wanted}`:\n{report}"
+            );
+        }
+
+        // And no line at all on a scenario whose pressure is off, which is every
+        // scenario in the repository today.
+        assert!(
+            !validated(WORKED_EXAMPLE).report().contains("pressure:"),
+            "a scenario with pressure off has no pressure line"
+        );
+    }
+
+    #[test]
+    fn the_peak_occupancy_ignores_negative_partial_molar_volumes() {
+        // Not an acceptance name; the one guard against a sum that looks more
+        // correct than the rule. Electrostriction makes `V_bar` negative —
+        // `PO4^3-` is about `-4.0e-5` (ADR-067) — so a substance declared with one
+        // *lowers* an unfiltered sum, lowers the floor of the window, and lets an
+        // unstable `theta_max` load with nothing else in the project able to see
+        // it.
+        let sup = |text: &str| -> f64 {
+            validated(text)
+                .pressure()
+                .expect("the fixture enables pressure")
+                .occupancy_sup
+        };
+
+        let base = with_pressure(WORKED_EXAMPLE, "0.5");
+        let electrostrictive = with_substance(
+            &base,
+            "PO4",
+            r#"
+[[substance]]
+id = "PO4"
+molar_mass = 94.97136
+typical_conc = 1.0e-3
+max_conc = 1.0e-1
+partial_molar_volume = -4.0e-5
+settling_radius = 0.0
+diffusivity = 8.0e-10
+c_p = 104.0
+enthalpy_formation = 0.0
+composition = { P = 1 }
+"#,
+        );
+
+        assert_eq!(
+            sup(&electrostrictive),
+            sup(&base),
+            "a negative partial molar volume moved the peak occupancy"
+        );
+
+        // And the floor moved with it or it did not: the same fixture at a
+        // `theta_max` under the floor has to be refused by the *same* number.
+        let under = swap(&electrostrictive, "theta_max = 0.5", "theta_max = 0.005");
+        assert_names(
+            &refusal(&under),
+            &[&format!("{:.4e}", 6.0 * worked_example_occupancy_sup())],
+        );
+    }
+
+    #[test]
+    fn the_two_occupancy_bounds_do_not_share_an_input() {
+        // Not an acceptance name either. The floor is taken over `max_conc` and
+        // the ceiling over `typical_conc`, and on the shipped registry the two
+        // come out at 1.005285 and 1.003288 — 0.2% apart. Swapped, they move no
+        // number in the report by anything a reader would notice and fail no other
+        // test; on a registry with the dynamic range ADR-039 allows, `2^14`, the
+        // window inverts.
+        let bounds = |text: &str| -> (f64, f64) {
+            let derived = validated(text);
+            let pressure = derived.pressure().expect("the fixture enables pressure");
+            (pressure.occupancy_sup, pressure.occupancy_typ)
+        };
+
+        let base = with_pressure(WORKED_EXAMPLE, "0.5");
+        let (sup, typ) = bounds(&base);
+
+        let richer_ceiling = swap(&base, "max_conc = 100.0", "max_conc = 200.0");
+        let (moved_sup, same_typ) = bounds(&richer_ceiling);
+        assert!(moved_sup > sup, "max_conc did not move Theta_sup");
+        assert_eq!(same_typ, typ, "max_conc moved Theta_typ");
+
+        let richer_typical = swap(&base, "typical_conc = 28.0", "typical_conc = 56.0");
+        let (same_sup, moved_typ) = bounds(&richer_typical);
+        assert_eq!(same_sup, sup, "typical_conc moved Theta_sup");
+        assert!(moved_typ > typ, "typical_conc did not move Theta_typ");
     }
 
     #[test]
@@ -2624,20 +3473,28 @@ composition = { C = 106, N = 16, P = 1 }
         assert_eq!(bounds.len(), 1, "one operator, one inequality");
         assert_eq!(bounds[0].operator, "velocity_field");
 
-        // The second input, settling, is unreachable in S0 — by a refusal and not
-        // by an omission, because `g` and the density of the medium are named by
-        // no document. This is the assertion that will fail the day item 23 is
-        // closed, and it is the right place to add the settling case.
-        let settling = swap(
-            WORKED_EXAMPLE,
-            "partial_molar_volume = 1.4e-5\nsettling_radius = 0.0",
-            "partial_molar_volume = 1.4e-5\nsettling_radius = 1.0e-6",
+        // The second input arrived with ADR-085, and this is where it lands: a
+        // scenario that enables settling and declares a grain carries **two**
+        // bounds, and the two do not add up. One outgoing face against six,
+        // because settling transports along a single axis (ADR-067), and a
+        // verdict of its own, because the operator folded it.
+        let settling = format!(
+            "{}{SETTLING_ON}",
+            with_substance(WORKED_EXAMPLE, "GRAIN", &grain_record(1.0e-6))
+        );
+        let config = parse(&settling).expect("parses");
+        let bounds = speed_bounds(&config, enthalpy_lod(&config)).expect("bounds");
+        assert_eq!(bounds.len(), 2, "two operators, two inequalities");
+        assert_eq!(bounds[1].operator, "settling");
+        assert_eq!(bounds[1].outgoing_faces, 1);
+        assert!(
+            matches!(bounds[1].courant, CourantVerdict::FoldedByTheOperator(_)),
+            "the settling bound was judged in f64, where the record's own limit \
+             is unreachable for two thirds of the whole excess densities"
         );
         assert!(
-            refusal(&settling).contains("item 23"),
-            "while settling is refused outright there is exactly one speed bound \
-             in S0, so a config where each input passes alone and the sum does \
-             not cannot be built at all"
+            matches!(bounds[0].courant, CourantVerdict::InF64),
+            "the velocity field carries no folded number and is judged here"
         );
     }
 
@@ -2845,28 +3702,85 @@ composition = { C = 106, N = 16, P = 1 }
         assert_names(&refusal(&two), &["seasonal_period", "three"]);
     }
 
-    #[test]
-    fn a_lit_scenario_is_refused_until_an_energy_sink_exists() {
-        // Temporary and **one-locked now**, on the precedent of
-        // `a_settling_substance_is_refused_until_g_and_the_medium_density_are_named`.
-        //
-        // It was two locks: no sink, and the width of a channel counter. ADR-083
-        // answered the second and this test lost a substring with it — `A-20` was
-        // the only automatic guard on twenty-two prose mentions of that question,
-        // and it is being spent rather than kept, because a refusal that goes on
-        // citing an answered question reads to the next author as a live lock.
-        //
-        // **The refusal itself stays**, and that is the whole point of removing
-        // one lock and not both. Deleting it here would make a lit scenario
-        // loadable into a world where absorbed energy has nowhere to go, and the
-        // failure would not be a panic but an energy residual that either never
-        // closes or closes because there is nothing to close. ADR-084 is what
-        // takes this test away.
-        let message = refusal(&with_light("enabled = true\ni_surface = 1.0e3"));
-        assert_names(&message, &["i_surface", "sink"]);
+    /// [`WORKED_EXAMPLE`] with nothing that trades with the outside: `z_max`
+    /// closed and the whole `[boundary.reservoir]` section gone.
+    ///
+    /// Both have to go together. A reservoir left behind on a world with no
+    /// `exchange` face is refused by section 6 on its own
+    /// (`exchange_face_without_a_reservoir_is_rejected` runs that mirror), and a
+    /// fixture refused for *that* would prove nothing at all about the light.
+    fn sealed_box() -> String {
+        swap(
+            &swap(WORKED_EXAMPLE, "z_max = \"exchange\"", "z_max = \"closed\""),
+            RESERVOIR,
+            "",
+        )
+    }
 
-        // The mirror: the dark box loads.
-        validated(&with_light("enabled = true\ni_surface = 0.0"));
+    #[test]
+    fn a_lit_scenario_without_an_exchange_face_is_refused() {
+        // The first of the two rules ADR-084 puts where the blanket refusal of
+        // ADR-076 stood. The sink of S0 is the `exchange` face that is already
+        // built — steps `c` and `d` credit `BOUNDARY_EXCHANGE` with the enthalpy
+        // that crosses it — so a sealed box is a world where absorbed light has
+        // nowhere to go, and that is what this refuses.
+        let sealed = sealed_box();
+        let message = refusal(&format!(
+            "{sealed}{}",
+            light_record("enabled = true\ni_surface = 0.7")
+        ));
+        assert_names(&message, &["i_surface", "exchange"]);
+
+        // The mirror, and it carries the weight rather than decorating: the same
+        // sealed box with the light off at the source has to load. A rule that
+        // failed it would be forbidding a legal dark closed world instead of a
+        // lit sealed one, and every assertion above would still be green.
+        validated(&format!(
+            "{sealed}{}",
+            light_record("enabled = true\ni_surface = 0.0")
+        ));
+    }
+
+    #[test]
+    fn a_lit_scenario_whose_steady_state_leaves_the_declared_range_is_refused() {
+        // The second rule, and the two ways of getting the ceiling wrong are
+        // caught by two different halves of this test. Which half catches which
+        // is worth writing down, because they are very unequal in size and the
+        // obvious reading has them the other way round.
+        //
+        // The **pair astride the threshold** catches a ceiling off by the volume:
+        // dividing `C_cell_out` by `V_voxel` instead of `V_cell` is 64 times too
+        // large at `lod = 2`, so `0.75` would sit far under it, the refusal would
+        // never fire and `refusal` below would fail. The `0.7` half is the mirror
+        // for a ceiling too small.
+        //
+        // The **exact number in the message** is what catches the other one, and
+        // it is the only thing that does. Summing over the domain's
+        // `typical_conc` instead of the reservoir's `conc_out` moves the ceiling
+        // by the one substance in which the two differ here — H2S at 0.1 against
+        // 0.0 — which is 0.7228 against 0.7203, four tenths of a percent, deep
+        // *inside* the pair and invisible to it. `assert_names` sees it because
+        // it demands the printed `0.720315`, so relaxing that substring to
+        // something looser throws the property away with no test turning red.
+        //
+        // The fixture is deliberately [`WORKED_EXAMPLE`] and **not** the shipped
+        // scenario, for that same substitution: the shipped one carries WATER at
+        // 55500 mol/m^3 in both tables, which swamps everything else, so the two
+        // sums agree there to every digit a report would print. Moving this test
+        // onto the shipped scenario as the "more real" one would lose the
+        // property without failing.
+        //
+        // Recomputed from the fixture rather than quoted from ADR-084:
+        //   conductance = k_ex * sum(conc_out_i * c_p_i)
+        //               = 1e-5 * (0.0*100 + 0.25*101 + 28.0*102 + 1e-4*103)
+        //               = 1e-5 * 2881.2603 = 2.8812603e-2 W/(m^2*K)
+        //   ceiling     = conductance * (t_max - t_out)
+        //               = 2.8812603e-2 * (323.15 - 298.15) = 0.720315 W/m^2
+        let message = refusal(&with_light("enabled = true\ni_surface = 0.75"));
+        assert_names(&message, &["i_surface", "0.75", "0.720315", "323.15"]);
+
+        // The other side of the same threshold loads.
+        validated(&with_light("enabled = true\ni_surface = 0.7"));
     }
 
     #[test]
@@ -3252,6 +4166,24 @@ composition = { C = 106, N = 16, P = 1 }
             "settling_radius = -1.0\ndiffusivity = 1.6e-9",
             "settling_radius = nan\ndiffusivity = 1.6e-9",
         ),
+        // The three keys of `[physics]` (ADR-085). Zero is legal for the first
+        // two and is deliberately not a violation here: `g = 0` is a lawful
+        // scenario that settles nothing, and a ban would be a statement about
+        // physics this record does not make.
+        ("physics.g", "g = 9.80665", "g = -9.80665", "g = nan"),
+        (
+            "physics.rho_medium",
+            "rho_medium = 1000.0",
+            "rho_medium = -1000.0",
+            "rho_medium = nan",
+        ),
+        // Violated with the settling process **off** — which is what
+        // `WORKED_EXAMPLE` leaves it — so that the rule is checked where it
+        // lives. Moved into the branch "when settling is on", a negative
+        // viscosity would pass validation whole on every scenario in the
+        // repository, and this table could not tell: the refusal
+        // `settling_velocity` raises names `mu` as well.
+        ("physics.mu", "mu = 1.0e-3", "mu = 0.0", "mu = nan"),
         (
             "rate.km.H2S",
             "km = { H2S = 0.01, O2 = 0.01 }",

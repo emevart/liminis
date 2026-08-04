@@ -67,14 +67,28 @@ use crate::world::{Grid, LaneRef};
 ///
 /// **Assigned by a record, and not a placeholder.** ADR-076 declares `i_surface`
 /// and derives the multiplier the fold wanted, so the reason this value used to
-/// carry — "the fold cannot be built" — is gone. The reason that replaces it
-/// outlives the wave that wrote it: light on by default would put an energy input
-/// into every scenario in the repository, and that input has no sink anywhere and
-/// a counter that does not hold one tick of it (ADR-075: `2^63/2^k_E = 62.5 mJ`
-/// against `0.16384 J` a tick at 128 cubed). Every scenario would then be refused
-/// by `a_lit_scenario_is_refused_until_an_energy_sink_exists`, and the obvious
-/// repair — crediting `SOLAR_IN` inside this process — would reverse ADR-049,
-/// which `the_light_process_credits_nothing` exists to prevent.
+/// carry — "the fold cannot be built" — is gone.
+///
+/// So are the two that replaced it, and the value is `false` all the same. Both
+/// locks of ADR-076 were lifted in one pack: ADR-084 ratifies the built
+/// `exchange` face as the energy sink of S0, and ADR-083 makes the counter
+/// `i128`. The blanket refusal those two fed is gone from `config/validate.rs`,
+/// and two narrow ones — a lit sealed box, and a steady state past the declared
+/// range — stand where it did.
+///
+/// The reason that is left is the one that survives all of that: **step `a` is
+/// still not dispatched**. `Tick::new` refuses an enabled light process because
+/// the attenuator table this module's `Light::new` wants can be built from
+/// nothing — the measure `Attenuator::conc_per_unit` multiplies is settled by no
+/// document (`TODO(attenuation-measure)` below). A default of `true` here would
+/// therefore refuse every scenario in the repository at tick assembly,
+/// `hello.toml` first, which is exactly the failure ADR-065 argued against when
+/// it rejected a blanket `enabled = true`.
+///
+/// And the repair that suggests itself for that — crediting `SOLAR_IN` from
+/// inside this process, so it needs no fold — would reverse ADR-049, which
+/// `the_light_process_credits_nothing` exists to prevent. That has not changed
+/// with any of the above.
 pub const ENABLED_BY_DEFAULT: bool = false;
 
 /// The daily sample of the modulation at a tick: `max(0, sin(2*pi*n/N))`.

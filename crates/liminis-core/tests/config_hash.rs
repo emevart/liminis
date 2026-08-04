@@ -73,10 +73,19 @@ name="hello"
 /// spelled out: `[boundary.reservoir]`, the three enthalpy keys of `[[field]]`,
 /// `requires` on the reaction, and every process parameter of section 7.
 ///
-/// Four records here are past section 12 — `requires`, and `[[process]]` for
-/// light and for settling — and they exist for that reason alone: the example
-/// does not write them, and without them `k_w … k_m`, `mu`, the five light keys
-/// of ADR-076 and `requires.{field,min,max}` are invisible to the test.
+/// Four records here are past section 12 — `requires`, `[physics]`, and
+/// `[[process]]` for light and for settling — and they exist for that reason
+/// alone: the example does not write them, and without them `k_w … k_m`, the
+/// five light keys of ADR-076 and `requires.{field,min,max}` are invisible to
+/// the test.
+///
+/// `[physics]` is written out **whole**, `mu` included, and that is not
+/// thoroughness either (ADR-085). The section has a default, so a scenario that
+/// omits it still gets `g` and `rho_medium` into the canonical form — but `mu`
+/// is an `Option` with no default, and a `None` yields no path on either side,
+/// so a `physics.mu` the projection forgot would pass unseen. The compiler is
+/// half a help here at most: exhaustive destructuring in `project` catches the
+/// new field of `Config` (E0027) and says nothing about a key inside `Physics`.
 ///
 /// **Nothing here meets the validator, and that is a decision rather than an
 /// oversight of `load`.** Two of these passages are refused by it outright since
@@ -129,6 +138,11 @@ z_max = "exchange"
 t_out = 298.15
 k_ex = 1.0e-5
 conc_out = { H2S = 0.0, O2 = 0.25, SO4 = 28.0, H_ION = 1.0e-4 }
+
+[physics]
+g = 9.80665
+rho_medium = 1000.0
+mu = 1.0e-3
 
 [[substance]]
 id = "H2S"
@@ -244,7 +258,6 @@ seasonal_period = 31536000.0    # placeholder
 [[process]]
 id = "settling"
 enabled = true
-mu = 1.0e-3                     # placeholder
 
 [[calibration]]
 path = "reaction.h2s_oxidation.rate.q10"
@@ -744,6 +757,68 @@ fn the_canonical_form_names_every_process_in_the_roster() {
             "the canonical form does not name `{id}`:\n{canonical}"
         );
     }
+}
+
+/// `ACCEPTANCE.md`, section "Determinism", from ADR-085.
+///
+/// A scenario that writes no `[physics]` section hashes exactly like one that
+/// spells out the two defaults — Earth's standard gravity and fresh water — and
+/// the canonical form of the first **prints both lines**.
+///
+/// The second half is the one with teeth. Equality of the two hashes would hold
+/// just as well in a world where the section was dropped from the projection
+/// altogether, so the canonical text is parsed back into a `toml::Value` and the
+/// two keys are demanded by path and by value.
+///
+/// The third assertion is the mirror: `physics.mu` is *absent* from the
+/// canonical form when nobody wrote it. The precedent is `theta_max` and
+/// `u_conv_max` — a materialised `Some(_)` would be a default the record never
+/// assigned, printed in a hashed document.
+///
+/// What this goes red on: `#[derive(Default)]` for `Physics` (the omitted
+/// section then materialises as `g = 0`, which is a legal world that simply
+/// settles nothing), `Option<Physics>` on `Config` (the section never reaches
+/// the canonical form at all), and a materialisation that runs after the hash.
+#[test]
+fn an_omitted_physics_section_hashes_as_earth_and_fresh_water() {
+    let omitted = format!("{BARE}\n[[process]]\nid = \"diffusion\"\n");
+    let spelled_out = format!(
+        "{BARE}\n[physics]\ng = 9.80665\nrho_medium = 1000.0\n\n[[process]]\nid = \"diffusion\"\n"
+    );
+    assert_eq!(
+        hash_of("physics_omitted.toml", &omitted),
+        hash_of("physics_spelled_out.toml", &spelled_out),
+    );
+
+    let config = config::load(&fixture("physics_canonical.toml", &omitted)).expect("loading");
+    let canonical = config::canonical(&config).expect("canonical form");
+    let parsed: toml::Value = toml::from_str(&canonical).expect("the canonical form must be TOML");
+    let physics = parsed
+        .get("physics")
+        .expect("the canonical form has no [physics] section");
+    assert_eq!(
+        physics.get("g").and_then(toml::Value::as_float),
+        Some(9.806_65),
+        "the canonical form does not print g:\n{canonical}"
+    );
+    assert_eq!(
+        physics.get("rho_medium").and_then(toml::Value::as_float),
+        Some(1000.0),
+        "the canonical form does not print rho_medium:\n{canonical}"
+    );
+    assert!(
+        physics.get("mu").is_none(),
+        "the canonical form prints a viscosity nobody declared, which is a \
+         default ADR-085 does not assign:\n{canonical}"
+    );
+
+    // And the fixture writes none of it, which is what makes the three
+    // assertions above statements about the materialisation rather than about
+    // the file.
+    assert!(
+        !omitted.contains("physics"),
+        "the fixture must not declare the section it is used to check"
+    );
 }
 
 #[test]

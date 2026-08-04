@@ -22,10 +22,12 @@
 //! Every one of them stands on a choice that no other test in the project can
 //! see, because the failures are silent by construction:
 //!
-//! - **the sign of the counter.** On a closed domain both conventions give zero
-//!   (`TODO(counter-sign)` in `ledger/mod.rs`), so this file is the only place a
-//!   backwards counter can show up at all — and it shows up as a residual of
-//!   twice the flow rather than as a small error;
+//! - **the sign of the counter.** ADR-084 ratifies it as the increment of the
+//!   domain, and ratifying it changed no line of `ledger/mod.rs` — so the
+//!   convention is still held by tests alone. On a closed domain both
+//!   conventions give zero, which leaves this file the only place *outside* the
+//!   crate where a backwards counter can show up at all, and it shows up as a
+//!   residual of twice the flow rather than as a small error;
 //! - **the substance the flow is credited to.** The table is indexed by lane, and
 //!   a lane is not a substance index (ADR-056). Credited to the wrong one, two
 //!   substances fail to close at once and nothing points at the mapping, so the
@@ -192,9 +194,11 @@ fn boundary_outflow_appears_in_channel_counter() {
     assert!(lost > 0, "nothing left through the lid at all");
 
     // (2) The counter holds exactly the negative of it. Positive when matter
-    // *entered* the domain, which is the convention `ledger/mod.rs` picks
-    // between the two ADR-059 states, and this is the only place in the project
-    // where picking the other one can fail.
+    // *entered* the domain, which is the convention ADR-084 ratifies of the two
+    // ADR-059 declared, and this is the only place where the sign under test is
+    // one a dispatched call site chose: `a_counter_is_signed_from_the_domains_point_of_view`
+    // holds the same convention inside the crate, on credits the test itself
+    // signs.
     let counted = ledger.matter(Channel::BoundaryExchange, VENTING);
     assert_eq!(
         counted, -lost,

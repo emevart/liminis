@@ -55,19 +55,23 @@ const LANE_LEN: u32 = N_VOXELS + 1;
 const LANES_32: u32 = 2;
 const LANES_64: u32 = 1;
 
-/// The limiting overflow ADR-055 derives the mobility from.
+/// The limiting overflow ADR-055 derives the mobility from, and ADR-082 makes a
+/// declared key of.
 ///
-/// Not a number from the corpus, and it cannot be: `theta_max` is declared
-/// nowhere (`TODO(theta-max)` in `kernels/pressure.rs`). A test may pick one
-/// precisely because the process takes it as an argument rather than reading it
-/// from a config that has no key for it. The value is picked against the
-/// linearised stability limit the kernel writes out —
-/// `6*courant_per_overflow*(theta + 1) <= 1`, the third condition of
-/// `TODO(courant-condition)`, which neither of the two conditions of SPEC section
-/// 4.2 implies. With the occupancies below the occupancy of a voxel stays under
-/// two, so `6*2/24 = 0.5 <= 1` with a factor of two in hand. Above that limit
-/// neighbouring voxels swap pools every tick, conserving matter exactly and
-/// leaving every other assertion in this file green.
+/// A number of this fixture's own, and legitimately so: `Pressure::new` takes it
+/// as an argument, and this file builds a world by hand rather than out of a
+/// scenario. What changed with ADR-082 is that the value is now checkable against
+/// the same rule a loader applies, instead of being an admitted invention. The
+/// floor of the window is `6*Theta_sup`, over the peak **occupancy**
+/// `V_occ/V_voxel`; the occupancy of a voxel here stays under two, so the floor
+/// this fixture has to clear is 12, and 24.0 clears it with a factor of two in
+/// hand. Equivalently, in the form the kernel writes it out:
+/// `6*courant_per_overflow*(theta + 1) = 6*2/24 = 0.5 <= 1`.
+///
+/// Above that limit neighbouring voxels swap pools every tick, conserving matter
+/// exactly and leaving every other assertion in this file green — which is why
+/// the number matters here and why the loader now refuses it at load
+/// (`theta_max_below_six_times_the_declared_peak_occupancy_is_rejected`).
 const THETA_MAX: f64 = 24.0;
 
 /// The voxel volume, m^3. `V_bar/(units_per_mol*V_voxel)` is what the process

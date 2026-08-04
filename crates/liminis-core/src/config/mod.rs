@@ -37,8 +37,8 @@ pub use derive::{
 };
 pub use hash::{NOT_HASHED, canonical, config_hash};
 pub use schema::{
-    Boundary, Calibration, Config, Face, Field, Grid, Initial, Layer, Process, Rate, Reaction,
-    Requirement, Reservoir, Scale, Substance,
+    Boundary, Calibration, Config, Face, Field, Grid, Initial, Layer, Physics, Process, Rate,
+    Reaction, Requirement, Reservoir, Scale, Substance,
 };
 pub use validate::validate;
 
@@ -129,6 +129,25 @@ pub fn parse(text: &str) -> Result<Config> {
 /// Idempotent: running it over a config it has already filled in changes
 /// nothing, which is what `the_canonical_form_reloads_to_the_same_hash` needs,
 /// since the canonical form carries the whole roster.
+///
+/// # The section defaults are materialised by serde, before this function
+///
+/// `[physics]` is filled in and never touched here, and that is worth writing
+/// down beside the two tables that *are* (ADR-085, ADR-065). `Config::physics`
+/// is a plain field with `#[serde(default)]`, so a scenario that omits the
+/// section gets `Physics::default()` inside `toml::from_str` — which is before
+/// [`parse`] hashes anything, and that is the whole requirement. The variant
+/// ADR-065 rejected head on is "materialise after hashing": a config spelling
+/// out a default and a config omitting the section would then get two
+/// `config_hash` for one world, and the identity of a run would again depend on
+/// how the file was typed.
+///
+/// It follows that the section has no line in this function and still shows up
+/// in `--print-canonical` in full, which is what
+/// `an_omitted_physics_section_hashes_as_earth_and_fresh_water` demands. Made an
+/// `Option<Physics>` instead, it would need a line here — and without one it
+/// would leave the canonical form silent about the two constants every settling
+/// world runs on.
 ///
 /// # The trap ADR-065 asks to be said out loud
 ///
@@ -234,7 +253,6 @@ fn default_record(id: ProcessId) -> Process {
         id: id.id().to_string(),
         enabled: Some(id.enabled_by_default()),
         every_n_ticks: DEFAULT_EVERY_N_TICKS,
-        mu: None,
         u_conv_max: None,
         l_c: None,
         stir_period: None,
@@ -248,6 +266,12 @@ fn default_record(id: ProcessId) -> Process {
         daily_period: None,
         seasonal_fraction: 0.0,
         seasonal_period: None,
+        // Absent and not zero (ADR-082). The limiting overflow has no default,
+        // and a materialised `Some(_)` here would be one — printed on all nine
+        // records of the canonical form, claiming that diffusion has a limiting
+        // overflow too. `u_conv_max` and `i_surface` are filled in the same way
+        // and for the same reason.
+        theta_max: None,
     }
 }
 

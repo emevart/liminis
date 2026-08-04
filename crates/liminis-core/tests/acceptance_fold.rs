@@ -455,9 +455,16 @@ fn solar_in_is_credited_the_same_integer_the_fold_added_to_enthalpy() {
 ///
 /// Read from `configs/` rather than written here, so that the two claims below
 /// are about a scenario that exists. The light record is appended because no
-/// shipped scenario may declare one: `i_surface > 0` is refused by two locks
-/// (ADR-076), which is also why both tests go through `config::derive` directly
-/// rather than through `config::validate`.
+/// shipped scenario declares one — the default is `enabled = false` while step
+/// `a` has no dispatch (`process/light.rs`) — and both tests go through
+/// `config::derive`, which is the one door to `units_per_intensity` and the
+/// function on trial.
+///
+/// The appended record used to be illegal outright, and is not any more: ADR-084
+/// replaced the blanket refusal with two narrow ones, and this scenario passes
+/// both — it vents through `z_max` against a declared reservoir, and its lid
+/// conducts 41.71 W/(m^2*K) over the 35 K to `t_max`, so the steady-state ceiling
+/// is 1460 W/m^2 against the 1000 below.
 fn lit_scenario(lod: u32, dt: f64) -> String {
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),

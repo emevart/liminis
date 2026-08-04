@@ -1047,4 +1047,142 @@
 /// folded ones carry `|C| <= 1/24` and `1/12` over the two outgoing faces of an
 /// axis — twelve times inside the condition, and a coarse check could only fire
 /// where the fine one already had.
-pub const WORLD_FORMAT_VERSION: u32 = 22;
+///
+/// # Version 23: the limiting overflow is declared, and the stiffness is gone
+///
+/// ADR-082, and the absolute number is settled here for the reason version 22
+/// gives: the record deliberately refuses to name it, because the guard of
+/// ADR-020 judges commits rather than the final tree and sister records of the
+/// same pack edit the same watched paths.
+///
+/// **`theta_max` becomes a required key of `[[process]] id = "pressure"`, with
+/// no default.** The set of admissible worlds moves in both directions at once,
+/// which is unusual enough to be worth spelling out. It **shrank**: a scenario
+/// that enables pressure and writes no `theta_max` used to load and now does not,
+/// and one that writes a `theta_max` outside the window — below `6*Theta_sup`,
+/// where the checkerboard mode of the relaxation grows, or above the value at
+/// which the longest mode of the domain outlives the declared run horizon — is
+/// refused too. It also **grew**: `every_n_ticks > 1` on the pressure record is
+/// now refused, where before ADR-030 was enforced only against the diffusion
+/// process by name.
+///
+/// **The stiffness `k` stops being a quantity.** ADR-082 cancels the second half
+/// of the decision of ADR-055 — "`k` is declared in pascals" — and leaves the
+/// first half standing. Nothing computed moves: `k` was never an argument of
+/// `Pressure::new` and never entered a kernel, because deriving the mobility from
+/// "one voxel per tick at `theta_max`" fixes the whole product `L*k*dt/dx^2`. The
+/// overflow field is now stated to hold the dimensionless `V_occ/V_voxel - 1`,
+/// which is what `overflow_voxel` already wrote.
+///
+/// **The default of `enabled` for pressure is assigned for the first time, and it
+/// is `false`.** It was `false` in the code before, by omission; it is `false` now
+/// by decision, as a temporary refusal on five named locks. No run changes,
+/// because no scenario enabled pressure and none could have: `Tick::new` refused
+/// it then and refuses it now, with a message that no longer names `theta_max`.
+///
+/// `config_hash` does **not** move, and that is a claim rather than an aside.
+/// `configs/**` is untouched — no shipped scenario writes `theta_max`, because
+/// pressure is off in all of them — an undeclared `Option` is not printed into
+/// the canonical form (the precedent is `u_conv_max` and `i_surface`), and the
+/// materialised default of `enabled` is the same `false` it was. The canonical
+/// form grows by zero bytes.
+///
+/// # Version 24: the energy sink is named, and a counter's sign is ratified
+///
+/// ADR-084, and the absolute number is settled here for the reason versions 22
+/// and 23 give: the guard of ADR-020 judges commits rather than the final tree,
+/// and sister records of one pack edit the same watched paths.
+///
+/// **The set of loadable worlds grew, and no existing world moved by a bit.**
+/// This is the rare direction for this guard. A scenario with `i_surface > 0`
+/// used to be refused outright — ADR-076 had two locks on it, no energy sink and
+/// the width of a channel counter — and both are gone: ADR-083 makes the counter
+/// `i128`, and ADR-084 ratifies the already-built `exchange` face as the sink of
+/// S0, since steps `c` and `d` credit the enthalpy crossing it to
+/// `BOUNDARY_EXCHANGE` on every substep. So a lit scenario loads. Two narrow
+/// refusals replace the blanket one: a lit **sealed** box, with no `exchange`
+/// face and no `[boundary.reservoir]`, and a lit scenario whose steady state
+/// `i_surface > k_ex * sum(conc_out * c_p) * (t_max - t_out)` sits past the
+/// declared temperature range `k_E` was derived from.
+///
+/// **The sign of a channel counter is ratified as the increment of the domain**
+/// — inbound positive, outbound negative — which is what `ledger/mod.rs` already
+/// did. ADR-059 had stated both conventions in one record; ADR-084 cancels the
+/// antisymmetry half and leaves the rest of ADR-059 whole. Not one stored number
+/// changes, and no field of any existing world moves: the whole of the change is
+/// prose, two validator rules and a strengthened test.
+///
+/// `config_hash` does **not** move, and that is a claim rather than an aside.
+/// ADR-084 declares no key, so the projection grows by zero fields, `configs/**`
+/// is untouched, and no materialised default changed value. What moves is only
+/// which configs get past the validator — and no shipped scenario is lit.
+///
+/// `RADIATIVE_OUT` and `GEOTHERMAL_IN` are still unwritten, and this version does
+/// not pretend otherwise: they have no inputs. No document declares an
+/// emissivity, a geothermal heat flux or a vent composition, and the shape of the
+/// radiative boundary is A-25. SPEC section 7 goes on printing
+/// `RADIATIVE_OUT | out | sigma*T^4`, which is a hole and not a contradiction.
+/// # Version 25: the medium is declared, and step `f` dispatches
+///
+/// ADR-085, and the absolute number is settled here for the reason versions 22,
+/// 23 and 24 give: the record deliberately refuses to name it, because the guard
+/// of ADR-020 judges commits rather than the final tree.
+///
+/// **`[physics]` is a section of the scenario**, with `g = 9.80665 m/s^2` and
+/// `rho_medium = 1000 kg/m^3` as defaults and `mu` required when the settling
+/// process is on. That cancels the consequence of ADR-069 in the part about `g`
+/// — the decision itself, and the exclusion of `alpha_T` and `rho_0`, stand
+/// whole — and it moves the `config_hash` of **every** scenario in existence,
+/// because a new simulated key with a default is materialised before the hash
+/// (ADR-065, ADR-066; the precedent is ADR-077). No world moves by a bit for it:
+/// neither shipped scenario declares a grain and settling is off in both.
+///
+/// **Step `f` dispatches.** `Derived` gains a medium and three fields on every
+/// derived substance — `settling_radius`, `molar_mass`, `partial_molar_volume` —
+/// so the grain and the medium reach `Tick::new` through the door
+/// `DerivedSubstance::diffusivity` goes through, and `refuse_if_blocked` loses
+/// its `Settling` arm outright. From this version a scenario that enables
+/// settling is a world where matter sinks; under version 24 such a scenario did
+/// not load at all, so no run changes — the set of admissible worlds grew, which
+/// is the direction versions 22 and 24 moved and the opposite of 5 and 6.
+///
+/// It also **shrank**, and the two refusals are worth naming because both were
+/// legal before: a substance with `settling_radius > 0` in a scenario where the
+/// settling process is off, and an enabled settling process without
+/// `physics.mu` — the second **even when no substance declares a radius**, since
+/// the phase folds a velocity for every lane and checks the viscosity before the
+/// branch on a zero radius.
+///
+/// Three things inside it are semantics in their own right:
+///
+/// - **the default of `enabled` for settling stays `false`,** and by decision
+///   now rather than by omission. ADR-085 weighed the flip and refused it: the
+///   viscosity would become required of every scenario in the repository,
+///   settling without compaction is a process guaranteed to stop a long run
+///   (ADR-067), and `config_hash` would move a second time for behaviour no
+///   shipped world has. The argument the flip was for is carried by the refusal
+///   above instead, and carried louder;
+/// - **the value of `g` is `9.80665` and not `9.81`,** chosen by provenance and
+///   not by consequence: the first is exactly defined and has an edition, the
+///   second is a rounding with no source. The difference is 0.034 %, wholly
+///   inside what the calibration of the sedimentation rate absorbs — which is
+///   exactly why it cannot be decided by its effect (ADR-055). Every number of
+///   `process/settle.rs` moved with it, and the fixture there now reads
+///   `config::Physics::default()` instead of quoting a literal;
+/// - **the settling Courant number is judged by the operator and not by the
+///   validator.** `config/validate.rs` calls `settling_velocity` and
+///   `settling_courant` and does not compare the bound a second time in `f64`:
+///   over the whole excess densities from 1 to 4000 kg/m^3 the `f64` number at
+///   the derived radius limit is above one in 2632 cases, so the second
+///   comparison would refuse the very grain the refusal beside it prints as the
+///   heaviest that loads.
+///
+/// What this version does **not** buy: a settling run on a shipped scenario.
+/// `settle::periodic_mask` refuses an `exchange` face and both files under
+/// `configs/` have one, no substance of the corpus declares a radius, and
+/// `MINERAL` cannot — ADR-046 leaves its density undeclared. The demonstration
+/// is a closed fixture in `tests/acceptance_tick.rs`. `TODO(channels)` in
+/// `process/settle.rs` stays where it is: what step `f` owes the ledger when
+/// sediment leaves through a built lid is ADR-080 and ADR-081's, not this
+/// record's.
+pub const WORLD_FORMAT_VERSION: u32 = 25;

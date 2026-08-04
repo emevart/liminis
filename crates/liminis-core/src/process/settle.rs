@@ -60,8 +60,11 @@
 //! `every_n_ticks`. Running this operator once every `n` ticks would multiply
 //! the effective step and falsify a condition already checked at load. ADR-005
 //! and ADR-030 forbid it for a diffusive field; whether the ban reaches a
-//! hyperbolic operator is settled nowhere, and `kernels/settle.rs` says so in
-//! its own words.
+//! hyperbolic operator is settled nowhere — **A-28** in `OPEN_QUESTIONS.md`
+//! since ADR-085 — and `kernels/settle.rs` says so in its own words. So
+//! `[[process]] id = "settling", every_n_ticks = 2` loads and assembles today,
+//! with matter conserved exactly, both residuals at zero, and the field simply
+//! moving twice as fast as declared.
 
 use anyhow::{Result, bail};
 
@@ -70,41 +73,53 @@ use crate::kernels::settle::{SettleParams, settle_voxel_32, settle_voxel_64};
 use crate::numeric::{Q, qsub};
 use crate::world::{Boundary, Direction, Face, Field32, Field64, Grid, ParitySplit, Width};
 
-/// The constants of the medium a grain settles through.
+/// The default of `enabled` for settling, and it is `false` — by decision now
+/// rather than by omission (ADR-065, ADR-085).
 ///
-/// **Declared constants, not per-voxel state** (ADR-067). Making `rho_medium`
-/// the mixture density of a voxel would give compaction for free — settled
-/// sediment would stop itself — and was rejected at a price that is counted:
-/// `w` becomes a per-voxel quantity, the kernel needs an input slice beyond its
-/// `Copy` struct of scalars (ADR-034), and, decisively, `V_occ` has no lower
-/// bound once negative partial molar volumes are legal, so `sum(m)/V_occ` has a
-/// pole and "the velocity is known at load time" stops being true by
-/// construction.
+/// The flip to `true` was the proposal this record started from, and it was
+/// refused on four counted grounds. The mechanical one is the shortest:
+/// [`SettlePhase::fold`] builds a [`Settle`] for **every** lane, and
+/// [`settling_velocity`] checks the viscosity before the branch on a zero
+/// radius, so settling on by default would make `physics.mu` a required key of
+/// every scenario in the repository — neither shipped file writes one, and both
+/// would stop assembling a tick.
 ///
-/// None of the three is reachable from a scenario today. `mu` is a declared key;
-/// `rho_medium` has no ASCII name yet (`CONFIG_SCHEMA.md` section 7 prints
-/// "TODO"), and `g` is assigned neither a value nor a place by any document —
-/// ADR-069 says only that it does not become a key. `config/validate.rs`
-/// therefore refuses a settling substance outright rather than invent either,
-/// and this struct is how a caller who *has* both supplies them.
-/// The default of `enabled` for settling, and it is `false` (ADR-065).
+/// The argument the flip was for is not lost, and it is the mirror of the one
+/// `Substance::settling_radius` refuses a default for: sediment that never
+/// settles under an entirely green test suite is indistinguishable from an
+/// honest zero. It is carried by a **refusal at load** instead — a substance
+/// with `settling_radius > 0` in a scenario where the process is off does not
+/// load — and carried louder, as a message rather than as a silent switch.
 ///
-/// Two numbers of [`Medium`] are named by no document — `rho_medium` has no
-/// ASCII key and `g` is assigned neither a value nor a place — so
-/// `config/validate.rs` refuses a substance with `settling_radius > 0` outright
-/// rather than invent them. A default of `true` would therefore enable a step
-/// that either has nothing to settle (every radius is zero, by that refusal) or
-/// cannot be built at all. Off is the honest reading of that pair, and the whole
-/// of the argument.
+/// The other two grounds are ADR-067's: settling without compaction is a process
+/// guaranteed to stop a long run, which is not a thing to hand out unasked, and
+/// `every_n_ticks > 1` on a hyperbolic operator is unsettled (**A-28**) and
+/// would become live in every scenario at once.
 ///
-/// The mirror argument: sediment that never settles under an entirely green test
-/// suite is the failure `Substance::settling_radius` refuses a default for, and
-/// the day `g` and `rho_medium` are declared, `true` is the reading that matches
+/// **The value lives here and not in `config/`, and that is ADR-065's rule
+/// rather than taste**: the CI guard of ADR-020 watches `process/**` and does
+/// not watch `config/**`, so a default moved into the schema could be flipped
+/// without `WORLD_FORMAT_VERSION` moving. The two defaults of `[physics]` sit on
+/// the wrong side of that line and ADR-085 names the cost rather than removing
 /// it.
-// TODO(CONFIG_SCHEMA.md section 13 item 23): assigned by no record, and settled
-// together with the two numbers of `Medium`.
 pub const ENABLED_BY_DEFAULT: bool = false;
 
+/// The constants of the medium a grain settles through.
+///
+/// **Declared constants, not per-voxel state** (ADR-067, confirmed by ADR-085).
+/// Making `rho_medium` the mixture density of a voxel would give compaction for
+/// free — settled sediment would stop itself — and was rejected at a price that
+/// is counted: `w` becomes a per-voxel quantity, the kernel needs an input slice
+/// beyond its `Copy` struct of scalars (ADR-034), and, decisively, `V_occ` has
+/// no lower bound once negative partial molar volumes are legal, so
+/// `sum(m)/V_occ` has a pole and "the velocity is known at load time" stops
+/// being true by construction.
+///
+/// All three numbers are keys of a scenario since ADR-085: `physics.g` with a
+/// default of `9.80665 m/s^2`, `physics.rho_medium` with `1000.0 kg/m^3`, and
+/// `physics.mu`, required when this process is on and defaulted nowhere. The
+/// host reaches them through `Derived::medium` and never off the `Config`
+/// directly, so this struct and the validator's are folded from one reading.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Medium {
     /// Density of the medium, kg/m^3.
@@ -401,11 +416,14 @@ impl Settle {
     /// process in the project carries enthalpy along with the matter. Enthalpy
     /// is transported, but as a field of its own on its own grid (ADR-062).
     // TODO(channels): ADR-067 writes this invariant as "conserves matter except
-    // through the BOUNDARY_EXCHANGE channel", and that arm of `Conservation`
-    // does not exist. `Conserved` is true today only because `world::Grid::new`
-    // refuses an `exchange` face, so a buoyant grain has no lid to leave
-    // through. The statement becomes false on the day the arm appears, and this
-    // comment is what will be pointing at it — which is also why
+    // through the BOUNDARY_EXCHANGE channel", and what step `f` owes the ledger
+    // when sediment crosses a built lid is settled by nothing (ADR-080,
+    // ADR-081, ADR-085). `Conserved` is true today only because
+    // [`periodic_mask`] below refuses an `exchange` face outright — the arm of
+    // `Conservation` exists and `world::Grid::new` builds such a face since
+    // ADR-059, so the lock is this file's own and not the grid's. The statement
+    // becomes false on the day the refusal is lifted, and this comment is what
+    // will be pointing at it — which is also why
     // `settling_out_of_the_top_face_appears_in_boundary_exchange` cannot be
     // written yet: the process sees no channel registry at all.
     #[inline]
@@ -703,23 +721,31 @@ mod tests {
     const DT: f64 = 1.0;
     const DX: f64 = 1.0e-4;
 
-    /// The medium of the worked example in ADR-067.
+    /// The viscosity of water, `1e-3 Pa*s`, and the one number of the medium
+    /// this fixture writes down: it is a declared key of `[physics]` with no
+    /// default, because over the declared temperature range the viscosity of
+    /// water moves by a factor of 3.27 while `g` does not move at all (ADR-085).
+    const MU: f64 = 1.0e-3;
+
+    /// The medium of the worked example in ADR-067, on the schema's own
+    /// defaults.
     ///
-    /// **Every number here is a test fixture, and two of the three are not
-    /// project constants.** `mu = 1e-3 Pa*s` is the viscosity of water and is a
-    /// declared key. `rho_medium = 1000 kg/m^3` has no ASCII name yet
-    /// (`CONFIG_SCHEMA.md` section 7 still prints "TODO"), and `g = 9.81` is
-    /// assigned no value and no place by any document — ADR-069 says only that
-    /// it does not become a key, and `config/validate.rs` refuses a settling
-    /// substance outright rather than invent it. The pair is written here
-    /// because the numeric examples of ADR-067 imply it: they give
-    /// `w = 3.60e-4 m/s` at `r = 10 um` and `d_rho = 1650 kg/m^3`, which is
-    /// `g = 9.81` and nothing else. Quoting it in a test is not deciding it.
-    const MEDIUM: Medium = Medium {
-        rho_medium: 1000.0,
-        g: 9.81,
-        mu: 1.0e-3,
-    };
+    /// **It quotes no gravitational acceleration and no density** — both come
+    /// from `config::Physics::default()`, which is where ADR-085 assigns them:
+    /// `g = 9.80665 m/s^2`, the standard acceleration with an edition behind it,
+    /// and `rho_medium = 1000 kg/m^3`. Before that record this fixture carried
+    /// `9.81`, with the honest note that quoting a number in a test is not
+    /// deciding it; the number stayed and the decision did not arrive, which is
+    /// the drift ADR-085 was written about. `the_medium_constants_have_one_source`
+    /// is what keeps the two doors from parting again.
+    fn medium() -> Medium {
+        let physics = crate::config::Physics::default();
+        Medium {
+            rho_medium: physics.rho_medium,
+            g: physics.g,
+            mu: MU,
+        }
+    }
 
     /// The excess density of the worked example, `1650 kg/m^3`.
     ///
@@ -747,7 +773,7 @@ mod tests {
     /// `r <= sqrt(9*mu*dx/(2*d_rho*g*dt))`, which is 5.27 um for the medium
     /// above (ADR-067).
     fn radius_limit(delta_rho: f64) -> f64 {
-        (9.0 * MEDIUM.mu * DX / (2.0 * delta_rho * MEDIUM.g * DT)).sqrt()
+        (9.0 * medium().mu * DX / (2.0 * delta_rho * medium().g * DT)).sqrt()
     }
 
     fn floored(nx: u32, ny: u32, nz: u32) -> Grid {
@@ -846,7 +872,7 @@ mod tests {
         ];
         let lanes = grains.len() as u32;
 
-        let phase = SettlePhase::new_32(&grid, lanes, &grains, &MEDIUM, DT, DX).unwrap();
+        let phase = SettlePhase::new_32(&grid, lanes, &grains, &medium(), DT, DX).unwrap();
         assert_eq!(
             phase.invariant(),
             Invariant {
@@ -889,7 +915,7 @@ mod tests {
         }
 
         // The same text on the wide storage width.
-        let phase = SettlePhase::new_64(&grid, lanes, &grains, &MEDIUM, DT, DX).unwrap();
+        let phase = SettlePhase::new_64(&grid, lanes, &grains, &medium(), DT, DX).unwrap();
         let mut wide: Field64 = Field::new(&grid, lanes).unwrap();
         for lane in 0..lanes {
             seed_lane_64(&mut wide, lane, |idx| {
@@ -943,14 +969,14 @@ mod tests {
         let settle = Settle::new(
             &floored(3, 3, 4),
             &grain(r, 1000.0 + DELTA_RHO),
-            &MEDIUM,
+            &medium(),
             DT,
             DX,
         )
         .unwrap();
         assert_eq!(
             settle.velocity(),
-            settling_coefficient(r) * DELTA_RHO * MEDIUM.g / MEDIUM.mu
+            settling_coefficient(r) * DELTA_RHO * medium().g / medium().mu
         );
     }
 
@@ -973,18 +999,18 @@ mod tests {
         assert!((settling_coefficient(r) - 2.22e-11).abs() < 0.01e-11);
 
         let dense = grain(r, 1000.0 + DELTA_RHO);
-        let w = settling_velocity(&dense, &MEDIUM).unwrap();
+        let w = settling_velocity(&dense, &medium()).unwrap();
         assert!((w - 3.60e-4).abs() < 0.01e-4, "w = {w}");
 
         // The diameter form with a radius inside it, which is what the record
         // names as the mistake.
-        let wrong = r * r / 18.0 * DELTA_RHO * MEDIUM.g / MEDIUM.mu;
+        let wrong = r * r / 18.0 * DELTA_RHO * medium().g / medium().mu;
         assert!(
             (w - 4.0 * wrong).abs() < 1.0e-18,
             "w = {w}, wrong = {wrong}"
         );
 
-        let doubled = settling_velocity(&grain(2.0 * r, 1000.0 + DELTA_RHO), &MEDIUM).unwrap();
+        let doubled = settling_velocity(&grain(2.0 * r, 1000.0 + DELTA_RHO), &medium()).unwrap();
         assert_eq!(doubled, 4.0 * w);
     }
 
@@ -1001,7 +1027,7 @@ mod tests {
         let grid = floored(3, 3, 6);
 
         let dense = grain(3.0e-6, 1000.0 + DELTA_RHO);
-        let settle = Settle::new(&grid, &dense, &MEDIUM, DT, DX).unwrap();
+        let settle = Settle::new(&grid, &dense, &medium(), DT, DX).unwrap();
         assert!(settle.velocity() > 0.0, "a denser grain must sink");
         assert!(
             settle.params().courant < Q::ZERO,
@@ -1009,13 +1035,13 @@ mod tests {
         );
 
         let buoyant = grain(3.0e-6, 500.0);
-        let rising = Settle::new(&grid, &buoyant, &MEDIUM, DT, DX).unwrap();
+        let rising = Settle::new(&grid, &buoyant, &medium(), DT, DX).unwrap();
         assert!(rising.velocity() < 0.0);
         assert!(rising.params().courant > Q::ZERO);
 
         // And the profile actually moves that way.
         for (grains, sinks) in [([dense], true), ([buoyant], false)] {
-            let phase = SettlePhase::new_32(&grid, 1, &grains, &MEDIUM, DT, DX).unwrap();
+            let phase = SettlePhase::new_32(&grid, 1, &grains, &medium(), DT, DX).unwrap();
             let mut field: Field32 = Field::new(&grid, 1).unwrap();
             seed_lane_32(&mut field, 0, |idx| profile(&grid, idx));
             field.swap();
@@ -1044,7 +1070,7 @@ mod tests {
     fn substance_with_zero_settling_radius_does_not_move_vertically() {
         let grid = floored(3, 4, 5);
         let grains = [grain(0.0, 2650.0), grain(3.0e-6, 1000.0 + DELTA_RHO)];
-        let phase = SettlePhase::new_32(&grid, 2, &grains, &MEDIUM, DT, DX).unwrap();
+        let phase = SettlePhase::new_32(&grid, 2, &grains, &medium(), DT, DX).unwrap();
 
         assert_eq!(phase.applications_of(0), 0);
         assert_eq!(phase.courant_of(0), None);
@@ -1078,15 +1104,15 @@ mod tests {
     #[test]
     fn a_lane_that_was_not_dispatched_is_not_left_a_tick_stale() {
         let grid = floored(3, 4, 5);
-        let neutral = grain(3.0e-6, MEDIUM.rho_medium);
+        let neutral = grain(3.0e-6, medium().rho_medium);
         assert_eq!(
             grain_density(neutral.molar_mass, neutral.partial_molar_volume).unwrap(),
-            MEDIUM.rho_medium
+            medium().rho_medium
         );
         let grains = [grain(3.0e-6, 1000.0 + DELTA_RHO), neutral];
-        let phase = SettlePhase::new_32(&grid, 2, &grains, &MEDIUM, DT, DX).unwrap();
+        let phase = SettlePhase::new_32(&grid, 2, &grains, &medium(), DT, DX).unwrap();
 
-        assert_eq!(settling_velocity(&neutral, &MEDIUM).unwrap(), 0.0);
+        assert_eq!(settling_velocity(&neutral, &medium()).unwrap(), 0.0);
         assert_eq!(phase.applications_of(1), 0);
         assert_eq!(phase.courant_of(1), None);
 
@@ -1130,20 +1156,20 @@ mod tests {
 
         // Exactly on the limit: accepted, and the kernel gets exactly -1.
         let at_the_limit =
-            Settle::new(&grid, &grain(limit, 1000.0 + DELTA_RHO), &MEDIUM, DT, DX).unwrap();
+            Settle::new(&grid, &grain(limit, 1000.0 + DELTA_RHO), &medium(), DT, DX).unwrap();
         assert_eq!(at_the_limit.params().courant, qsub(Q::ZERO, Q::ONE));
 
         // Past it: refused, naming w and the bound on the radius.
         let error =
-            Settle::new(&grid, &grain(5.3e-6, 1000.0 + DELTA_RHO), &MEDIUM, DT, DX).unwrap_err();
+            Settle::new(&grid, &grain(5.3e-6, 1000.0 + DELTA_RHO), &medium(), DT, DX).unwrap_err();
         let message = error.to_string();
-        let w = settling_velocity(&grain(5.3e-6, 1000.0 + DELTA_RHO), &MEDIUM).unwrap();
+        let w = settling_velocity(&grain(5.3e-6, 1000.0 + DELTA_RHO), &medium()).unwrap();
         assert!(message.contains(&format!("w = {w}")), "{message}");
         assert!(message.contains("5.27"), "{message}");
 
         // Between advection's six-face share and one: legal, and folded whole.
         let r = 4.0e-6;
-        let settle = Settle::new(&grid, &grain(r, 1000.0 + DELTA_RHO), &MEDIUM, DT, DX).unwrap();
+        let settle = Settle::new(&grid, &grain(r, 1000.0 + DELTA_RHO), &medium(), DT, DX).unwrap();
         let c = settle.velocity() * DT / DX;
         assert!(c > 1.0 / 6.0 && c < 1.0, "c = {c}");
         assert_eq!(settle.params().courant, Q::from_f64(-c));
@@ -1167,8 +1193,18 @@ mod tests {
     /// Compared as the `Q` the kernel runs on it is exactly one, and legal.
     #[test]
     fn the_settling_courant_is_compared_as_a_q_not_as_an_f64() {
-        let limit = radius_limit(DELTA_RHO);
-        let w = settling_velocity(&grain(limit, 1000.0 + DELTA_RHO), &MEDIUM).unwrap();
+        // The witness is `1353` and not [`DELTA_RHO`], and the swap is
+        // arithmetic rather than tidying (ADR-085). At `g = 9.80665` the worked
+        // example's `1650` gives an `f64` Courant of exactly `1.0` at its own
+        // limit — it lands in the bucket where the two comparisons agree, and a
+        // witness taken from there is green and testifies to nothing. Over every
+        // whole excess density from 1 to 4000 the excess over one is largest at
+        // `1353`: `1.0000000000000007`, three ULP, and an exact one after the
+        // fold into `Q`.
+        const WITNESS_DELTA_RHO: f64 = 1353.0;
+
+        let limit = radius_limit(WITNESS_DELTA_RHO);
+        let w = settling_velocity(&grain(limit, 1000.0 + WITNESS_DELTA_RHO), &medium()).unwrap();
         assert!(w * DT / DX > 1.0, "the f64 courant is over one");
         assert_eq!(Q::from_f64(-(w * DT / DX)), qsub(Q::ZERO, Q::ONE));
         assert_eq!(settling_courant(w, DT, DX).unwrap(), qsub(Q::ZERO, Q::ONE));
@@ -1177,6 +1213,50 @@ mod tests {
         let over = (1.0 + 2.0f64.powi(-20)) * DX / DT;
         assert!(settling_courant(over, DT, DX).is_err());
         assert!(settling_courant(-over, DT, DX).is_err());
+    }
+
+    /// `ACCEPTANCE.md`, section "Deriving the scales", from ADR-085.
+    ///
+    /// The two constants of the medium have **one** source, and it is
+    /// `config::Physics` — not a literal in this file, which is where `9.81`
+    /// lived for three records with the note that quoting a number in a test is
+    /// not deciding it. The difference between `9.81` and `9.80665` is 0.034 %:
+    /// invisible in any picture, entirely eaten by the calibration of the
+    /// sedimentation rate, and enough to part every number of this file from
+    /// every number of a run.
+    ///
+    /// The second half is the one a reviewer skips. A `#[derive(Default)]` on
+    /// `Physics` gives the schema **two** doors to one default — a section that
+    /// is absent materialises as `g = 0`, a section written without `g` as
+    /// `9.80665` — and both worlds load, conserve exactly and close both halves
+    /// of the ledger, because a world without gravity simply settles nothing.
+    /// So the two doors are compared here against each other.
+    ///
+    /// The precedent is `the_incident_irradiance_has_one_source` (ADR-076), and
+    /// it was written against exactly the drift that produced this fixture.
+    #[test]
+    fn the_medium_constants_have_one_source() {
+        let declared = crate::config::Physics::default();
+        assert_eq!(medium().g, declared.g);
+        assert_eq!(medium().rho_medium, declared.rho_medium);
+        assert_eq!(medium().mu, MU);
+
+        // No literal of the pair survives in this file's fixture. Asserted as an
+        // equality against the schema rather than by grepping the source,
+        // because what matters is the value a run gets and not the spelling.
+        assert_ne!(medium().g, 9.81, "the fixture is quoting `9.81` again");
+
+        // The two doors of one default: the section that is absent, and the
+        // section that is present and silent about `g`. Serde fills the second
+        // from `default_g` and `Default::default` fills the first, and a
+        // `#[derive(Default)]` parts them by 9.80665 with nothing else noticing.
+        let written: crate::config::Config = crate::config::parse(
+            "name = \"medium\"\nT_ref = 298.15\n\n[grid]\n\n[physics]\nmu = 1.0e-3\n",
+        )
+        .expect("the fixture must parse");
+        assert_eq!(written.physics.g, declared.g);
+        assert_eq!(written.physics.rho_medium, declared.rho_medium);
+        assert_eq!(written.physics.mu, Some(MU));
     }
 
     /// Parameter arrays are indexed by **lane**, never by substance (ADR-056).
@@ -1190,12 +1270,12 @@ mod tests {
         let grid = floored(3, 3, 5);
         let grains = [grain(0.0, 2650.0), grain(3.0e-6, 1000.0 + DELTA_RHO)];
 
-        let error = SettlePhase::new_32(&grid, 3, &grains, &MEDIUM, DT, DX).unwrap_err();
+        let error = SettlePhase::new_32(&grid, 3, &grains, &medium(), DT, DX).unwrap_err();
         assert!(error.to_string().contains("ADR-056"), "{error}");
 
         // Water first, the settling substance second: the phase moves lane 1 and
         // leaves lane 0 exactly where it was.
-        let phase = SettlePhase::new_32(&grid, 2, &grains, &MEDIUM, DT, DX).unwrap();
+        let phase = SettlePhase::new_32(&grid, 2, &grains, &medium(), DT, DX).unwrap();
         let mut field: Field32 = Field::new(&grid, 2).unwrap();
         seed_lane_32(&mut field, 0, |idx| profile(&grid, idx));
         seed_lane_32(&mut field, 1, |idx| profile(&grid, idx));
@@ -1236,7 +1316,7 @@ mod tests {
             &grid,
             1,
             &[grain(radius_limit(DELTA_RHO), 1000.0 + DELTA_RHO)],
-            &MEDIUM,
+            &medium(),
             DT,
             DX,
         )

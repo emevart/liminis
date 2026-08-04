@@ -39,18 +39,40 @@
 //! write buffer, that is the previous phase's state, and zeroes on the first tick.
 //! Zero is a legal amount and nothing falls over.
 //!
-//! # One iteration per tick, and the stiffness that cancels
+//! # One iteration per tick, and the stiffness that was cancelled
 //!
 //! ADR-055 rejects several relaxation iterations per tick by name — "the same as
-//! raising `k`, by a detour" — because one voxel per tick is the **Courant
-//! ceiling** and not slowness. So [`Pressure::apply`] is one pass and there is no
-//! loop to tune.
+//! raising `k`, by a detour" — and ADR-082 gave that refusal a number: every
+//! iteration is bound by the same `alpha <= 1/6`, so `m` of them cost `m` passes
+//! and buy a factor of `m` at best. So [`Pressure::apply`] is one pass and there
+//! is no loop to tune.
 //!
-//! The number the kernel receives is `1/theta_max`, and the declared stiffness `k`
-//! takes no part in the arithmetic at all: deriving the mobility from "one voxel
-//! per tick at `theta_max`" fixes the whole product `L*k*dt/dx^2`. `k` is
-//! therefore not an argument of [`Pressure::new`], and that absence is the
-//! decision — a wrong `k`, bars for pascals, would change not one bit of any run.
+//! The number the kernel receives is `1/theta_max`, and there is no stiffness
+//! anywhere — not in this file, not in `config/schema.rs`, not in
+//! `QUANTITIES.md`. **ADR-082 cancels the second half of the decision of ADR-055,
+//! "`k` is declared in pascals", and leaves the first half standing:** the
+//! mechanism is still artificial compressibility, and the mobility is still
+//! derived at load rather than declared. It is an outright cancellation of a
+//! *decision* and not of a consequence, which is why it is named that way here.
+//!
+//! `k` is cancelled rather than merely unused, and the derivation is the whole
+//! argument:
+//!
+//! ```text
+//! 1. theta = V_occ/V_voxel - 1                             dimensionless
+//! 2. P = k*theta                                           Pa
+//! 3. u = -L*dP/dx = L*k*(theta_low - theta_high)/dx        m/s, [L] = m^2/(Pa*s)
+//! 4. c = u*dt/dx = (L*k*dt/dx^2)*(theta_low - theta_high)  the courant of a face
+//! 5. ADR-055: c = 1 at delta_theta = theta_max  =>  L*k*dt/dx^2 = 1/theta_max
+//! 6. substituting 5 into 4:  c = (theta_low - theta_high)/theta_max
+//! ```
+//!
+//! At line 6 all three leave at once: `k`, `dt` and `dx`. `k` is therefore not an
+//! argument of [`Pressure::new`] and not a key of a scenario, and that absence is
+//! the decision — a wrong `k`, bars for pascals, would have changed not one bit
+//! of any run, which is the disease ADR-055 closed the *unit* of `k` against, one
+//! step deeper. What the scenario declares instead is `theta_max`, which is the
+//! one number the mobility is a function of.
 //!
 //! # What is not here
 //!
@@ -74,22 +96,43 @@ use crate::kernels::pressure::{
 use crate::numeric::{M32, M64, Q};
 use crate::world::{Boundary, Face, Field32, Field64, Grid, LaneRef, ParitySplit};
 
-/// The default of `enabled` for pressure, and it is `false` (ADR-065).
+/// The default of `enabled` for pressure, and it is `false` (ADR-065, ADR-082).
 ///
-/// The limiting overflow `theta_max` is declared nowhere — `TODO(theta-max)` on
-/// [`Pressure::new`] says so in full — and the mobility of ADR-055 is derived
-/// from it and from nothing else. A default of `true` would mean every scenario
-/// displacing matter at a rate whose only input was invented at the point of
-/// use; and because the scheme conserves exactly, both halves of the invariant
-/// would close over it for ever.
+/// **Assigned by decision, and assigned for the first time.** `CONFIG_SCHEMA.md`
+/// section 13 item 23 used to record that no record had named it; ADR-082 names
+/// it, so this is a decision rather than a leftover, and it owes a reason of the
+/// same weight ADR-076 owed for the light.
+///
+/// The reason this constant used to give — "the limiting overflow is declared
+/// nowhere" — is **gone**: ADR-082 declares `theta_max` as a required key of the
+/// pressure record with a window at both ends. What keeps the default `false` is
+/// five other things, and every one of them is an absence rather than an opinion:
+///
+/// 1. **Step `e` is not dispatched.** `Tick::new` refuses an enabled pressure and
+///    `Tick::run` holds `Step::Pressure` in an `unreachable!`.
+/// 2. **The overflow field has no owner.** `world/world.rs` names it and
+///    allocates nothing, and `TODO(overflow-field)` in `kernels/pressure.rs` says
+///    the same from the other side. `Derived` carries neither
+///    `partial_molar_volume` nor an [`Occupant`] table — ADR-082 leaves both to
+///    the record that lifts these locks — so the occupancy table cannot be built.
+/// 3. **The behaviour on an `exchange` face is not decided.** [`periodic_mask`]
+///    refuses one out loud, and `configs/scenarios/h2s-oxidation.toml` declares
+///    `z_max = "exchange"`.
+/// 4. **One-sidedness is not decided.** This process writes the two-sided sign,
+///    SPEC section 3 reads one-sided, and `TODO(one-sided)` prices the choice with
+///    a number: on four substances with no solvent a one-sided field is
+///    identically zero, so the whole of step `e` would be an expensive no-op.
+/// 5. **`energy: Conserved` stands on the absence of a number.** See
+///    `TODO(enthalpy-of-transport)` on [`Pressure::invariant`]: ADR-062 bounded
+///    and checked the diffusive term at load, and there is no such estimate for
+///    steps `c` and `e`.
 ///
 /// The mirror argument, so that this value is not read as "pressure is
-/// optional": ADR-055 makes the overflow a property of the world rather than of
-/// a scenario — matter has volume whether or not anybody switches it on — so the
-/// natural default once `theta_max` exists is `true`.
-// TODO(CONFIG_SCHEMA.md section 13 item 23): assigned by no record. It is
-// settled together with `theta_max`, in `DECISIONS.md` and in section 7 of the
-// schema.
+/// optional": ADR-055 makes the overflow a property of the world rather than of a
+/// scenario — matter has volume whether or not anybody switches it on — so the
+/// natural default, once the five above are answered, is `true`. ADR-082 leaves
+/// it `false` as a **temporary refusal**, on the shape of ADR-067 and ADR-076
+/// rather than on either of their test names, which the same pack is lifting.
 pub const ENABLED_BY_DEFAULT: bool = false;
 
 /// One substance that takes up room in a voxel, as the scenario declares it.
@@ -138,20 +181,21 @@ impl Pressure {
     /// `k` is **not** an argument: it cancels out of the derivation entirely (see
     /// the module header).
     ///
+    /// **`theta_max` is a declared key and has exactly one door.** It comes from
+    /// `[[process]] id = "pressure"` through `Derived::pressure` (ADR-082), which
+    /// is where the two halves of its window are checked — `theta_max >= 6*Theta_sup`
+    /// against the declared ceilings, and a relaxation time inside the declared run
+    /// horizon. A caller that picked a number of its own would be inventing the one
+    /// input the whole mobility is a function of, and the scheme conserves exactly,
+    /// so both halves of the invariant would close over the invention for ever.
+    /// The check below is the domain of the arithmetic and not that window: this
+    /// constructor is public and reachable from a test with no config at all.
+    ///
     /// # Errors
     ///
     /// Returns an error if `theta_max`, `v_voxel` or an entry of the table is not
     /// a usable number, or if the table is longer than the `width_mask` of the
     /// kernel can address.
-    // TODO(theta-max): the limiting overflow is **declared nowhere**.
-    // `CONFIG_SCHEMA.md` section 7 carries only the stiffness `k` on the pressure
-    // row, and `QUANTITIES.md` section 4 has `k` and the mobility as derived. So it
-    // arrives as an argument rather than being read from a config that has no key
-    // for it, and a plausible number invented here would be indistinguishable from
-    // a decision. Settling it is a record in the journal plus a key in
-    // `CONFIG_SCHEMA.md` section 7 — together with the question this work raises
-    // anew: since `k` cancels, is it still a key of the scenario, and what does it
-    // observe.
     pub fn new(grid: &Grid, theta_max: f64, occupants: &[Occupant], v_voxel: f64) -> Result<Self> {
         if !theta_max.is_finite() || theta_max <= 0.0 {
             bail!(
@@ -238,9 +282,10 @@ impl Pressure {
     /// The Courant number per unit of overflow difference across a face:
     /// `1/theta_max`.
     ///
-    /// The one number in the scheme that knows any physics, and the stiffness is
-    /// not in it. See the module header for why that is uncomfortable and has to
-    /// be said out loud.
+    /// The one number in the scheme that knows any physics, and there is no
+    /// stiffness left to be in it: ADR-082 cancelled `k` as a key and as a
+    /// quantity, because it cancels out of the derivation. See the module header
+    /// for the six lines that show it.
     #[inline]
     #[must_use]
     pub fn courant_per_overflow(&self) -> Q {
@@ -593,10 +638,11 @@ mod tests {
     #[test]
     fn the_stiffness_is_not_an_argument() {
         // ADR-055 derives the mobility so that `L*k*dt/dx^2 = 1/theta_max`, so `k`
-        // cancels out of the arithmetic entirely. Its absence from the signature is
-        // the decision, and this test is the only place that says so — a `k`
-        // threaded through and multiplied in would change no result of any other
-        // test in this file.
+        // cancels out of the arithmetic entirely, and ADR-082 cancelled the key
+        // and the quantity along with it. Its absence from the signature is the
+        // decision, and this test is the only place that says so — a `k` threaded
+        // through and multiplied in would change no result of any other test in
+        // this file.
         let pressure = built();
         assert_eq!(
             pressure.courant_per_overflow(),

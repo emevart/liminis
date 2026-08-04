@@ -39,10 +39,12 @@
 //! The shape of every one of the four. `GEOTHERMAL_IN` needs a heat flux and a
 //! composition at the vents (SPEC section 7 names the substances and no
 //! numbers), `RADIATIVE_OUT` needs an emissivity, and both events need a schedule
-//! that `CONFIG_SCHEMA.md` does not declare. The sign convention of a counter is
-//! open too — `TODO(counter-sign)` in `ledger/mod.rs` — although it is no longer
-//! untested: `boundary_outflow_appears_in_channel_counter` is the one place in
-//! the project where getting it backwards can fail, and it now runs.
+//! that `CONFIG_SCHEMA.md` does not declare. Three blockers and not four: the
+//! heat flux and the vent composition are **one** of them, because they belong
+//! to one channel and one record lifts them together.
+//!
+//! The sign convention of a counter is no longer on the list. ADR-084 ratifies
+//! it as the increment of the domain, and `ledger/mod.rs` says which way.
 //!
 //! The temperature `sigma*T^4` is taken over is **not** on that list any more:
 //! `process/temperature.rs` derives it from enthalpy and the composition of the
