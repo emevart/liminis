@@ -140,10 +140,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      # A change to a config, a kernel or the tick order changes what the
-      # numbers mean, and old runs stop being comparable to new ones.
-      # Refactoring that preserves behaviour changes the code version and leaves
-      # this one alone; anything that touches dynamics has to move it.
+      # A change to a config, a kernel, the tick order or the random mixer
+      # changes what the numbers mean, and old runs stop being comparable to new
+      # ones. Refactoring that preserves behaviour changes the code version and
+      # leaves this one alone; anything that touches dynamics has to move it.
+      #
+      # numeric/rng.rs joined the list with ADR-058, and it is the one entry
+      # that is a single file rather than a tree: every stochastic rounding of
+      # reaction extent draws from it (ADR-027), so a changed mixer is a changed
+      # world exactly like a changed kernel. The rest of numeric/ is deliberately
+      # not here — the wrappers are semantics too, but they are covered by their
+      # own tests, and a guard that fires on every touch of the module would be
+      # a guard people learn to bump past.
+      #
+      # The pattern is also the whole guard. `|| true` below swallows grep's
+      # exit status, so a typo in one alternative does not fail the step: it
+      # empties `sensitive`, prints "No changes" and exits zero, switching the
+      # guard off for configs/, kernels/ and process/ as well, in silence. Hence
+      # the `$` and the escaped dot on the file entry, and hence a dry run of
+      # this pipeline against a made-up file list before changing it.
       - name: WORLD_FORMAT_VERSION must move with the semantics
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -152,10 +167,10 @@ jobs:
 
           changed="$(git diff --name-only "$BASE_SHA" HEAD)"
           sensitive="$(printf '%s\n' "$changed" \
-            | grep -E '^(configs/|crates/liminis-core/src/(kernels|process)/)' || true)"
+            | grep -E '^(configs/|crates/liminis-core/src/((kernels|process|worldgen)/|numeric/rng\.rs$))' || true)"
 
           if [ -z "$sensitive" ]; then
-            echo "No configs/**, kernels/** or process/** changes in this pull request."
+            echo "No configs/**, kernels/**, process/**, worldgen/** or numeric/rng.rs changes here."
             exit 0
           fi
 
@@ -168,10 +183,12 @@ jobs:
           if [ "$bumped" -eq 0 ]; then
             echo
             echo "::error::WORLD_FORMAT_VERSION was not changed (ADR-020)."
-            echo "A change under configs/**, crates/liminis-core/src/kernels/**"
-            echo "or crates/liminis-core/src/process/** changes what a run means,"
-            echo "so results from before and after this pull request cannot go on"
-            echo "the same plot. Bump the constant in"
+            echo "A change under configs/**, crates/liminis-core/src/kernels/**,"
+            echo "crates/liminis-core/src/process/** or"
+            echo "crates/liminis-core/src/worldgen/**, or to"
+            echo "crates/liminis-core/src/numeric/rng.rs, changes what a run"
+            echo "means, so results from before and after this pull request"
+            echo "cannot go on the same plot. Bump the constant in"
             echo "crates/liminis-core/src/version.rs."
             echo
             echo "process/** counts because the order of processes inside a tick"
@@ -179,6 +196,17 @@ jobs:
             echo "result depends on it, so swapping two processes has to move the"
             echo "version even though no config and no kernel changed (ADR-036,"
             echo "SPEC section 8)."
+            echo
+            echo "numeric/rng.rs counts because the extent of every reaction is"
+            echo "rounded stochastically off that generator (ADR-027): a changed"
+            echo "mixer, a changed counter list or a changed start constant"
+            echo "changes every draw, hence every xi, hence every run (ADR-058)."
+            echo
+            echo "worldgen/** counts because it decides the state every tick"
+            echo "starts from: the purpose window, the octave spectrum and the"
+            echo "band an initial condition wanders inside all enter the draws,"
+            echo "so a change there gives a different world under the same seed"
+            echo "and the same scenario (SPEC section 12.4, ADR-021, ADR-058)."
             echo
             echo "If this change genuinely cannot affect dynamics, say so in the"
             echo "pull request description and record why."

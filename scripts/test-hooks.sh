@@ -238,8 +238,29 @@ pub fn advect(conc: Q, velocity: Q, i: usize) -> Q {
 }
 EOF
 
+cat >"$FAKE/crates/liminis-core/src/kernels/substance_major.rs" <<'EOF'
+// Адресация по индексу вещества вместо полосы (ADR-056). Компилируется,
+// выглядит как скелет ARCHITECTURE.md и читает чужое количество.
+pub fn react(src: &[i32], s: u32, idx: u32, n_voxels: u32) -> i32 {
+    let at = (s * n_voxels + idx) as usize;
+    src[at]
+}
+EOF
+
+cat >"$FAKE/crates/liminis-core/src/kernels/by_lane.rs" <<'EOF'
+// Законные обе формы: через таблицу и через названную полосу.
+pub fn react(src: &[i32], lane_of: &[u32], s: u32, idx: u32, n_voxels: u32) -> i32 {
+    let at = (lane_of[s as usize] * n_voxels + idx) as usize;
+    let lane = lane_of[s as usize];
+    let same = (lane * n_voxels + idx) as usize;
+    src[at] + src[same]
+}
+EOF
+
 check 'блокирует голый оператор над Q в ядре' 2 kernel-lint.py \
     "$(payload Write "$FAKE/crates/liminis-core/src/kernels/bare.rs" PostToolUse)"
+check 'блокирует адресацию по индексу вещества' 2 kernel-lint.py \
+    "$(payload Write "$FAKE/crates/liminis-core/src/kernels/substance_major.rs" PostToolUse)"
 check 'блокирует распаковку Q через .0' 2 kernel-lint.py \
     "$(payload Write "$FAKE/crates/liminis-core/src/kernels/unwrapped.rs" PostToolUse)"
 check 'не трогает не-Rust файлы' 0 kernel-lint.py \
@@ -251,6 +272,13 @@ unset CLAUDE_PROJECT_DIR
 export CLAUDE_PROJECT_DIR="$ROOT"
 check 'пропускает чистый Rust и проходит cargo' 0 kernel-lint.py \
     "$(payload Write "$ROOT/crates/liminis-core/src/config.rs" PostToolUse)"
+
+# Законную адресацию проверяем на настоящем ядре реакций, а не на поддельном
+# файле: только оно стоит под `kernels/`, содержит `rx.lane[...] * p.n_voxels`
+# и обязано пройти оба грепа. Запрет без парной проверки пропуска — это хук,
+# который однажды начнёт ругаться на верный код.
+check 'пропускает адресацию через таблицу полос' 0 kernel-lint.py \
+    "$(payload Write "$ROOT/crates/liminis-core/src/kernels/react.rs" PostToolUse)"
 
 echo
 printf 'пройдено %s, провалено %s\n' "$PASSED" "$FAILED"

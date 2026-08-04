@@ -183,7 +183,15 @@ pub fn xi(rate: Q, dt: Q, volume: Q, e_r: u8, rng: u32) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::numeric::{qdiv, qsub, rand};
+    use crate::numeric::{qdiv, qsub, rand, run_key};
+
+    // A nonzero run key everywhere a draw is taken (ADR-058). Since the fourth
+    // counter exists, the stream is a function of the seed, and a property
+    // checked on key 0 says nothing about anybody's run except the one seeded
+    // to zero — least of all unbiasedness, which is a property of the stream.
+    // Writing `, 0` into these six call sites is the quick edit and it would
+    // freeze the whole file onto the one key no real run uses.
+    const KEY: u32 = run_key(1);
 
     fn q(v: f64) -> Q {
         Q::from_f64(v)
@@ -268,7 +276,7 @@ mod tests {
     fn stochastic_rounding_only_ever_returns_a_neighbour() {
         for i in 0..1000u32 {
             let x = q(7.3);
-            let v = stochastic_round(x, rand(i, 0, 0));
+            let v = stochastic_round(x, rand(i, 0, 0, KEY));
             assert!(v == 7 || v == 8, "stochastic rounding produced {v}");
         }
     }
@@ -278,9 +286,9 @@ mod tests {
         // frac == 0 means the Bernoulli draw can never fire: an exact amount
         // must not acquire noise.
         for i in 0..1000u32 {
-            assert_eq!(stochastic_round(q(4.0), rand(i, 1, 1)), 4);
-            assert_eq!(stochastic_round(q(-4.0), rand(i, 2, 2)), -4);
-            assert_eq!(stochastic_round(Q::ZERO, rand(i, 3, 3)), 0);
+            assert_eq!(stochastic_round(q(4.0), rand(i, 1, 1, KEY)), 4);
+            assert_eq!(stochastic_round(q(-4.0), rand(i, 2, 2, KEY)), -4);
+            assert_eq!(stochastic_round(Q::ZERO, rand(i, 3, 3, KEY)), 0);
         }
     }
 
@@ -299,7 +307,7 @@ mod tests {
             let x = 7.0 + fraction;
             let mut total = 0i64;
             for i in 0..DRAWS {
-                total += stochastic_round(q(x), rand(i, 4242, 3));
+                total += stochastic_round(q(x), rand(i, 4242, 3, KEY));
             }
 
             let mean = total as f64 / f64::from(DRAWS);
@@ -335,6 +343,6 @@ mod tests {
 
     #[test]
     fn extent_of_a_dead_reaction_is_zero() {
-        assert_eq!(xi(Q::ZERO, q(1.0), q(1.0), 20, rand(1, 2, 3)), 0);
+        assert_eq!(xi(Q::ZERO, q(1.0), q(1.0), 20, rand(1, 2, 3, KEY)), 0);
     }
 }

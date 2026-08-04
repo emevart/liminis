@@ -1,0 +1,333 @@
+# Abiotic oxidation of sulfide, and the first scenario in this repository with
+# chemistry in it.
+#
+# It is the worked example of CONFIG_SCHEMA.md section 12, carried the last mile:
+# that listing has stood for months with six commented-out keys and a paragraph
+# titled "why it does not load". The keys are here now, and the reason they were
+# missing is worth keeping in mind while reading them — they are the numbers the
+# *project* had not decided, as distinct from the numbers this *scenario*
+# declares. ADR-062, ADR-063 and ADR-067 decided the first kind. The second kind
+# is below, and it is calibration bait, not physics the project stands behind.
+#
+# WHAT IS BEING MODELLED. Sulfide meets oxygen and burns to sulfate, releasing
+# acid. In a real basin this is the reaction that draws the oxycline: oxygen
+# comes down from the surface, sulfide up from the sediment, and they annihilate
+# in a band whose depth is set by how fast each is supplied. SPEC section 4.7
+# names it among the reactions abiotic chemistry enters S0 for (ADR-031).
+#
+#   H2S + 2 O2 -> SO4(2-) + 2 H+
+#
+# WHERE THE NUMBERS COME FROM, so that the next reader knows what to trust:
+#
+#   molar_mass          SPEC section 2.3, seven significant figures. Not a
+#                       choice — ADR-043 makes the tolerance smaller than a
+#                       proton, and four figures would make the mass check
+#                       unable to tell a rounded table from a lost proton.
+#   diffusivity         SPEC section 1.7, except sulfate, which the table does
+#                       not carry.
+#   enthalpy_formation  Standard aqueous values at 298.15 K. The reaction
+#                       enthalpy below is their sum and has to be, to a part in
+#                       a million (ADR-044).
+#   c_p, partial_molar_volume
+#                       Standard aqueous values. Placeholders in the sense that
+#                       this scenario is not calibrated, not in the sense that
+#                       they are invented.
+#   typical_conc, max_conc, vmax, km, k_ex, t_out
+#                       Calibration bait. Ordinary water chemistry, chosen to be
+#                       the right order of magnitude and nothing more.
+#
+# WATER IS HERE AND DOES NOT REACT, and that is not decoration. Temperature is
+# derived from enthalpy over the voxel's heat capacity (ADR-044), and aqueous
+# sulfate has a *negative* partial molar heat capacity — about -293 J/(mol K),
+# which is real and not a typo. Without a solvent the denominator of the
+# temperature would go negative at these concentrations and the world would have
+# no meaningful temperature at all. Water contributes 4.18e6 J/(m^3 K) against
+# sulfate's -8.2e3 and settles the question by five hundred to one.
+#
+# Note what water does *not* do here: it does not force the 64-bit path. ADR-040
+# sends water to i64 when it shares a reaction with the proton, because their
+# concentrations are twenty-nine binary orders apart. In this scenario it shares
+# a reaction with nothing, so its scale comes from its own ceiling and fits an
+# i32 with room. The rule is about pairs, never about water.
+
+name = "h2s-oxidation"
+
+# One second. Fields whose diffusion outruns it subdivide their own step
+# (ADR-030); here the proton takes six substeps and oxygen two.
+dt = 1.0
+
+# Fraction of a typical pool one quantum of extent may consume, 2^-6 (ADR-039).
+beta = 0.015625
+
+# Storage zero for enthalpy (ADR-044). Coincides with the thermochemical 298.15 K
+# here, which is a convenience and not a requirement: the two reference states
+# are unrelated, and ADR-044 exists because calling them one word made both
+# unanswerable.
+T_ref = 298.15
+
+# Tracked quantities and their molar masses, g/mol to seven figures (ADR-064).
+# A table, so it stands after every scalar: TOML cannot write a bare key after a
+# table header, and the canonical form the hash is taken over depends on it.
+[conserved]
+C = 12.01070
+N = 14.00670
+P = 30.97376
+S = 32.06500
+Fe = 55.84500
+
+[grid]
+nx = 48
+ny = 48
+nz = 48
+dx = 1.0e-4                 # 100 um, the eco regime. V_voxel = 1e-12 m^3
+
+[boundary]
+# x and y stay periodic; the floor is solid; the lid vents (ADR-059).
+#
+# The lid is the whole difference between this scenario and a sealed box. With
+# it closed nothing replenishes the oxygen, the reaction consumes it, and the
+# world runs down; with it open the domain trades with an atmosphere-saturated
+# reservoir and an oxycline is a state it can hold.
+z_min = "closed"
+z_max = "exchange"
+
+# The reservoir the lid trades with. Required exactly when some face is
+# `exchange`, in both directions, and it stands after the six scalar keys
+# because it is a table and TOML cannot write a bare key after a table header
+# (CONFIG_SCHEMA.md section 4, item 3 of section 11).
+#
+# EVERY NUMBER HERE IS CALIBRATION BAIT AND NOT A MEASUREMENT. ADR-059 assigns
+# none of them: it gives the order of `k_ex` (the piston velocity of oxygen at
+# the surface of the sea, about 1e-5 m/s, against a limit of 1e-4 at this dx and
+# dt) and no value at all for the composition or the temperature. What is
+# written below is the shallow oxic sea this scenario is about, chosen so that
+# the lid is a source of oxygen and a sink of everything the vents produce; it
+# is the first thing to move when the run does not look like an oxycline
+# (ADR-038).
+#
+# `conc_out` is required for every substance of the registry and there is no
+# default, because a missing entry would mean zero and a zero outside is an
+# infinite sink — a statement about the physics that has to be printed rather
+# than inherited (ADR-059).
+[boundary.reservoir]
+t_out = 288.15              # 15 C, a temperate surface ocean
+k_ex = 1.0e-5               # m/s; alpha_ex = k_ex*dt/dx = 0.1, a tenth of the limit
+conc_out = { WATER = 55500.0, H2S = 0.0, O2 = 0.25, SO4 = 28.0, H_ION = 1.0e-4 }
+
+# --- substances ------------------------------------------------------------
+
+[[substance]]
+id = "WATER"
+composition = {}            # neither C, N, P, S nor Fe: its balance rests on
+                            # the mass check alone (ADR-033)
+molar_mass = 18.01528
+diffusivity = 2.3e-9        # self-diffusion; SPEC section 1.7 does not carry it
+typical_conc = 55500.0
+max_conc = 55600.0
+partial_molar_volume = 1.807e-5
+settling_radius = 0.0
+c_p = 75.3
+enthalpy_formation = -285830.0
+
+[[substance]]
+id = "H2S"
+composition = { S = 1 }
+molar_mass = 34.08088
+diffusivity = 1.6e-9
+typical_conc = 0.1
+max_conc = 0.5
+partial_molar_volume = 3.5e-5
+settling_radius = 0.0       # dissolved matter does not settle: the
+                            # Stokes-Einstein radius puts it at 2.4e-4 of a
+                            # voxel over the whole 1e6-tick horizon (ADR-067)
+c_p = 179.0
+enthalpy_formation = -39700.0
+
+[[substance]]
+id = "O2"
+composition = {}
+molar_mass = 31.99880
+diffusivity = 2.1e-9        # two substeps
+typical_conc = 0.25
+max_conc = 0.5
+partial_molar_volume = 3.1e-5
+settling_radius = 0.0
+c_p = 234.0
+enthalpy_formation = -11700.0
+
+[[substance]]
+id = "SO4"
+composition = { S = 1 }
+molar_mass = 96.06260
+diffusivity = 1.0e-9
+typical_conc = 28.0
+max_conc = 40.0
+partial_molar_volume = 1.4e-5
+settling_radius = 0.0
+c_p = -293.0                # negative, and real: the ion orders the water
+                            # around it. See the note at the top about why the
+                            # solvent has to be present for this to be safe.
+enthalpy_formation = -909270.0
+
+[[substance]]
+id = "H_ION"
+composition = {}            # pH is derived: pH = -log10[H+]
+molar_mass = 1.007940
+diffusivity = 9.3e-9        # the Grotthuss mechanism; six substeps, the worst
+                            # case of the registry
+typical_conc = 1.0e-4       # pH 7
+max_conc = 5.0e-4           # pH 5, and this is a hard ceiling on the run rather
+                            # than an estimate: crossing it stops the run
+                            # (ADR-041)
+partial_molar_volume = 0.0  # exactly zero on the conventional single-ion scale
+                            # (ADR-067), and legal because the radius is zero
+settling_radius = 0.0
+c_p = 0.0                   # zero by the same convention
+enthalpy_formation = 0.0
+
+# --- reaction --------------------------------------------------------------
+
+[[reaction]]
+id = "h2s_oxidation"
+
+# H2S + 2 O2 -> SO4(2-) + 2 H+
+inputs = { H2S = 1, O2 = 2 }
+outputs = { SO4 = 1, H_ION = 2 }
+
+catalyst = ""               # abiotic, so vmax is per cubic metre (ADR-063)
+
+# Sum of the formation enthalpies above, and it has to be to a part in a million
+# or the load fails (ADR-044):
+#   -909270 + 0 - (-39700) - 2*(-11700) = -846170
+# Negative means exothermic, so energy_from stays empty. A non-empty source is
+# only legal for a reaction that does *not* agree with its formation enthalpies
+# — which ADR-044 refuses to load — and "LIGHT", printed in the frozen spec, is
+# illegal outright: light is already credited to enthalpy at step i' (ADR-059).
+enthalpy = -846170.0
+
+[reaction.rate]
+vmax = 1.0e-6               # turnovers per second per cubic metre. Turns the
+                            # H2S pool over in about 28 hours, which is the
+                            # order abiotic sulfide oxidation actually has.
+t_vmax = 298.15             # the temperature vmax was measured at, and not
+                            # T_ref: tying kinetics to the storage zero would
+                            # make the speed of all chemistry depend on where
+                            # enthalpy is counted from (ADR-048)
+q10 = 2.0
+km = { H2S = 0.01, O2 = 0.01 }
+
+# --- fields ----------------------------------------------------------------
+
+[[field]]
+id = "enthalpy"
+lod = 2                     # 12^3 here. Coarsening divides the substep count by
+                            # 4^lod, which is the only legal way to make a fast
+                            # field cheap — running it less often is not
+                            # (ADR-030).
+thermal_diffusivity = 1.4e-7
+t_min = 273.15
+t_max = 323.15
+
+# --- processes -------------------------------------------------------------
+#
+# The roster is closed and lives in code, so a missing record means the
+# process's own default rather than its absence (ADR-065). Everything named
+# below is named to turn it on; run `liminis run --print-canonical` to see the
+# full materialised list, including the records nobody wrote.
+
+[[process]]
+id = "diffusion"
+enabled = true
+
+# OFF, and not by choice. The temperature is no longer the reason: the operator
+# exists — `T = T_ref + H / sum(n_i * c_p_i)` over the composition of the coarse
+# cell (ADR-044, ADR-062) — and the world allocates the buffers it writes. This
+# is the scenario that pays for the c_p note at the top of this file: WATER,
+# SO4 at -293 J/(mol K) and H_ION at exactly zero all reach that denominator, and
+# they reach it with their signs.
+#
+# The ledger is no longer the reason, and A-19 is closed. Matter: ADR-080 gave
+# the residual its second term — the kernel reports how far each reaction ran and
+# the host reduces it — so `Ledger::assert_closed` no longer panics on a reacting
+# tick. Energy: ADR-081 put the chemical energy of the substances into the
+# *left*-hand side, `H_field + sum_s w_s * n_s`, so a reaction stops being a
+# source and becomes a transfer between two forms of one quantity; the identity
+# closes by construction, no channel for the heat of reaction is invented, and
+# `nu_E` is stated in the direction of the field — positive for an exothermic
+# record, so burning sulfide now warms the water. The sign lives in the loader
+# and in one place only.
+#
+# What blocks step `h` is the dispatch wiring, and it is wiring nobody has
+# decided yet: `Tick::new` folds no reaction operator, no energy fold and no
+# temperature operator, and no record says whether their three per-voxel buffers
+# come from `Scratch` or from `World`. Turning this on today does not start the
+# chemistry — the process refuses to build a tick at all, naming exactly that.
+#
+# And when the wiring lands, this flag is still a decision of its own rather than
+# a convenience: ADR-081 says in as many words that `react::ENABLED_BY_DEFAULT`
+# stays `false` and this line stays `enabled = false`, because flipping either
+# changes every run in the repository at once, under the guard of ADR-020, and is
+# worth its own entry in DECISIONS.md with its own version bump.
+# Everything else the reaction needs is already here and already validated: the
+# stoichiometry balances by element and by mass, the declared enthalpy agrees
+# with the formation enthalpies to a part in a million, and the scales resolve.
+[[process]]
+id = "reactions"
+enabled = false
+
+# OFF for the same reason one layer along: step `j` has nothing to write. The
+# exchange face is refused (see [boundary] above), there are no events in this
+# scenario, and the two heat channels ADR-059 assigns here — GEOTHERMAL_IN at the
+# floor, RADIATIVE_OUT at the lid — have a temperature field to read now and
+# still no emissivity, no vent flux and no rule for which cells of the coarse
+# enthalpy grid face the sky. A process with nothing to write refuses rather than
+# running empty, which is what keeps an idle channel from looking like a closed
+# one.
+[[process]]
+id = "external_channels"
+enabled = false
+
+# --- initial state ---------------------------------------------------------
+#
+# One key, and it is the one that draws the oxycline. Of the four numbers the
+# generator builds the zeroth tick out of, exactly one is a property of the
+# scenario (ADR-077): which side of the sediment/water boundary each substance is
+# enriched on. The band an initial condition wanders in — half of the smaller of
+# the two headrooms — is a derived rule and not a key, and the weighting of the
+# octaves is a build-time boundary with an open question over it.
+#
+# Oxygen comes down and sulfide comes up: that is the picture at the top of this
+# file, and without this line the world starts as its opposite. Every substance
+# would take the default and be enriched in the sediment, so the two reagents
+# would be high in the same voxels — the one arrangement in which no front forms
+# anywhere, whatever the chemistry does. The four substances not named below keep
+# `sediment`, and the loader writes their side out for them before hashing, so
+# the canonical form of this file names the side of all five (ADR-065).
+#
+# It moves no number in the paragraph on H_ION.max_conc above: that estimate was
+# taken over the worst voxel of a world where the sulfide and the oxygen sit on
+# top of each other, which is what the default gives and what this line undoes.
+# Separating them can only make the proton arrive later.
+
+[initial.layer]
+O2 = "water"                # sediment | water | uniform, and the only side in
+                            # this repository that is not the default. It is what
+                            # gives oxidation_front_forms_at_predicted_depth an
+                            # initial condition capable of producing a front.
+
+# --- calibration -----------------------------------------------------------
+# Not part of config_hash (ADR-038): the search driver reads this section, the
+# simulator does not, so it cannot affect the dynamics. The order of the entries
+# is the order of the coordinates in the search vector.
+
+[[calibration]]
+path = "reaction.h2s_oxidation.rate.vmax"
+min = 1.0e-8
+max = 1.0e-4
+scale = "log"
+
+[[calibration]]
+path = "reaction.h2s_oxidation.rate.q10"
+min = 1.5
+max = 3.0
+scale = "linear"

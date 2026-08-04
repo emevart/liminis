@@ -111,9 +111,24 @@ macro_rules! define_m {
             /// concentrations, and the debug assertion says so; in release the
             /// clamp keeps a wrong number from becoming a number of the opposite
             /// sign, which is what a plain `as` cast would do.
+            ///
+            /// Public, unlike the two bounds above it, and the reason is the
+            /// reaction kernel. It accumulates the deltas of one voxel in an
+            /// `i64` — the substances of a voxel differ in width, so the
+            /// accumulator can be neither of them (ADR-040, ADR-041) — and has
+            /// to narrow the result on the way back into storage. The
+            /// alternative is a bare `as i32` inside `kernels/react.rs`, and in
+            /// release that turns a pool which overflowed into one of the
+            /// opposite sign, in silence. Transport never needed it: a flux
+            /// stays inside the width it came from.
+            ///
+            /// What this does **not** watch is the ceiling ADR-039 declares
+            /// through `max_conc` — `2^28`, a different number from the ceiling
+            /// of the storage width. That one belongs to the validator
+            /// (ADR-041).
             #[inline(always)]
             #[allow(clippy::unnecessary_cast)]
-            pub(in crate::numeric) fn from_i64_clamping(v: i64) -> Self {
+            pub fn from_i64_clamping(v: i64) -> Self {
                 debug_assert!(
                     (Self::MIN_I64..=Self::MAX_I64).contains(&v),
                     concat!(

@@ -22,12 +22,34 @@
 //! substeps, and against the analytic solution. Either one can fail while the
 //! other passes.
 
-use liminis_core::kernels::{DiffuseParams, diffuse_voxel_32, diffuse_voxel_64, flux_32, flux_64};
+use liminis_core::kernels::diffuse::{
+    DiffuseParams, diffuse_voxel_32, diffuse_voxel_64, flux_32, flux_64,
+};
+use liminis_core::ledger::Ledger;
 use liminis_core::numeric::{M32, M64, Q};
-use liminis_core::process::Diffuse;
+use liminis_core::process::{Diffuse, DiffusePhase};
 use liminis_core::world::{Boundary, Field, Field32, Field64, Grid};
 use proptest::prelude::*;
 use proptest::test_runner::FileFailurePersistence;
+
+/// A grid with no exchanging face: `k_ex` multiplies a flux nobody gathers.
+///
+/// The venting cases are the outside view of ADR-059 and live in
+/// `tests/acceptance_boundary.rs`.
+const SEALED: f64 = 0.0;
+
+/// One substance per lane, a weight table of zeroes, and a scratch ledger. On a
+/// sealed grid no counter is ever touched, so neither which substance a lane
+/// stands for nor what its chemical energy is worth can matter here (ADR-081).
+fn run_diffusion_32(phase: &DiffusePhase, field: &mut Field32) {
+    let table: Vec<u32> = (0..field.lanes()).collect();
+    phase.apply_32(field, &table, &[0; 32], &mut Ledger::new(32).unwrap());
+}
+
+fn run_diffusion_64(phase: &DiffusePhase, field: &mut Field64) {
+    let table: Vec<u32> = (0..field.lanes()).collect();
+    phase.apply_64(field, &table, &[0; 32], &mut Ledger::new(32).unwrap());
+}
 
 /// The eco regime of SPEC section 1.7: a one-second tick and a 100 um voxel.
 const DT: f64 = 1.0;
@@ -47,11 +69,11 @@ fn torus(nx: u32, ny: u32, nz: u32) -> Grid {
 }
 
 fn total_32(field: &Field32) -> i64 {
-    field.read().iter().map(|v| v.to_i64()).sum()
+    field.lane(0).iter().map(|v| v.to_i64()).sum()
 }
 
 fn total_64(field: &Field64) -> i64 {
-    field.read().iter().map(|v| v.to_i64()).sum()
+    field.lane(0).iter().map(|v| v.to_i64()).sum()
 }
 
 /// Put a state into a field: write state `N+1` in full, then promote it.
@@ -271,7 +293,7 @@ fn diffusion_alone_conserves_exactly() {
     //
     // The parameters come from the process rather than from a hand-written
     // struct: a test that folds its own `alpha` is testing a kernel nobody runs.
-    let at_the_limit = Diffuse::new(&grid, 9.99e-9, DT, DX).unwrap();
+    let at_the_limit = Diffuse::new(&grid, 9.99e-9, DT, DX, SEALED).unwrap();
     assert_eq!(at_the_limit.substeps(), 6);
     assert!(at_the_limit.params().alpha <= Q::from_f64(1.0 / 6.0));
     assert!(at_the_limit.params().alpha > Q::from_f64(0.166));
@@ -309,10 +331,10 @@ fn diffusion_alone_conserves_exactly() {
 
         // And the run was not asserting about a field that had stopped moving:
         // one more substep still changes it.
-        let settled = field.read().to_vec();
+        let settled = field.lane(0).to_vec();
         substep_32(&mut field, &p);
         assert_ne!(
-            field.read(),
+            field.lane(0),
             settled.as_slice(),
             "{label}: the field went quiet, so the substeps above proved nothing"
         );
@@ -347,8 +369,10 @@ fn diffusion_alone_conserves_exactly() {
     const TICKS: u32 = 300;
 
     let grid = torus(12, 10, 8);
-    let diffuse = Diffuse::new(&grid, D_PROTON, DT, DX).unwrap();
+    let diffuse = Diffuse::new(&grid, D_PROTON, DT, DX, SEALED).unwrap();
     assert_eq!(diffuse.substeps(), 6);
+    let phase = DiffusePhase::new_32(&grid, 1, &[D_PROTON], DT, DX, SEALED).unwrap();
+    let wide_phase = DiffusePhase::new_64(&grid, 1, &[D_PROTON], DT, DX, SEALED).unwrap();
 
     let mut narrow: Field32 = Field::new(&grid, 1).unwrap();
     seed_32(&mut narrow, &grid, |x, y, z| {
@@ -374,33 +398,34 @@ fn diffusion_alone_conserves_exactly() {
         // Water, at the scale that made ADR-040 necessary, with a gradient of a
         // few hundred units on top of it. The small difference on the large pool
         // is the case that separates `q_conc(there - here)` from
-        // `q_conc(there) - q_conc(here)`: at 5.1e12 an f32 step is 512 units, so
-        // the second form would round the whole gradient away and this field
-        // would sit there looking perfectly conserved and perfectly still.
+        // `q_conc(there) - q_conc(here)`: at 5.1e12 an f32 step is
+        // `2^19 = 524 288` units, so the second form would round the whole
+        // gradient away and this field would sit there looking perfectly
+        // conserved and perfectly still.
         5_100_000_000_000 + i64::from(x * 100 + y * 10 + z)
     });
 
     let narrow_total = total_32(&narrow);
     let wide_total = total_64(&wide);
     let wide_spread = |field: &Field64| {
-        let amounts = field.read().iter().map(|v| v.to_i64());
+        let amounts = field.lane(0).iter().map(|v| v.to_i64());
         amounts.clone().max().unwrap() - amounts.min().unwrap()
     };
     let wide_spread_before = wide_spread(&wide);
 
     for tick in 0..TICKS {
-        diffuse.apply_32(&mut narrow);
+        run_diffusion_32(&phase, &mut narrow);
         assert_eq!(total_32(&narrow), narrow_total, "i32: tick {tick}");
 
-        diffuse.apply_64(&mut wide);
+        run_diffusion_64(&wide_phase, &mut wide);
         assert_eq!(total_64(&wide), wide_total, "i64: tick {tick}");
     }
 
     // And both runs did something. The narrow pool spread out of its voxel and
     // reached every corner of the domain; the wide gradient flattened, which it
     // could not have done if the differences had been rounded away.
-    assert!(narrow.read()[grid.index(6, 5, 4) as usize].to_i64() < 2_000_000_000);
-    assert!(narrow.read().iter().all(|&v| v != M32::ZERO));
+    assert!(narrow.lane(0)[grid.index(6, 5, 4) as usize].to_i64() < 2_000_000_000);
+    assert!(narrow.lane(0).iter().all(|&v| v != M32::ZERO));
     assert!(wide_spread(&wide) < wide_spread_before / 10);
 }
 
@@ -528,7 +553,7 @@ fn diffusion_matches_analytic_gaussian_spread() {
     const SOURCE: i64 = 1 << 38;
 
     let grid = torus(N, N, N);
-    let diffuse = Diffuse::new(&grid, D_PROTON, DT, DX).unwrap();
+    let diffuse = Diffuse::new(&grid, D_PROTON, DT, DX, SEALED).unwrap();
     let substeps = diffuse.substeps();
     assert_eq!(substeps, 6);
     let p = diffuse.params();
@@ -566,7 +591,7 @@ fn diffusion_matches_analytic_gaussian_spread() {
     let assert_shell_is_empty = |field: &Field64, step: u32| {
         for &idx in &shell {
             assert_eq!(
-                field.read()[idx as usize],
+                field.lane(0)[idx as usize],
                 M64::ZERO,
                 "substep {step}: voxel {idx} sits on the wrap and is not empty, \
                  so the profile is about to come round the torus and the moments \
@@ -588,7 +613,7 @@ fn diffusion_matches_analytic_gaussian_spread() {
     let mut second = [0i64; 3];
     let mut marginal = [[0i64; N as usize]; 3];
     for idx in 0..grid.n_voxels() {
-        let amount = field.read()[idx as usize].to_i64();
+        let amount = field.lane(0)[idx as usize].to_i64();
         if amount == 0 {
             continue;
         }

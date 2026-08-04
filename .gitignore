@@ -21,3 +21,6 @@
 
 # Snapshots
 *.snap
+
+# Playwright MCP scratch output
+.playwright-mcp/
