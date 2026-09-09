@@ -28,7 +28,7 @@ const LENSES = (args && args.lenses) || [
   },
   {
     key: 'kernel-shape',
-    adrs: 'ADR-015, ADR-034, ADR-041, .claude/rules/kernels.md',
+    adrs: 'ADR-015, ADR-034, ADR-041, docs/agent-kernels.md',
     hunt: `Форма ядра. Всё под kernels/ обязано переводиться в WGSL построчно.
 Ищи: self, трейты, дженерики по поведению, замыкания, Vec, Box, dyn, HashMap, рекурсию, любую
 аллокацию, итераторные цепочки, не выражаемые циклом for по диапазону; чтение из буфера записи;
