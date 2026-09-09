@@ -301,7 +301,7 @@ const CORPUS = `
 - docs/QUANTITIES.md — реестр величин: единица, класс, тип, где объявлена.
 - docs/CONFIG_SCHEMA.md — ключи сценария; раздел 13 — список дыр.
 - docs/ACCEPTANCE.md — приёмочные критерии именами тестов.
-- crates/liminis-core/src/kernels/AGENTS.md — правила для ядер.
+- docs/agent-kernels.md — правила для ядер.
 - crates/liminis-core/src/ — действующий код: numeric, world, kernels/diffuse.rs, process/diffuse.rs, config.rs.
 
 ИНВАРИАНТЫ ПРОЕКТА, которые нельзя нарушить молча:

@@ -8,7 +8,7 @@ AGENTS.md. CLAUDE.md импортирует их, общие правила не
 - Прочитай поручение, git status, ветку/HEAD и checkpoint задачи. Приоритет
   у текущих указаний пользователя с сохранением ограничений инструментов.
 - Перед правкой читай ближайшие AGENTS.md; для ядер —
-  crates/liminis-core/src/kernels/AGENTS.md. Карта: [docs/README.md](docs/README.md).
+  docs/agent-kernels.md. Карта: [docs/README.md](docs/README.md).
 - Параллельные сессии ведут независимые задачи в отдельных checkout/ветках;
   subagents получают узкую задачу и владельца файлов. Один координатор
   согласует пересечения. Не переключай чужую ветку и не откатывай dirty-файлы.
@@ -108,7 +108,7 @@ AGENTS.md. CLAUDE.md импортирует их, общие правила не
 | `docs/PRIOR_ART.md` | Соседние проекты и чем Liminis от них отличается |
 | `docs/LEARNING.md` | Что нужно изучить и в каком порядке |
 | `docs/archive/` | Вытесненные черновики. Не ссылаться |
-| `crates/liminis-core/src/kernels/AGENTS.md` | Правила для `crates/liminis-core/src/kernels/**` |
+| `docs/agent-kernels.md` | Правила для `crates/liminis-core/src/kernels/**` |
 
 ## Команды
 

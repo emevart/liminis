@@ -10,6 +10,7 @@
 - [OPEN_QUESTIONS](OPEN_QUESTIONS.md), [PRIOR_ART](PRIOR_ART.md),
   [LEARNING](LEARNING.md) — исследование и новые идеи.
 - [COMMUNITY](COMMUNITY.md) — границы вклада и воспроизводимость.
+- [Правила ядер](agent-kernels.md) — обязательные ограничения kernels/**.
 - [Работа агентов](agent-development.md), [checkpoint](checkpoint-template.md).
 - [Планы](superpowers/plans/) — конкретные очереди реализации; их статус
   сверяется с текущими коммитами и ACCEPTANCE.
