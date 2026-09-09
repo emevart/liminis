@@ -33,7 +33,7 @@ const GATE = `cargo fmt --all --check && cargo clippy --workspace --all-targets 
 const RULES = `
 ПРАВИЛА ПРОЕКТА, обязательные и проверяемые.
 
-ЧИТАЙ ПЕРЕД РАБОТОЙ: CLAUDE.md, docs/ARCHITECTURE.md, docs/NUMERIC.md, .claude/rules/kernels.md,
+ЧИТАЙ ПЕРЕД РАБОТОЙ: CLAUDE.md, docs/ARCHITECTURE.md, docs/NUMERIC.md, crates/liminis-core/src/kernels/AGENTS.md,
 и те записи docs/DECISIONS.md, которые названы в задании. Журнал большой — ищи grep по «## ADR-0NN».
 
 ФОРМА ЯДРА (ADR-015, ADR-034). Всё под crates/liminis-core/src/kernels/ — свободные функции вида
