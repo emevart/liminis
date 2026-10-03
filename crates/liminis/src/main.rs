@@ -60,16 +60,18 @@ enum Command {
     },
     /// Run a scenario and serve the viewer on a local port.
     ///
-    /// `--config` and `--seed` are not optional and cannot be: a server has
-    /// nothing to build a world out of without them, and no file under
-    /// `configs/` will do — `hello.toml` declares no substance and does not
-    /// survive its own derivation.
+    /// Defaults to the small living-world scenario; config and seed remain
+    /// explicit overrides for reproducible experiments (ADR-092).
     Serve {
         /// Path to a scenario TOML file.
-        #[arg(long, value_name = "PATH")]
+        #[arg(
+            long,
+            value_name = "PATH",
+            default_value = "configs/scenarios/living-world.toml"
+        )]
         config: PathBuf,
         /// Seed for the run.
-        #[arg(long, value_name = "N")]
+        #[arg(long, value_name = "N", default_value_t = 42)]
         seed: u64,
         /// Port to listen on.
         #[arg(long, default_value_t = 8080)]
@@ -126,7 +128,10 @@ fn route(shared: &Arc<Mutex<serve::Sim>>, request: &Request) -> Response {
         };
     }
 
-    if path == "/api/state" || path.starts_with("/api/volume/") || path.starts_with("/api/profile/")
+    if path == "/api/state"
+        || path == "/api/ecology"
+        || path.starts_with("/api/volume/")
+        || path.starts_with("/api/profile/")
     {
         return match request.method {
             Method::Get => serve::route(shared, request),

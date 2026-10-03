@@ -1,0 +1,434 @@
+# Experimental, uncalibrated eco-mode culture (ADR-091).
+# Biomass is CH2O-equivalent organic carbon, not a measured microbial formula.
+# All five ecotypes have identical chemistry; only inherited kinetics differ.
+# Mutation creates offspring in adjacent ecotypes, never converts an adult.
+# No lineage tree, individual cells, or open-ended genome evolution is claimed.
+name = "living-world"
+dt = 1.0
+beta = 0.015625
+T_ref = 298.15
+
+[conserved]
+C = 12.01070
+H = 1.007940
+O = 15.99940
+
+[grid]
+nx = 24
+ny = 24
+nz = 24
+dx = 1.0e-4
+
+[boundary]
+z_min = "closed"
+z_max = "exchange"
+
+[boundary.reservoir]
+t_out = 298.15
+k_ex = 1.0e-6
+conc_out = { WATER = 55500.0, FOOD = 0.8, O2 = 0.25, CO2 = 0.01, DET = 0.0, HARVESTER = 0.0, FORAGER = 0.0, GENERALIST = 0.0, OPPORTUNIST = 0.0, BLOOMER = 0.0 }
+
+# Amount scales and thermochemistry of all ecotypes are identical.
+# The reservoir supplies food and oxygen and removes exported matter and heat.
+
+[[substance]]
+id = "WATER"
+composition = { H = 2, O = 1 }
+molar_mass = 18.01528
+diffusivity = 2.3e-9
+typical_conc = 55500
+max_conc = 55600
+partial_molar_volume = 0.00001807
+settling_radius = 0.0
+c_p = 75.3
+enthalpy_formation = -285830
+
+[[substance]]
+id = "FOOD"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 8e-10
+typical_conc = 0.2
+max_conc = 10
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 75
+enthalpy_formation = -200000
+
+[[substance]]
+id = "O2"
+composition = { O = 2 }
+molar_mass = 31.9988
+diffusivity = 2e-9
+typical_conc = 0.25
+max_conc = 5
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 30
+enthalpy_formation = 0
+
+[[substance]]
+id = "CO2"
+composition = { C = 1, O = 2 }
+molar_mass = 44.0095
+diffusivity = 1.6e-9
+typical_conc = 0.01
+max_conc = 100
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 75
+enthalpy_formation = -393510
+
+[[substance]]
+id = "DET"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 4e-11
+typical_conc = 0.002
+max_conc = 20
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 75
+enthalpy_formation = -181000
+
+[[substance]]
+id = "HARVESTER"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 2e-12
+typical_conc = 0.002
+max_conc = 20
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 75
+enthalpy_formation = -180000
+
+[[substance]]
+id = "FORAGER"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 2e-12
+typical_conc = 0.002
+max_conc = 20
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 75
+enthalpy_formation = -180000
+
+[[substance]]
+id = "GENERALIST"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 2e-12
+typical_conc = 0.002
+max_conc = 20
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 75
+enthalpy_formation = -180000
+
+[[substance]]
+id = "OPPORTUNIST"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 2e-12
+typical_conc = 0.002
+max_conc = 20
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 75
+enthalpy_formation = -180000
+
+[[substance]]
+id = "BLOOMER"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 2e-12
+typical_conc = 0.002
+max_conc = 20
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 75
+enthalpy_formation = -180000
+
+# Growth: 2 CH2O(food) + O2 -> CH2O(biomass) + CO2 + H2O.
+# Each event retains half the food carbon as biomass.
+# Formation enthalpies give -459340 J/mol extent for every offspring branch.
+# Tradeoff: higher maximum growth requires a higher food concentration.
+# vmax [0.0012, 0.002, 0.0033, 0.0053, 0.0085] /s.
+# FOOD half-saturation [0.002, 0.009, 0.03, 0.09, 0.25] mol/m3.
+# Mutation probability 0.02: symmetric nearest neighbours inside the range;
+# the boundary's whole mutant fraction goes to its only neighbour.
+
+[[reaction]]
+id = "grow_harvester_harvester"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { HARVESTER = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:HARVESTER"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.001176
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.002, O2 = 0.01 }
+
+[[reaction]]
+id = "grow_harvester_forager"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { FORAGER = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:HARVESTER"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.000024
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.002, O2 = 0.01 }
+
+[[reaction]]
+id = "grow_forager_forager"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { FORAGER = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:FORAGER"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.00196
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.009, O2 = 0.01 }
+
+[[reaction]]
+id = "grow_forager_harvester"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { HARVESTER = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:FORAGER"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.00002
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.009, O2 = 0.01 }
+
+[[reaction]]
+id = "grow_forager_generalist"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { GENERALIST = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:FORAGER"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.00002
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.009, O2 = 0.01 }
+
+[[reaction]]
+id = "grow_generalist_generalist"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { GENERALIST = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:GENERALIST"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.003234
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.03, O2 = 0.01 }
+
+[[reaction]]
+id = "grow_generalist_forager"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { FORAGER = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:GENERALIST"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.000033
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.03, O2 = 0.01 }
+
+[[reaction]]
+id = "grow_generalist_opportunist"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { OPPORTUNIST = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:GENERALIST"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.000033
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.03, O2 = 0.01 }
+
+[[reaction]]
+id = "grow_opportunist_opportunist"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { OPPORTUNIST = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:OPPORTUNIST"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.005194
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.09, O2 = 0.01 }
+
+[[reaction]]
+id = "grow_opportunist_generalist"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { GENERALIST = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:OPPORTUNIST"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.000053
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.09, O2 = 0.01 }
+
+[[reaction]]
+id = "grow_opportunist_bloomer"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { BLOOMER = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:OPPORTUNIST"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.000053
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.09, O2 = 0.01 }
+
+[[reaction]]
+id = "grow_bloomer_bloomer"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { BLOOMER = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:BLOOMER"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.00833
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.25, O2 = 0.01 }
+
+[[reaction]]
+id = "grow_bloomer_opportunist"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { OPPORTUNIST = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:BLOOMER"
+enthalpy = -459340.0
+[reaction.rate]
+vmax = 0.00017
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.25, O2 = 0.01 }
+
+# Mortality transfers biomass to detritus, not out of the accounting system.
+# Km=1e-9 approaches first-order 0.0004 * B above trace concentrations.
+
+[[reaction]]
+id = "turnover_harvester"
+inputs = { HARVESTER = 1 }
+outputs = { DET = 1 }
+catalyst = "guild:HARVESTER"
+enthalpy = -1000.0
+[reaction.rate]
+vmax = 0.0004
+t_vmax = 298.15
+q10 = 1.0
+km = { HARVESTER = 1.0e-9 }
+
+[[reaction]]
+id = "turnover_forager"
+inputs = { FORAGER = 1 }
+outputs = { DET = 1 }
+catalyst = "guild:FORAGER"
+enthalpy = -1000.0
+[reaction.rate]
+vmax = 0.0004
+t_vmax = 298.15
+q10 = 1.0
+km = { FORAGER = 1.0e-9 }
+
+[[reaction]]
+id = "turnover_generalist"
+inputs = { GENERALIST = 1 }
+outputs = { DET = 1 }
+catalyst = "guild:GENERALIST"
+enthalpy = -1000.0
+[reaction.rate]
+vmax = 0.0004
+t_vmax = 298.15
+q10 = 1.0
+km = { GENERALIST = 1.0e-9 }
+
+[[reaction]]
+id = "turnover_opportunist"
+inputs = { OPPORTUNIST = 1 }
+outputs = { DET = 1 }
+catalyst = "guild:OPPORTUNIST"
+enthalpy = -1000.0
+[reaction.rate]
+vmax = 0.0004
+t_vmax = 298.15
+q10 = 1.0
+km = { OPPORTUNIST = 1.0e-9 }
+
+[[reaction]]
+id = "turnover_bloomer"
+inputs = { BLOOMER = 1 }
+outputs = { DET = 1 }
+catalyst = "guild:BLOOMER"
+enthalpy = -1000.0
+[reaction.rate]
+vmax = 0.0004
+t_vmax = 298.15
+q10 = 1.0
+km = { BLOOMER = 1.0e-9 }
+
+# Background remineralisation releases carbon dioxide and chemical heat.
+[[reaction]]
+id = "detritus_respiration"
+inputs = { DET = 1, O2 = 1 }
+outputs = { CO2 = 1, WATER = 1 }
+catalyst = ""
+enthalpy = -498340.0
+[reaction.rate]
+vmax = 0.00002
+t_vmax = 298.15
+q10 = 1.0
+km = { DET = 0.01, O2 = 0.01 }
+
+[[field]]
+id = "enthalpy"
+lod = 2
+thermal_diffusivity = 1.4e-7
+t_min = 273.15
+t_max = 323.15
+
+[[process]]
+id = "diffusion"
+enabled = true
+
+[[process]]
+id = "reactions"
+enabled = true
+
+[[process]]
+id = "velocity_field"
+enabled = false
+
+[[process]]
+id = "advection"
+enabled = false
+
+[[process]]
+id = "external_channels"
+enabled = false
+
+# Resources begin on opposing sides. Every ecotype starts present with seeded
+# spatial heterogeneity; selection and reproduction mutations then change shares.
+[initial.layer]
+WATER = "uniform"
+FOOD = "sediment"
+O2 = "water"
+CO2 = "uniform"
+DET = "sediment"
+HARVESTER = "sediment"
+FORAGER = "sediment"
+GENERALIST = "sediment"
+OPPORTUNIST = "sediment"
+BLOOMER = "sediment"

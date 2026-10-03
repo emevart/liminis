@@ -176,7 +176,7 @@ molar_mass = 1.007940
 diffusivity = 9.3e-9        # the Grotthuss mechanism; six substeps, the worst
                             # case of the registry
 typical_conc = 1.0e-4       # pH 7
-max_conc = 5.0e-4           # pH 5, and this is a hard ceiling on the run rather
+max_conc = 1.0e-2           # ADR-078: includes the transported reaction product.
                             # than an estimate: crossing it stops the run
                             # (ADR-041)
 partial_molar_volume = 0.0  # exactly zero on the conventional single-ion scale
@@ -239,41 +239,11 @@ t_max = 323.15
 id = "diffusion"
 enabled = true
 
-# OFF, and not by choice. The temperature is no longer the reason: the operator
-# exists — `T = T_ref + H / sum(n_i * c_p_i)` over the composition of the coarse
-# cell (ADR-044, ADR-062) — and the world allocates the buffers it writes. This
-# is the scenario that pays for the c_p note at the top of this file: WATER,
-# SO4 at -293 J/(mol K) and H_ION at exactly zero all reach that denominator, and
-# they reach it with their signs.
-#
-# The ledger is no longer the reason, and A-19 is closed. Matter: ADR-080 gave
-# the residual its second term — the kernel reports how far each reaction ran and
-# the host reduces it — so `Ledger::assert_closed` no longer panics on a reacting
-# tick. Energy: ADR-081 put the chemical energy of the substances into the
-# *left*-hand side, `H_field + sum_s w_s * n_s`, so a reaction stops being a
-# source and becomes a transfer between two forms of one quantity; the identity
-# closes by construction, no channel for the heat of reaction is invented, and
-# `nu_E` is stated in the direction of the field — positive for an exothermic
-# record, so burning sulfide now warms the water. The sign lives in the loader
-# and in one place only.
-#
-# What blocks step `h` is the dispatch wiring, and it is wiring nobody has
-# decided yet: `Tick::new` folds no reaction operator, no energy fold and no
-# temperature operator, and no record says whether their three per-voxel buffers
-# come from `Scratch` or from `World`. Turning this on today does not start the
-# chemistry — the process refuses to build a tick at all, naming exactly that.
-#
-# And when the wiring lands, this flag is still a decision of its own rather than
-# a convenience: ADR-081 says in as many words that `react::ENABLED_BY_DEFAULT`
-# stays `false` and this line stays `enabled = false`, because flipping either
-# changes every run in the repository at once, under the guard of ADR-020, and is
-# worth its own entry in DECISIONS.md with its own version bump.
-# Everything else the reaction needs is already here and already validated: the
-# stoichiometry balances by element and by mass, the declared enthalpy agrees
-# with the formation enthalpies to a part in a million, and the scales resolve.
+# Chemistry is enabled after the runtime ceiling guard (ADR-088).
+# Extents are reduced for the matter ledger in both debug and release builds.
 [[process]]
 id = "reactions"
-enabled = false
+enabled = true
 
 # OFF for the same reason one layer along: step `j` has nothing to write. The
 # exchange face is refused (see [boundary] above), there are no events in this

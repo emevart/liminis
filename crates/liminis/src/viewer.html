@@ -1,4 +1,41 @@
 <!doctype html>
+<!--
+Inline control icons: Lucide, https://github.com/lucide-icons/lucide
+
+ISC License
+Copyright (c) 2026 Lucide Icons and Contributors
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+The download icon is derived from Feather:
+The MIT License (MIT)
+Copyright (c) 2013-present Cole Bemis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -114,6 +151,7 @@
       * {
         box-sizing: border-box;
       }
+      [hidden] { display:none !important; }
 
       html,
       body {
@@ -508,6 +546,8 @@
         height: auto;
         padding: 0.5rem 1.25rem;
       }
+      .offline[data-open="0"] { display:none; }
+      .offline[data-open="1"] { display:block; }
 
       @media (max-width: 900px) {
         .panels {
@@ -526,13 +566,123 @@
           transition: none !important;
         }
       }
+
+      /* The living-world observer is deliberately dark and dense: the world is
+         the page, while controls and measurements sit at its edges. */
+      :root,
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --surface: #111614;
+        --plane: #090d0c;
+        --ink: #edf2ee;
+        --ink-2: #c3cec7;
+        --muted: #84928a;
+        --rule: #27312c;
+        --axis: #3d4a43;
+        --grid: #1c2521;
+        --ring: rgba(222, 239, 229, 0.14);
+        --ok: #54c99a;
+        --critical: #ff706b;
+      }
+      .micro { letter-spacing: 0; }
+
+      .shell {
+        width: 100%;
+        max-width: none;
+        border: 0;
+        grid-template-rows: 56px auto minmax(0, 1fr) auto;
+        padding-bottom:58px;
+      }
+      .masthead { padding: 0 18px; background: rgba(13,18,16,.96); align-items: center; }
+      .wordmark { font-size: 19px; }
+      .scenario { color: #a8d6c0; }
+      .live-mark { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:11px; margin-left:8px; }
+      .live-dot { width:7px; height:7px; border-radius:50%; background:var(--muted); }
+      .live-mark[data-live="1"] .live-dot { background:#55d6a1; box-shadow:0 0 12px rgba(85,214,161,.7); }
+      .panels { grid-template-columns:minmax(0, 1fr); background:var(--plane); }
+      .panels[data-volume="1"] { grid-template-columns:minmax(500px, 1.3fr) minmax(340px, .7fr); }
+      .panels[data-volume="0"] .specimen { display:none; }
+      .specimen { min-height:430px; overflow:hidden; order:2; border-right:0; border-left:1px solid var(--rule); }
+      .field-overlay { position:absolute; z-index:3; top:16px; left:16px; right:16px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; pointer-events:none; }
+      .field-overlay .chips { pointer-events:auto; max-width:70%; }
+      .field-overlay .chip { background:rgba(9,13,12,.76); backdrop-filter:blur(8px); }
+      .observer { min-width:0; min-height:0; display:grid; grid-template-rows:minmax(520px,65vh) 220px auto; overflow:auto; background:#0e1311; order:1; }
+      .instrument { position:relative; min-height:0; padding:12px 14px; border-bottom:1px solid var(--rule); }
+      .instrument.culture { display:grid; grid-template-rows:auto auto minmax(0,1fr); }
+      .instrument-head { min-height:28px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+      .instrument-head strong { color:var(--ink-2); font-size:11px; font-weight:500; }
+      .instrument canvas { display:block; width:100%; height:calc(100% - 28px); min-height:120px; }
+      #microscope { image-rendering:pixelated; cursor:crosshair; }
+      .slice-control { display:flex; align-items:center; gap:8px; }
+      .slice-control input { width:96px; }
+      .metric-strip { display:grid; grid-template-columns:repeat(3,1fr); border-bottom:1px solid var(--rule); }
+      .metric { padding:10px 14px; border-right:1px solid var(--rule); min-width:0; }
+      .metric:last-child { border-right:0; }
+      .metric b { display:block; margin-top:2px; font:500 15px ui-monospace,SFMono-Regular,Menlo,monospace; overflow:hidden; text-overflow:ellipsis; }
+      .ecotypes { padding:9px 14px 13px; }
+      .culture .chips { margin:4px 0 8px; }
+      .eco-row { display:grid; grid-template-columns:minmax(88px,1fr) 2.2fr auto; align-items:center; gap:9px; padding:4px 0; font-size:11px; }
+      .eco-name { display:flex; align-items:center; gap:7px; min-width:0; }
+      .eco-name span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .eco-track { height:5px; background:#202925; overflow:hidden; }
+      .eco-fill { height:100%; }
+      .trait-mark { position:relative; height:18px; margin:8px 0 2px; border-bottom:1px solid var(--axis); }
+      .trait-pin { position:absolute; bottom:-1px; width:2px; min-height:3px; transform:translateX(-1px); }
+      .trait-labels { display:flex; justify-content:space-between; color:var(--muted); font-size:9px; }
+      .tip.micro-tip { position:fixed; z-index:20; }
+      .chemistry { display:none; }
+      .observer[data-mode="chemistry"] .ecology-only { display:none; }
+      .observer[data-mode="chemistry"] .chemistry { display:grid; min-height:100%; }
+      .readout { position:fixed; left:0; right:0; bottom:0; z-index:12; align-items:center; gap:18px; padding:9px 18px; background:rgba(12,16,15,.98); border-top:1px solid var(--rule); }
+      .residual { min-width:180px; }
+      .residual-note { display:none; }
+      .residual-value { font-size:15px; gap:12px; }
+      .controls { flex-wrap:nowrap; }
+      .icon-button { width:34px; height:32px; padding:0; display:grid; place-items:center; font-size:15px; }
+      .icon-button svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+      body[data-volume="0"] .volume-only { display:none; }
+      .speed-wrap { display:grid; grid-template-columns:auto 92px 38px; align-items:center; gap:7px; }
+      .seed-form { display:flex; align-items:center; gap:6px; padding-left:8px; border-left:1px solid var(--rule); }
+      .seed-form input { width:130px; min-width:70px; height:30px; color:var(--ink); background:#151b18; border:1px solid var(--rule); padding:0 7px; font:11px ui-monospace,monospace; }
+      .seed-form input:focus { outline:1px solid #7edbb5; border-color:#7edbb5; }
+      #theme, #table-toggle, .rail, .table-wrap { display:none; }
+      .stamp { z-index:3; color:#a2b2a9; }
+      @media (max-width:980px) {
+        .shell { height:auto; min-height:100%; grid-template-rows:auto auto auto auto; }
+        .masthead { min-height:56px; flex-wrap:wrap; padding:9px 14px; }
+        .identity { width:100%; margin-left:0; overflow:auto; }
+        .panels, .panels[data-volume="1"] { grid-template-columns:1fr; grid-template-rows:auto 300px; }
+        .panels[data-volume="0"] { grid-template-rows:auto; }
+        .observer { grid-row:1; min-height:820px; grid-template-rows:520px 190px auto; }
+        .specimen { grid-row:2; min-height:300px; border-left:0; border-top:1px solid var(--rule); }
+        .residual { display:none; }
+        .controls { width:100%; flex-wrap:wrap; overflow:visible; }
+      }
+      @media (max-width:620px) {
+        .panels { grid-template-rows:auto 240px; }
+        .panels[data-volume="0"] { grid-template-rows:auto; }
+        .observer { min-height:800px; grid-template-rows:500px 180px auto; }
+        .specimen { min-height:240px; }
+        .identity span:nth-child(2), .identity span:nth-child(3) { display:none; }
+        .field-overlay .chips { max-width:100%; }
+        .field-overlay .chip { font-size:10px; }
+        .stat { display:none; }
+        .seed-form input { width:92px; }
+        .field-overlay { top:10px; left:10px; right:10px; }
+        .field-overlay > .micro { display:none; }
+        .shell { padding-bottom:108px; }
+        .instrument { padding:10px; }
+        .culture .chip { padding:3px 6px; }
+      }
     </style>
   </head>
-  <body>
+  <body data-volume="0">
     <div class="shell">
       <header class="masthead">
         <h1 class="wordmark">Liminis</h1>
         <span class="scenario" id="scenario">—</span>
+        <span class="live-mark" id="live" data-live="0"><span class="live-dot"></span><span id="live-label">connecting</span></span>
+        <button class="icon-button" id="volume-toggle" aria-pressed="false" aria-label="Show 3D volume" title="Show 3D volume"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 8-9 5-9-5"/><path d="M3 8l9-5 9 5v8l-9 5-9-5Z"/><path d="M12 13v8"/></svg></button>
         <div class="identity num">
           <span>seed <b id="seed">—</b></span>
           <span>config <b id="hash">—</b></span>
@@ -545,7 +695,7 @@
         the current state.
       </div>
 
-      <div class="panels">
+      <div class="panels" id="panels" data-volume="0">
         <section class="specimen" id="specimen" aria-label="Volume">
           <canvas id="gl" tabindex="0" aria-label="Volume render. Drag to orbit, scroll to zoom."></canvas>
           <div class="fallback">
@@ -559,25 +709,54 @@
           <div class="stamp micro" id="stamp">—</div>
         </section>
 
-        <section class="reading" aria-label="Vertical profile">
-          <div class="reading-head">
-            <span class="micro">Vertical profile · mean over XY</span>
-            <span class="micro">each series ÷ its own max_conc</span>
+        <aside class="observer" id="observer" data-mode="ecology" aria-label="Ecology observer">
+          <section class="instrument culture ecology-only" aria-label="Horizontal biomass slice">
+            <div class="instrument-head">
+              <span class="micro" id="culture-label">Biomass</span>
+              <strong id="slice-scale" class="num">— mol/m³</strong>
+              <label class="slice-control micro">z <span id="slice-value" class="num">—</span><input id="slice" type="range" min="0" max="0" value="0" /></label>
+            </div>
+            <div class="chips" id="chips" role="group" aria-label="Ecotypes"></div>
+            <canvas id="microscope" aria-label="Horizontal voxel slice"></canvas>
+            <div class="tip micro-tip" id="micro-tip" role="status"></div>
+          </section>
+          <section class="instrument ecology-only" aria-label="Ecology history">
+            <div class="instrument-head">
+              <span class="micro">Ecology history · this session</span>
+              <strong><span id="history-span">0</span> ticks</strong>
+            </div>
+            <canvas id="timeline"></canvas>
+          </section>
+          <div class="ecology-only">
+            <div class="metric-strip">
+              <div class="metric"><span class="micro">Biomass</span><b id="biomass">—</b></div>
+              <div class="metric"><span class="micro">Diversity</span><b id="diversity">—</b></div>
+              <div class="metric"><span class="micro">Mean vmax</span><b id="mean-trait">—</b></div>
+            </div>
+            <div class="ecotypes">
+              <div class="micro">Ecotype abundance</div>
+              <div id="ecotype-list"></div>
+              <div class="micro" style="margin-top:8px">Inherited maximum growth rate · weighted share</div>
+              <div class="trait-mark" id="trait-mark"></div>
+              <div class="trait-labels num"><span id="trait-min">—</span><span>vmax</span><span id="trait-max">—</span></div>
+            </div>
           </div>
-          <div class="plot" id="plot">
-            <canvas id="profile"></canvas>
-            <div class="tip" id="tip" role="status" aria-live="polite"></div>
-          </div>
-          <div class="field-row">
-            <div class="chips" id="chips" role="group" aria-label="Fields"></div>
-            <button id="table-toggle" aria-pressed="false" aria-controls="table-wrap">
-              Table
-            </button>
-          </div>
-        </section>
+          <section class="reading chemistry" aria-label="Vertical chemistry profile">
+            <div class="reading-head">
+              <span class="micro">Vertical profile · mean over XY</span>
+              <span class="micro">each series / max concentration</span>
+            </div>
+            <div class="plot" id="plot">
+              <canvas id="profile"></canvas>
+              <div class="tip" id="tip" role="status" aria-live="polite"></div>
+            </div>
+            <div class="field-row"><span class="micro">This scenario exposes chemistry fields only.</span></div>
+          </section>
+        </aside>
       </div>
 
       <div class="table-wrap" id="table-wrap" data-open="0">
+        <button id="table-toggle" type="button" aria-pressed="false" aria-controls="table-wrap">Table</button>
         <table id="table">
           <caption class="micro" style="text-align: left; padding: 0.5rem 0">
             Profile values, one row per depth layer
@@ -607,18 +786,18 @@
           <div class="micro">Ticks / s</div>
           <div class="stat-value num" id="tps">0</div>
         </div>
-        <div class="stat">
+        <div class="stat volume-only">
           <div class="micro">Depth slab</div>
           <div class="stat-value num" id="slab">full</div>
         </div>
 
         <div class="controls">
-          <button id="play" aria-pressed="false">Run</button>
-          <button id="step">Step</button>
-          <label class="micro" for="speed">Speed</label>
-          <input id="speed" type="range" min="1" max="200" value="30" />
-          <label class="micro" for="clip">Slab</label>
-          <input id="clip" type="range" min="0" max="100" value="100" />
+          <button class="icon-button" id="play" aria-pressed="false" aria-label="Run simulation" title="Run"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>
+          <button class="icon-button" id="step" aria-label="Advance one tick" title="Step"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><path d="M19 5v14"/></svg></button>
+          <div class="speed-wrap"><label class="micro" for="speed">speed</label><input id="speed" type="range" min="1" max="200" value="30" /><span class="num" id="speed-value">30</span></div>
+          <label class="micro volume-only" for="clip">slab</label><input class="volume-only" id="clip" type="range" min="2" max="100" value="100" title="Visible depth slab" />
+          <form class="seed-form" id="seed-form"><label class="micro" for="reset-seed">seed</label><input id="reset-seed" inputmode="numeric" pattern="[0-9]+" autocomplete="off" aria-label="Restart seed" /><button class="icon-button" type="submit" aria-label="Restart with seed" title="Restart with seed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-7.7L3 7"/><path d="M3 3v4h4"/></svg></button></form>
+          <button class="icon-button" id="export" type="button" aria-label="Export observation" title="Export observation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg></button>
           <button id="theme" aria-label="Switch theme">Theme</button>
         </div>
       </footer>
@@ -674,12 +853,25 @@
         return r.json();
       }
 
+      async function getEcology(z) {
+        const suffix = Number.isInteger(z) ? `?z=${z}` : "";
+        const r = await fetch(`/api/ecology${suffix}`, { cache: "no-store" });
+        if (r.status === 404) return null;
+        if (!r.ok) throw new Error(`ecology: ${r.status}`);
+        return r.json();
+      }
+
       async function control(action, value) {
-        await fetch("/api/control", {
+        const payload = { action };
+        if (action === "reset") payload.seed = String(value);
+        else if (value !== undefined) payload.value = value;
+        const r = await fetch("/api/control", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ action, value }),
+          body: JSON.stringify(payload),
         });
+        if (!r.ok) throw new Error(`control ${action}: ${r.status}`);
+        return r;
       }
 
       // ---------------------------------------------------------------------
@@ -699,6 +891,10 @@
         distance: 3.1,
         clip: 1,
         hoverZ: null,
+        ecology: null,
+        history: [],
+        sliceZ: null,
+        hoverCell: null,
         connected: true,
         everConnected: false,
       };
@@ -1019,7 +1215,7 @@
         const colours = new Float32Array(12);
         const gains = new Float32Array(4);
         shown.forEach((fld, k) => {
-          const c = rgb(css(fld.slot));
+          const c = rgb(fld.color || css(fld.slot));
           colours.set(c, k * 3);
           // A texture sample is already normalised to [0,1] — the byte was
           // divided by 255 by the sampler. Dividing again here is the bug that
@@ -1221,6 +1417,160 @@
           .join("");
       }
 
+      const number = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+      const formatSI = (value, digits = 3) => {
+        const n = number(value);
+        if (n === 0) return "0";
+        const a = Math.abs(n);
+        if (a >= 1e6 || a < 1e-3) return n.toExponential(2);
+        return n.toLocaleString("en-US", { maximumSignificantDigits: digits });
+      };
+      const hexRgb = (hex) => {
+        const clean = String(hex || "#7fa08e").replace("#", "");
+        const n = parseInt(clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean, 16);
+        return Number.isFinite(n) ? [(n >> 16) & 255, (n >> 8) & 255, n & 255] : [127, 160, 142];
+      };
+      function prepareCanvas(canvas) {
+        const dpr = Math.min(devicePixelRatio || 1, 2);
+        const w = Math.max(1, canvas.clientWidth), h = Math.max(1, canvas.clientHeight);
+        canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+        const ctx = canvas.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { ctx, w, h };
+      }
+
+      function drawMicroscope() {
+        const e = view.ecology;
+        if (!e || !Array.isArray(e.cells)) return;
+        const canvas = el("microscope");
+        const { ctx, w, h } = prepareCanvas(canvas);
+        ctx.fillStyle = "#080c0a"; ctx.fillRect(0, 0, w, h);
+        const nx = number(e.grid?.nx, view.state?.grid?.nx || 1);
+        const ny = number(e.grid?.ny, view.state?.grid?.ny || 1);
+        const side = Math.min(w / nx, h / ny);
+        const ox = (w - nx * side) / 2, oy = (h - ny * side) / 2;
+        const positive = e.cells.map((c) => number(c.biomass)).filter((v) => v > 0).sort((a,b) => a-b);
+        const scale = positive.length ? positive[Math.min(positive.length - 1, Math.floor(positive.length * .95))] : 1;
+        const colors = (e.ecotypes || []).map((x) => hexRgb(x.color));
+        const enabled = new Set(view.fields.filter((f) => f.on).map((f) => f.id));
+        for (const cell of e.cells) {
+          const biomass = number(cell.biomass);
+          const shares = Array.isArray(cell.shares) ? cell.shares : [];
+          const active = shares.map((share, i) => ({ i, share: enabled.has(e.ecotypes?.[i]?.id) ? Math.max(0, number(share)) : 0 }));
+          const sum = active.reduce((total, part) => total + part.share, 0);
+          if (biomass <= 0 || sum <= 0) continue;
+          const dominant = active.reduce((best, part) => part.share > best.share ? part : best, active[0] || { i:0, share:0 });
+          const ratio = Math.min(1, biomass / Math.max(scale, 1e-30));
+          const glyph = side * .86 * Math.sqrt(ratio);
+          const gw = Math.max(1.5, glyph * 1.22), gh = Math.max(1.3, glyph * .64);
+          const x = number(cell.x), y = number(cell.y);
+          const cx = ox + (x + .5) * side, cy = oy + (ny - y - .5) * side;
+          const angle = (((x * 37 + y * 17) % 11) - 5) * .035;
+          const rgb = colors[dominant.i] || [120,150,135];
+          ctx.save();
+          ctx.translate(cx, cy); ctx.rotate(angle);
+          ctx.globalAlpha = .48 + .48 * Math.sqrt(ratio);
+          ctx.beginPath(); ctx.roundRect(-gw/2, -gh/2, gw, gh, gh/2);
+          ctx.fillStyle = `rgb(${rgb.join(",")})`; ctx.fill();
+          ctx.clip();
+          let bandX = -gw/2;
+          for (const part of active) {
+            if (part.share <= 0) continue;
+            const bandW = gw * part.share / sum;
+            const c = colors[part.i] || [120,150,135];
+            ctx.fillStyle = `rgb(${c.join(",")})`;
+            ctx.fillRect(bandX, -gh*.14, bandW+.25, gh*.28);
+            bandX += bandW;
+          }
+          ctx.globalAlpha = .34;
+          ctx.strokeStyle = "#f4fff8"; ctx.lineWidth = Math.max(.45, side*.035);
+          ctx.beginPath(); ctx.roundRect(-gw/2, -gh/2, gw, gh, gh/2); ctx.stroke();
+          ctx.restore();
+        }
+        ctx.strokeStyle = "rgba(190,220,204,.25)"; ctx.strokeRect(ox+.5, oy+.5, nx*side-1, ny*side-1);
+        el("slice-scale").textContent = `0–${formatSI(scale)} mol/m³ · p95`;
+        const dx = number(e.grid?.dx, view.state?.grid?.dx);
+        const sample = dx < 1e-3 ? `${formatSI(dx * 1e6)} µm` : dx < 1 ? `${formatSI(dx * 1e3)} mm` : `${formatSI(dx)} m`;
+        el("culture-label").textContent = `Biomass · ${sample} samples`;
+        view.sliceGeometry = { ox, oy, side, nx, ny };
+      }
+
+      function recordHistory() {
+        const e = view.ecology;
+        if (!e || !Array.isArray(e.ecotypes)) return;
+        const last = view.history.at(-1);
+        if (last && number(e.tick) < last.tick) view.history = [];
+        if (view.history.at(-1)?.tick === number(e.tick)) return;
+        view.history.push({
+          tick: number(e.tick), biomass: number(e.metrics?.biomass_mol),
+          shares: Object.fromEntries(e.ecotypes.map((x) => [x.id, number(x.share)])),
+        });
+        if (view.history.length > 360) view.history.splice(0, view.history.length - 360);
+      }
+
+      function drawTimeline() {
+        const canvas = el("timeline");
+        const { ctx, w, h } = prepareCanvas(canvas);
+        const data = view.history, eco = view.ecology?.ecotypes || [];
+        ctx.clearRect(0, 0, w, h);
+        const p = { l:42, r:10, t:10, b:23 }, iw=w-52, ih=h-33;
+        ctx.strokeStyle = "#28342e"; ctx.lineWidth=1;
+        for (let i=0;i<=4;i++) { const y=p.t+ih*i/4+.5; ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(w-p.r,y);ctx.stroke(); }
+        if (!data.length) return;
+        const xAt = (i) => p.l + (data.length === 1 ? iw : i*iw/(data.length-1));
+        let lower = data.map(() => 0);
+        eco.forEach((ec) => {
+          ctx.beginPath(); ctx.moveTo(xAt(0), p.t+ih);
+          data.forEach((d,i) => { const top=lower[i]+number(d.shares[ec.id]); ctx.lineTo(xAt(i), p.t+ih*(1-Math.min(1,top))); });
+          for (let i=data.length-1;i>=0;i--) ctx.lineTo(xAt(i),p.t+ih*(1-Math.min(1,lower[i])));
+          ctx.closePath(); ctx.fillStyle=ec.color || "#7fa08e"; ctx.globalAlpha=.64; ctx.fill(); ctx.globalAlpha=1;
+          lower = lower.map((v,i) => v+number(data[i].shares[ec.id]));
+        });
+        const maxBio = Math.max(...data.map((d)=>d.biomass), 1e-30);
+        ctx.beginPath(); data.forEach((d,i)=>{ const y=p.t+ih*(1-d.biomass/maxBio); i?ctx.lineTo(xAt(i),y):ctx.moveTo(xAt(i),y); });
+        ctx.strokeStyle="#e9f2ed";ctx.lineWidth=1.5;ctx.stroke();
+        ctx.fillStyle="#829188";ctx.font="9px ui-monospace,monospace";
+        ctx.fillText("100%",4,p.t+4);ctx.fillText("0",26,p.t+ih+3);
+        ctx.fillText(String(data[0].tick),p.l,h-5);
+        const last=String(data.at(-1).tick);ctx.fillText(last,w-p.r-ctx.measureText(last).width,h-5);
+        ctx.fillStyle="#dce8e1";ctx.fillText(`biomass ${formatSI(data.at(-1).biomass)} mol`,p.l+5,p.t+12);
+        el("history-span").textContent = Math.max(0, data.at(-1).tick-data[0].tick).toLocaleString("en-US");
+      }
+
+      function renderEcology() {
+        const e = view.ecology;
+        if (!e || !e.ecotypes?.length) {
+          el("observer").dataset.mode = "chemistry";
+          el("volume-toggle").hidden = false;
+          return;
+        }
+        el("volume-toggle").hidden = true;
+        el("volume-toggle").setAttribute("aria-pressed", "false");
+        el("panels").dataset.volume = "0";
+        document.body.dataset.volume = "0";
+        el("observer").dataset.mode = "ecology";
+        const metrics=e.metrics || {}, ecotypes=e.ecotypes || [];
+        el("biomass").textContent=`${formatSI(metrics.biomass_mol)} mol`;
+        el("diversity").textContent=formatSI(metrics.diversity,3);
+        el("mean-trait").textContent=formatSI(metrics.mean_vmax,3);
+        const list=el("ecotype-list"); list.textContent="";
+        ecotypes.forEach((ec)=>{
+          const row=document.createElement("div");row.className="eco-row";
+          const name=document.createElement("span");name.className="eco-name";
+          const sw=document.createElement("span");sw.className="swatch";sw.style.background=ec.color;
+          const label=document.createElement("span");label.textContent=ec.label || ec.id;name.append(sw,label);
+          const track=document.createElement("span");track.className="eco-track";
+          const fill=document.createElement("span");fill.className="eco-fill";fill.style.width=`${Math.max(0,Math.min(100,number(ec.share)*100))}%`;fill.style.background=ec.color;track.append(fill);
+          const val=document.createElement("span");val.className="num";val.textContent=`${(number(ec.share)*100).toFixed(1)}%`;
+          row.append(name,track,val);list.append(row);
+        });
+        const traits=ecotypes.map((x)=>number(x.vmax));
+        const lo=Math.min(...traits), hi=Math.max(...traits), span=Math.max(hi-lo,1e-12);
+        const mark=el("trait-mark");mark.textContent="";
+        ecotypes.forEach((ec)=>{const pin=document.createElement("span");pin.className="trait-pin";pin.style.left=`${(number(ec.vmax)-lo)/span*100}%`;pin.style.height=`${3+number(ec.share)*15}px`;pin.style.background=ec.color;pin.title=`${ec.label || ec.id}: vmax ${formatSI(ec.vmax)}, share ${(number(ec.share)*100).toFixed(1)}%`;mark.append(pin);});
+        el("trait-min").textContent=Number.isFinite(lo)?formatSI(lo):"—";el("trait-max").textContent=Number.isFinite(hi)?formatSI(hi):"—";
+        drawMicroscope(); recordHistory(); drawTimeline();
+      }
+
       // ---------------------------------------------------------------------
       // Wiring.
       // ---------------------------------------------------------------------
@@ -1233,11 +1583,14 @@
           b.className = "chip";
           b.type = "button";
           b.setAttribute("aria-pressed", String(f.on));
-          b.innerHTML = `<span class="swatch" style="background:var(${f.slot})"></span>${f.label}`;
+          b.innerHTML = `<span class="swatch" style="background:${f.color || `var(${f.slot})`}"></span>${f.label}`;
           b.addEventListener("click", async () => {
             f.on = !f.on;
             b.setAttribute("aria-pressed", String(f.on));
-            await refreshFrames();
+            if (el("observer").dataset.mode === "chemistry" || el("panels").dataset.volume === "1") {
+              await refreshFrames();
+            }
+            drawMicroscope();
           });
           chips.appendChild(b);
         });
@@ -1273,7 +1626,18 @@
         el("tick").textContent = (s.tick ?? 0).toLocaleString("en-US");
         el("tps").textContent = (s.ticks_per_second ?? 0).toFixed(1);
         el("play").setAttribute("aria-pressed", String(!!s.running));
-        el("play").textContent = s.running ? "Pause" : "Run";
+        el("play").innerHTML = s.running
+          ? '<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="4" height="16" x="6" y="4" rx="1"/><rect width="4" height="16" x="14" y="4" rx="1"/></svg>'
+          : '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>';
+        el("play").setAttribute("aria-label", s.running ? "Pause simulation" : "Run simulation");
+        el("play").title = s.running ? "Pause" : "Run";
+        el("live").dataset.live = String(s.running && s.alive !== false ? 1 : 0);
+        el("live-label").textContent = s.error ? "simulation error" : s.alive === false ? "stopped" : s.running ? "evolving" : "paused";
+        if (document.activeElement !== el("reset-seed")) el("reset-seed").value = s.seed ?? "";
+        if (Number.isFinite(s.target_tps)) {
+          el("speed").value = String(Math.max(1, Math.min(200, s.target_tps)));
+          el("speed-value").textContent = String(Math.round(s.target_tps));
+        }
 
         // A zero here means "the check ran and it closed". When no state has
         // arrived there is no check to report, and printing zero would be the
@@ -1330,24 +1694,40 @@
       async function poll() {
         try {
           view.state = await getState();
+          const grid = view.state.grid || {};
+          if (view.sliceZ === null) view.sliceZ = Math.floor(number(grid.nz, 1) / 2);
+          view.sliceZ = Math.max(0, Math.min(number(grid.nz, 1) - 1, view.sliceZ));
+          el("slice").max = String(Math.max(0, number(grid.nz, 1) - 1));
+          el("slice").value = String(view.sliceZ);
+          el("slice-value").textContent = String(view.sliceZ);
+          try { view.ecology = await getEcology(view.sliceZ); }
+          catch (ecologyError) { console.warn(ecologyError); view.ecology = null; }
           if (!view.connected) {
             view.connected = true;
             el("offline").dataset.open = "0";
           }
           view.everConnected = true;
           if (!view.fields.length) {
-            view.fields = (view.state.fields || []).map((f, i) => ({
+            const ecoById = new Map((view.ecology?.ecotypes || view.state.ecology || []).map((e) => [e.id, e]));
+            const source = view.ecology?.ecotypes?.length
+              ? view.ecology.ecotypes.map((e) => ({ ...(view.state.fields || []).find((f) => f.id === e.id), ...e }))
+              : (view.state.fields || []);
+            view.fields = source.map((f, i) => ({
               id: f.id,
               label: f.label || f.id,
               unit: f.unit || "",
               max: f.max || 1,
+              color: f.color || ecoById.get(f.id)?.color,
               slot: SLOTS[i % SLOTS.length],
-              on: i < 2,
+              on: true,
             }));
             renderChips();
           }
           renderReadout();
-          await refreshFrames();
+          renderEcology();
+          if (!view.ecology?.ecotypes?.length || el("panels").dataset.volume === "1") {
+            await refreshFrames();
+          }
         } catch {
           const everConnected = view.everConnected;
           view.connected = false;
@@ -1367,6 +1747,8 @@
             "Nothing to report: the simulator is not answering, so no tick is being accounted for.";
           el("tick").textContent = "—";
           el("tps").textContent = "—";
+          el("live").dataset.live = "0";
+          el("live-label").textContent = "disconnected";
 
           // Paint something, even if it is only the plane. Reaching here
           // without drawing leaves an unpainted canvas, and an unpainted canvas
@@ -1457,13 +1839,14 @@
       })();
 
       el("play").addEventListener("click", async () => {
-        await control(view.state?.running ? "pause" : "play");
+        await control(view.state?.running ? "pause" : "run");
         await poll();
       });
       el("step").addEventListener("click", async () => {
         await control("step");
         await poll();
       });
+      el("speed").addEventListener("input", (e) => { el("speed-value").textContent = e.target.value; });
       el("speed").addEventListener("change", (e) => control("speed", Number(e.target.value)));
       el("clip").addEventListener("input", (e) => {
         view.clip = Number(e.target.value) / 100;
@@ -1482,11 +1865,59 @@
         drawVolume();
         drawProfile();
       });
+      el("slice").addEventListener("input", (e) => {
+        view.sliceZ = Number(e.target.value);
+        el("slice-value").textContent = e.target.value;
+      });
+      el("slice").addEventListener("change", () => poll());
+      el("seed-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const seed = el("reset-seed").value.trim();
+        if (!/^\d+$/.test(seed)) { el("reset-seed").setCustomValidity("Enter a non-negative integer seed"); el("reset-seed").reportValidity(); return; }
+        el("reset-seed").setCustomValidity("");
+        await control("reset", seed);
+        view.history = []; view.volumes.clear(); view.profiles.clear();
+        await poll();
+      });
+      el("export").addEventListener("click", () => {
+        if (!view.ecology) return;
+        const link = document.createElement("a");
+        link.href = `/api/ecology?z=${view.sliceZ ?? view.ecology.slice_z ?? 0}&download=1`;
+        link.download = "living-world-observation.json";
+        link.click();
+      });
+
+      (function microscopeHover() {
+        const canvas=el("microscope"), tip=el("micro-tip");
+        canvas.addEventListener("pointermove", (event) => {
+          const g=view.sliceGeometry,e=view.ecology;if(!g||!e)return;
+          const r=canvas.getBoundingClientRect();
+          const x=Math.floor((event.clientX-r.left-g.ox)/g.side);
+          const y=g.ny-1-Math.floor((event.clientY-r.top-g.oy)/g.side);
+          const cell=(e.cells||[]).find((c)=>number(c.x)===x&&number(c.y)===y);
+          if(!cell){tip.dataset.open="0";return;}
+          const ec=(e.ecotypes||[])[cell.dominant];
+          tip.textContent=`voxel ${x},${y},${e.slice_z} · biomass ${formatSI(cell.biomass)} mol/m³ · ${ec?.label || "no dominant type"} · resource ${formatSI(cell.resource)} mol/m³ · O2 ${formatSI(cell.oxygen)} mol/m³`;
+          tip.style.left=`${Math.min(innerWidth-320,event.clientX+14)}px`;tip.style.top=`${Math.min(innerHeight-50,event.clientY+14)}px`;tip.dataset.open="1";
+        });
+        canvas.addEventListener("pointerleave",()=>{tip.dataset.open="0";});
+      })();
+      el("volume-toggle").addEventListener("click", (event) => {
+        const open = el("panels").dataset.volume === "1";
+        el("panels").dataset.volume = open ? "0" : "1";
+        document.body.dataset.volume = open ? "0" : "1";
+        event.currentTarget.setAttribute("aria-pressed", String(!open));
+        event.currentTarget.setAttribute("aria-label", open ? "Show 3D volume" : "Hide 3D volume");
+        event.currentTarget.title = open ? "Show 3D volume" : "Hide 3D volume";
+        requestAnimationFrame(() => { drawVolume(); drawMicroscope(); drawTimeline(); });
+      });
 
       addEventListener("resize", () => {
         drawVolume();
         drawProfile();
         drawRail();
+        drawMicroscope();
+        drawTimeline();
       });
 
       drawVolume();

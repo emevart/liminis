@@ -114,6 +114,79 @@ pub const fn run_key(seed: u64) -> u32 {
     mix(lo ^ mix(hi))
 }
 
+/// A name as a counter: an arbitrary UTF-8 string folded into one `u32`
+/// (ADR-090).
+///
+/// `reaction_id` is the third counter of [`rand`], and ADR-027 fixes where it
+/// comes from — the *name* of the reaction, never its position in the file.
+/// This is the function that does it, and it lives next to [`run_key`] rather
+/// than beside its caller in `config/derive.rs` for two reasons that are not
+/// taste. The ADR-020 guard in CI covers this file and does not cover
+/// `config/derive.rs`, so a fold living there would be the only world semantics
+/// in the project without a guard: change one constant of it and every draw of
+/// every run changes, and the pull request still passes green. And [`mix`] is
+/// private — a fold in any other file has to make the mixer callable from
+/// everywhere, which is to undo the one thing it is.
+///
+/// The chain starts at `mix(START)`, not at `START`, and that round is the
+/// whole reason the length of the name is not folded at all. Folding it in
+/// first (Merkle-Damgard strengthening) buys exactly one thing here — an empty
+/// name stops coming out as `START` — and the initial round buys the same thing
+/// for free. So the length lives only in the loop condition and no `usize` ever
+/// reaches `h`: `name.len() as u32` is the single place where the word width of
+/// the host could enter world semantics, and there is nothing here for it to
+/// enter. Nothing is lost by leaving it out, because every byte arrives through
+/// a round of its own, so a name and its prefix diverge at the first extra
+/// round.
+///
+/// Bytes, not `chars`. On ASCII the two agree byte for byte; they part on the
+/// day somebody names a reaction outside Latin script, where a `char` is a code
+/// point above 255 and a different value enters the round. Nothing would fail
+/// then — no load error, no residual — the run would just be a different run,
+/// reproducibly. Two things stand in the way of that, and the first is the
+/// signature above: `chars()` is not a `const` method, so the swap does not
+/// compile at all while this is a `const fn` (E0015) — the stronger guard of
+/// the two, because it fires on every name rather than on the non-ASCII ones.
+/// The second is for the day someone drops the `const` to make it compile, and
+/// it is a name outside ASCII in the anchor test: 581_524_112 by bytes against
+/// 3_550_296_139 by code points.
+///
+/// One round per byte rather than one per 32-bit word: the word form saves
+/// `(13 - 4) * 12 = 108` operations once per run and costs two conventions the
+/// byte form does not have at all — byte order within the word, and a rule for
+/// padding the tail. Both are classic places for a silent divergence, and a
+/// fold read by a second implementer has to carry both verbatim.
+///
+/// Zero is a legal result for a real name and gets no special case. `| 1`, or a
+/// substitute constant, would move the `rid` of exactly one name in 2^32 and
+/// there is nothing to protect: the third counter enters `rand` through a round
+/// of its own, so `rand(0, 0, 0, 0)` is not zero either
+/// (`zero_counters_do_not_give_zero`).
+///
+/// Like the mixer it is made of, this is world semantics. Change it and every
+/// reaction's `rid` changes, therefore every stochastic rounding of extent
+/// (ADR-027), therefore every run — a `WORLD_FORMAT_VERSION` event (ADR-020),
+/// which is why this file is under the guard and why the anchors in
+/// `the_name_fold_is_the_same_fold_it_was` are not numbers to re-bless.
+pub const fn name_key(name: &str) -> u32 {
+    let b = name.as_bytes();
+    let mut h = mix(START);
+    let mut i = 0;
+    // The length is read here and nowhere else. `while` rather than an iterator
+    // chain because this is a `const fn`, for the same reason `run_key` is one:
+    // a fold that cannot run at compile time is a fold that could reach for
+    // something non-deterministic (ADR-090, cross-platform reproducibility).
+    while i < b.len() {
+        // `h ^ b[i]` *inside* the round, not outside it. Under
+        // `mix(h) ^ b[i] as u32` the last byte of a name passes through no
+        // avalanche at all, and two names differing only in their last byte
+        // come out one xor apart — uniform, unbiased, and correlated.
+        h = mix(h ^ b[i] as u32);
+        i += 1;
+    }
+    h
+}
+
 /// A uniform `u32` from four counters.
 ///
 /// The canonical call sites are `(voxel_idx, tick, reaction_id, run_key)` for
@@ -252,6 +325,129 @@ mod tests {
         // asymmetric nesting buys. Under `mix(lo) ^ mix(hi)` these two seeds
         // both come out as 4_126_714_175.
         assert_ne!(run_key(0x2_0000_0001), run_key(0x1_0000_0002));
+    }
+
+    /// ADR-090 names this test in its decision text, because a rule without a
+    /// test name is not a criterion. The anchor below asserts the same value
+    /// among its own, so the empty name has two witnesses and losing this one
+    /// would not leave the rule bare — what would go is the reason, which lives
+    /// here: the chain starts at `mix(START)`, and starting it at `START`
+    /// instead is one character shorter, reads the same way and compiles.
+    #[test]
+    fn the_empty_name_folds_to_a_fixed_nonzero_id() {
+        assert_eq!(name_key(""), 4_249_023_594);
+
+        // Nonzero, because the chain starts from the mixer's start constant and
+        // not from an empty accumulator: every step of `mix` maps zero to zero.
+        assert_ne!(name_key(""), 0);
+
+        // And not `START` itself, which is the assertion the test exists for.
+        // Under `let mut h = START;` the empty name comes out as 2_654_435_769:
+        // nonzero, hash-shaped, and indistinguishable from the right answer to
+        // any test that only asks for "nonzero" — while every `rid` in the
+        // project has moved. Folding the length in first (Merkle-Damgard
+        // strengthening) buys the same nonzero and costs a `usize`; ADR-090
+        // rejects it for that.
+        assert_ne!(name_key(""), START);
+    }
+
+    /// Anchors the fold, the way `the_stream_is_the_same_stream_it_was` anchors
+    /// the stream, and carries the same rule: these are not magic numbers to be
+    /// re-blessed when they stop matching. A changed value here means every
+    /// reaction's `rid` changed, therefore every stochastic rounding of extent
+    /// (ADR-027), therefore every run — a `WORLD_FORMAT_VERSION` event
+    /// (ADR-020), not a test to update.
+    ///
+    /// It goes red on any edit to `mix`, on a changed `START`, on folding the
+    /// length in, on a word-at-a-time fold, on `mix(h) ^ b` in place of
+    /// `mix(h ^ b)`, and on walking `chars()` instead of `as_bytes()` — the
+    /// last only for names outside ASCII, which is why the doc comment has to
+    /// say "bytes, not chars" as well as this test.
+    #[test]
+    fn the_name_fold_is_the_same_fold_it_was() {
+        assert_eq!(name_key(""), 4_249_023_594);
+
+        // The only reaction of the shipped scenario, thirteen bytes
+        // (`configs/scenarios/h2s-oxidation.toml:191`).
+        assert_eq!(name_key("h2s_oxidation"), 603_427_705);
+
+        // The witness for "bytes, not chars". Every other name in this file is
+        // ASCII, where the two readings agree byte for byte and the swap is
+        // invisible; here the acute is `0xC3 0xA9` and takes two rounds where a
+        // `char` would take one — fourteen bytes for thirteen code points — so
+        // folding `chars()` answers 3_550_296_139 instead.
+        //
+        // Second guard and not the first: `chars()` is not a `const` method, so
+        // the swap does not compile while `name_key` is a `const fn` (E0015).
+        // This line is what catches it on the day the `const` comes off, which
+        // is also the day the compiler stops catching it.
+        assert_eq!(name_key("hydrogénation"), 581_524_112);
+    }
+
+    #[test]
+    fn names_differing_in_one_byte_fold_to_unrelated_ids() {
+        // Avalanche on a single substituted byte is what makes this a fold
+        // rather than a sum, and it is not hygiene: neighbouring reaction names
+        // in a registry differ by one character more often than by anything
+        // else, and two names one character apart must not draw in step.
+        let base = "h2s_oxidation";
+        let key = name_key(base);
+        let bytes = base.as_bytes();
+
+        let mut count = 0u32;
+        let mut total = 0u32;
+        let mut min = 32u32;
+        let mut max = 0u32;
+
+        for (i, &original) in bytes.iter().enumerate() {
+            // The range has to stop at 127. A byte above 127 is not valid UTF-8
+            // on its own, and the obvious way round that — `char::from(v)` —
+            // encodes 128..=255 as *two* bytes: "replace one byte" would
+            // quietly become "lengthen the name", the substitution count would
+            // stop being 1651, and the statistic would measure a different
+            // property while staying inside the band below.
+            for v in 0..=127u8 {
+                if v == original {
+                    continue;
+                }
+                let mut probe = bytes.to_vec();
+                probe[i] = v;
+                let other = name_key(std::str::from_utf8(&probe).unwrap());
+
+                // Load-bearing, not hygiene: no neighbour may land on the key.
+                assert_ne!(other, key, "byte {i} set to {v} reproduces the key");
+
+                let d = (other ^ key).count_ones();
+                count += 1;
+                total += d;
+                min = min.min(d);
+                max = max.max(d);
+            }
+        }
+
+        // Thirteen positions by 127 alternative values.
+        assert_eq!(count, 1651);
+
+        // The Hamming distance between two unrelated 32-bit words is
+        // Binomial(32, 1/2): mean 16, sigma sqrt(8) = 2.828, so the mean over
+        // 1651 samples has sigma about 0.070 and this band is some seven of
+        // them — the same way the six-sigma band above and the chi-square
+        // threshold below were chosen. Observed: 16.094, minimum 7, maximum 26.
+        //
+        // The band, not the observation, is what is asserted. Under
+        // `h = mix(h) ^ b[i]` the last byte of a name passes through no round
+        // at all, the distance over the last position collapses towards 1, and
+        // the mean falls out of the band. This test is one of two witnesses of
+        // that mistake, and the only one that says what is wrong rather than
+        // that something is: the anchor above also goes red, because the
+        // outside-the-round fold answers 1_308_973_844 for `h2s_oxidation`. The
+        // sweep catches it only because it covers the last position.
+        let mean = f64::from(total) / f64::from(count);
+        assert!(
+            (15.5..=16.5).contains(&mean),
+            "mean Hamming distance {mean} over {count} single-byte substitutions \
+             (minimum {min}, maximum {max})"
+        );
     }
 
     #[test]

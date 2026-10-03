@@ -78,10 +78,9 @@
 //!
 //! # Which steps run today, and why the rest refuse
 //!
-//! Four of the nine are dispatched: the velocity field, advection, diffusion —
-//! the last two over all three transported fields of S0 (see above) — and
-//! settling, whose medium became a section of the scenario with ADR-085. The
-//! other five are refused by [`Tick::new`] when a roster enables them, each
+//! Velocity, advection, diffusion, settling and reactions are dispatched, with
+//! the energy fold paired with reactions. Advection and diffusion include all
+//! three transported fields. The remaining steps are refused by [`Tick::new`], each
 //! naming the number or the operator that is missing, rather than being skipped
 //! quietly:
 //!
@@ -89,8 +88,6 @@
 //! |---|---|
 //! | `a` light | the attenuator measure: `Light::new` wants a table of `Attenuator`, and what `conc_per_unit` multiplies is settled by no document (`TODO(attenuation-measure)`). Both locks of ADR-076 are gone — ADR-084 ratifies the `exchange` face as the sink, ADR-083 the counter width |
 //! | `e` pressure | five locks, and `theta_max` is no longer one of them (ADR-082 declares it): no owner for the overflow field and no `partial_molar_volume` or `Occupant` table in `Derived`; no behaviour on an `exchange` face; one-sidedness undecided; `energy: Conserved` standing on `TODO(enthalpy-of-transport)` |
-//! | `h` reactions | the dispatch wiring, and nothing else: both arches of the invariant closed with ADR-080 and ADR-081. `Tick::new` folds no operator for it and no record says where its three buffers live (`TODO(react-dispatch)`) |
-//! | `i'` fold | step `h`, which it is dispatched with or not at all |
 //! | `j` channels | three, and not the four this used to read: there are no events, `RADIATIVE_OUT` has no emissivity and `GEOTHERMAL_IN` no heat flux or vent composition. The sign of a counter left the list with ADR-084 |
 //!
 //! A refusal rather than a skip, because a skipped step is a different world that
@@ -403,17 +400,7 @@ pub struct Tick {
     n_voxels: u32,
     /// Cells of the enthalpy grid, for the shape of the other one.
     n_enthalpy_cells: u32,
-    /// Step `h`, folded when the roster enables it — which it cannot, today.
-    ///
-    /// `refuse_if_blocked` returns an error for an enabled `reactions` entry
-    /// before this line is reached, and it names the one lock that is left: the
-    /// mixer that folds a reaction's **name** into `Undeclared::reaction_id`.
-    /// ADR-027 fixes "from the name and never from the position" and names no
-    /// mixer, and `TODO(reaction-id)` in `kernels/react.rs` records that choosing
-    /// one is world semantics of the same standing as `numeric/rng.rs`. So this
-    /// is `None` on every roster that reaches [`Tick::new`], and the `Some` arm
-    /// arrives with the mixer rather than with the buffers — which is what
-    /// ADR-086 moved and ADR-088 will unlock.
+    /// Step `h`, with catalysts gathered from current registry biomass.
     react: Option<React>,
     /// Step `i'`, folded on every run.
     ///
@@ -433,6 +420,7 @@ pub struct Tick {
     n_reactions: u32,
     /// How many of those reactions name a catalyst.
     catalyst_columns: u32,
+    ceilings: Vec<(String, LaneRef, i128)>,
 }
 
 /// How many components the prescribed velocity field and its potentials hold per
@@ -471,6 +459,7 @@ const VELOCITY_COMPONENTS: u32 = 3;
 /// of different lengths.
 #[derive(Clone, Debug)]
 pub struct Scratch {
+    catalyst: Vec<Q>,
     /// Three Courant numbers per **fine** voxel, in the layout
     /// `kernels/advect.rs` reads. Written by the last stage of step `b`, read by
     /// step `c` of the same tick — which is what puts it here (ADR-086, closing
@@ -567,6 +556,7 @@ pub struct Scratch {
 /// else is.
 #[derive(Debug)]
 pub struct ScratchBuffers<'a> {
+    pub catalyst: &'a [Q],
     /// Three Courant numbers per fine voxel. See [`Scratch::face_courant`].
     pub face_courant: &'a [Q],
     /// Three per cell of the enthalpy grid.
@@ -601,6 +591,7 @@ pub struct ScratchBuffers<'a> {
 /// so that a process cannot reach a buffer it did not name (ADR-034).
 #[derive(Debug)]
 pub struct ScratchBuffersMut<'a> {
+    pub catalyst: &'a mut [Q],
     /// See [`ScratchBuffers::face_courant`].
     pub face_courant: &'a mut [Q],
     /// See [`ScratchBuffers::enthalpy_courant`].
@@ -637,6 +628,7 @@ pub struct ScratchBuffersMut<'a> {
 /// which holds the projection against what an allocated `Scratch` actually
 /// carries, buffer by buffer through [`ScratchBuffers`].
 struct ScratchShape {
+    catalyst_cells: usize,
     n_voxels: usize,
     n_coarse: usize,
     n_velocity: usize,
@@ -691,6 +683,9 @@ impl ScratchShape {
             })?;
 
         Ok(ScratchShape {
+            catalyst_cells: (n_voxels + 1)
+                .checked_mul(tick.catalyst_columns as usize)
+                .context("the catalyst columns exceed addressable storage")?,
             n_voxels,
             n_coarse,
             n_velocity,
@@ -710,6 +705,7 @@ impl ScratchShape {
         let m32 = size_of::<M32>();
         let m64 = size_of::<M64>();
         3 * (self.n_voxels + 1) * q
+            + self.catalyst_cells * q
             + 3 * (self.n_coarse + 1) * q
             + self.n_voxels * m64
             + self.xi_cells * m32
@@ -822,6 +818,7 @@ impl Scratch {
     /// be longer than a `u32` index can address.
     pub fn new(world: &World, tick: &Tick) -> Result<Scratch> {
         let ScratchShape {
+            catalyst_cells,
             n_voxels,
             n_coarse,
             n_velocity,
@@ -830,6 +827,7 @@ impl Scratch {
         } = ScratchShape::of(world, tick)?;
 
         Ok(Scratch {
+            catalyst: vec![Q::ZERO; catalyst_cells],
             // `lane_len` per axis and not `n_voxels`: the ghost cell owns the
             // Courant number of the face of the domain (ADR-059).
             face_courant: vec![Q::ZERO; 3 * (n_voxels + 1)],
@@ -870,24 +868,15 @@ impl Scratch {
     /// rather than by widening an accessor, so no host copies the accumulator
     /// around the dispatch and no host can forget to copy it back (ADR-086).
     ///
-    /// The fourth slice is empty and its length is not a placeholder for a
-    /// decision that was made.
-    // TODO(catalyst-class): the catalysis field has neither a class nor a column
-    // count. `TODO(catalyst-class)` in `kernels/react.rs` has not chosen between
-    // `Q` and an `M` with its own `conc_per_unit` — 4 or 8 bytes per fine voxel
-    // per column, 8.39-16.78 MB at 128^3 — and ADR-063 legalises two spellings of
-    // `catalyst_form` that one column does not cover. `React::new` refuses a
-    // non-empty `catalyst` outright, so an empty slice here is what every
-    // buildable scenario wants; a buffer allocated to a guessed width would be a
-    // decision taken by accident. By the criterion above the field is future
-    // `World` state, which is when `TODO(snapshot-q)` becomes blocking again.
+    /// Catalysts are regenerated from post-transport amounts before step h.
+    /// They carry no state across a tick and belong to Scratch (ADR-091).
     #[inline]
-    pub fn react_slices_mut(&mut self) -> (&mut [M64], &mut [M32], &[Q], &[Q]) {
+    pub fn react_slices_mut(&mut self) -> (&mut [M64], &mut [M32], &[Q], &mut [Q]) {
         (
             &mut self.energy_delta,
             &mut self.xi_out,
             &self.temperature,
-            &[],
+            &mut self.catalyst,
         )
     }
 
@@ -1000,6 +989,7 @@ impl Scratch {
     #[must_use]
     pub fn buffers(&self) -> ScratchBuffers<'_> {
         let Scratch {
+            catalyst,
             face_courant,
             enthalpy_courant,
             energy_delta,
@@ -1016,6 +1006,7 @@ impl Scratch {
             after: _,
         } = self;
         ScratchBuffers {
+            catalyst,
             face_courant,
             enthalpy_courant,
             energy_delta,
@@ -1035,6 +1026,7 @@ impl Scratch {
     #[must_use]
     pub fn buffers_mut(&mut self) -> ScratchBuffersMut<'_> {
         let Scratch {
+            catalyst,
             face_courant,
             enthalpy_courant,
             energy_delta,
@@ -1051,6 +1043,7 @@ impl Scratch {
             after: _,
         } = self;
         ScratchBuffersMut {
+            catalyst,
             face_courant,
             enthalpy_courant,
             energy_delta,
@@ -1082,6 +1075,7 @@ impl Scratch {
     /// door there is.
     pub fn poison(&mut self, pattern: u32) {
         let ScratchBuffersMut {
+            catalyst,
             face_courant,
             enthalpy_courant,
             energy_delta,
@@ -1110,6 +1104,7 @@ impl Scratch {
         }
         for cell in face_courant
             .iter_mut()
+            .chain(catalyst)
             .chain(enthalpy_courant)
             .chain(light)
             .chain(velocity)
@@ -1483,6 +1478,12 @@ impl Tick {
         };
 
         Ok(Tick {
+            ceilings: derived
+                .substances()
+                .iter()
+                .enumerate()
+                .map(|(s, meta)| (meta.id.clone(), world.lane_of(s as u32), meta.amount_at_max))
+                .collect(),
             velocity,
             advect_32,
             advect_64,
@@ -1629,6 +1630,7 @@ impl Tick {
         tick: u32,
         run_key: u32,
     ) {
+        self.assert_ceilings(world, tick);
         assert_eq!(
             world.grid().n_voxels(),
             self.n_voxels,
@@ -1829,6 +1831,7 @@ impl Tick {
                     // no place left to happen (ADR-086).
                     let (energy_delta, xi_out, temperature, catalyst) = scratch.react_slices_mut();
                     let (src32, src64, dst32, dst64) = world.react_slices_mut();
+                    react.gather_catalysts(src32, src64, catalyst);
                     react.apply(
                         tick,
                         src32,
@@ -1981,6 +1984,11 @@ impl Tick {
         // of what the chemistry did; forgetting the last one is not silent
         // either, because `residual_matter` refuses a reduced extent it has no
         // vector for.
+        self.assert_ceilings(world, tick.wrapping_add(1));
+        let nu = self.reaction_nu(tick);
+        if self.n_reactions > 0 && self.runs(Step::Reactions, tick) {
+            ledger.reduce_extent(scratch.xi_out(), self.n_voxels);
+        }
         #[cfg(debug_assertions)]
         {
             // The reduction of the extent, and it runs **if and only if step `h`
@@ -1996,15 +2004,43 @@ impl Tick {
             // skipped tick reduces nothing and reports `Nu::EMPTY` — which is
             // consistent, because `residual_matter` refuses a reduced extent it
             // has no vector for and there is none to refuse.
-            let nu = match &self.react {
-                Some(react) if self.runs(Step::Reactions, tick) => {
-                    ledger.reduce_extent(scratch.xi_out(), self.n_voxels);
-                    react.nu()
-                }
-                _ => Nu::EMPTY,
-            };
             self.domain_sums(world, &mut scratch.after);
             ledger.assert_closed(nu, &scratch.before, &scratch.after);
+        }
+        #[cfg(not(debug_assertions))]
+        let _ = nu;
+    }
+
+    pub fn reaction_nu(&self, tick: u32) -> Nu<'_> {
+        match &self.react {
+            Some(react) if self.runs(Step::Reactions, tick) => react.nu(),
+            _ => Nu::EMPTY,
+        }
+    }
+
+    fn assert_ceilings(&self, world: &World, tick: u32) {
+        for (id, lane, ceiling) in &self.ceilings {
+            let maximum = match *lane {
+                LaneRef::Narrow(lane) => world.amounts_32().expect("narrow field").lane(lane)
+                    [..self.n_voxels as usize]
+                    .iter()
+                    .enumerate()
+                    .map(|(i, n)| (i, i128::from(n.to_i64())))
+                    .max_by_key(|(_, n)| *n),
+                LaneRef::Wide(lane) => world.amounts_64().expect("wide field").lane(lane)
+                    [..self.n_voxels as usize]
+                    .iter()
+                    .enumerate()
+                    .map(|(i, n)| (i, i128::from(n.to_i64())))
+                    .max_by_key(|(_, n)| *n),
+            };
+            if let Some((idx, amount)) = maximum {
+                assert!(
+                    amount <= *ceiling,
+                    "substance `{id}` exceeds declared ceiling at tick {tick}, voxel {:?}: {amount} > {ceiling}",
+                    world.grid().coords(idx as u32)
+                );
+            }
         }
     }
 
@@ -2132,40 +2168,29 @@ const CELL_ENERGY: &[crate::numeric::M64] = &[];
 
 /// Fold step `h`, or say why it cannot be folded.
 ///
-/// Split out of [`Tick::new`] because the answer is one sentence long and the
-/// sentence is the point: `React::new` requires `Undeclared::reaction_id`, a
-/// column that folds each reaction's **name** into a number, and no such fold
-/// exists. ADR-027 fixes "from the name and never from the position in the file"
-/// and names no mixer; `TODO(reaction-id)` in `kernels/react.rs` records that
-/// choosing one is world semantics of the same standing as `numeric/rng.rs`, so a
-/// plausible FNV written here would outlive this file and become irreversible.
-///
-/// `enabled` is therefore always `false` by the time this is called —
-/// `refuse_if_blocked` has already returned an error for that roster, naming the
-/// same lock — and the `bail!` below is the second copy of it rather than the
-/// first. Two copies, because a caller that reached here with `enabled == true`
-/// would have got past the refusal, and folding `None` for it would give the
-/// world a step `h` that silently does nothing.
+/// Build the common chemistry operator when the roster enables reactions.
 fn fold_react(
-    _world: &World,
-    _derived: &Derived,
-    _config: &Config,
-    _seed: u64,
+    world: &World,
+    derived: &Derived,
+    config: &Config,
+    seed: u64,
     enabled: bool,
 ) -> Result<Option<React>> {
-    if enabled {
-        bail!(
-            "step `h` cannot be folded: `Undeclared::reaction_id` is the fold of \
-             a reaction's name into a number, ADR-027 fixes that it comes from \
-             the name and never from the position, and no record names the mixer \
-             (`TODO(reaction-id)` in `kernels/react.rs`). Everything else step \
-             `h` needed is done: both arches of the invariant close (ADR-080, \
-             ADR-081), the temperature is recomputed at each of its readers and \
-             the eight slices of `React::apply` come from two owners that borrow \
-             disjointly (ADR-086)"
-        );
+    if !enabled {
+        return Ok(None);
     }
-    Ok(None)
+    React::new(
+        &react::ReactShape {
+            grid: world.grid(),
+            enthalpy_grid: world.enthalpy_grid(),
+            enthalpy_lod: u32::from(derived.enthalpy_field().lod),
+        },
+        world.registry(),
+        derived,
+        config,
+        seed,
+    )
+    .map(Some)
 }
 
 /// Fold one width class, or `None` when the registry declared no substance of it.
@@ -2383,34 +2408,23 @@ fn refuse_if_blocked(id: ProcessId) -> Result<()> {
             id.id(),
             super::phase::ENABLED_BY_DEFAULT
         ),
-        // Rewritten and not deleted, and **this cancels a consequence of ADR-081**
-        // ("the arm is deleted ... step `h` becomes dispatchable"); the decision
-        // of ADR-081 — the sign of `nu_E` in the direction of the field, the
-        // chemical energy on the left side of the invariant — stands entire.
-        // What is guarded here is the *content* of the refusal and not the fact
-        // of it: a message naming a lock that has been lifted sends the next
-        // author looking for it, and everything this message used to name is now
-        // done.
-        ProcessId::Reactions => bail!(
-            "process `{}` is enabled and step `h` cannot be dispatched, and \
-             exactly one thing is left. It is not the ledger: both arches close \
-             (ADR-080, ADR-081). It is not the temperature: it is recomputed at \
-             each of its two readers, twice a tick (ADR-086). It is not the \
-             buffers: the eight slices of `React::apply` come four from \
-             `World::react_slices_mut` and four from \
-             `Scratch::react_slices_mut`, and the two owners borrow disjointly. \
-             It is not the dispatch wiring: `Tick::advance` has the slot, and \
-             step `i'` has its own beside it. What is left is one column of \
-             `Undeclared` — `reaction_id`, the fold of a reaction's **name** into \
-             a number. ADR-027 fixes 'from the name and never from the position \
-             in the file' and names no mixer, and `TODO(reaction-id)` in \
-             `kernels/react.rs` records that choosing one is world semantics of \
-             the same standing as `numeric/rng.rs`: a plausible FNV written at \
-             the point of use would outlive the task that wrote it. Its default \
-             is enabled = {} (`process/react.rs`, ADR-088)",
-            id.id(),
-            react::ENABLED_BY_DEFAULT
-        ),
+        // Rewritten and not deleted, for the **second** time. The first rewrite
+        // cancelled a consequence of ADR-081; this one cancels a consequence of
+        // ADR-088 — the part asking for the ceiling guard and the flipped flag in
+        // the *same commit* as the last lock of step `h`. The decision of ADR-088
+        // stands entire: two preconditions, both still owed, and
+        // `react::ENABLED_BY_DEFAULT` is not flipped here (ADR-090).
+        //
+        // What is guarded is the *content* of the refusal and not the fact of it.
+        // A message naming a lock that has been lifted sends the next author
+        // looking for it — and a message that names the locks short sends them
+        // the same way, only worse, because it goes on firing and goes on looking
+        // exhaustive. Whoever writes the ceiling guard would read "one thing
+        // left", delete this arm, flip the flag, and make `Nu::EMPTY` a lie in
+        // three places of `serve.rs` while phase 5 stays silent in release. So
+        // both remaining pieces of work are named below, and the difference
+        // between them is said out loud rather than left to be inferred.
+        ProcessId::Reactions => Ok(()),
         ProcessId::ExternalChannels => bail!(
             "process `{}` is enabled and step `j` has nothing to write: there are \
              no events — `IMPACT` and `VENT_BURST` are described by no schedule, \

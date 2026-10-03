@@ -20,7 +20,7 @@
 
 ### Валидатор отказывается грузить
 
-Шестьдесят девять отказов. Каждый — класс ошибки, который иначе проявится как
+Семьдесят два отказа. Каждый — класс ошибки, который иначе проявится как
 странная динамика через сто тысяч тиков. Порядок тот же, что в таблице §10
 `CONFIG_SCHEMA.md`, и число получено пересчётом обоих перечней, а не сложением
 дельт из записей журнала: каждая из ADR-056 … ADR-069 берёт базой одно и то же
@@ -74,7 +74,35 @@ ADR-086). Второй ADR-074 назвал и в этот перечень не
 `initial_layer_side_outside_the_enumeration_is_rejected` пришли с ADR-077 и стоят
 ниже, в «Начальных условиях», рядом с остальными именами про сторону слоя: там
 они читаются вместе с тем, что стерегут. §10 после них насчитывает семьдесят
-одну строку.
+четыре строки.
+
+Оба числа выше — и семьдесят два здесь, и семьдесят четыре в §10 — получены
+пересчётом перечней в день ADR-090, а не сложением дельт. Пересчёт понадобился:
+до него заголовок читался «шестьдесят девять» над семьюдесятью именами, а фраза
+про §10 — «семьдесят одну» при фактических семидесяти двух строках. Врал этот
+документ в обоих местах согласованно, `CONFIG_SCHEMA.md` был прав; инвариант
+«§10 на две больше» держался всё это время, и разошёлся ровно счёт.
+
+Два имени пришли с ADR-090 и оба сравнивают `reaction_id`, поэтому стоят сразу
+за `a_duplicate_id_in_any_section_is_refused`: тот сравнивает **имена** на
+равенство, `two_reaction_names_folding_to_one_id_are_rejected` — их свёртки, а
+`a_reaction_id_landing_in_a_reserved_purpose_window_is_rejected` — вхождение
+свёртки в объявленное окно счётчика `purpose` (`NOISE_BASE`, `WORLDGEN_BASE`).
+Позиция выбрана по роду сравнения, а не выведена: ADR-090 её не назначает.
+
+Три вещи про них надо знать, и ни одна не следует из имени. **Это отказы
+валидатора, а не загрузки.** `config::load` есть `read_to_string` плюс `parse` и
+деривации не зовёт вовсе, поэтому `every_scenario_in_the_repository_loads` их не
+видит; на поставляемом файле их стережёт `the_shipped_scenario_survives_a_thousand_ticks`
+и больше ничто. **В таблицу `every_refusal_names_the_numbers_it_compared` они не
+входят** — по той же причине, по которой вне её стоит
+`a_duplicate_id_in_any_section_is_refused`: сравниваются не два числа с разными
+единицами, а идентификаторы на равенство и на вхождение в окно, и печатать
+«сравнили 603427705 с 603427705» значит ничего не сообщить. **Фикстура первого
+есть второй якорь смесителя.** Отказ по коллизии печатает общий `rid`, а его
+половина с переименованием требует от выжившей реакции ровно ту свёртку, в
+которую сворачивается её имя, — то есть держит `name_key` независимо от
+`the_name_fold_is_the_same_fold_it_was`.
 
 Последние два имени пришли с ADR-081, и оба про левую часть энергетического
 инварианта. `summed_energy_coefficient_disagreeing_with_the_declared_enthalpy_is_rejected`
@@ -150,6 +178,8 @@ a_modulation_period_under_three_ticks_is_rejected
 a_lit_scenario_without_an_exchange_face_is_refused
 a_lit_scenario_whose_steady_state_leaves_the_declared_range_is_refused
 a_duplicate_id_in_any_section_is_refused
+two_reaction_names_folding_to_one_id_are_rejected
+a_reaction_id_landing_in_a_reserved_purpose_window_is_rejected
 a_reservoir_naming_an_unknown_substance_is_rejected
 every_domain_rule_refuses_its_own_violation
 a_not_a_number_never_passes_a_domain_rule
@@ -910,6 +940,9 @@ same_seed_and_config_give_byte_identical_state
 different_seed_gives_different_state
 different_seed_changes_the_rounding_on_identical_state
 run_key_is_derived_from_both_halves_of_the_seed
+the_name_fold_is_the_same_fold_it_was
+names_differing_in_one_byte_fold_to_unrelated_ids
+the_empty_name_folds_to_a_fixed_nonzero_id
 seed_in_the_scenario_file_is_rejected
 reaction_id_is_stable_under_reordering_in_toml
 reaction_result_is_independent_of_order_in_toml
@@ -935,6 +968,30 @@ an_omitted_physics_section_hashes_as_earth_and_fresh_water
 `different_seed_gives_different_state` при этом есть утверждение о **конкретной
 паре** сидов, а не теорема: `u64 → u32` схлопывается, и внутри галереи из десяти
 тысяч сидов вероятность коллизии `1.2%`.
+
+Три имени ADR-090 стоят рядом с ними, потому что это та же конструкция во второй
+раз: `run_key` сворачивает внешнюю идентичность прогона в счётчик `rand`,
+`name_key` — внешнюю идентичность реакции в третий счётчик того же броска.
+`the_name_fold_is_the_same_fold_it_was` печатает якоря числами, и это не
+украшение: свёртка есть семантика мира ровно того же уровня, что генератор, —
+поменяй в ней раунд, и каждый бросок каждого прогона поменяется вместе с ним, —
+поэтому тест обязан краснеть от правки смесителя, а не пересчитываться под неё.
+`names_differing_in_one_byte_fold_to_unrelated_ids` требует лавины: имена
+реестра различаются на байт куда чаще, чем случайно, и свёртка, у которой
+соседние имена дают соседние числа, обесценивает третий счётчик, ничего при этом
+не ломая. `the_empty_name_folds_to_a_fixed_nonzero_id` про вырожденный вход —
+`mix(START)` без единого раунда, — и он же держит `START` от подмены нулём.
+Второй якорь того же смесителя стоит в другом месте и назван выше: фикстура
+переименования в `two_reaction_names_folding_to_one_id_are_rejected`.
+
+`reaction_id_is_stable_under_reordering_in_toml` — имя ADR-027, написуемое
+только с ADR-090, и живёт оно в `crates/liminis-core/tests/acceptance_reactions.rs`,
+где стоит единственная в `tests/` фикстура с настоящим реестром реакций. Путь
+через `config::validate` — условие, а не удобство: `config::load` деривации не
+зовёт, поэтому `rid` в него не попадает вовсе. Переставляет тест строки, но не
+добавляет их, и это его объявленное слепое пятно: `rid`, зависящий от всего
+реестра, под перестановкой устойчив и разъедется в день, когда сценарий получит
+ещё одну реакцию.
 
 `the_projection_covers_every_simulated_key` и
 `the_canonical_form_reloads_to_the_same_hash` — из ADR-066, и первый ловит то,
@@ -1388,3 +1445,34 @@ ticks_per_second_above_threshold_on_reference_scenario
 архитектуру, а не на приёмку: **операциональные критерии перехода** (B-7). Их
 надо записать до первых эволюционных прогонов, иначе post-hoc неизбежен —
 найдётся красивая структура, и её объявят тем самым переходом.
+
+---
+
+## Локальная культура конечных экотипов (ADR-091, ADR-092)
+
+Это первая наблюдаемая жизнь экорежима, не приёмка клеточного морфогенеза
+или существенного эволюционного перехода. Конечные полосы наследуемых
+стратегий заменяют ещё не реализованные поля BT из замороженной SPEC;
+расхождение и ограничения названы в ADR-091.
+
+Исполняемые критерии в `crates/liminis-core/tests/acceptance_living_world.rs`:
+
+```text
+living_ecotypes_share_chemistry_and_have_a_real_resource_tradeoff
+birth_mutations_create_neighbours_and_removing_them_prevents_new_types
+living_culture_changes_heritable_shares_and_closes_both_ledgers_each_tick
+living_culture_replays_identically_from_the_same_seed
+living_catalysts_are_fresh_and_cannot_create_unseeded_life
+living_world_10k_ticks_closes_integer_ledgers_and_stays_within_ceilings
+```
+
+Последний критерий запускается отдельно с `--release -- --ignored`:
+полная сетка 24³, 10 000 тиков, оба целочисленных баланса проверяются каждый
+тик и в release. Остальные входят в обычный набор тестов. Проба с единственным
+родительским вариантом отделяет мутацию при рождении от простого присутствия
+всех вариантов в начальном состоянии; стерильная проба исключает рост без
+катализатора. Изменение долей считается отбором внутри конечного набора,
+а не появлением ранее не заданного генома.
+
+Команды, проверенный горизонт и измеренные доли записаны в
+`docs/plans/2026-10-04-local-living-world.md`.

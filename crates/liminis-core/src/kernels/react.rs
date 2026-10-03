@@ -127,13 +127,16 @@ pub struct Rx<'a> {
     /// third counter of every draw this kernel takes, so an identifier taken
     /// from a row index makes reordering two lines of TOML a different run at
     /// unchanged semantics.
-    // TODO(reaction-id): the function that folds a name into this number does
-    // not exist. ADR-027 fixes only "from the name, not from the position", and
-    // `config/derive.rs` checks nothing but that names are unique. The mixer
-    // chosen there is world semantics of the same standing as `numeric/rng.rs` —
-    // change it and every draw of every run changes with it — so it wants a
-    // decision, not a first plausible hash. The column is here so that the
-    // decision has one home.
+    ///
+    /// The mixer is `numeric::name_key`, a round of the same `mix` per UTF-8
+    /// byte, and it stays on the host by necessity and not by taste: WGSL has
+    /// no strings, and the kernel form forbids a loop over host data of unknown
+    /// length (ADR-015, ADR-090). What crosses the boundary is this `u32`
+    /// column. Which counter of `rand` a future kernel may take for itself is
+    /// still open — there is no registry of `purpose` — so the validator can
+    /// only keep `rid` out of the windows that are declared as constants today
+    /// (`NOISE_BASE`, `WORLDGEN_BASE`), and those two bases are themselves
+    /// still `TODO`.
     pub rid: &'a [u32],
     /// Turnovers per second per cubic metre at `t_vmax`, or per mole of catalyst
     /// when `cat[r]` is not the sentinel (ADR-063).

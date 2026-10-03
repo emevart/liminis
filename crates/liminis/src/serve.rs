@@ -50,7 +50,7 @@ use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
 use liminis_core::config::{self, Config, Derived};
-use liminis_core::ledger::{DomainSums, Ledger, Nu};
+use liminis_core::ledger::{DomainSums, Ledger};
 use liminis_core::numeric::{M32, M64, run_key};
 use liminis_core::process::{Footprint, ProcessId, ROSTER_LEN, RosterEntry, Scratch, Tick};
 use liminis_core::version::WORLD_FORMAT_VERSION;
@@ -58,6 +58,9 @@ use liminis_core::world::{Boundary, Face, Grid, LaneRef, Registry, World, WorldL
 use liminis_core::worldgen;
 
 use crate::http::{Request, Response};
+
+#[path = "ecology.rs"]
+mod ecology;
 
 /// The magic of the volume payload: "LMNV", little-endian, as the viewer reads
 /// it.
@@ -100,6 +103,9 @@ const RATE_WINDOW: Duration = Duration::from_millis(250);
 ///
 /// Held for exactly one tick or exactly one answer, never across `advance`.
 pub struct Sim {
+    scenario: Config,
+    ecology: ecology::Ecology,
+    error: Option<String>,
     world: World,
     tick: Tick,
     ledger: Ledger,
@@ -278,10 +284,14 @@ fn build(scenario: &Config, seed: u64) -> Result<Sim> {
     let scratch = Scratch::new(&world, &tick).context("the scratch buffers")?;
 
     Ok(Sim {
+        scenario: scenario.clone(),
+        ecology: ecology::Ecology::new(scenario),
+        error: None,
         fields: fields_of(&world, &derived),
         world,
         tick,
-        ledger: Ledger::new(n_substances).context("the ledger")?,
+        ledger: Ledger::with_reactions(n_substances, scenario.reaction.len() as u32)
+            .context("the ledger")?,
         scratch,
         before: DomainSums::new(n_substances).context("the domain sums before a tick")?,
         after: DomainSums::new(n_substances).context("the domain sums after a tick")?,
@@ -433,7 +443,9 @@ fn run_loop(shared: &Arc<Mutex<Sim>>) {
                 std::thread::sleep(IDLE);
                 continue;
             }
-            advance_one(&mut sim);
+            if !safe_advance(&mut sim) {
+                continue;
+            }
             since += 1;
             let elapsed = mark.elapsed();
             if elapsed >= RATE_WINDOW {
@@ -514,53 +526,57 @@ fn advance_one(sim: &mut Sim) {
     sim.ticks = sim.ticks.wrapping_add(1);
 }
 
-/// The residual published for the tick that just finished: the aggregate of
-/// ADR-071 over matter, and the `None` the energy half is owed.
-///
-/// # Why this is a function and not three lines inside `advance_one`
-///
-/// ADR-037 asks for a written zero because a written zero is proof the check
-/// ran — so the corpus has to be able to tell one from a constant. On this
-/// world it cannot: every process S0 dispatches conserves each substance
-/// exactly, and `Ledger::assert_closed` fires *inside* `Tick::advance` in the
-/// debug build the tests run in, so a real tick that arrived here with a hole
-/// would have panicked before it. Which is to say every residual any test can
-/// obtain through `advance_one` is structurally zero, and `matter: 0` written
-/// in place of the computation would stay green through all of them.
-///
-/// Split out, the computation takes accumulators a test can fill itself, and
-/// `the_published_residual_is_computed_and_not_written` fills them with a hole.
-/// Taking the whole `Sim` rather than the three parts is the other half of it:
-/// there is then no call site at which `before` and `after` can be passed the
-/// wrong way round, and a swap inside here changes the sign of that test.
-///
-/// The aggregate is the largest residual by magnitude with its sign, never the
-/// sum: `+5` on one substance and `-5` on another add up to a green zero, and
-/// `assert_closed` walks the substances one at a time and lives in another
-/// build.
+/// Keep a failed world stopped and observable until an explicit reset.
+fn safe_advance(sim: &mut Sim) -> bool {
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| advance_one(sim))) {
+        Ok(()) => {
+            if sim
+                .last
+                .as_ref()
+                .is_some_and(|r| r.matter != 0 || r.energy.is_some_and(|e| e != 0))
+            {
+                sim.error = Some("the conservation ledger did not close".into());
+            }
+        }
+        Err(error) => {
+            sim.error = Some(
+                error
+                    .downcast_ref::<String>()
+                    .cloned()
+                    .or_else(|| error.downcast_ref::<&str>().map(|s| s.to_string()))
+                    .unwrap_or_else(|| "the simulation stopped during a tick".into()),
+            );
+            sim.last = None;
+        }
+    }
+    if sim.error.is_some() {
+        sim.running = false;
+        sim.alive = false;
+        sim.measured_tps = 0.0;
+    }
+    sim.alive
+}
+
+/// The largest signed matter residual, not a sum that could cancel errors.
+/// Actual scheduled reaction extents and stoichiometry participate in release
+/// builds too. The synthetic-hole test distinguishes a checked zero from a
+/// hardcoded one; abiotic transport-only worlds retain ADR-071's energy `None`.
 fn residual_of(sim: &Sim) -> Residual {
     let matter = (0..sim.before.n_substances())
         .map(|s| {
-            // `Nu::EMPTY` because no roster this binary can build dispatches step
-            // `h` — `Tick::new` refuses an enabled `reactions` — so every `Xi_r`
-            // of every tick is zero and the second term of ADR-080 is absent by
-            // construction. It is not a shortcut that could rot quietly: the day
-            // chemistry runs, `residual_matter` refuses a reduced extent it has no
-            // stoichiometry for, and this line goes red rather than under-reporting.
             sim.ledger
-                .residual_matter(Nu::EMPTY, s, &sim.before, &sim.after)
+                .residual_matter(sim.tick.reaction_nu(sim.ticks), s, &sim.before, &sim.after)
         })
         .max_by_key(|residual| residual.unsigned_abs())
         .unwrap_or(0);
 
     Residual {
         matter,
-        // `None` and never a zero: in S0 the energy half has no source at all,
-        // so a zero here would be produced by a check that cannot fail
-        // (ADR-071). The day `energy_ledger_residual_is_zero_over_10k_ticks`
-        // loses its `#[ignore]` is the day this becomes
-        // `Some(sim.ledger.residual_energy(&sim.before, &sim.after))`.
-        energy: None,
+        energy: if sim.tick.enabled(ProcessId::Reactions) {
+            Some(sim.ledger.residual_energy(&sim.before, &sim.after))
+        } else {
+            None
+        },
     }
 }
 
@@ -579,6 +595,20 @@ pub fn route(shared: &Arc<Mutex<Sim>>, request: &Request) -> Response {
     if path == "/api/state" {
         let sim = lock(shared);
         return Response::json(state_json(&sim));
+    }
+
+    if path == "/api/ecology" {
+        let sim = lock(shared);
+        let z = request
+            .query
+            .split('&')
+            .find_map(|part| part.strip_prefix("z="));
+        let z = match z.map(str::parse::<u32>).transpose() {
+            Ok(Some(z)) if z < sim.world.grid().nz() => z,
+            Ok(None) => sim.world.grid().nz() / 2,
+            _ => return Response::error(400, "z must name a layer inside the grid"),
+        };
+        return Response::json(sim.ecology.frame(&sim, z).to_string());
     }
 
     if let Some(field) = path.strip_prefix("/api/volume/") {
@@ -642,6 +672,19 @@ fn state_json(sim: &Sim) -> String {
     push_real(&mut out, if running { sim.measured_tps } else { 0.0 });
     out.push_str(",\"running\":");
     out.push_str(if running { "true" } else { "false" });
+    out.push_str(",\"alive\":");
+    out.push_str(if sim.alive { "true" } else { "false" });
+    out.push_str(",\"target_tps\":");
+    push_real(&mut out, sim.target_tps);
+    out.push_str(",\"sim_time\":");
+    push_real(&mut out, f64::from(sim.ticks) * sim.scenario.dt);
+    out.push_str(",\"error\":");
+    match &sim.error {
+        Some(error) => push_json_string(&mut out, error),
+        None => out.push_str("null"),
+    }
+    out.push_str(",\"ecology\":");
+    out.push_str(&sim.ecology.summary(sim).to_string());
 
     out.push_str(",\"grid\":{\"nx\":");
     push_int(&mut out, i128::from(grid.nx()));
@@ -805,23 +848,31 @@ fn profile_json(sim: &Sim, field: &str) -> Option<String> {
     Some(out)
 }
 
-/// `play`, `pause`, `step`, `speed` — and a refusal for anything else.
+/// `play`, `pause`, `step`, `speed`, `reset` and a refusal for anything else.
 ///
 /// A command swallowed in silence looks exactly like a simulator that has hung,
 /// so every action this does not understand is answered 400 and named back.
 fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
-    let Ok(text) = std::str::from_utf8(body) else {
-        return Response::error(400, "the control body is not UTF-8");
+    let Ok(command) = serde_json::from_slice::<serde_json::Value>(body) else {
+        return Response::error(400, "the control body must be valid JSON");
     };
-    let Some(action) = json_str(text, "action") else {
+    let Some(action) = command.get("action").and_then(serde_json::Value::as_str) else {
         return Response::error(
             400,
-            "the control body names no action. The four are play, pause, step, speed",
+            "the control body names no action. Use play, pause, step, speed or reset",
         );
     };
 
-    match action.as_str() {
-        "play" => sim.running = true,
+    match action {
+        "play" | "run" => {
+            if !sim.alive {
+                return Response::error(
+                    503,
+                    "the simulation has stopped; reset to start a new run",
+                );
+            }
+            sim.running = true;
+        }
         "pause" => {
             sim.running = false;
             // Reported at once rather than left to the loop to notice: the page
@@ -833,7 +884,7 @@ fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
             if !sim.alive {
                 return Response::error(
                     503,
-                    "the simulation thread is gone; there is nothing left to step",
+                    "the simulation has stopped; reset to start a new run",
                 );
             }
             sim.running = false;
@@ -841,10 +892,12 @@ fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
             // Performed here and not queued. `pending_steps += 1` races the
             // poll the page makes immediately after this response, and the
             // button looks unpressed every other time.
-            advance_one(sim);
+            if !safe_advance(sim) {
+                return Response::error(503, sim.error.as_deref().unwrap_or("the tick failed"));
+            }
         }
         "speed" => {
-            let Some(value) = json_num(text, "value") else {
+            let Some(value) = command.get("value").and_then(serde_json::Value::as_f64) else {
                 return Response::error(400, "speed without a value");
             };
             if !value.is_finite() || !(MIN_TPS..=MAX_TPS).contains(&value) {
@@ -858,11 +911,38 @@ fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
             }
             sim.target_tps = value;
         }
+        "reset" => {
+            let seed = match command.get("seed") {
+                None => sim.identity.seed,
+                Some(serde_json::Value::String(seed)) => match seed.parse::<u64>() {
+                    Ok(seed) => seed,
+                    Err(_) => {
+                        return Response::error(
+                            400,
+                            "seed must be a decimal unsigned 64-bit integer",
+                        );
+                    }
+                },
+                _ => {
+                    return Response::error(
+                        400,
+                        "seed must be a string to preserve its exact value",
+                    );
+                }
+            };
+            match build(&sim.scenario, seed) {
+                Ok(mut reset) => {
+                    reset.target_tps = sim.target_tps;
+                    *sim = reset;
+                }
+                Err(error) => return Response::error(400, &format!("reset failed: {error:#}")),
+            }
+        }
         other => {
             return Response::error(
                 400,
                 &format!(
-                    "`{other}` is not a control action. The four are play, pause, step, speed"
+                    "`{other}` is not a control action. Use play, pause, step, speed or reset"
                 ),
             );
         }
@@ -976,46 +1056,6 @@ fn push_real(out: &mut String, value: f64) {
     } else {
         out.push_str("null");
     }
-}
-
-/// The string under a key of the control body.
-///
-/// Not a JSON parser: the only writer on the other side is one
-/// `JSON.stringify({action, value})` in `viewer.html`, and a second JSON
-/// implementation in a binary that deliberately has none would be a worse trade
-/// than this. Anything it cannot read is refused rather than guessed at, which
-/// is why every caller answers 400 on `None`.
-fn json_str(text: &str, key: &str) -> Option<String> {
-    let rest = after_key(text, key)?.strip_prefix('"')?;
-    let mut out = String::new();
-    let mut chars = rest.chars();
-    while let Some(c) = chars.next() {
-        match c {
-            '"' => return Some(out),
-            // The escape is kept as written. No action name contains one, so an
-            // escaped name simply matches nothing and is answered 400 by name.
-            '\\' => out.push(chars.next()?),
-            c => out.push(c),
-        }
-    }
-    None
-}
-
-/// The number under a key of the control body. See [`json_str`].
-fn json_num(text: &str, key: &str) -> Option<f64> {
-    let rest = after_key(text, key)?;
-    let end = rest
-        .find(|c: char| !matches!(c, '0'..='9' | '-' | '+' | '.' | 'e' | 'E'))
-        .unwrap_or(rest.len());
-    rest[..end].parse().ok()
-}
-
-/// What follows `"key":` in the control body, whitespace skipped.
-fn after_key<'a>(text: &'a str, key: &str) -> Option<&'a str> {
-    let quoted = format!("\"{key}\"");
-    let at = text.find(&quoted)? + quoted.len();
-    let rest = text[at..].trim_start().strip_prefix(':')?;
-    Some(rest.trim_start())
 }
 
 #[cfg(test)]
@@ -1636,7 +1676,14 @@ mod tests {
             advance_one(&mut guard);
             guard.tick.domain_sums(&guard.world, &mut after);
             let want: Vec<i128> = (0..n)
-                .map(|s| guard.ledger.residual_matter(Nu::EMPTY, s, &before, &after))
+                .map(|s| {
+                    guard.ledger.residual_matter(
+                        guard.tick.reaction_nu(guard.ticks.wrapping_sub(1)),
+                        s,
+                        &before,
+                        &after,
+                    )
+                })
                 .collect();
             let published = guard.last.as_ref().expect("a tick was completed").matter;
             (want, published)
@@ -1908,6 +1955,98 @@ mod tests {
         assert_eq!(guard.target_tps, DEFAULT_TARGET_TPS);
     }
 
+    #[test]
+    fn control_parses_json_and_preserves_an_exact_reset_seed() {
+        let shared = sim();
+        assert_eq!(
+            post(&shared, "/api/control", "{\"action\":\"pause\"}garbage").status,
+            400
+        );
+        assert_eq!(
+            post(
+                &shared,
+                "/api/control",
+                "{\"action\":\"reset\",\"seed\":42}"
+            )
+            .status,
+            400
+        );
+        assert_eq!(
+            post(
+                &shared,
+                "/api/control",
+                "{\"action\":\"reset\",\"seed\":\"18446744073709551615\"}"
+            )
+            .status,
+            200
+        );
+        assert_eq!(
+            state(&shared).get("seed").and_then(Json::as_str),
+            Some("18446744073709551615")
+        );
+        assert_eq!(tick_of(&shared), 0);
+        assert_eq!(
+            post(
+                &shared,
+                "/api/control",
+                "{\"action\":\"reset\",\"seed\":\"18446744073709551616\"}"
+            )
+            .status,
+            400
+        );
+    }
+
+    #[test]
+    fn a_ceiling_failure_is_visible_and_a_reset_recovers() {
+        let shared = sim();
+        {
+            let mut guard = lock(&shared);
+            let above = i64::try_from(meta(&guard, "O2").amount_at_max).unwrap() + 1;
+            paint(&mut guard, |_, _| above);
+        }
+        let response = post(&shared, "/api/control", "{\"action\":\"step\"}");
+        assert_eq!(response.status, 503);
+        assert!(
+            String::from_utf8(response.body)
+                .unwrap()
+                .contains("ceiling")
+        );
+        let guard = lock(&shared);
+        assert!(!guard.alive && !guard.running && guard.last.is_none());
+        drop(guard);
+        assert_eq!(
+            post(&shared, "/api/control", "{\"action\":\"reset\"}").status,
+            200
+        );
+        assert_eq!(
+            post(&shared, "/api/control", "{\"action\":\"step\"}").status,
+            200
+        );
+        assert_eq!(tick_of(&shared), 1);
+    }
+
+    #[test]
+    fn the_ecology_frame_reports_registry_biomass_and_growth_only_traits() {
+        let mut scenario =
+            config::parse(include_str!("../../../configs/scenarios/living-world.toml")).unwrap();
+        scenario.grid.nx = 8;
+        scenario.grid.ny = 8;
+        scenario.grid.nz = 8;
+        let mut sim = build(&scenario, 42).unwrap();
+        let frame = sim.ecology.frame(&sim, 3);
+        assert_eq!(frame["cells"].as_array().unwrap().len(), 64);
+        let types = frame["ecotypes"].as_array().unwrap();
+        assert_eq!(types.len(), 5);
+        let shares: f64 = types.iter().map(|t| t["share"].as_f64().unwrap()).sum();
+        assert!((shares - 1.0).abs() < 1e-12);
+        let harvester = types.iter().find(|t| t["id"] == "HARVESTER").unwrap();
+        assert!((harvester["vmax"].as_f64().unwrap() - 0.0012).abs() < 1e-12);
+        advance_one(&mut sim);
+        let last = sim.last.as_ref().unwrap();
+        assert_eq!(last.matter, 0);
+        assert_eq!(last.energy, Some(0));
+    }
+
     // --- the identity -----------------------------------------------------
 
     #[test]
@@ -2021,7 +2160,8 @@ mod tests {
             sim.tick.domain_sums(&sim.world, &mut before);
             advance_one(&mut sim);
             sim.tick.domain_sums(&sim.world, &mut after);
-            sim.ledger.assert_closed(Nu::EMPTY, &before, &after);
+            sim.ledger
+                .assert_closed(sim.tick.reaction_nu(tick), &before, &after);
             assert_eq!(sim.ticks, tick + 1, "the tick counter skipped");
         }
 

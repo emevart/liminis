@@ -11,22 +11,16 @@ separates a field from an object, and the evolutionary threshold of a transition
 
 ## Status
 
-Pre-S0. Nothing is simulated yet.
+The local living-world milestone runs a small eco-mode microbial culture in
+Rust and serves an offline browser observer. Five inherited ecotypes grow,
+compete for food and oxygen, produce mutated offspring, turn over into detritus
+and change their population shares. Biomass uses the same integer chemistry,
+transport and matter/energy accounting as the environment.
 
-There is no grid, no fields, no tick loop, no kernels. The repository currently holds
-the design documents, a Cargo workspace, and a single command that reads a scenario
-config, applies defaults, and prints the identity of the run it would have performed.
-
-The roadmap is laid out in `docs/SPEC.md` §13 and starts at S0: infrastructure first
-(pinned toolchain, config validator, golden tests, `world_format_version`), then the
-grid, the fields, advection, diffusion with substeps, pressure, light, enthalpy, the
-reaction engine with abiotic chemistry, a ledger for substance and a ledger for
-energy, and a volume viewer. Chemistry is in S0 because transport conserves substance
-by construction, so on a world without reactions the central invariant has almost
-nothing to catch (ADR-031) — and with oxidation fronts and chemical zonation the
-stage is no longer a dead world, though not yet a live one. Temperature is absent from
-the list on purpose: it follows from stored enthalpy instead of being a field of its
-own (ADR-028).
+This is finite mutation and selection in biomass fields. Individual cells,
+open-ended genomes and multicellular development are future stages. The full
+research acceptance criteria of S0/S1 are not claimed complete. Current scope
+and verification are recorded in [the local living-world plan](docs/plans/2026-10-04-local-living-world.md).
 
 ## Expectations
 
@@ -36,6 +30,25 @@ kernels are accepted rarely — see `docs/COMMUNITY.md` for why the boundary sit
 
 ## Quickstart
 
+On Windows, start a detached local server (builds the release binary and chooses
+a free loopback port):
+
+```powershell
+.\scripts\start-local.ps1
+```
+
+Or run the server in a terminal on any supported platform:
+
+```sh
+cargo run --release -p liminis -- serve
+```
+
+Open the printed localhost URL. The default culture uses seed 42; the viewer
+can pause, step, change speed, choose a slice, restart with a seed and export the
+current observation. Nothing is deployed or sent to an external service.
+
+The existing scenario identity command remains available:
+
 ```
 cargo build --workspace
 cargo run -p liminis -- run --config configs/scenarios/hello.toml --seed 42
@@ -44,7 +57,7 @@ cargo run -p liminis -- run --config configs/scenarios/hello.toml --seed 42
 The second command prints the triple that identifies a run:
 
 ```
-seed=42 config_hash=blake3:<hex16> world_format_version=1 code_version=0.1.0
+seed=42 config_hash=blake3:<hex16> world_format_version=27 code_version=0.1.0
 ```
 
 `config_hash` is computed after defaults are applied and over a canonical

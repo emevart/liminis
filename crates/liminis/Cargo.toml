@@ -17,4 +17,5 @@ path = "src/main.rs"
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
+serde_json.workspace = true
 liminis-core = { path = "../liminis-core", version = "0.1.0" }

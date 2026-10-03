@@ -54,13 +54,10 @@
 //!
 //! # What this file refuses to load
 //!
-//! A reaction with a non-empty `catalyst`, a non-empty `requires` or a non-empty
-//! `energy_from`. All three parse, all three validate, and all three reach a
-//! kernel that implements none of them — so passing them through would be a
-//! reaction running outside its declared window, or energy debited from a
-//! channel nobody counted, or (ADR-063 spells this one out) a catalysis column
-//! of a zero buffer, which stops the whole chemistry of the scenario with both
-//! halves of the invariant closing on `0 == 0`.
+//! Expression catalysts, non-empty `requires` and non-empty `energy_from` are
+//! refused. `guild:<id>` instead resolves to a registry substance and gathers
+//! its current concentration into Scratch before the common kernel (ADR-091).
+//! An unresolved guild is an error, never an unused zero catalyst column.
 //!
 //! # What is not here
 //!
@@ -220,34 +217,6 @@ pub struct ReactShape<'a> {
     pub enthalpy_lod: u32,
 }
 
-/// The one column of a reaction that the corpus declares nowhere in a form this
-/// file could read.
-///
-/// It arrives from the caller rather than being defaulted to something
-/// plausible, by the precedent `WorldLayout::velocity_lod` sets for exactly this
-/// situation: a number named in prose and by no key does not get invented at the
-/// point of use, because an invention outlives the task that made it.
-///
-/// **It used to be two, and the second was a drift rather than a gap.**
-/// `t_vmax` — the reference temperature of a Q10 factor (ADR-048) — was carried
-/// here on the claim that `CONFIG_SCHEMA.md` section 6 declared no such key and
-/// that `reaction_without_t_vmax_is_rejected` stood `#[ignore]`d. Both are false
-/// in this tree: the key is a mandatory field of the schema without a default
-/// (`config/schema.rs`, ADR-048), the shipped scenario declares it, and that test
-/// is live — the `#[ignore]` beside it is on the next one. So the column comes
-/// off the config like every other kinetic number (ADR-086).
-pub struct Undeclared<'a> {
-    /// The identifier of each reaction, folded from its **name** (ADR-027).
-    ///
-    /// It is the third counter of every draw the kernel takes. ADR-027 fixes
-    /// "from the name and never from the position in the file" and names no
-    /// mixer; `TODO(reaction-id)` in `kernels/react.rs` records that choosing one
-    /// is world semantics of the same standing as `numeric/rng.rs`. A plausible
-    /// FNV written here would outlive this file and become irreversible, so the
-    /// column comes from the caller.
-    pub reaction_id: &'a [u32],
-}
-
 /// One chemistry step: the flat tables of ADR-041, owned, plus the scalars the
 /// kernel receives.
 ///
@@ -255,6 +224,7 @@ pub struct Undeclared<'a> {
 /// the scenario and of the derivation; nothing in it is state.
 #[derive(Clone, Debug)]
 pub struct React {
+    catalyst_params: Vec<crate::kernels::catalyst::CatalystParams>,
     // --- by entry ---
     nu: Vec<i32>,
     nu_sub: Vec<u32>,
@@ -282,25 +252,23 @@ impl React {
     /// # Errors
     ///
     /// Returns an error if the derivation and the registry describe different
-    /// registries, if the column of [`Undeclared`] is not one entry per
-    /// reaction, if the shape's coarse grid is not the fine one at the declared
-    /// `lod`, if a storage coefficient does not fit the `i32` the kernel table
+    /// registries, if the shape's coarse grid is not the fine one at the
+    /// declared `lod`, if a storage coefficient does not fit the `i32` the
+    /// kernel table
     /// holds, if a folded scalar comes out non-finite or zero — and if any
-    /// reaction declares a `catalyst`, a `requires` window or an `energy_from`
-    /// channel, none of which the kernel implements.
+    /// reaction declares an unresolved guild, an expression catalyst, a
+    /// `requires` window or an `energy_from` channel.
     pub fn new(
         shape: &ReactShape<'_>,
         registry: &Registry,
         derived: &Derived,
         config: &Config,
-        undeclared: &Undeclared<'_>,
         seed: u64,
     ) -> Result<Self> {
         let n_reactions = derived.reactions().len();
         let n_substances = derived.substances().len();
 
         check_registry(registry, derived)?;
-        check_undeclared(undeclared, n_reactions)?;
         check_shape(shape)?;
         if config.reaction.len() != n_reactions {
             bail!(
@@ -354,6 +322,7 @@ impl React {
         lane.push(u32::MAX);
 
         let mut this = Self {
+            catalyst_params: Vec::new(),
             nu: Vec::new(),
             nu_sub: Vec::new(),
             km: Vec::new(),
@@ -361,7 +330,24 @@ impl React {
             len: Vec::with_capacity(n_reactions),
             e_r: Vec::with_capacity(n_reactions),
             cat: Vec::with_capacity(n_reactions),
-            rid: undeclared.reaction_id.to_vec(),
+            // Copied out of the derivation and never folded here, though
+            // `numeric::name_key` is one call away and would give the same
+            // bits today. The precedent is `WorldLayout::velocity_lod`: a
+            // number is not invented at the point of use, because the
+            // invention outlives the task. Two call sites would be two
+            // strings — the record's `id` and this one — and the day either
+            // grows a trim, a case fold or an NFC pass, the two refusals of
+            // ADR-090 guard a number no kernel receives.
+            //
+            // Wholesale and outside the loop below, which is also why nothing
+            // checks the length any more: `check_undeclared` existed to prove
+            // `rid.len() == n_reactions` back when the column came from a
+            // caller. It holds now only because the column and `n_reactions`
+            // are the same `derived.reactions()`. A short column would panic
+            // in the kernel, in release too; a long one would be silent. Take
+            // this column from anywhere else — `config.reaction[r]` is right
+            // there in the loop — and the proof goes with it.
+            rid: derived.reactions().iter().map(|r| r.rid).collect(),
             vmax: Vec::with_capacity(n_reactions),
             q10: Vec::with_capacity(n_reactions),
             t_vmax: Vec::with_capacity(n_reactions),
@@ -463,11 +449,34 @@ impl React {
             this.len
                 .push(this.nu.len() as u32 - this.begin[this.begin.len() - 1]);
             this.e_r.push(u32::from(reaction.e_r));
-            // No catalysis column exists, so the only legal value is the
-            // sentinel — and a sentinel rather than column 0 of a zero buffer,
-            // which is the accident ADR-063 names outright. A non-empty
-            // `catalyst` was refused above.
-            this.cat.push(NO_CATALYST);
+            if let Some(id) = record.catalyst.strip_prefix("guild:") {
+                let s = derived
+                    .substances()
+                    .iter()
+                    .position(|s| s.id == id)
+                    .with_context(|| {
+                        format!(
+                            "reaction `{}` names missing guild biomass `{id}`",
+                            record.id
+                        )
+                    })?;
+                let column = this.catalyst_params.len() as u32;
+                let (source_lane, source_wide) = match registry.lane_of()[s] {
+                    lane if registry.width_mask() & (1 << s) != 0 => (lane, true),
+                    lane => (lane, false),
+                };
+                this.catalyst_params
+                    .push(crate::kernels::catalyst::CatalystParams {
+                        source_lane,
+                        source_wide,
+                        column,
+                        lane_len: shape.grid.lane_len(),
+                        conc_per_unit: this.conc_per_unit[s],
+                    });
+                this.cat.push(column);
+            } else {
+                this.cat.push(NO_CATALYST);
+            }
             this.vmax
                 .push(finite(record.rate.vmax, "rate.vmax", &reaction.id)?);
             this.q10
@@ -552,13 +561,23 @@ impl React {
 
     /// How many planes of the fine grid the catalysis buffer has to hold.
     ///
-    /// Zero today, and by refusal rather than by omission: a non-empty
-    /// `catalyst` does not load (ADR-063, and `TODO(catalyst-class)` in
-    /// `kernels/react.rs` for what is undecided about the buffer itself).
+    /// One concentration column per catalysed reaction (ADR-091).
     #[inline]
     #[must_use]
     pub fn catalyst_columns(&self) -> u32 {
         self.cat.iter().filter(|&&c| c != NO_CATALYST).count() as u32
+    }
+
+    pub fn gather_catalysts(&self, src32: &[M32], src64: &[M64], dst: &mut [Q]) {
+        assert_eq!(
+            dst.len(),
+            self.catalyst_columns() as usize * self.params.lane_len as usize
+        );
+        for p in &self.catalyst_params {
+            for idx in 0..self.params.n_voxels {
+                crate::kernels::catalyst::catalyst_voxel(src32, src64, dst, p, idx);
+            }
+        }
     }
 
     /// One tick of the whole chemistry: one pass over the voxels, one call of the
@@ -752,21 +771,6 @@ fn check_registry(registry: &Registry, derived: &Derived) -> Result<()> {
     Ok(())
 }
 
-/// The undeclared column is one entry per reaction.
-fn check_undeclared(undeclared: &Undeclared<'_>, n_reactions: usize) -> Result<()> {
-    for (name, len) in [("reaction_id", undeclared.reaction_id.len())] {
-        if len != n_reactions {
-            bail!(
-                "{len} values of `{name}` were given for {n_reactions} reactions. \
-                 The column is indexed by reaction and travels with the row, so \
-                 one of the wrong length is read for a plausible set of reactions \
-                 and it is the wrong set"
-            );
-        }
-    }
-    Ok(())
-}
-
 /// The second half of step `i'`: reduce the fold's solar slice and credit
 /// `SOLAR_IN` with it (ADR-075).
 ///
@@ -902,7 +906,7 @@ fn check_shape(shape: &ReactShape<'_>) -> Result<()> {
 /// the whole chemistry of the scenario with both halves of the invariant closing
 /// on `0 == 0` — the accident ADR-063 names outright.
 fn check_unimplemented_keys(reaction: &Reaction) -> Result<()> {
-    if !reaction.catalyst.is_empty() {
+    if !reaction.catalyst.is_empty() && !reaction.catalyst.starts_with("guild:") {
         bail!(
             "reaction `{}` declares catalyst = \"{}\", and the catalysis field it \
              names does not exist. ADR-050 has the contribution of cells and \
@@ -1236,23 +1240,6 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
         format!("{HEADER}{}{FIELD}", reactions.concat())
     }
 
-    /// The identifier of a reaction, folded from its **name** and never from its
-    /// position in the file (ADR-027).
-    ///
-    /// A table rather than a hash, because the mixer is undecided (see
-    /// [`Undeclared::reaction_id`]) and because a table is what makes the
-    /// property visible: permuting the `[[reaction]]` blocks permutes this column
-    /// with them.
-    fn rid_of(id: &str) -> u32 {
-        match id {
-            "amination" => 0x5eed_0001,
-            "dimerisation" => 0x5eed_0002,
-            "isomerisation" => 0x5eed_0003,
-            "reduction" => 0x5eed_0004,
-            other => panic!("the fixture has no reaction called `{other}`"),
-        }
-    }
-
     /// Everything a test needs to run a step, in one value.
     #[derive(Debug)]
     struct Fixture {
@@ -1308,7 +1295,6 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
             )
             .unwrap();
 
-            let rid: Vec<u32> = derived.reactions().iter().map(|r| rid_of(&r.id)).collect();
             let react = React::new(
                 &ReactShape {
                     grid: world.grid(),
@@ -1318,7 +1304,6 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
                 world.registry(),
                 &derived,
                 &config,
-                &Undeclared { reaction_id: &rid },
                 seed,
             )?;
 
@@ -1701,7 +1686,22 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
             j += 1;
             assert_eq!(rx.len[r] as usize, j - rx.begin[r] as usize);
             assert_eq!(rx.e_r[r], u32::from(reaction.e_r));
-            assert_eq!(rx.rid[r], rid_of(&reaction.id));
+            // The derivation's column, and never `name_key(&reaction.id)`:
+            // folding the name on both sides of the equality would let a
+            // `React::new` that folds it a second time pass green, and this test
+            // is named for the one thing that would then stop being asserted.
+            // That the fold is `name_key` is asserted where the fold lives
+            // (`numeric/rng.rs`, `config/derive.rs`); here the claim is carriage
+            // without recomputation (ADR-090).
+            //
+            // One witness was lost with the hand-written table this replaces:
+            // both sides now come from one source, so "the rid was taken from
+            // the row index" no longer reddens here. Inside this file that
+            // property is left to `reaction_result_is_independent_of_order_in_toml`
+            // alone — the acceptance name for it,
+            // `reaction_id_is_stable_under_reordering_in_toml`, is budgeted to
+            // `crates/liminis-core/tests/` and is not written yet.
+            assert_eq!(rx.rid[r], reaction.rid);
             assert_eq!(rx.cat[r], NO_CATALYST);
         }
         assert_eq!(
@@ -2198,7 +2198,7 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
     /// happens to hold.
     #[test]
     fn a_catalysed_reaction_is_refused_until_the_catalysis_field_exists() {
-        for catalyst in ["guild:M_PHOTO", "expr:7"] {
+        for catalyst in ["expr:7"] {
             let text = scenario(&[amination(
                 VMAX_FOUR_QUANTA,
                 &format!("{{ ZED = {KM_NEGLIGIBLE}, ACE = {KM_NEGLIGIBLE} }}"),
@@ -2212,6 +2212,14 @@ km = {{ ZEDACE = {KM_NEGLIGIBLE} }}
                 );
             }
         }
+
+        let text = scenario(&[amination(
+            VMAX_FOUR_QUANTA,
+            &format!("{{ ZED = {KM_NEGLIGIBLE}, ACE = {KM_NEGLIGIBLE} }}"),
+            "catalyst = \"guild:UNKNOWN\"",
+        )]);
+        let refusal = format!("{:#}", Fixture::build(&text, SEED).unwrap_err());
+        assert!(refusal.contains("UNKNOWN") && refusal.contains("amination"));
 
         // The abiotic half: it loads, it runs, and the buffer changes nothing.
         let text = scenario(&[plain_amination(VMAX_FOUR_QUANTA)]);
