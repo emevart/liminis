@@ -76,7 +76,7 @@ async function run() {
     return response.json();
   };
   await eventually(async () => { try { return (await state()).kind === 'cells'; } catch { return false; } }, 'real host readiness');
-  browser = await chromium.launch({ headless: true, chromiumSandbox: true, timeout: 20000 });
+  browser = await chromium.launch({ headless: true, chromiumSandbox: true, args: ['--enable-automation'], timeout: 20000 });
   report.browserVersion = browser.version();
   const browserSession = await bounded(browser.newBrowserCDPSession(), 5000, 'browser command-line session');
   try {

@@ -179,3 +179,17 @@ https://playwright.dev/docs/intro#system-requirements
 https://docs.github.com/en/actions/reference/runners/github-hosted-runners
 https://github.com/actions/runner-images/issues/14254
 Только actualPASS нового exacthead может закрыть gate; предыдущийFAIL сохраняется.
+
+
+## Compatibility Trial: Sandbox Запустился, CDP Instrumentation FAIL
+
+Candidatec355238baa85f6cd24537336d80d1491c0fe011f наubuntu22.04 запустил
+protectedChromium149.0.7827.55, но доUI отказал диагностическийCDP вызов:
+Browser.getBrowserCommandLine требует --enable-automation. Failedreport
+Actions37204336072/artifact11303877676 сохранён; checks/screenshots пусты,
+UIQA неPASS. Это instrumentationdefect, не новый отказsandbox.
+
+Astra фактически вызван, сверил authoritativeCDP/Chromiumcontract и одобрил
+единственныйargs:['--enable-automation'] для раскрытияactualcommandline.
+Sandbox/CDPdenyflags/perms/platform не меняются, внешнийdebugport не открывается.
+Послеindependentreview нуженactualnewheadPASS; прежнийFAIL не скрывается.
