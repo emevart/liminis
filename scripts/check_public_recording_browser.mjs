@@ -151,7 +151,11 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
   for (const verified of evidence.publicAssets.verifiedResponses) {
     const asset = assets.find((item) => item.filename === verified.filename);
     expected.set(new URL(verified.finalUrl).pathname, asset);
-    for (const redirect of verified.redirects) attestedRedirects.set(redirect.from, redirect);
+    for (const redirect of verified.redirects) {
+      expected.set(new URL(redirect.from).pathname, asset);
+      expected.set(new URL(redirect.to).pathname, asset);
+      attestedRedirects.set(redirect.from, redirect);
+    }
   }
   const bodyReads = [];
   page.on("pageerror", (error) => observation.errors.push(error.message));
@@ -165,7 +169,9 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
       const result = { url: response.url(), httpStatus: response.status(), status: "FAIL", measurement: "Browser canonical redirect headers; no asset byte claim" };
       (observation.redirectResponses ||= []).push(result);
       try {
-        const target = new URL(response.headers().location, response.url());
+        const location = response.headers().location;
+        assert.ok(location, "Browser canonical redirect must name a target");
+        const target = new URL(location, response.url());
         const attested = attestedRedirects.get(response.url());
         assert.equal(target.origin, publicBase.origin);
         assert.ok(attested, "Browser redirect must match the verified Node chain");
