@@ -13,6 +13,14 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  site:
+    name: recorded observer data contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate the public recording and reject incomplete data
+        run: node --test site/recording.test.mjs
+
   check:
     name: build, lint, test
     runs-on: ubuntu-latest
@@ -33,6 +41,9 @@ jobs:
 
       - name: Test
         run: cargo test --workspace
+
+      - name: Recorded exporter tests
+        run: cargo test -p liminis --example export_cell_replay
 
   # The rule is old, the check is not: NUMERIC.md section 8 asks for "a linter or
   # a grep in CI, rather than a line in CLAUDE.md". The PostToolUse hook greps
