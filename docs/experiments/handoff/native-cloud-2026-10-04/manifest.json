@@ -1,0 +1,36 @@
+{
+  "kind": "bounded-evidence-only",
+  "product_release": false,
+  "source_head": "09a2b5c151f6f1c4b691e4db5044131c771c3f80",
+  "source_tree": "724ff0c37b518320dfc76494796edcb7ee52474e",
+  "workflow_run": 37215665903,
+  "artifact_id": 11308267497,
+  "assets": [
+    {
+      "filename": "public-09a2b5c.zip",
+      "bytes": 3690990,
+      "sha256": "f87a7e284aee272aa776f4d8013caaa0ff8f31cf04572cd6678249519c353d0a",
+      "status": "PASS protected desktop/mobile; exact known Cloudflare insertion qualified, analytics intentionally blocked; fullCI pending"
+    },
+    {
+      "filename": "public-a735-fail.zip",
+      "bytes": 897590,
+      "sha256": "b9677fc3059a2a051d7fa585ca918279ae9b7ddb70e6f529e6b1064896397ba6",
+      "status": "FAIL: unqualified production HTML insertion; diagnostic, not acceptance"
+    },
+    {
+      "filename": "public-4839-fail.zip",
+      "bytes": 3609,
+      "sha256": "ab392968b11b7cd9b91a39f4bac9fb5c481d74263de2952dfffe834317408c55",
+      "status": "FAIL: canonical redirect not admitted by original gate; diagnostic, not acceptance"
+    }
+  ],
+  "privacy": {
+    "text_entries_pattern_scanned": 21,
+    "pattern_hits": 0,
+    "limit": "Bounded pattern scan plus both production screenshots viewed, not a full secret guarantee.",
+    "representative_pngs_viewed": 2
+  },
+  "hosting_qualification": "Browser raw HTML differs by exactly one independently pinned Cloudflare insertion; removing that insertion yields source bytes. Its exact analytics Script GET is blocked at CDP Request stage with ACK. Critical application resources and recording match bytes; analytics execution not tested. Original ZIPs retained without repacking.",
+  "independent_artifact_review": "Qualified PASS, 0 blockers: bytes/trace/rawHTML/2PNG/lifecycle/controls/protectedargv independently reviewed; fullCI still pending."
+}
