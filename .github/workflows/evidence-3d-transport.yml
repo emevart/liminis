@@ -1,7 +1,7 @@
 name: Original 3D evidence byte transport
 
 # Evidence-only branch. No product PR, checkout, build, browser or model run.
-# This workflow is never merged into main; the product candidate stays 9d9f709.
+# This workflow is never merged into main; the product candidate stays unchanged.
 on:
   push:
     branches: [codex/evidence-transport-3d-20261004]
@@ -33,12 +33,13 @@ jobs:
 
           REPO = 'emevart/liminis'
           REPO_ID = 1317617987
-          RUN = 37238281987
-          ARTIFACT = 11316208815
-          HEAD = '9d9f70903939b93905beed9e0ad2be5c3f4d18ff'
-          TREE = '7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d'
-          SIZE = 44944288
-          SHA = 'e417e0a26e61a28315d080e0ea4b42153bd033d090449e9c52958b9301097e98'
+          RUN = 37243706546
+          JOB = 111557322570
+          ARTIFACT = 11318935319
+          HEAD = '79df352a045cf7dd0efc14a232e867365c7b75a7'
+          TREE = '0c9b9a5530111e418e49a675a946b5f007367c21'
+          SIZE = 59183146
+          SHA = '8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60'
           PART = 16777216
           deadline = time.monotonic() + 150
 
@@ -80,9 +81,15 @@ jobs:
               run = api_json('/actions/runs/' + str(RUN))
               assert run['id'] == RUN and run['head_sha'] == HEAD
               assert run['repository']['id'] == run['head_repository']['id'] == REPO_ID
-              assert run['head_branch'] == 'codex/live-cells-3d-observer'
+              assert run['head_branch'] == 'codex/lab-aggregate-site'
               assert run['event'] == 'pull_request'
-              assert run['status'] == 'completed' and run['conclusion'] == 'success'
+              # Preserve this completed LIVE job even if the separate LAB
+              # gate fails. Do not label the overall workflow successful.
+              assert run['status'] == 'completed' and run['conclusion'] == 'failure'
+              job = api_json('/actions/jobs/' + str(JOB))
+              assert job['id'] == JOB and job['run_id'] == RUN
+              assert job['head_sha'] == HEAD and job['name'] == 'live cells browser acceptance'
+              assert job['status'] == 'completed' and job['conclusion'] == 'success'
               meta = api_json('/actions/artifacts/' + str(ARTIFACT))
               assert meta['id'] == ARTIFACT and not meta['expired']
               assert meta['name'] == 'physical-3d-browser-' + HEAD
@@ -126,16 +133,18 @@ jobs:
                       'repository': REPO,
                       'original': {'artifact_id': ARTIFACT, 'run_id': RUN, 'source_head': HEAD,
                                    'source_tree': TREE, 'bytes': SIZE, 'sha256': SHA,
-                                   'zip_crc': 'PASS', 'zip_members': members},
+                                   'zip_crc': 'PASS', 'zip_members': members,
+                                   'job_id': JOB, 'job_conclusion': job['conclusion'],
+                                   'workflow_status': run['status'], 'workflow_conclusion': run['conclusion']},
                       'transport': {'run_id': int(os.environ['GITHUB_RUN_ID']),
                                     'run_attempt': int(os.environ['GITHUB_RUN_ATTEMPT']),
                                     'source_head': os.environ['GITHUB_SHA']},
-                      'part': {'ordinal': ordinal, 'count': 3, 'offset': offset,
+                      'part': {'ordinal': ordinal, 'count': 4, 'offset': offset,
                                'file': name, 'bytes': len(raw),
                                'sha256': hashlib.sha256(raw).hexdigest()}}
                   (folder / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
                   parts.append(receipt['part'])
-              assert [p['bytes'] for p in parts] == [16777216, 16777216, 11389856]
+              assert [p['bytes'] for p in parts] == [16777216, 16777216, 16777216, 8851498]
               print(json.dumps({'status': 'PASS', 'original_id': ARTIFACT,
                                 'original_sha256': SHA, 'parts': parts}))
           except Exception as error:
@@ -148,7 +157,7 @@ jobs:
       - name: Attach original bytes part 1
         uses: actions/upload-artifact@v4
         with:
-          name: physical-3d-original-9d9f709-part-001-${{ github.sha }}
+          name: physical-3d-original-79df352-part-001-${{ github.sha }}
           path: ${{ runner.temp }}/liminis-original-3d-parts/part-001/
           compression-level: 0
           if-no-files-found: error
@@ -157,7 +166,7 @@ jobs:
       - name: Attach original bytes part 2
         uses: actions/upload-artifact@v4
         with:
-          name: physical-3d-original-9d9f709-part-002-${{ github.sha }}
+          name: physical-3d-original-79df352-part-002-${{ github.sha }}
           path: ${{ runner.temp }}/liminis-original-3d-parts/part-002/
           compression-level: 0
           if-no-files-found: error
@@ -166,8 +175,17 @@ jobs:
       - name: Attach original bytes part 3
         uses: actions/upload-artifact@v4
         with:
-          name: physical-3d-original-9d9f709-part-003-${{ github.sha }}
+          name: physical-3d-original-79df352-part-003-${{ github.sha }}
           path: ${{ runner.temp }}/liminis-original-3d-parts/part-003/
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Attach original bytes part 4
+        uses: actions/upload-artifact@v4
+        with:
+          name: physical-3d-original-79df352-part-004-${{ github.sha }}
+          path: ${{ runner.temp }}/liminis-original-3d-parts/part-004/
           compression-level: 0
           if-no-files-found: error
           retention-days: 7
