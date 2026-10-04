@@ -43,3 +43,26 @@
   без catalog/PR. После complete source/file validation — exact-head PR/CI,
   independent protected browser artifacts; только затем guarded merge и
   существующая production verification.
+
+## Complete candidate, 19:20 UTC
+
+First partial commit `1db6d26c094ebf25be93fc7cca912a8a1137945a` опубликован
+в `codex/dense-recorded-observer`:2259chunks/1399591759gzipbytes. Второй batch
+1650chunks/1021041806gzipbytes, metadata и все три catalog dense attachments
+подготовлены. Total3919files/2424602694bytes. Build helper проверил complete
+closed inventory, каждый file digest, unchanged observations/original metadata,
+shared prefixes/provenance и cap. Native full-data Node suite109PASS; RustfmtPASS.
+Снятие только новых dense fields из catalog даёт exact старый catalog.
+
+Полный report/receipt независимо проверен numerics reviewer:0blockers.
+Независимый combined source review0 после exact archivedSHA fetch для shallow
+CI; fetched compatibility helpers не подменяют candidate checkout. Два старых
+archive loader tests использовали реальный catalog как mock без dense server:
+после attachment исправлена только явная архивная fixture, production не менялся.
+Эти два FAIL сохранены диагностикой и не выдаются за прежний109PASS/full-data PASS.
+Positive/corrupt/identity dense tests и mandatory actual browser gate сохранены.
+
+Pending: second network push, fresh independent-objectDB readback и точный
+candidate CI/protected browser/independent artifacts. Native checks не заменяют
+browser/provider capacity acceptance. Следующий шаг — закончить bounded push,
+создать PR с полным набором, принять exact-head11checks и реальные artifacts.

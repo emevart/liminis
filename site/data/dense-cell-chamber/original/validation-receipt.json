@@ -1,0 +1,13 @@
+{
+  "kind": "full_dense_recording_validation",
+  "schema_version": 1,
+  "status": "PASS",
+  "source_index_sha256": "44b142721927011cef693ba75bb9867d928d6a1d9cd172f050f2bf54832685b9",
+  "horizon": 1000000,
+  "frames": 1000001,
+  "decoded_frames": 1000001,
+  "producer_commit": "bb70c9eb448b55ef3f50dfd6cd2a70213157bd8d",
+  "matter_residual_max": "0",
+  "energy_residual_max": "0",
+  "validation_report_sha256": "af409a80ff61fecd4600c971fac21b3fbc1cb30cbfbdb24f43af225156f88f47"
+}

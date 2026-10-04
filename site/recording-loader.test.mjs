@@ -5,12 +5,15 @@ import test from "node:test";
 import { loadRecording } from "./recording-loader.mjs";
 
 const catalog = JSON.parse(await readFile(new URL("./data/catalog.json", import.meta.url), "utf8"));
+// Проверяем legacy fallback явно на архивном catalog, независимо от того,
+// прикреплена ли уже complete dense publication к реальному catalog сайта.
+const archiveCatalog = { ...catalog, entries: catalog.entries.map(({ dense, ...entry }) => entry) };
 const bytes = await readFile(new URL(catalog.entries[0].recording, import.meta.url));
 const mockFetch = (dataset = bytes, status = 200) => async (url) => url === "./data/catalog.json"
-  ? Response.json(catalog)
+  ? Response.json(archiveCatalog)
   : new Response(dataset, { status });
 
-test("loads and verifies the default recorded dataset", async () => {
+test("loads and verifies the default archive when no dense attachment exists", async () => {
   const { entry, data } = await loadRecording("", mockFetch(), webcrypto);
   assert.equal(entry.id, catalog.default_experiment);
   assert.equal(data.experiment.steps, entry.experiment.steps);
