@@ -21,7 +21,9 @@ jobs:
       - name: Validate recordings, catalog freshness, and download integrity
         run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs
       - name: Validate exact dense codec and Linux publication boundaries
-        run: python3 scripts/dense-recording-tests.py
+        run: |
+          git fetch --no-tags --depth=1 origin bd2a7f25e61abd713109171fc25b7c3de86003ab
+          python3 scripts/dense-recording-tests.py
 
   live-browser:
     name: live cells browser acceptance
