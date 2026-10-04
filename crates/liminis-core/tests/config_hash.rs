@@ -1,6 +1,7 @@
 //! The config hash has to identify the configuration, not the file.
 
 use liminis_core::config;
+use liminis_core::micro::config as micro_config;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -657,7 +658,15 @@ fn every_scenario_in_the_repository_loads() {
     for entry in std::fs::read_dir(&dir).expect("configs/scenarios must exist") {
         let path = entry.expect("reading configs/scenarios").path();
         if path.extension().is_some_and(|ext| ext == "toml") {
-            if let Err(err) = config::load(&path) {
+            let result = if path
+                .file_name()
+                .is_some_and(|name| name == "cell-chamber.toml")
+            {
+                micro_config::load(&path).map(|_| ())
+            } else {
+                config::load(&path).map(|_| ())
+            };
+            if let Err(err) = result {
                 panic!("{} does not load: {err:#}", path.display());
             }
             seen += 1;

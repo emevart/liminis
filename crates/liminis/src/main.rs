@@ -7,6 +7,7 @@
 //! contract (ADR-070), and the half that turns a world into bytes lives in
 //! `serve.rs`.
 
+mod cells_host;
 mod http;
 #[cfg(test)]
 mod json;
@@ -39,6 +40,21 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Observe real individual cells in a separate, well-mixed chamber.
+    Cells {
+        #[arg(long, value_name = "PATH", conflicts_with = "resume")]
+        config: Option<PathBuf>,
+        #[arg(long, value_name = "N", conflicts_with = "resume")]
+        seed: Option<u64>,
+        #[arg(long, default_value_t = 8083)]
+        port: u16,
+        #[arg(long, default_value = ".liminis/cells", value_name = "PATH")]
+        data_dir: PathBuf,
+        #[arg(long, value_name = "RUN_ID|latest")]
+        resume: Option<String>,
+        #[arg(long, value_name = "CHECKPOINT_ID", requires = "resume")]
+        checkpoint: Option<String>,
+    },
     /// Read a scenario config and print the run identity.
     Run {
         /// Path to a scenario TOML file.
@@ -86,6 +102,21 @@ enum Command {
 
 fn main() -> Result<()> {
     match Cli::parse().command {
+        Command::Cells {
+            config,
+            seed,
+            port,
+            data_dir,
+            resume,
+            checkpoint,
+        } => cells_host::run(
+            port,
+            &config.unwrap_or_else(|| PathBuf::from("configs/scenarios/cell-chamber.toml")),
+            seed.unwrap_or(42),
+            &data_dir,
+            resume.as_deref(),
+            checkpoint.as_deref(),
+        ),
         Command::Run {
             config,
             seed,
@@ -166,6 +197,29 @@ fn route(shared: &Arc<Mutex<serve::Sim>>, request: &Request) -> Response {
 mod tests {
     use super::*;
     use serve::fixture;
+
+    #[test]
+    fn cells_have_separate_defaults_and_identity_guards() {
+        let Command::Cells {
+            config,
+            seed,
+            port,
+            data_dir,
+            resume,
+            checkpoint,
+        } = Cli::try_parse_from(["liminis", "cells"]).unwrap().command
+        else {
+            panic!("cells command");
+        };
+        assert!(config.is_none() && seed.is_none() && resume.is_none() && checkpoint.is_none());
+        assert_eq!(port, 8083);
+        assert_eq!(data_dir, PathBuf::from(".liminis/cells"));
+        assert!(
+            Cli::try_parse_from(["liminis", "cells", "--resume", "latest", "--seed", "42"])
+                .is_err()
+        );
+        assert!(Cli::try_parse_from(["liminis", "cells", "--checkpoint", "checkpoint-x"]).is_err());
+    }
 
     #[test]
     fn serve_defaults_to_the_accepted_genetic_experiment() {

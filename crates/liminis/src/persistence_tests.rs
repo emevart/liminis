@@ -92,6 +92,39 @@ fn rewrite_envelope(run: &Path, info: &CheckpointInfo) {
 }
 
 #[test]
+fn eco28_compatibility_is_narrow_and_preserves_saved_identity() {
+    assert!(supports_eco_version(WORLD_FORMAT_VERSION));
+    assert!(!supports_eco_version(27));
+    assert!(!supports_eco_version(WORLD_FORMAT_VERSION + 1));
+    if WORLD_FORMAT_VERSION != 29 {
+        return;
+    }
+    assert!(supports_eco_version(28));
+    let root = Temp::new();
+    let mut sim = fixture();
+    sim.identity.world_format_version = 28;
+    for _ in 0..7 {
+        assert!(super::super::safe_advance(&mut sim));
+    }
+    sim.running = false;
+    let mut storage = Persistence::create(&root.0, &sim).unwrap();
+    storage.wait_for_save().unwrap();
+    let run_id = storage.lease.info.run_id.clone();
+    stop(storage);
+    let mut resumed = resume(&root.0, &run_id, None).unwrap();
+    assert_eq!(resumed.identity.world_format_version, 28);
+    assert_eq!(resumed.ticks, sim.ticks);
+    assert!(resumed.last.is_none());
+    assert!(super::super::safe_advance(&mut resumed));
+    let mut storage = resumed.persistence.take().unwrap();
+    storage.save(&resumed, true).unwrap();
+    storage.wait_for_save().unwrap();
+    assert_eq!(saved(&storage).world_format_version, 28);
+    assert_eq!(storage.lease.info.world_format_version, 28);
+    stop(storage);
+}
+
+#[test]
 fn published_checkpoint_rejects_corruption_truncation_trailing_data_and_wrong_identity() {
     for case in 0..4 {
         let root = Temp::new();

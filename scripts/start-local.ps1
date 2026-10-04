@@ -7,6 +7,7 @@ param(
     [string]$DataDir,
     [string]$Resume,
     [string]$Checkpoint,
+    [switch]$Cells,
     [switch]$OpenBrowser
 )
 
@@ -22,6 +23,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Liminis build failed.' }
 
     $chosenPort = $Port
+    if ($Cells -and -not $PSBoundParameters.ContainsKey('Port')) { $chosenPort = 8083 }
     while ($chosenPort -le 65535) {
         $probe = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $chosenPort)
         try {
@@ -40,9 +42,13 @@ try {
     Copy-Item -LiteralPath $binaryPath -Destination $runPath -Force
     $logPath = Join-Path $projectPath "target\local-$chosenPort.log"
     $errorPath = Join-Path $projectPath "target\local-$chosenPort.error.log"
-    if (-not $DataDir) { $DataDir = Join-Path $projectPath '.liminis\runs' }
+    if (-not $DataDir) {
+        $storageFolder = if ($Cells) { '.liminis\cells' } else { '.liminis\runs' }
+        $DataDir = Join-Path $projectPath $storageFolder
+    }
     $dataPath = [System.IO.Path]::GetFullPath($DataDir)
-    $serverArgs = @('serve', '--port', $chosenPort, '--data-dir', "`"$dataPath`"")
+    $command = if ($Cells) { 'cells' } else { 'serve' }
+    $serverArgs = @($command, '--port', $chosenPort, '--data-dir', "`"$dataPath`"")
     if ($Resume) {
         $serverArgs += @('--resume', "`"$Resume`"")
         if ($Checkpoint) { $serverArgs += @('--checkpoint', "`"$Checkpoint`"") }

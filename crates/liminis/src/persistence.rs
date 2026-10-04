@@ -232,7 +232,7 @@ impl Persistence {
             scenario: sim.identity.scenario.clone(),
             seed: sim.identity.seed.to_string(),
             config_hash: sim.identity.config_hash.clone(),
-            world_format_version: WORLD_FORMAT_VERSION,
+            world_format_version: sim.identity.world_format_version,
             created_at: now(),
         };
         let lease = Arc::new(Lease {
@@ -382,7 +382,7 @@ impl Persistence {
             session_id: self.session.session_id.clone(),
             seed: sim.identity.seed.to_string(),
             config_hash: sim.identity.config_hash.clone(),
-            world_format_version: WORLD_FORMAT_VERSION,
+            world_format_version: sim.identity.world_format_version,
             tick: sim.ticks,
             running: sim.running && sim.alive,
             target_tps: sim.target_tps,
@@ -504,7 +504,7 @@ pub(super) fn resume(root: &Path, run: &str, checkpoint: Option<&str>) -> Result
         "checkpoint identity differs from run manifest"
     );
     ensure!(
-        latest.world_format_version == WORLD_FORMAT_VERSION,
+        supports_eco_version(latest.world_format_version),
         "saved world version is not supported by this build"
     );
     ensure!(
@@ -519,6 +519,13 @@ pub(super) fn resume(root: &Path, run: &str, checkpoint: Option<&str>) -> Result
         .parse::<u64>()
         .context("saved seed is not u64")?;
     let mut sim = build(&config, seed)?;
+    ensure!(
+        sim.identity.config_hash == latest.config_hash,
+        "saved canonical config hash differs from this build"
+    );
+    // ADR-100: the new chamber does not change the eco tick. A resumed eco28
+    // experiment keeps its original identity in every subsequent artifact.
+    sim.identity.world_format_version = latest.world_format_version;
     let bytes = fs::read(generation.join("state.limsnap"))?;
     ensure!(
         bytes.len() as u64 == latest.state_bytes,
@@ -565,6 +572,10 @@ fn snapshot_identity(sim: &Sim) -> SnapshotIdentity {
         world_format_version: sim.identity.world_format_version,
         tick: sim.ticks,
     }
+}
+
+fn supports_eco_version(version: u32) -> bool {
+    version == WORLD_FORMAT_VERSION || (WORLD_FORMAT_VERSION == 29 && version == 28)
 }
 
 fn metrics(sim: &Sim, tick_record: bool) -> Result<Vec<u8>> {

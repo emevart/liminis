@@ -1218,4 +1218,7 @@
 /// reproducible on version 26.
 /// Version 28 compiles two-locus genotypes into checked chemistry and permits
 /// declared inocula over explicit initial concentrations (ADR-093, ADR-094).
-pub const WORLD_FORMAT_VERSION: u32 = 28;
+/// Version 29 adds a separate, well-mixed individual-cell chamber (ADR-099,
+/// ADR-101). Eco tick semantics are unchanged; ADR-100 permits only eco28
+/// resume with its original identity preserved, never cross-kind loading.
+pub const WORLD_FORMAT_VERSION: u32 = 29;

@@ -7,6 +7,7 @@
 pub mod config;
 pub mod kernels;
 pub mod ledger;
+pub mod micro;
 pub mod numeric;
 pub mod observe;
 pub mod process;

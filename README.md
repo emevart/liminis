@@ -29,6 +29,15 @@ and [the earlier living-world plan](docs/plans/2026-10-04-local-living-world.md)
 The observer now saves full restart checkpoints and exact scalar history to
 local disk; see [the durable-experiment plan](docs/plans/2026-10-04-durable-living-experiment.md).
 
+A separate individual-cell mode now runs an ideal well-mixed, isothermal chamber.
+Every visible capsule is a real cell with an ID, parent, generation, inherited
+genome, structural mass and energy reserve. Cells grow, divide into two offspring,
+mutate a bounded kinetics locus and die from energy starvation. Finite reservoir
+exchange feeds the chamber through counted matter/energy channels. This is not a
+spatial microsolver: screen positions are presentation only, and there is no
+GRN, adhesion or multicellular development yet. See the
+[cell-chamber plan](docs/plans/2026-10-04-cell-chamber.md).
+
 ## Expectations
 
 This is a research project. Issues and questions are answered when there is time,
@@ -36,6 +45,27 @@ scenarios and analysis tooling are welcome, and pull requests against the numeri
 kernels are accepted rarely — see `docs/COMMUNITY.md` for why the boundary sits there.
 
 ## Quickstart
+
+For the new individual-cell chamber, start a separate local observer:
+
+```powershell
+.\scripts\start-local.ps1 -Cells
+```
+
+Or:
+
+```sh
+cargo run --release -p liminis -- cells
+```
+
+It defaults to port 8083, seed 42 and `configs/scenarios/cell-chamber.toml`.
+Its own storage is `.liminis/cells`; after stopping its server, continue with
+`.\scripts\start-local.ps1 -Cells -Resume latest`. Pause and Save commit the
+exact cell table and counters, not the browser picture. Autosave is every minute,
+history samples every ten completed ticks, and the last three checkpoints remain.
+Selecting a cell shows its actual identity and decoded traits. A hard safety
+limit stops the experiment visibly; it never silently suppresses births or resets.
+The old culture servers and `.liminis/runs` remain independent.
 
 On Windows, start a detached local server (builds the release binary and chooses
 a free loopback port):
@@ -127,7 +157,7 @@ cargo run -p liminis -- run --config configs/scenarios/hello.toml --seed 42
 The second command prints the triple that identifies a run:
 
 ```
-seed=42 config_hash=blake3:<hex16> world_format_version=28 code_version=0.1.0
+seed=42 config_hash=blake3:<hex16> world_format_version=29 code_version=0.1.0
 ```
 
 `config_hash` is computed after defaults are applied and over a canonical
