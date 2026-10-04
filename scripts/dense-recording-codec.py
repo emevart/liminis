@@ -289,11 +289,19 @@ def reconstruct(definition, values):
     return dict(zip(STATIC + DYNAMIC, definition + values))
 
 
-def validate_descriptor(descriptor):
+def sharded_path(ordinal, first, last):
+    natural(ordinal, MAX_CHUNKS - 1)
+    return f"chunks/{ordinal // 256:02d}/chunk-{first:07d}-{last:07d}.jsonl.gz"
+
+
+def validate_descriptor(descriptor, ordinal=None):
     fields(descriptor, ("path", "first_tick", "last_tick", "frames", "gzip_bytes", "decoded_bytes", "gzip_sha256", "decoded_sha256"))
-    require(type(descriptor["path"]) is str and re.fullmatch(r"chunk-[0-9]{7}-[0-9]{7}\.jsonl\.gz", descriptor["path"]), "unsafe chunk path")
+    require(type(descriptor["path"]) is str and re.fullmatch(r"(?:chunks/(?:[0-2][0-9]|3[01])/)?chunk-[0-9]{7}-[0-9]{7}\.jsonl\.gz", descriptor["path"]), "unsafe chunk path")
     first, last = natural(descriptor["first_tick"], 1_000_000), natural(descriptor["last_tick"], 1_000_000)
-    require(descriptor["path"] == f"chunk-{first:07d}-{last:07d}.jsonl.gz", "path/range mismatch")
+    name = f"chunk-{first:07d}-{last:07d}.jsonl.gz"
+    require(descriptor["path"].split("/")[-1] == name, "path/range mismatch")
+    if ordinal is not None and descriptor["path"] != name:
+        require(descriptor["path"] == sharded_path(ordinal, first, last), "path/ordinal shard mismatch")
     require(last >= first and type(descriptor["frames"]) is int and 1 <= descriptor["frames"] == last - first + 1 <= MAX_TICKS, "invalid chunk range")
     require(type(descriptor["gzip_bytes"]) is int and 1 <= descriptor["gzip_bytes"] <= MAX_GZIP
             and type(descriptor["decoded_bytes"]) is int and 1 <= descriptor["decoded_bytes"] <= MAX_DECODED

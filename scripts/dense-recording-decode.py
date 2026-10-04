@@ -13,7 +13,7 @@ codec = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(codec)
 
 
-def frames(manifest_path, first=0, last=None):
+def metadata(manifest_path):
     path = Path(manifest_path)
     with path.open("rb") as stream:
         raw = stream.read(16 * 1024 * 1024 + 1)
@@ -70,8 +70,8 @@ def frames(manifest_path, first=0, last=None):
     chunks = manifest["chunks"]
     codec.require(type(chunks) is list and 1 <= len(chunks) <= codec.MAX_CHUNKS, "unbounded manifest chunks")
     expected = 0
-    for chunk in chunks:
-        codec.validate_descriptor(chunk)
+    for ordinal, chunk in enumerate(chunks):
+        codec.validate_descriptor(chunk, ordinal)
         codec.require(chunk["first_tick"] == expected, "manifest chunk gap/overlap")
         expected = chunk["last_tick"] + 1
     codec.require(expected == horizon + 1, "manifest horizon mismatch")
@@ -82,6 +82,13 @@ def frames(manifest_path, first=0, last=None):
     if horizon == index["manifests"][-1]["last_tick"]:
         codec.require(index["unique_chunks"] == len(chunks) and index["unique_gzip_bytes"] == gzip_bytes
                       and index["decoded_chunk_bytes"] == decoded_bytes, "index/full horizon count mismatch")
+    return manifest, index, raw, index_bytes
+
+
+def frames(manifest_path, first=0, last=None):
+    path = Path(manifest_path)
+    manifest, _, _, _ = metadata(path)
+    horizon, chunks = manifest["experiment"]["steps"], manifest["chunks"]
     last = horizon if last is None else last
     codec.require(type(first) is int and type(last) is int and 0 <= first <= last <= horizon, "invalid requested range")
     for chunk in chunks:

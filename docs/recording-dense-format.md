@@ -119,7 +119,7 @@ Packer записывает во временный соседний катал�
 ## Файлы, индекс и общие префиксы
 
 Codec identifier: `dense-cell-jsonl-mask-v1+gzip`, schema `1`.
-Набор состоит из `index.json`, `horizon-H.json` и файлов
+Исходный набор состоит из `index.json`, `horizon-H.json` и файлов
 `chunk-FFFFFFF-LLLLLLL.jsonl.gz`, где `F/L` — включительные номера первого и
 последнего тика с семью десятичными цифрами. Chunk содержит один gzip member,
 mtime `0`, пустое filename, OS byte `255`, deflate level `9`.
@@ -263,6 +263,109 @@ chunk по включительному tick range, проверить/inflate �
 более `255` delta records после keyframe. Держать весь миллион состояний
 в памяти не требуется. Consumer обязан отклонять truncated payload,
 trailing bytes, дополнительные gzip members и oversize до выдачи состояний.
+
+## Публикация с неизменными payload bytes
+
+`scripts/publish_dense_recording.py` меняет только транспортную раскладку
+завершённого, проверенного набора. Producer и движок не запускаются повторно.
+Новый dataset сохраняет `identity`, `provenance`, genome definitions и все
+chunk descriptors кроме `path`; gzip bytes не пересжимает и не меняет.
+Publisher source HEAD обозначается отдельно от producer/engine refs.
+
+Новый путь chunk с порядковым номером `ordinal` в полном списке:
+
+```text
+chunks/{ordinal // 256:02d}/chunk-FFFFFFF-LLLLLLL.jsonl.gz
+```
+
+`ordinal` начинается с нуля; максимум `8192` chunks означает не более `32`
+директорий `00..31`, каждая не более `256` файлов. Префиксы используют те же
+ordinal и пути, что полный manifest. Reference codec/decoder принимает и
+прежние flat paths, и эту каноническую раскладку; номер директории проверяет
+у всех descriptors до seek, включая chunks вне запрошенного диапазона.
+`..`, абсолютные paths, иные директории и несовпадение path/range запрещены.
+Publisher дополнительно отвергает source symlinks и path resolution вне
+корня dataset. Input inventory замкнут на index, перечисленные manifests
+и chunks; неожиданные files/directories отвергаются, отчёты и logs хранятся
+снаружи. Прежние strict decoders
+из `bb70c9e` принимают только flat layout и не читают новый transport layout;
+идентификатор payload codec v1 остаётся прежним, совместимый reader должен
+обновить именно admission/resolution paths.
+
+Перед первым копированием publisher проверяет все manifests, их index
+SHA/size, total budget, смежные ranges, точные общие prefix descriptors/paths,
+metadata/provenance и genome definitions. Затем перечитывает каждый
+уникальный source gzip: size/SHA-256, канонический header, CRC/ISIZE,
+inflated size/SHA-256 и record count. Обычный режим полностью декодирует
+schema одной полной уникальной траектории, без повторения проходов меньших
+горизонтов; проверяет определения на границах chunks и genome tables
+префиксов. Только после полного успеха итоговый каталог становится видимым.
+
+Reuse-режим требует отдельную доверенную квитанцию координатора, созданную
+только после успешного полного decode исходной траектории. Её exact closed
+schema, UTF-8 JSON размером не более `64 KiB`, содержит:
+
+```text
+kind = "full_dense_recording_validation", schema_version = 1, status = "PASS"
+source_index_sha256 = SHA-256 исходного index
+horizon = H, frames = H+1, decoded_frames = H+1
+producer_commit = исходный provenance.producer_commit
+matter_residual_max = "0", energy_residual_max = "0"
+validation_report_sha256 = SHA-256 отдельного полного validation report
+```
+
+Duplicate keys и неизвестные fields запрещены. CLI требует одновременно
+receipt path и внешний ожидаемый receipt SHA-256; отдельный внешний ожидаемый
+source index SHA-256 обязателен в обоих режимах. Receipt должен совпасть с
+реальными index bytes, полным горизонтом, frame count и producer commit.
+Это доверенное evidence координатора, закреплённое снаружи: не подпись,
+не аттестация binary/kernel и не независимая проверка истинности report.
+Receipt нельзя выпускать по частичному прогону или текущему progress report.
+
+Reuse пропускает повторное восстановление всех frames, опираясь на receipt
+и transitive source digests; все gzip/inflated проверки всё равно выполняет
+над прочитанными bytes. Genome dictionary на каждой prefix boundary
+проверяется по keyframe/genotype additions соответствующего ending chunk,
+не восстанавливая клеточные состояния. `publication.json` явно записывает
+метод, внешний receipt SHA и число frames, декодированных именно publisher:
+`0` в reuse-режиме. Новый научный прогон или новый producer HEAD этим не
+объявляется.
+
+Выход содержит опубликованные index/manifests, sharded chunks и отдельный
+`publication.json`. В `original/` byte-exact сохраняются исходные index,
+все исходные manifests и переданный receipt. Исходные gzip второй раз не
+копируются: mapping связывает original path с published path и теми же
+gzip/decoded SHA/length. Файлы `original/horizon-H.json` служат evidence;
+их flat chunk paths разрешаются через mapping, а не через отсутствующие
+original chunk copies. Обычный decoder читает опубликованный корневой
+`horizon-H.json`.
+
+`publication.json` связывает original index SHA, published index SHA,
+publisher version/actual clean Git HEAD/tree/helper blobs, mapping payload
+digests и digests/length всех metadata files. Digest самого publication
+выдаётся в stdout report и закрепляется внешним catalog/evidence.
+Полный cap включает уникальные gzip bytes, новые index/manifests,
+`original/`, receipt и сам `publication.json`. При переполнении запись
+отказывается от публикации. Staging directory переименовывается только
+после всех проверок; существующий output не перезаписывается. Никакие
+network upload, push, изменение сайта или rerun модели helper не выполняет.
+
+Из clean publisher checkout, после внешнего закрепления source index SHA:
+
+```bash
+publisher_ref="$(git rev-parse HEAD)"
+python3 -B scripts/publish_dense_recording.py \
+  --source-dir /path/to/validated-dense-source \
+  --output-dir target/dense/published \
+  --expected-source-index-sha256 "$source_index_sha" \
+  --expected-publisher-commit "$publisher_ref"
+```
+
+Для разрешённого reuse добавляются оба аргумента:
+`--validation-receipt /path/to/full-validation-receipt.json`
+и `--expected-receipt-sha256 "$receipt_sha"`. Ожидаемые SHA берутся из
+внешнего проверенного evidence, не вычисляются из неизвестного набора
+лишь ради прохождения проверки.
 
 ## Команды и граница приёмки
 
