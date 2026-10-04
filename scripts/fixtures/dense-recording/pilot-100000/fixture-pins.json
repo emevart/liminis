@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "kind": "partial_saved_artifact_browser_fixture",
+  "complete_recording": false,
+  "label": "PARTIAL: original 100k metadata and only two original chunks; not a complete 100k recording",
+  "producer_commit": "bd2a7f25e61abd713109171fc25b7c3de86003ab",
+  "source_index_sha256": "603b6f3b62448c2dc6cd6abe976c77ffbb9aad83f9c143813785137e4f71a370",
+  "source_horizon": 100000,
+  "source_chunks": 393,
+  "included_chunks": 2,
+  "original_bytes": 1504219,
+  "files": [
+    { "path": "index.json", "bytes": 1798, "sha256": "603b6f3b62448c2dc6cd6abe976c77ffbb9aad83f9c143813785137e4f71a370" },
+    { "path": "horizon-10000.json", "bytes": 18449, "sha256": "a08ecd054f85fbeb06c52b868ef604d39c1d8563231cec76dc33420a5e611c8d" },
+    { "path": "horizon-100000.json", "bytes": 124764, "sha256": "7da1efd07473e15af331c060341fcb75fdcc911e60a5be9347423f9791442bcd" },
+    { "path": "chunk-0000000-0000255.jsonl.gz", "bytes": 312818, "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968" },
+    { "path": "chunk-0000768-0000992.jsonl.gz", "bytes": 1046390, "sha256": "8acb535328f123b618f0d9d86044a8d3a0c0cac66c85143b0bcfa5aeed468f4c" }
+  ]
+}

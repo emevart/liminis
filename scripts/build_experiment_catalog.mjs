@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { validateRecording } from "../site/recording.mjs";
 import { validateCatalog } from "../site/catalog.mjs";
+import { attachDenseRecordings } from "./attach_dense_catalog.mjs";
 
 const sources = [
   ["cell-chamber-10k", "10,000 ticks", "cell-chamber-seed-42.json"],
@@ -57,7 +58,7 @@ export async function buildCatalog() {
     schema_version: 1, kind: "recorded_experiment_catalog",
     default_experiment: "cell-chamber-10k", featured_experiment: "cell-chamber-1m",
     interpretation: "Same scenario and seed, different horizons of one deterministic trajectory. These are not independent biological replicates.",
-    entries,
+    entries: await attachDenseRecordings(entries),
   });
 }
 

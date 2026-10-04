@@ -1542,6 +1542,13 @@
             "division_mass_mol": 5.999996506578231e-14
           }
         ]
+      },
+      "dense": {
+        "index": "./data/dense-cell-chamber/index.json",
+        "index_sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+        "manifest": "horizon-10000.json",
+        "publication": "./data/dense-cell-chamber/publication.json",
+        "publication_sha256": "48cf7367c19e3fed7669e0a26473f6ceb02b720d6d0e70d19f140a672aa6368b"
       }
     },
     {
@@ -3081,6 +3088,13 @@
             "division_mass_mol": 5.999996506578231e-14
           }
         ]
+      },
+      "dense": {
+        "index": "./data/dense-cell-chamber/index.json",
+        "index_sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+        "manifest": "horizon-100000.json",
+        "publication": "./data/dense-cell-chamber/publication.json",
+        "publication_sha256": "48cf7367c19e3fed7669e0a26473f6ceb02b720d6d0e70d19f140a672aa6368b"
       }
     },
     {
@@ -3738,6 +3752,13 @@
             "division_mass_mol": 5.999996506578231e-14
           }
         ]
+      },
+      "dense": {
+        "index": "./data/dense-cell-chamber/index.json",
+        "index_sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+        "manifest": "horizon-1000000.json",
+        "publication": "./data/dense-cell-chamber/publication.json",
+        "publication_sha256": "48cf7367c19e3fed7669e0a26473f6ceb02b720d6d0e70d19f140a672aa6368b"
       }
     }
   ]

@@ -2,7 +2,7 @@
 // with its official playwright@1.61.1 install, never with a sandbox opt-out.
 // This is separate from site/playback.browser.mjs and its local HTTP gate.
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+import { createHash, webcrypto } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { createRequire } from "node:module";
@@ -10,6 +10,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { selectExperiment, validateCatalog } from "../site/catalog.mjs";
 import { validateRecording } from "../site/recording.mjs";
+import { createDenseRecordingLoader } from "../site/dense-recording.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const siteRoot = resolve(repoRoot, "site");
@@ -19,12 +20,12 @@ const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 // Reviewed production-only Cloudflare insertion, including its preceding LF.
 // Its digest is pinned before execution, never learned from a new response.
 const knownEdgeInsertion = {
-  sourceBytes: 6735, sourceSha256: "9670bd6ab110e363a01c060f885464dc3f8e03abaf73b5e416b86254275bdeba",
-  offset: 6719, bytes: 367, sha256: "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
+  sourceBytes: 6894, sourceSha256: "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+  offset: 6878, bytes: 367, sha256: "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
   scriptUrl: "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
 };
 const controls = ["play", "previous", "next", "scrub", "speed", "speed-preset", "draw-fps"];
-const sourceNames = ["observe.html", "observer.js", "observer.css", "playback.mjs", "recording-loader.mjs", "recording.mjs", "catalog.mjs", "data/catalog.json"];
+const sourceNames = ["observe.html", "observer.js", "observer.css", "playback.mjs", "recording-loader.mjs", "recording.mjs", "dense-recording.mjs", "catalog.mjs", "data/catalog.json"];
 const timeouts = { deployment: 180_000, retry: 5000, fetch: 15_000, operation: 15_000, viewport: 60_000, launch: 20_000, cdp: 5000, traceStop: 15_000, cleanup: 5000 };
 const evidence = {
   scope: "Read-only deployed recording smoke; does not replace local recorded-browser acceptance.",
@@ -149,7 +150,7 @@ async function layout(page, desktop) {
   await page.evaluate(() => scrollTo(0, 0));
 }
 
-async function viewportSmoke(name, viewport, assets, entry, data) {
+async function viewportSmoke(name, viewport, assets, entry, control) {
   const page = await bounded(context.newPage(), timeouts.operation, "Public page creation");
   page.setDefaultTimeout(timeouts.operation); page.setDefaultNavigationTimeout(timeouts.operation);
   await bounded(page.setViewportSize(viewport), timeouts.operation, "Public viewport setup");
@@ -323,13 +324,17 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
     assert.ok((observation.redirectResponses || []).every((item) => item.status === "PASS"), "Browser redirects must match the verified canonical chain");
     assert.ok(observation.requests.every((item) => item.method === "GET" && (new URL(item.url).origin === publicBase.origin || (item.url === knownEdgeInsertion.scriptUrl && observation.html.knownEdgeInjectionVerified && observation.analyticsRequests.some((request) => request.status === "BLOCKED_ACKNOWLEDGED")))), "Only public same-origin GETs or the exact intentionally blocked analytics request may be observed");
 
-    const first = data.frames[0], next = data.frames[1], horizon = data.frames.at(-1).sim_time - first.sim_time;
+    const { first, next, horizon } = control;
     assert.equal(Number(await page.locator("#speed").inputValue()), horizon / 120);
     assert.equal(await page.locator("#duration").textContent(), "2 min");
     assert.equal(await shownNumber(page, "playhead"), first.sim_time);
     assert.equal(await shownNumber(page, "time"), first.sim_time);
     assert.equal(await shownNumber(page, "tick"), first.tick);
-    assert.ok((await page.locator("#sample-cadence").textContent()).includes(`${entry.sample_count} real samples`));
+    assert.ok((await page.locator("#sample-cadence").textContent()).includes(control.dense ? `${control.states.toLocaleString("en-US")} real states` : `${entry.sample_count} real samples`));
+    if (control.dense) {
+      assert.match(await page.locator("#sample-cadence").textContent(), /every tick.*sparse archive/);
+      assert.equal(await page.locator("#archive-link").getAttribute("href"), `./observe.html?experiment=${encodeURIComponent(entry.id)}&recording=archive`);
+    }
     observation.initialCanvas = await canvasState(page); assert.ok(observation.initialCanvas.paintedPixels > 10);
     await layout(page, name === "desktop");
     const filename = `${name}-default.png`;
@@ -363,11 +368,14 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
       observation.heldSamples.push({ drawTarget: fps, playhead: paused, modelSecondsAdvanced: delta, wallSeconds, shownTime: first.sim_time, shownTick: first.tick, canvasSha256: canvas.sha256, durationAt1x });
     }
     await page.locator("#next").click();
+    if (control.dense) await page.waitForFunction((tick) => Number(document.getElementById("tick").textContent.replaceAll(",", "")) === tick && document.getElementById("workspace").getAttribute("aria-busy") === "false", next.tick);
     assert.equal(await shownNumber(page, "playhead"), next.sim_time); assert.equal(await shownNumber(page, "time"), next.sim_time); assert.equal(await shownNumber(page, "tick"), next.tick);
     assert.equal(await shownNumber(page, "living"), next.cells.length);
     assert.equal(await page.locator("#play").getAttribute("aria-label"), "Play recording");
     observation.nextSample = { time: next.sim_time, tick: next.tick, livingCells: next.cells.length };
-    await page.locator("#previous").click(); assert.equal(await shownNumber(page, "playhead"), first.sim_time); assert.equal(await shownNumber(page, "time"), first.sim_time);
+    await page.locator("#previous").click();
+    if (control.dense) await page.waitForFunction((tick) => Number(document.getElementById("tick").textContent.replaceAll(",", "")) === tick && document.getElementById("workspace").getAttribute("aria-busy") === "false", first.tick);
+    assert.equal(await shownNumber(page, "playhead"), first.sim_time); assert.equal(await shownNumber(page, "time"), first.sim_time);
     observation.playbackPageRequests = observation.requests.slice(requestBaseline);
     assert.deepEqual(observation.playbackPageRequests, [], "Playback/draw controls must create no Page request events");
     actionsPassed = true;
@@ -405,6 +413,27 @@ try {
   const data = JSON.parse(recordingBytes.toString("utf8")); validateRecording(data);
   assert.ok(data.frames.length > 1 && data.frames[1].sim_time - data.frames[0].sim_time > 10, "Default public recording must have a real held-sample smoke window");
   assets.push({ filename: entry.recording.replace(/^\.\//, ""), bytes: entry.bytes, sha256: entry.sha256 });
+  let control = { first: data.frames[0], next: data.frames[1], horizon: data.experiment.steps * data.experiment.dt_seconds, dense: false };
+  if (entry.dense) {
+    // Expected frames come from the already fully validated local publication;
+    // this smoke checks deployed transport and rendering, not a second model.
+    const indexUrl = new URL(entry.dense.index, publicBase);
+    const localFetch = async (url) => {
+      const target = new URL(url, publicBase); assert.equal(target.origin, publicBase.origin);
+      assert.ok(target.pathname.startsWith("/data/dense-cell-chamber/") && !target.search && !target.hash);
+      return new Response(await readFile(resolve(siteRoot, `.${target.pathname}`)));
+    };
+    const loader = await createDenseRecordingLoader({ indexUrl: indexUrl.href, indexSha256: entry.dense.index_sha256, manifestPath: entry.dense.manifest, baseUrl: publicBase.href, fetcher: localFetch, cryptoProvider: webcrypto, prefetch: false });
+    try {
+      const first = (await loader.seek(0)).frame, next = (await loader.seek(1)).frame;
+      assert.deepEqual(first, data.frames[0], "Dense genesis must match the immutable sparse archive");
+      assert.equal(loader.manifest.experiment.steps, entry.experiment.steps);
+      control = { first, next, horizon: loader.manifest.experiment.steps * loader.manifest.experiment.dt_seconds, states: loader.manifest.experiment.frames, dense: true };
+      const filenames = [indexUrl.pathname.slice(1), new URL(entry.dense.manifest, indexUrl).pathname.slice(1), ...loader.manifest.chunks.slice(0, 2).map((chunk) => new URL(chunk.path, indexUrl).pathname.slice(1))];
+      for (const filename of filenames) { const bytes = await readFile(resolve(siteRoot, filename)); assets.push({ filename, bytes: bytes.length, sha256: digest(bytes) }); }
+      evidence.denseAdmission = { indexSha256: entry.dense.index_sha256, manifest: entry.dense.manifest, actualStates: control.states, sourceValidation: "Local publication was independently validated before merge; expected states decoded by reviewed source module", browserScope: "Deployed initial and prefetched chunks plus exact every-tick Step; whole-horizon rendering is not claimed", publicationRuntimeVerification: false };
+    } finally { loader.close(); }
+  }
   evidence.sourceFiles = assets; evidence.selectedRecording = { id: entry.id, filename: entry.recording, bytes: entry.bytes, sha256: entry.sha256 };
   evidence.status = "RUNNING";
   assert.ok(await check("Public critical assets and one allowlisted recording match checkout bytes", () => waitForPublicAssets(assets)));
@@ -431,7 +460,7 @@ try {
   context = await bounded(browser.newContext({ acceptDownloads: false }), timeouts.operation, "Public context creation");
   await bounded(context.tracing.start({ screenshots: true, snapshots: true, sources: true }), timeouts.cdp, "Public trace start"); tracing = true;
   for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mobile", { width: 390, height: 844 }]]) {
-    await check(`Public default observer ready, real canvas, physical 1× hold and sample stepping: ${name}`, () => bounded(viewportSmoke(name, viewport, assets, entry, data), timeouts.viewport, `${name} public smoke`));
+    await check(`Public default observer ready, real canvas, physical 1× hold and ${control.dense ? "every-tick" : "archival sample"} stepping: ${name}`, () => bounded(viewportSmoke(name, viewport, assets, entry, control), timeouts.viewport, `${name} public smoke`));
   }
   evidence.status = evidence.checks.every((item) => item.status === "PASS") ? "PASS" : "FAIL";
 } catch (error) { evidence.status = "FAIL"; evidence.blocker = error.stack || String(error); }
