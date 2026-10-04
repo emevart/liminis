@@ -14,10 +14,10 @@
       * { box-sizing:border-box; }
       html, body { margin:0; min-height:100%; background:var(--bg); color:var(--ink); }
       body { font:13px/1.4 Inter, ui-sans-serif, system-ui, sans-serif; letter-spacing:0; }
-      button, input { font:inherit; color:inherit; }
+      button, input, select { font:inherit; color:inherit; }
       button { background:transparent; border:1px solid var(--rule); border-radius:3px; cursor:pointer; }
       button:hover, button:focus-visible { border-color:#9aafa3; background:#19221d; }
-      button:focus-visible, input:focus-visible { outline:2px solid var(--mint); outline-offset:2px; }
+      button:focus-visible, input:focus-visible, select:focus-visible { outline:2px solid var(--mint); outline-offset:2px; }
       button:disabled { opacity:.4; cursor:default; }
       .num { font:11px/1.25 ui-monospace, SFMono-Regular, Consolas, monospace; font-variant-numeric:tabular-nums; }
       .micro { color:var(--muted); font-size:10px; text-transform:uppercase; }
@@ -64,14 +64,21 @@
       .events { display:grid; gap:6px; }
       .event { display:grid; grid-template-columns:46px 58px minmax(0,1fr); gap:6px; color:#b7c6be; }
       .event span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-      .readout { min-height:58px; display:flex; align-items:center; gap:12px; padding:8px 14px; border-top:1px solid var(--rule); background:#0d1310; }
+      .readout { min-height:58px; display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:8px 14px; border-top:1px solid var(--rule); background:#0d1310; }
       .metric { min-width:68px; }
       .metric b { display:block; margin-top:2px; font-weight:500; }
-      .controls { margin-left:auto; display:flex; align-items:center; gap:7px; }
+      .controls { margin-left:auto; display:flex; align-items:center; gap:7px; flex-wrap:wrap; min-width:0; max-width:100%; }
       .icon-button { width:34px; height:32px; display:grid; place-items:center; padding:0; }
       .icon-button svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-      .speed { display:grid; grid-template-columns:auto 88px 30px; gap:6px; align-items:center; }
-      .speed input { width:88px; accent-color:var(--mint); }
+      .speed { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+      .speed input { width:88px; }
+      .speed input, .screen select { height:30px; padding:0 6px; border:1px solid var(--rule); background:#141b17; }
+      .speed button { height:30px; padding:0 7px; }
+      .speed button[aria-pressed="true"] { border-color:var(--mint); color:var(--mint); }
+      .speed-presets { display:flex; gap:4px; }
+      .screen { display:flex; gap:6px; align-items:center; }
+      .control-error { flex-basis:100%; color:var(--coral); margin:0; }
+      .control-error:empty { display:none; }
       .seed { display:flex; align-items:center; gap:6px; padding-left:8px; border-left:1px solid var(--rule); }
       .seed input { width:122px; height:30px; padding:0 7px; border:1px solid var(--rule); background:#141b17; }
       .save-wrap { display:flex; align-items:center; gap:5px; min-width:0; }
@@ -97,8 +104,7 @@
         .stage-head strong { font-size:24px; }
         .side { grid-template-columns:1fr; }
         .readout { padding:7px 10px; }
-        .metric:nth-child(3) { display:none; }
-        .speed { grid-template-columns:auto 72px 28px; }
+        .speed { flex-wrap:wrap; }
         .speed input { width:72px; }
         .seed { width:100%; padding:6px 0 0; border-left:0; border-top:1px solid var(--rule); }
         .seed input { flex:1; min-width:80px; }
@@ -118,7 +124,7 @@
           <canvas id="chamber" tabindex="0" aria-label="Living cells in a well-mixed chamber. Select a cell to inspect it."></canvas>
           <div class="stage-head"><span class="micro">Well-mixed chamber</span><h1><strong id="cell-count">0</strong> living cells</h1></div>
           <div class="event-mark num" id="event-mark">—</div>
-          <div class="stage-meta num"><span id="volume">— m³</span><span id="temperature">— K</span><span id="sim-time">— s</span><span id="event-totals">—</span></div>
+          <div class="stage-meta num"><span id="volume">— m³</span><span id="temperature">— K</span><span id="sim-time">model time — s</span><span id="dt">dt — s</span><span id="event-totals">—</span></div>
         </section>
         <aside class="side">
           <section class="section" aria-labelledby="cell-title"><div class="section-head"><h2 id="cell-title">Cell inspector</h2><span class="micro" id="selection-state">none selected</span></div><div id="cell-detail" class="empty">Select a living cell.</div></section>
@@ -130,23 +136,27 @@
       </main>
       <footer class="readout">
         <div class="metric"><span class="micro">Tick</span><b class="num" id="tick">0</b></div>
-        <div class="metric"><span class="micro">Ticks / s</span><b class="num" id="tps">0</b></div>
+        <div class="metric"><span class="micro">Actual speed</span><b class="num" id="actual-speed">×0</b></div>
+        <div class="metric"><span class="micro">Measured ticks / s</span><b class="num" id="tps">0</b></div>
+        <div class="metric"><span class="micro">Target speed / TPS</span><b class="num" id="target-speed">—</b></div>
         <div class="metric"><span class="micro">Generation</span><b class="num" id="generation">0</b></div>
         <div class="metric"><span class="micro">Matter residual</span><b class="num" id="matter">—</b></div>
         <div class="metric"><span class="micro">Energy residual</span><b class="num" id="energy">—</b></div>
         <div class="controls">
           <button class="icon-button" id="play" aria-label="Run simulation" title="Run"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg></button>
           <button class="icon-button" id="step" aria-label="Advance one tick" title="Step"><svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><path d="M19 5v14"/></svg></button>
-          <div class="speed"><label class="micro" for="speed">speed</label><input id="speed" type="range" min="0.5" max="100" step="0.5" value="3"/><span class="num" id="speed-value">3</span></div>
+          <form class="speed" id="speed-form"><label class="micro" for="speed">Speed ×</label><input class="num" id="speed" type="number" step="any" value="90" required aria-label="Model seconds per real second"/><button type="submit">Apply</button><span class="speed-presets" aria-label="Speed presets"><button type="button" data-speed="1">×1</button><button type="button" data-speed="10">×10</button><button type="button" data-speed="100">×100</button><button type="button" data-speed="1000">×1000</button></span><button type="button" id="maximum" aria-pressed="false">Maximum</button></form>
+          <div class="screen"><label class="micro" for="screen-fps">Screen</label><select id="screen-fps" aria-label="Target screen frames per second"><option value="30">30 FPS</option><option value="60">60 FPS</option></select></div>
           <form class="seed" id="seed-form"><label class="micro" for="reset-seed">seed</label><input class="num" id="reset-seed" inputmode="numeric" pattern="[0-9]+" autocomplete="off" aria-label="Restart seed"/><button class="icon-button" type="submit" aria-label="Restart with seed" title="Restart with seed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-7.7L3 7"/><path d="M3 3v4h4"/></svg></button></form>
           <div class="save-wrap"><button class="icon-button" id="save" aria-label="Save checkpoint now" title="Save checkpoint now"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg></button><span class="micro num save-status" id="save-status">not saved</span></div>
+          <p class="control-error" id="control-error" role="alert"></p>
         </div>
       </footer>
     </div>
     <script type="module">
       const $ = (id) => document.getElementById(id);
       const finite = (value, fallback=0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
-      const view = { state:null, history:[], identity:null, historyAt:0, historyBusy:false, historyStatus:"loading", selected:null, hits:[], layout:new Map(), usedSlots:new Set(), pollBusy:false, pollSerial:0, saveRequest:null, saveError:null };
+      const view = { state:null, history:[], identity:null, historyAt:0, historyBusy:false, historyStatus:"loading", selected:null, hits:[], layout:new Map(), usedSlots:new Set(), pollBusy:false, pollSerial:0, saveRequest:null, saveError:null, screenFps:30, frameAt:null };
       const palette = ["#86dfb7","#72d5df","#ff8f83","#e69fce","#e7c66f","#94b9ff","#b9df78","#d99b78"];
 
       async function json(url) {
@@ -175,6 +185,11 @@
         const ctx=canvas.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);return {ctx,w,h};
       }
       function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
+
+      function retireLayout(cells){
+        const living=new Set(cells.map(cell=>cell.id));
+        for(const [id,slot] of view.layout){if(!living.has(id)){view.layout.delete(id);view.usedSlots.delete(slot);}}
+      }
 
       function drawChamber() {
         const {ctx,w,h}=prepare($("chamber"));ctx.clearRect(0,0,w,h);ctx.fillStyle="#080d0b";ctx.fillRect(0,0,w,h);
@@ -246,20 +261,41 @@
       function renderResources(){const host=$("resources");host.replaceChildren();const rows=view.state?.resources||[],max=Math.max(...rows.map(r=>finite(r.concentration)),1e-30);for(const resource of rows){const row=document.createElement("div");row.className="resource";const id=document.createElement("span");id.textContent=resource.id;const value=document.createElement("span");value.className="num";value.textContent=`${format(resource.concentration)} mol/m³`;const track=document.createElement("div");track.className="resource-track";const fill=document.createElement("div");fill.className="resource-fill";fill.style.width=`${Math.max(0,Math.min(100,finite(resource.concentration)/max*100))}%`;track.append(fill);row.append(id,value,track);host.append(row);}}
       function renderEvents(){const host=$("events");host.replaceChildren();const events=(view.state?.events||[]).slice(-6).reverse();if(!events.length){const empty=document.createElement("div");empty.className="empty";empty.textContent="No events recorded.";host.append(empty);$("event-mark").textContent="no events";return;}for(const event of events){const row=document.createElement("div");row.className="event";const tick=document.createElement("span"),kind=document.createElement("span"),subject=document.createElement("span");tick.textContent=String(event.tick);kind.textContent=event.kind;subject.textContent=event.children?.length?`${event.parent_id||event.cell_id||"—"} → ${event.children.join(", ")}${event.mutated?" · mutated":""}`:(event.cell_id||event.parent_id||"—");row.append(tick,kind,subject);host.append(row);}const latest=events[0];$("event-mark").textContent=`${latest.kind} · tick ${latest.tick}`;}
 
-      function renderSave(){const p=view.state?.persistence,status=$("save-status"),button=$("save");if(view.saveRequest&&view.pollSerial>view.saveRequest.serial&&!p?.saving&&p?.saved_tick!=null&&finite(p.saved_tick)>=view.saveRequest.tick){view.saveRequest=null;view.saveError=null;}if(p?.error)view.saveRequest=null;const error=view.saveError||p?.error,saving=!!p?.saving||!!view.saveRequest;button.disabled=saving||!p?.enabled;status.dataset.state=error?"error":saving?"saving":"saved";if(error){status.textContent=`error · ${error}`;status.title=error;}else if(saving){status.textContent=`saving ${view.saveRequest?.tick??view.state.tick}`;}else if(p?.saved_tick!=null){status.textContent=`saved ${p.saved_tick}`;status.title=p.saved_at?new Date(p.saved_at).toLocaleString():"";}else status.textContent="not saved";}
+      function renderSave(){const p=view.state?.persistence,status=$("save-status"),button=$("save");if(view.saveRequest&&view.pollSerial>view.saveRequest.serial&&!p?.saving&&!view.state?.save_pending&&p?.saved_tick!=null&&finite(p.saved_tick)>=view.saveRequest.tick){view.saveRequest=null;view.saveError=null;}if(p?.error)view.saveRequest=null;const error=view.saveError||p?.error,saving=!!p?.saving||!!view.state?.save_pending||!!view.saveRequest;button.disabled=saving||!p?.enabled;status.dataset.state=error?"error":saving?"saving":"saved";if(error){status.textContent=`error · ${error}`;status.title=error;}else if(saving){status.textContent=`${view.state?.save_pending?"queued":"saving"} ${view.saveRequest?.tick??view.state.tick}`;}else if(p?.saved_tick!=null){status.textContent=`saved ${p.saved_tick}`;status.title=p.saved_at?new Date(p.saved_at).toLocaleString():"";}else status.textContent="not saved";}
       function renderState(){
-        const s=view.state;if(!s)return;$("scenario").textContent=s.scenario;$("seed").textContent=s.seed;$("hash").textContent=s.config_hash;$("wfv").textContent=s.world_format_version;$("tick").textContent=finite(s.tick).toLocaleString("en-US");$("tps").textContent=format(s.measured_tps);$("generation").textContent=String(s.summary?.generation_max??0);$("matter").textContent=s.residual?.matter??"—";$("energy").textContent=s.residual?.energy??"—";$("cell-count").textContent=finite(s.summary?.living_cells).toLocaleString("en-US");$("volume").textContent=`${format(s.model?.volume_m3)} m³`;$("temperature").textContent=`${format(s.model?.temperature_k)} K`;$("sim-time").textContent=`${format(s.sim_time)} s`;$("event-totals").textContent=`${finite(s.summary?.births)} born · ${finite(s.summary?.deaths)} died · ${finite(s.summary?.divisions)} divisions`;$("live").dataset.live=String(s.running&&s.alive!==false?1:0);$("live-label").textContent=s.error?"simulation error":s.alive===false?"stopped":s.running?"evolving":"paused";
+        const s=view.state;if(!s)return;$("scenario").textContent=s.scenario;$("seed").textContent=s.seed;$("hash").textContent=s.config_hash;$("wfv").textContent=s.world_format_version;$("tick").textContent=finite(s.tick).toLocaleString("en-US");$("tps").textContent=format(s.measured_tps);$("actual-speed").textContent=`×${format(s.measured_multiplier)}`;$("target-speed").textContent=s.pacing?.mode==="maximum"?"Maximum":`×${format(s.pacing?.multiplier)} / ${format(s.target_tps)}`;$("dt").textContent=`dt ${format(s.dt_seconds)} s`;$("generation").textContent=String(s.summary?.generation_max??0);$("matter").textContent=s.residual?.matter??"—";$("energy").textContent=s.residual?.energy??"—";$("cell-count").textContent=finite(s.summary?.living_cells).toLocaleString("en-US");$("volume").textContent=`${format(s.model?.volume_m3)} m³`;$("temperature").textContent=`${format(s.model?.temperature_k)} K`;$("sim-time").textContent=`model time ${format(s.sim_time)} s`;$("event-totals").textContent=`${finite(s.summary?.births)} born · ${finite(s.summary?.deaths)} died · ${finite(s.summary?.divisions)} divisions`;$("live").dataset.live=String(s.running&&s.alive!==false?1:0);$("live-label").textContent=s.error?"simulation error":s.alive===false?"stopped":s.running?"evolving":"paused";
         $("play").innerHTML=s.running?'<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="4" height="16" x="6" y="4" rx="1"/><rect width="4" height="16" x="14" y="4" rx="1"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>';$("play").setAttribute("aria-label",s.running?"Pause simulation":"Run simulation");$("play").title=s.running?"Pause":"Run";
-        if(document.activeElement!==$("reset-seed"))$("reset-seed").value=s.seed;if(Number.isFinite(s.target_tps)){$("speed").value=String(Math.max(.5,Math.min(100,s.target_tps)));$("speed-value").textContent=format(s.target_tps);}renderSave();drawChamber();renderInspector();renderResources();renderEvents();renderCharts();
+        if(document.activeElement!==$("reset-seed"))$("reset-seed").value=s.seed;if(document.activeElement!==$("speed")&&Number.isFinite(s.pacing?.multiplier))$("speed").value=String(s.pacing.multiplier);$("maximum").setAttribute("aria-pressed",String(s.pacing?.mode==="maximum"));renderSave();renderInspector();renderResources();renderEvents();renderCharts();
       }
-      async function poll(){if(view.pollBusy)return;view.pollBusy=true;try{const state=await json("/api/state");if(state.kind!=="cells")throw new Error(`Expected cell-host state, received ${state.kind||"unknown"}`);view.state=state;view.pollSerial++;const p=state.persistence,identity=p?.enabled?`${p.run_id}\n${p.session_id}`:null;if(identity!==view.identity){view.identity=identity;view.history=[];view.historyAt=0;view.historyStatus="loading";view.selected=null;view.layout.clear();view.usedSlots.clear();view.saveRequest=null;view.saveError=null;}mergeHistory([liveSample(state)]);$("offline").dataset.open="0";await loadHistory();renderState();}catch(error){$("offline").textContent=error instanceof Error?error.message:String(error);$("offline").dataset.open="1";$("live").dataset.live="0";$("live-label").textContent="disconnected";}finally{view.pollBusy=false;}}
+      async function poll(){if(view.pollBusy)return;view.pollBusy=true;try{const state=await json("/api/state");if(state.kind!=="cells")throw new Error(`Expected cell-host state, received ${state.kind||"unknown"}`);view.state=state;view.pollSerial++;const p=state.persistence,identity=p?.enabled?`${p.run_id}\n${p.session_id}`:null;if(identity!==view.identity){view.identity=identity;view.history=[];view.historyAt=0;view.historyStatus="loading";view.selected=null;view.layout.clear();view.usedSlots.clear();view.saveRequest=null;view.saveError=null;}retireLayout(state.cells||[]);mergeHistory([liveSample(state)]);$("offline").dataset.open="0";await loadHistory();renderState();}catch(error){$("offline").textContent=error instanceof Error?error.message:String(error);$("offline").dataset.open="1";$("live").dataset.live="0";$("live-label").textContent="disconnected";}finally{view.pollBusy=false;}}
 
       $("chamber").addEventListener("pointerdown",event=>{const rect=event.currentTarget.getBoundingClientRect(),x=event.clientX-rect.left,y=event.clientY-rect.top;const hit=[...view.hits].reverse().find(item=>Math.hypot(x-item.x,y-item.y)<=item.r);view.selected=hit?.id||null;drawChamber();renderInspector();});
       $("chamber").addEventListener("keydown",event=>{const cells=view.state?.cells||[];if(!cells.length||!["ArrowLeft","ArrowRight"].includes(event.key))return;event.preventDefault();const index=Math.max(0,cells.findIndex(cell=>cell.id===view.selected)),next=(index+(event.key==="ArrowRight"?1:-1)+cells.length)%cells.length;view.selected=cells[next].id;drawChamber();renderInspector();});
-      $("play").addEventListener("click",async()=>{await control(view.state?.running?"pause":"run");await poll();});$("step").addEventListener("click",async()=>{await control("step");await poll();});$("speed").addEventListener("input",e=>$("speed-value").textContent=e.target.value);$("speed").addEventListener("change",e=>control("speed",Number(e.target.value)));
-      $("seed-form").addEventListener("submit",async event=>{event.preventDefault();const seed=$("reset-seed").value.trim();if(!/^\d+$/.test(seed)){$("reset-seed").setCustomValidity("Enter a non-negative integer seed");$("reset-seed").reportValidity();return;}$("reset-seed").setCustomValidity("");await control("reset",seed);view.history=[];view.selected=null;await poll();});
-      $("save").addEventListener("click",async()=>{const p=view.state?.persistence;if(!p?.enabled||p.saving||view.saveRequest)return;view.saveError=null;view.saveRequest={tick:finite(view.state.tick),serial:view.pollSerial};renderSave();try{await control("save");await poll();}catch(error){view.saveRequest=null;view.saveError=error instanceof Error?error.message:String(error);renderSave();}});
-      addEventListener("resize",()=>{drawChamber();renderCharts();});poll();setInterval(poll,650);
+      $("play").addEventListener("click",()=>applyControl(view.state?.running?"pause":"run"));$("step").addEventListener("click",()=>applyControl("step"));
+      async function applyControl(action,value){
+        try{await control(action,value);$("control-error").textContent="";await poll();return true;}
+        catch(error){$("control-error").textContent=error instanceof Error?error.message:String(error);return false;}
+      }
+      function speedMultiplier(value){const n=Number(value);if(!String(value).trim()||!Number.isFinite(n)||n<=0)throw new Error("Enter a positive finite speed multiplier");return n;}
+      async function setSpeed(value){
+        try{const multiplier=speedMultiplier(value);$("speed").setCustomValidity("");await control("speed",multiplier);$("control-error").textContent="";await poll();}
+        catch(error){$("control-error").textContent=error instanceof Error?error.message:String(error);}
+      }
+      $("speed").addEventListener("input",()=>$("speed").setCustomValidity(""));
+      $("speed-form").addEventListener("submit",event=>{event.preventDefault();setSpeed($("speed").value);});
+      document.querySelectorAll("[data-speed]").forEach(button=>button.addEventListener("click",()=>{ $("speed").value=button.dataset.speed;setSpeed(button.dataset.speed); }));
+      $("maximum").addEventListener("click",async()=>{try{await control("maximum");$("control-error").textContent="";await poll();}catch(error){$("control-error").textContent=error instanceof Error?error.message:String(error);}});
+      $("screen-fps").addEventListener("change",event=>{view.screenFps=Number(event.target.value);view.frameAt=null;});
+      // Screen cadence only redraws the last confirmed state. It never advances
+      // the model, fetches snapshots, saves to disk, or invents cell movement.
+      function screenFrame(now){
+        const interval=1000/view.screenFps;
+        if(view.frameAt===null||now-view.frameAt>=interval-0.1){drawChamber();view.frameAt=now;}
+        requestAnimationFrame(screenFrame);
+      }
+      $("seed-form").addEventListener("submit",async event=>{event.preventDefault();const seed=$("reset-seed").value.trim();if(!/^\d+$/.test(seed)){$("reset-seed").setCustomValidity("Enter a non-negative integer seed");$("reset-seed").reportValidity();return;}$("reset-seed").setCustomValidity("");try{await control("reset",seed);view.history=[];view.selected=null;$("control-error").textContent="";await poll();}catch(error){$("control-error").textContent=error instanceof Error?error.message:String(error);}});
+      $("save").addEventListener("click",async()=>{const p=view.state?.persistence;if(!p?.enabled||p.saving||view.state?.save_pending||view.saveRequest)return;view.saveError=null;view.saveRequest={tick:finite(view.state.tick),serial:view.pollSerial};renderSave();try{await control("save");await poll();}catch(error){view.saveRequest=null;view.saveError=error instanceof Error?error.message:String(error);renderSave();}});
+      addEventListener("resize",()=>{drawChamber();renderCharts();});poll();setInterval(poll,650);requestAnimationFrame(screenFrame);
     </script>
   </body>
 </html>

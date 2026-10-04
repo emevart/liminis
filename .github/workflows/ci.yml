@@ -19,7 +19,44 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Validate recordings, catalog freshness, and download integrity
-        run: node --test site/*.test.mjs
+        run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs
+
+  live-browser:
+    name: live cells browser acceptance
+    # Compatibility image for protected Chromium; never disable its sandbox.
+    # Ubuntu 24's runner refused user namespaces (see LIVE checkpoint).
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Evidence belongs to the PR candidate, not GitHub's synthetic merge.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Build actual pinned release host
+        run: cargo build --locked --release -p liminis
+      - name: Install pinned official browser test runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/liminis-browser" --no-save --package-lock=false playwright@1.61.1
+          "$RUNNER_TEMP/liminis-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Real live cells desktop and mobile browser acceptance
+        env:
+          LIMINIS_PLAYWRIGHT_MODULE: ${{ runner.temp }}/liminis-browser/node_modules/playwright
+          LIMINIS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/check_live_cells_browser.mjs
+      - name: Attach screenshots and exact-head browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-cells-browser-${{ github.event.pull_request.head.sha || github.sha }}
+          path: target/qa/live-browser/
+          if-no-files-found: warn
+          retention-days: 7
 
   check:
     name: build, lint, test
@@ -326,3 +363,38 @@ jobs:
           echo "still true, it belongs in the current documents, not in a patch"
           echo "to the draft."
           exit 1
+
+
+  recorded-browser:
+    name: recorded player browser acceptance
+    # Use the existing LIVE protected compatibility runner; migration is separate.
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install pinned official recorded browser runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/liminis-recorded-browser" --no-save --package-lock=false playwright@1.61.1
+          "$RUNNER_TEMP/liminis-recorded-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Real recorded player desktop and mobile browser acceptance
+        env:
+          LIMINIS_PLAYWRIGHT_MODULE: ${{ runner.temp }}/liminis-recorded-browser/node_modules/playwright
+          LIMINIS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          LIMINIS_BROWSER_EVIDENCE_DIR: target/qa/recorded-browser
+        run: node site/playback.browser.mjs
+      - name: Attach exact-head screenshots, trace, and browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recorded-browser-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+          path: target/qa/recorded-browser/
+          if-no-files-found: error
+          retention-days: 7

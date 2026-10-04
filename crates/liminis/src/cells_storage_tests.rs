@@ -498,3 +498,40 @@ fn history_header_is_bound_to_its_session_path() {
     fs::write(history_file, changed).unwrap();
     assert!(prepare_error(&root, &run_id, None).contains("header"));
 }
+
+#[test]
+fn optional_sample_saturation_is_visible_and_checkpoint_busy_is_not_acknowledged() {
+    let root = Temp::new();
+    let mut storage = new_storage(&root);
+    storage.flush().unwrap();
+    // Hold a bounded queue without its consumer to exercise backpressure
+    // deterministically, independently of filesystem or scheduler timing.
+    let (sender, receiver) = mpsc::sync_channel(1);
+    let worker_sender = std::mem::replace(&mut storage.sender, sender);
+    storage.sample(metric(1)).unwrap();
+    storage.sample(metric(2)).unwrap();
+    assert_eq!(storage.status()["skipped_observations"], 1);
+    assert_eq!(storage.status()["history_samples"], 0);
+    assert_eq!(storage.last_enqueued_sample, Some(1));
+    assert!(storage.error().is_none());
+    let error = storage.save(capture(2)).unwrap_err();
+    assert!(error.downcast_ref::<QueueBusy>().is_some());
+    assert!(!storage.busy());
+    assert!(storage.status()["saved_tick"].is_null());
+    assert!(storage.error().is_none());
+    assert_eq!(storage.last_enqueued_sample, Some(1));
+
+    let queued = receiver.recv().unwrap();
+    storage.sender = worker_sender;
+    storage.sender.send(queued).unwrap();
+    storage.flush().unwrap();
+    let info = save(&mut storage, 2);
+    assert_eq!(info.tick, 2);
+    assert_eq!(storage.history()["total_samples"], 2);
+    assert_eq!(storage.status()["skipped_observations"], 1);
+    let run_id = storage.run_id().to_string();
+    stop(storage);
+    let prepared = prepare_resume(&root.0, &run_id, None).unwrap();
+    assert_eq!(prepared.state().capture, capture(2));
+    assert_eq!(prepared.history.count, 2);
+}

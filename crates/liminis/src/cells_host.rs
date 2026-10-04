@@ -18,10 +18,46 @@ use crate::http::{Method, Request, Response};
 mod storage;
 
 const VIEWER: &str = include_str!("cell-viewer.html");
-const DEFAULT_TPS: f64 = 3.0;
-const MIN_TPS: f64 = 0.5;
-const MAX_TPS: f64 = 100.0;
+const DEFAULT_MULTIPLIER: f64 = 90.0;
+const CONTROL_POLL: Duration = Duration::from_millis(10);
+const SAMPLE_PERIOD: Duration = Duration::from_millis(250);
 const EVENTS: usize = 64;
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum PaceMode {
+    Manual,
+    Maximum,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Pacing {
+    mode: PaceMode,
+    multiplier: f64,
+}
+
+impl Pacing {
+    fn manual(multiplier: f64, dt: f64) -> Result<Self> {
+        ensure!(
+            multiplier.is_finite() && multiplier > 0.0,
+            "speed multiplier must be positive and finite"
+        );
+        let tps = multiplier / dt;
+        ensure!(
+            tps.is_finite() && tps > 0.0,
+            "speed multiplier produces an unrepresentable tick rate for this dt"
+        );
+        Ok(Self {
+            mode: PaceMode::Manual,
+            multiplier,
+        })
+    }
+
+    fn tps(self, dt: f64) -> f64 {
+        self.multiplier / dt
+    }
+}
 
 #[derive(Default, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -48,7 +84,10 @@ struct Sim {
     alive: bool,
     error: Option<String>,
     residual: Option<(i128, i128)>,
+    pacing: Pacing,
     target_tps: f64,
+    pace_generation: u64,
+    last_sample: Instant,
     measured_tps: f64,
     storage: Option<storage::CellsStorage>,
     transitioning: bool,
@@ -184,8 +223,12 @@ fn state_json(sim: &Sim) -> Value {
     json!({"kind":"cells","tick":sim.state.tick,"sim_time":summary.sim_time,
         "seed":sim.seed.to_string(),"scenario":sim.config.name,"config_hash":sim.config_hash,
         "world_format_version":sim.world_format_version,"chamber_format":sim.config.chamber_format,
-        "running":sim.running,"alive":sim.alive,"target_tps":sim.target_tps,
-        "measured_tps":sim.measured_tps,"error":sim.error,
+        "running":sim.running,"alive":sim.alive,"pacing":sim.pacing,
+        "dt_seconds":sim.config.dt_seconds,
+        "target_tps":if sim.pacing.mode == PaceMode::Manual {Some(sim.target_tps)} else {None},
+        "save_pending":sim.save_requested,
+        "measured_tps":sim.measured_tps,
+        "measured_multiplier":sim.measured_tps*sim.config.dt_seconds,"error":sim.error,
         "residual":sim.residual.map(|(matter,energy)|json!({"matter":matter.to_string(),"energy":energy.to_string()})),
         "persistence":sim.storage.as_ref().map(|s|s.status()),
         "model":{"environment":"well_mixed","volume_m3":sim.config.volume_m3,
@@ -207,6 +250,8 @@ fn build(text: &str, seed: u64) -> Result<Sim> {
         medium_matter: vec![0; config.matter_ids.len()],
         ..Observation::default()
     };
+    let pacing = Pacing::manual(DEFAULT_MULTIPLIER, config.dt_seconds)?;
+    let target_tps = pacing.tps(config.dt_seconds);
     Ok(Sim {
         config,
         config_text,
@@ -219,7 +264,10 @@ fn build(text: &str, seed: u64) -> Result<Sim> {
         alive: true,
         error: None,
         residual: None,
-        target_tps: DEFAULT_TPS,
+        pacing,
+        target_tps,
+        pace_generation: 0,
+        last_sample: Instant::now(),
         measured_tps: 0.0,
         storage: None,
         transitioning: false,
@@ -240,35 +288,55 @@ impl Drop for Alive {
 
 fn run_loop(shared: &Arc<Mutex<Sim>>) {
     let _alive = Alive(Arc::clone(shared));
+    let mut generation = None;
+    let mut last_tick = Instant::now();
     let mut mark = Instant::now();
-    let mut ticks = 0u32;
+    let mut ticks = 0u64;
     loop {
-        let started = Instant::now();
-        let period = {
+        let sleep = {
             let mut sim = lock(shared);
+            if !sim.alive {
+                return;
+            }
             service_storage(&mut sim);
-            if !sim.running || !sim.alive || sim.transitioning {
+            if generation != Some(sim.pace_generation) || !sim.running || sim.transitioning {
+                generation = Some(sim.pace_generation);
+                last_tick = Instant::now();
+                mark = last_tick;
+                ticks = 0;
                 sim.measured_tps = 0.0;
-                drop(sim);
-                mark = Instant::now();
-                ticks = 0;
-                std::thread::sleep(Duration::from_millis(10));
-                continue;
             }
-            if !safe_advance(&mut sim) {
-                continue;
+            if !sim.running || sim.transitioning {
+                CONTROL_POLL
+            } else {
+                // Compare progress instead of constructing an astronomical
+                // Duration or overflowing Instant for valid very slow rates.
+                let due = sim.pacing.mode == PaceMode::Maximum
+                    || last_tick.elapsed().as_secs_f64() * sim.target_tps >= 1.0;
+                if due && safe_advance(&mut sim) {
+                    ticks = ticks.saturating_add(1);
+                    // Schedule from completion: missed wall time is never debt.
+                    last_tick = Instant::now();
+                }
+                let elapsed = mark.elapsed().as_secs_f64();
+                if !sim.running {
+                    sim.measured_tps = 0.0;
+                } else if elapsed > 0.0 {
+                    sim.measured_tps = ticks as f64 / elapsed;
+                }
+                if sim.pacing.mode == PaceMode::Maximum {
+                    Duration::ZERO
+                } else {
+                    let remaining =
+                        (1.0 / sim.target_tps - last_tick.elapsed().as_secs_f64()).max(0.0);
+                    Duration::from_secs_f64(remaining.min(CONTROL_POLL.as_secs_f64()))
+                }
             }
-            ticks += 1;
-            if mark.elapsed() >= Duration::from_secs(1) {
-                sim.measured_tps = f64::from(ticks) / mark.elapsed().as_secs_f64();
-                ticks = 0;
-                mark = Instant::now();
-            }
-            Duration::from_secs_f64(1.0 / sim.target_tps)
-        };
-        match period.checked_sub(started.elapsed()) {
-            Some(rest) => std::thread::sleep(rest),
-            None => std::thread::yield_now(),
+        }; // Release the mutex after exactly one complete checked tick.
+        if sleep.is_zero() {
+            std::thread::yield_now();
+        } else {
+            std::thread::sleep(sleep);
         }
     }
 }
@@ -385,15 +453,20 @@ fn safe_advance(sim: &mut Sim) -> bool {
         return false;
     }
     if let Some(mut storage) = sim.storage.take() {
-        let result = if storage.autosave_due() {
+        let result = if !sim.save_requested && storage.autosave_due() {
             storage.save(capture(sim))
-        } else if sim.state.tick.is_multiple_of(10) {
+        } else if !sim.save_requested && sim.last_sample.elapsed() >= SAMPLE_PERIOD {
+            sim.last_sample = Instant::now();
             storage.sample(metric(sim)).map(|_| ())
         } else {
             Ok(())
         };
         sim.storage = Some(storage);
-        if result.is_err() {
+        if let Err(error) = result {
+            if error.is::<storage::QueueBusy>() {
+                sim.save_requested = true;
+                return true;
+            }
             sim.running = false;
             sim.measured_tps = 0.0;
             return false;
@@ -429,7 +502,7 @@ fn capture(sim: &Sim) -> storage::Capture {
         world_format_version: sim.world_format_version,
         running: sim.running && sim.alive,
         tps: sim.target_tps,
-        state: json!({"format":1,"core":sim.state.snapshot(),"observation":sim.observation}),
+        state: json!({"format":2,"pacing":sim.pacing,"core":sim.state.snapshot(),"observation":sim.observation}),
         metric: sim.residual.map(|_| metric(sim)),
     }
 }
@@ -453,9 +526,10 @@ fn service_storage(sim: &mut Sim) {
             sim.running = false;
             sim.measured_tps = 0.0;
         } else if sim.save_requested && !storage.busy() && sim.alive && !sim.transitioning {
-            sim.save_requested = false;
-            if save(sim).is_err() {
-                sim.running = false;
+            match save(sim) {
+                Ok(()) => sim.save_requested = false,
+                Err(error) if error.is::<storage::QueueBusy>() => {}
+                Err(_) => sim.running = false,
             }
         }
     }
@@ -516,6 +590,31 @@ struct SavedState {
     format: u32,
     core: micro::MicroSnapshot,
     observation: Observation,
+    #[serde(default)]
+    pacing: Option<Pacing>,
+}
+
+fn restore_pacing(saved: &SavedState, tps: f64, dt: f64) -> Result<Pacing> {
+    ensure!(tps.is_finite() && tps > 0.0, "saved cell speed is invalid");
+    match saved.format {
+        1 => {
+            ensure!(
+                saved.pacing.is_none(),
+                "legacy envelope cannot contain pacing"
+            );
+            Pacing::manual(tps * dt, dt)
+        }
+        2 => {
+            let pacing = saved.pacing.context("saved pacing is missing")?;
+            Pacing::manual(pacing.multiplier, dt)?;
+            ensure!(
+                pacing.tps(dt) == tps || pacing.multiplier == tps * dt,
+                "saved pacing differs from checkpoint tick rate"
+            );
+            Ok(pacing)
+        }
+        _ => anyhow::bail!("unsupported cell state envelope"),
+    }
 }
 
 fn resume_sim(root: &Path, run: &str, checkpoint: Option<&str>) -> Result<Sim> {
@@ -541,12 +640,9 @@ fn resume_sim(root: &Path, run: &str, checkpoint: Option<&str>) -> Result<Sim> {
         "saved cell state world identity differs"
     );
     sim.world_format_version = saved.stored.world_format_version;
-    ensure!(
-        saved.capture.tps.is_finite() && (MIN_TPS..=MAX_TPS).contains(&saved.capture.tps),
-        "saved cell speed is invalid"
-    );
     let snapshot: SavedState = serde_json::from_value(saved.capture.state.clone())?;
-    ensure!(snapshot.format == 1, "unsupported cell state envelope");
+    sim.pacing = restore_pacing(&snapshot, saved.capture.tps, sim.config.dt_seconds)?;
+    sim.target_tps = saved.capture.tps;
     sim.state = MicroState::from_snapshot(&sim.config, snapshot.core)?;
     ensure!(
         sim.state.tick == saved.capture.tick,
@@ -567,7 +663,6 @@ fn resume_sim(root: &Path, run: &str, checkpoint: Option<&str>) -> Result<Sim> {
     sim.observation = snapshot.observation;
     validate_observation(&sim)?;
     sim.running = saved.capture.running;
-    sim.target_tps = saved.capture.tps;
     sim.residual = None;
     println!(
         "restoring cell checkpoint {} at tick {}",
@@ -688,7 +783,7 @@ fn validate_observation(sim: &Sim) -> Result<()> {
 }
 
 fn reset(shared: &Arc<Mutex<Sim>>, command: &Value) -> Response {
-    let (config_text, seed, tps, running, root) = {
+    let (config_text, seed, pacing, tps, generation, running, root) = {
         let mut sim = lock(shared);
         if sim.transitioning || sim.storage.as_ref().is_some_and(|s| s.busy()) {
             return Response::error(409, "wait for the pending checkpoint before resetting");
@@ -710,7 +805,15 @@ fn reset(shared: &Arc<Mutex<Sim>>, command: &Value) -> Response {
             return Response::error(503, &format!("saving previous chamber: {error:#}"));
         }
         sim.transitioning = true;
-        (sim.config_text.clone(), seed, sim.target_tps, running, root)
+        (
+            sim.config_text.clone(),
+            seed,
+            sim.pacing,
+            sim.target_tps,
+            sim.pace_generation.wrapping_add(1),
+            running,
+            root,
+        )
     };
     // No large file writes or construction hold the active simulation lock.
     let replacement = (|| -> Result<Sim> {
@@ -732,7 +835,9 @@ fn reset(shared: &Arc<Mutex<Sim>>, command: &Value) -> Response {
         }
         let mut fresh = build(&config_text, seed)?;
         fresh.running = running;
+        fresh.pacing = pacing;
         fresh.target_tps = tps;
+        fresh.pace_generation = generation;
         start_storage(&mut fresh, &root)?;
         Ok(fresh)
     })();
@@ -771,15 +876,21 @@ fn control(shared: &Arc<Mutex<Sim>>, body: &[u8]) -> Response {
         return Response::error(503, "local storage failed; simulation remains stopped");
     }
     match command.get("action").and_then(Value::as_str) {
-        Some("run" | "play") => sim.running = true,
+        Some("run" | "play") => {
+            sim.running = true;
+            sim.measured_tps = 0.0;
+            sim.pace_generation = sim.pace_generation.wrapping_add(1);
+        }
         Some("pause") => {
             sim.running = false;
+            sim.pace_generation = sim.pace_generation.wrapping_add(1);
             sim.measured_tps = 0.0;
             sim.save_requested = true;
             service_storage(&mut sim);
         }
         Some("step") => {
             sim.running = false;
+            sim.pace_generation = sim.pace_generation.wrapping_add(1);
             sim.measured_tps = 0.0;
             if !safe_advance(&mut sim) {
                 return Response::error(503, sim.error.as_deref().unwrap_or("storage failed"));
@@ -791,16 +902,28 @@ fn control(shared: &Arc<Mutex<Sim>>, body: &[u8]) -> Response {
             let Some(value) = command.get("value").and_then(Value::as_f64) else {
                 return Response::error(400, "speed value must be a number");
             };
-            if !value.is_finite() || !(MIN_TPS..=MAX_TPS).contains(&value) {
-                return Response::error(400, "speed must be between 0.5 and 100 ticks/s");
-            }
-            sim.target_tps = value;
+            let pacing = match Pacing::manual(value, sim.config.dt_seconds) {
+                Ok(pacing) => pacing,
+                Err(error) => return Response::error(400, &error.to_string()),
+            };
+            sim.pacing = pacing;
+            sim.target_tps = pacing.tps(sim.config.dt_seconds);
+            sim.pace_generation = sim.pace_generation.wrapping_add(1);
+            sim.measured_tps = 0.0;
+        }
+        Some("maximum") => {
+            sim.pacing.mode = PaceMode::Maximum;
+            sim.pace_generation = sim.pace_generation.wrapping_add(1);
+            sim.measured_tps = 0.0;
         }
         Some("save") => {
             if sim.storage.as_ref().is_some_and(|s| s.busy()) {
                 return Response::error(409, "a checkpoint is already being saved");
             }
             if let Err(error) = save(&mut sim) {
+                if error.is::<storage::QueueBusy>() {
+                    return Response::error(409, "cell storage queue is busy; retry save");
+                }
                 return Response::error(503, &format!("saving the chamber: {error:#}"));
             }
         }
