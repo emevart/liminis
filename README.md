@@ -29,6 +29,10 @@ and [the earlier living-world plan](docs/plans/2026-10-04-local-living-world.md)
 The observer now saves full restart checkpoints and exact scalar history to
 local disk; see [the durable-experiment plan](docs/plans/2026-10-04-durable-living-experiment.md).
 
+Наличие кода не означает завершение приёмки S0/S1: текущие критерии
+и расхождения находятся в [ACCEPTANCE](docs/ACCEPTANCE.md). Перед продолжением
+сверьте статус с текущей веткой и результатами проверок.
+
 A separate individual-cell mode now runs an ideal well-mixed, isothermal chamber.
 Every visible capsule is a real cell with an ID, parent, generation, inherited
 genome, structural mass and energy reserve. Cells grow, divide into two offspring,
@@ -154,10 +158,21 @@ cargo build --workspace
 cargo run -p liminis -- run --config configs/scenarios/hello.toml --seed 42
 ```
 
-The second command prints the triple that identifies a run:
+Команда run печатает идентичность конфигурации, не запускает симуляцию.
+Для локальной симуляции и viewer:
+
+~~~text
+cargo run --release -p liminis -- serve --config configs/scenarios/h2s-oxidation.toml --seed 42
+~~~
+
+В release нет debug-фазы LEDGER ядра полей. Локальные живые наблюдатели
+проверяют свои балансы отдельно; индивидуальная камера проверяет обе
+целочисленные невязки на каждом завершённом тике также в release.
+
+Пример формы идентичности, значения зависят от checkout:
 
 ```
-seed=42 config_hash=blake3:<hex16> world_format_version=29 code_version=0.1.0
+seed=42 config_hash=blake3:<hex16> world_format_version=<current> code_version=0.1.0
 ```
 
 `config_hash` is computed after defaults are applied and over a canonical
@@ -168,9 +183,7 @@ Changing a parameter value does.
 
 - [docs/NORTH_STAR.md](docs/NORTH_STAR.md) — what is being built and why. Wins over
   the spec if the two disagree.
-- [docs/SPEC.md](docs/SPEC.md) — the design. It freezes the moment the first file
-  appears in `crates/liminis-core/src/kernels/`; until then it is brought in line with
-  the decision log rather than extended (ADR-032). A hook reads that directory, so the
+- [docs/SPEC.md](docs/SPEC.md) — the design. It is already frozen because implementation has begun in `crates/liminis-core/src/kernels/` (ADR-032). A hook reads that directory, so the
   trigger is a check and not a promise.
 - [docs/DECISIONS.md](docs/DECISIONS.md) — the decision log. Append-only; a reversal is
   a new entry, not an edit.
@@ -179,7 +192,8 @@ Changing a parameter value does.
 
 The remaining documents (`ARCHITECTURE.md`, `NUMERIC.md`, `QUANTITIES.md`,
 `ACCEPTANCE.md`, `COMMUNITY.md`, `OPEN_QUESTIONS.md`, `PRIOR_ART.md`,
-`LEARNING.md`) are indexed in `CLAUDE.md`. Everything under `docs/archive/` is a
+`LEARNING.md`) are indexed in [docs/README.md](docs/README.md).
+Правила агентов: [AGENTS.md](AGENTS.md). Everything under `docs/archive/` is a
 superseded draft and contradicts the current spec.
 
 ## License
