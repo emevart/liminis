@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { buildCatalog, catalogEntry, verifySharedSamples } from "../scripts/build_experiment_catalog.mjs";
-import { validateCatalog, selectExperiment } from "./catalog.mjs";
+import { validateCatalog, validateDenseAttachment, selectExperiment } from "./catalog.mjs";
 
 const catalog = await buildCatalog();
 
@@ -15,6 +15,19 @@ test("selection is limited to the validated catalog", () => {
   assert.equal(selectExperiment(catalog).id, "cell-chamber-10k");
   assert.equal(selectExperiment(catalog, "?experiment=cell-chamber-1m").experiment.steps, 1_000_000);
   assert.throws(() => selectExperiment(catalog, "?experiment=https://other.invalid/data.json"));
+});
+
+test("dense pins are typed, same-origin, closed and tied to their horizon", () => {
+  const valid = { index: "./data/dense-cell-chamber/index.json", index_sha256: "a".repeat(64), manifest: "horizon-10000.json", publication: "./data/dense-cell-chamber/publication.json", publication_sha256: "b".repeat(64) };
+  assert.equal(validateDenseAttachment(valid, 10000), valid);
+  for (const change of [
+    { index: "https://elsewhere.invalid/index.json" }, { manifest: "horizon-100000.json" },
+    { publication: "./data/dense-cell-chamber/../publication.json" }, { index_sha256: [valid.index_sha256] },
+    { publication_sha256: "invented" }, { untrusted: true },
+  ]) assert.throws(() => validateDenseAttachment({ ...valid, ...change }, 10000));
+  const attached = structuredClone(catalog); attached.entries[0].dense = valid;
+  assert.equal(validateCatalog(attached), attached);
+  attached.entries[0].dense = null; assert.throws(() => validateCatalog(attached));
 });
 
 test("rejects unsafe recording paths and duplicate IDs", () => {
