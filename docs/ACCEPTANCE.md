@@ -1639,6 +1639,8 @@ Native release benchmark именует D0/Dpositive scenario, seed, hardware,
 binary/config/source hashes, occupied observations, ticks, latency и Pause
 ack. Он не является универсальным throughput обещанием. Настоящий protected
 Playwright проверяет оба chamber formats последовательно, sandbox/CDP argv,
-actual API positions и Step, held state/display30/60, save/resume, desktop/mobile
+actual API positions и Step, held state/display30/60, Save acknowledgement, desktop/mobile
 captions; inventory layout остаётся schematic. Final CI/head/review/evidence
 фиксируются в `docs/checkpoints/2026-10-04-live-physical-transport.md`.
+Resume и exact future проверяют отдельные actual disk tests; браузерный runner
+не перезапускает host и не заявляет browser resume.
