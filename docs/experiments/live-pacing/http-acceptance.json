@@ -1,0 +1,18 @@
+{
+  "acceptance": "passed",
+  "actual_multiplier": 475917.04061852477,
+  "actual_tps": 15863.901353950825,
+  "benchmark": "live_cells_maximum_cell_chamber_seed42_release",
+  "exact_new_checkpoint_resume": true,
+  "first_tick_wall_seconds": 30.02027858800011,
+  "http_max_ms": 76.73017400020399,
+  "http_polls": 73,
+  "pause_ms": 4.537903999789705,
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "processor": "x86_64",
+  "reported_tps_peak": 16185.325253254623,
+  "scenario": "configs/scenarios/cell-chamber.toml",
+  "seed": 42,
+  "ticks": 79634,
+  "wall_seconds": 5.019824457000141
+}

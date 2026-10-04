@@ -1225,4 +1225,8 @@
 /// integer Q31 scaling and rejects unsafe accumulator bounds (ADR-102).
 /// Eco trajectories change: eco28/29 resume is refused (ADR-103). The separate
 /// cell engine is unchanged, so cells29 may resume preserving identity 29.
-pub const WORLD_FORMAT_VERSION: u32 = 30;
+/// Version 31 adds explicitly admitted chamber-2 persisted physical positions
+/// and passive dilute Brownian transport. Chamber-1 and eco-30 tick semantics
+/// remain unchanged; compatible resumes retain their stored world identity.
+/// Chamber 2 is not admitted by the legacy exporter/LAB configuration APIs.
+pub const WORLD_FORMAT_VERSION: u32 = 31;

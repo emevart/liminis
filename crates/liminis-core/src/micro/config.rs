@@ -20,6 +20,7 @@ use crate::numeric::{Q, run_key};
 use crate::process::ProcessId;
 
 pub const CHAMBER_FORMAT_VERSION: u32 = 1;
+pub const SPATIAL_CHAMBER_FORMAT_VERSION: u32 = 2;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -44,13 +45,38 @@ pub struct MicroScenario {
 #[serde(deny_unknown_fields)]
 pub struct Chamber {
     /// Homogeneous liquid volume, m^3.
-    pub volume_m3: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub volume_m3: Option<f64>,
     /// Fixed bath temperature, K. Format 1 does not evolve temperature.
     pub temperature_k: f64,
     pub max_cells: u32,
     /// Independent capped-reservoir actuator, 1/s. Each free pool may move by
     /// at most `max_conc * volume * units_per_mol * rate * dt` per tick.
     pub medium_exchange_per_s: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spatial: Option<SpatialChamber>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpatialChamber {
+    pub dimensions_m: [f64; 3],
+    pub viscosity_pa_s: f64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpatialGenome {
+    pub radius_at_division_m: f64,
+    pub mobility_scale: f64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpatialConfig {
+    pub dimensions_m: [f64; 3],
+    pub viscosity_pa_s: f64,
+    pub transport_seed: u64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -103,6 +129,8 @@ pub struct GenomeDeclaration {
     pub capture_denominator: u32,
     pub division_energy_j: f64,
     pub starvation_tolerance_s: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spatial: Option<SpatialGenome>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -137,6 +165,8 @@ pub struct MicroConfig {
     pub mutation: MutationSpec,
     pub founder: FounderSpec,
     pub medium: Vec<MediumExchange>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spatial: Option<SpatialConfig>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -185,6 +215,8 @@ pub struct Genome {
     pub capture_denominator: u32,
     pub division_energy_cost: i128,
     pub starvation_tolerance_ticks: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spatial: Option<SpatialGenome>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -241,13 +273,25 @@ pub fn config_hash(scenario: &MicroScenario) -> Result<String> {
     Ok(format!("blake3:{}", &hex.as_str()[..16]))
 }
 
+/// Historical well-mixed entry point. Spatial scenarios require opt-in.
 pub fn validate(scenario: &MicroScenario) -> Result<()> {
     ensure!(
         scenario.chamber_format == CHAMBER_FORMAT_VERSION,
-        "cell chamber format {} is unsupported; this build reads format {}",
-        scenario.chamber_format,
-        CHAMBER_FORMAT_VERSION
+        "the legacy cell entry point requires chamber format 1"
     );
+    validate_live(scenario)
+}
+
+/// Explicit live dispatch; public recording and existing callers stay strict1.
+pub fn parse_live(text: &str) -> Result<MicroScenario> {
+    let scenario: MicroScenario = toml::from_str(text)?;
+    validate_live(&scenario)?;
+    Ok(scenario)
+}
+
+pub fn validate_live(scenario: &MicroScenario) -> Result<()> {
+    chamber_volume(scenario)?;
+    validate_spatial_genome(scenario.chamber_format, scenario.founder.genome.spatial)?;
     ensure!(
         !scenario.name.trim().is_empty(),
         "chamber name must not be empty"
@@ -259,7 +303,6 @@ pub fn validate(scenario: &MicroScenario) -> Result<()> {
             && scenario.extent_fraction <= 1.0,
         "extent_fraction must be finite and in (0, 1]"
     );
-    positive_finite("chamber.volume_m3", scenario.chamber.volume_m3)?;
     positive_finite("chamber.temperature_k", scenario.chamber.temperature_k)?;
     ensure!(
         scenario.chamber.max_cells > 0,
@@ -388,7 +431,29 @@ pub fn validate(scenario: &MicroScenario) -> Result<()> {
 
 pub fn derive(scenario: &MicroScenario, seed: u64) -> Result<MicroConfig> {
     validate(scenario)?;
-    let chemistry = chemistry_config(scenario)?;
+    derive_checked(scenario, seed)
+}
+
+pub fn derive_spatial(scenario: &MicroScenario, seed: u64) -> Result<MicroConfig> {
+    ensure!(
+        scenario.chamber_format == SPATIAL_CHAMBER_FORMAT_VERSION,
+        "spatial derivation requires chamber format 2"
+    );
+    validate_live(scenario)?;
+    derive_checked(scenario, seed)
+}
+
+pub fn derive_live(scenario: &MicroScenario, seed: u64) -> Result<MicroConfig> {
+    match scenario.chamber_format {
+        CHAMBER_FORMAT_VERSION => derive(scenario, seed),
+        SPATIAL_CHAMBER_FORMAT_VERSION => derive_spatial(scenario, seed),
+        _ => anyhow::bail!("unsupported chamber format"),
+    }
+}
+
+fn derive_checked(scenario: &MicroScenario, seed: u64) -> Result<MicroConfig> {
+    let volume_m3 = chamber_volume(scenario)?;
+    let chemistry = chemistry_config(scenario, volume_m3)?;
     config::validate(&chemistry).context("validating chamber chemistry")?;
     let derived = config::derive(&chemistry).context("deriving chamber chemistry")?;
     let growth = derived
@@ -424,14 +489,15 @@ pub fn derive(scenario: &MicroScenario, seed: u64) -> Result<MicroConfig> {
     let energy_units_per_joule = 1_i128
         .checked_shl(u32::from(derived.energy().k_e))
         .context("energy scale does not fit i128")?;
-    let initial_matter = fold_composition(scenario, &scenario.initial, &ids, &units_per_mol)?;
-    let medium_matter = fold_composition(scenario, &scenario.medium, &ids, &units_per_mol)?;
+    let initial_matter = fold_composition(&scenario.initial, &ids, &units_per_mol, volume_m3)?;
+    let medium_matter = fold_composition(&scenario.medium, &ids, &units_per_mol, volume_m3)?;
     let genome = derive_genome(
         scenario,
         biomass,
         limiting,
         &units_per_mol,
         energy_units_per_joule,
+        volume_m3,
     )?;
     let structural_mass = physical_to_int(
         "founder structural mass",
@@ -455,12 +521,12 @@ pub fn derive(scenario: &MicroScenario, seed: u64) -> Result<MicroConfig> {
     let stoich = growth.nu.iter().map(micro_nu).collect::<Result<Vec<_>>>()?;
 
     let config = MicroConfig {
-        chamber_format: CHAMBER_FORMAT_VERSION,
+        chamber_format: scenario.chamber_format,
         name: scenario.name.clone(),
         config_hash: config_hash(scenario)?,
         dt_seconds: scenario.dt,
         run_key: run_key(seed),
-        volume_m3: scenario.chamber.volume_m3,
+        volume_m3,
         temperature_kelvin: scenario.chamber.temperature_k,
         max_cells: scenario.chamber.max_cells,
         matter_ids: ids,
@@ -503,6 +569,11 @@ pub fn derive(scenario: &MicroScenario, seed: u64) -> Result<MicroConfig> {
                     .ceil() as i128,
             })
             .collect(),
+        spatial: scenario.chamber.spatial.map(|spatial| SpatialConfig {
+            dimensions_m: spatial.dimensions_m,
+            viscosity_pa_s: spatial.viscosity_pa_s,
+            transport_seed: seed,
+        }),
     };
     validate_runtime(&config)?;
     Ok(config)
@@ -530,10 +601,17 @@ pub fn decode_genome(config: &MicroConfig, genome: &Genome) -> DecodedGenome {
 /// This validates configuration, not the evolving cumulative bath heat held by
 /// `MicroState`; format 1 separately requires non-endothermic lysis.
 pub fn validate_runtime(config: &MicroConfig) -> Result<()> {
-    ensure!(
-        config.chamber_format == CHAMBER_FORMAT_VERSION,
-        "unsupported chamber format"
-    );
+    match (config.chamber_format, config.spatial) {
+        (CHAMBER_FORMAT_VERSION, None) => {}
+        (SPATIAL_CHAMBER_FORMAT_VERSION, Some(spatial)) => {
+            let volume = spatial_volume(spatial.dimensions_m, spatial.viscosity_pa_s)?;
+            ensure!(
+                volume == config.volume_m3,
+                "runtime volume differs from spatial dimensions"
+            );
+        }
+        _ => anyhow::bail!("runtime chamber format and spatial configuration disagree"),
+    }
     positive_finite("runtime dt_seconds", config.dt_seconds)?;
     positive_finite("runtime volume_m3", config.volume_m3)?;
     positive_finite("runtime temperature_kelvin", config.temperature_kelvin)?;
@@ -678,6 +756,7 @@ pub fn validate_runtime(config: &MicroConfig) -> Result<()> {
 }
 
 fn validate_runtime_genome(config: &MicroConfig, genome: &Genome) -> Result<()> {
+    validate_spatial_genome(config.chamber_format, genome.spatial)?;
     ensure!(
         (config.mutation.min_kinetics..=config.mutation.max_kinetics).contains(&genome.kinetics),
         "runtime genome kinetics is outside mutation bounds"
@@ -702,7 +781,55 @@ fn validate_runtime_genome(config: &MicroConfig, genome: &Genome) -> Result<()> 
     Ok(())
 }
 
-fn chemistry_config(scenario: &MicroScenario) -> Result<Config> {
+/// Resolve the declaration without adding a second volume source to format2.
+fn chamber_volume(scenario: &MicroScenario) -> Result<f64> {
+    match (
+        scenario.chamber_format,
+        scenario.chamber.volume_m3,
+        scenario.chamber.spatial,
+    ) {
+        (CHAMBER_FORMAT_VERSION, Some(volume), None) => {
+            positive_finite("chamber.volume_m3", volume)?;
+            Ok(volume)
+        }
+        (SPATIAL_CHAMBER_FORMAT_VERSION, None, Some(spatial)) => {
+            spatial_volume(spatial.dimensions_m, spatial.viscosity_pa_s)
+        }
+        _ => anyhow::bail!(
+            "chamber format 1 requires volume and no spatial declaration; format 2 requires spatial dimensions and forbids volume"
+        ),
+    }
+}
+
+fn spatial_volume(dimensions_m: [f64; 3], viscosity_pa_s: f64) -> Result<f64> {
+    for dimension in dimensions_m {
+        positive_finite("spatial dimension", dimension)?;
+        positive_finite("spatial reflection period 2L", 2.0 * dimension)?;
+    }
+    positive_finite("spatial viscosity_pa_s", viscosity_pa_s)?;
+    let volume = (dimensions_m[0] * dimensions_m[1]) * dimensions_m[2];
+    positive_finite("spatial dimensions volume product", volume)?;
+    Ok(volume)
+}
+
+fn validate_spatial_genome(format: u32, genome: Option<SpatialGenome>) -> Result<()> {
+    match (format, genome) {
+        (CHAMBER_FORMAT_VERSION, None) => Ok(()),
+        (SPATIAL_CHAMBER_FORMAT_VERSION, Some(spatial)) => {
+            positive_finite("spatial radius_at_division_m", spatial.radius_at_division_m)?;
+            ensure!(
+                spatial.mobility_scale.is_finite() && (0.0..=1.0).contains(&spatial.mobility_scale),
+                "spatial mobility_scale must be finite and in [0, 1]"
+            );
+            Ok(())
+        }
+        _ => anyhow::bail!(
+            "spatial genome must be absent in chamber format 1 and present in format 2"
+        ),
+    }
+}
+
+fn chemistry_config(scenario: &MicroScenario, volume_m3: f64) -> Result<Config> {
     let mut km = BTreeMap::new();
     for id in scenario.growth.inputs.keys() {
         km.insert(id.clone(), scenario.founder.genome.uptake_km_mol_m3);
@@ -772,7 +899,7 @@ fn chemistry_config(scenario: &MicroScenario) -> Result<Config> {
             nx: 1,
             ny: 1,
             nz: 1,
-            dx: scenario.chamber.volume_m3.cbrt(),
+            dx: volume_m3.cbrt(),
         },
         boundary: closed,
         physics: Physics::default(),
@@ -812,6 +939,7 @@ fn derive_genome(
     limiting: usize,
     units_per_mol: &[i128],
     energy_units_per_joule: i128,
+    volume_m3: f64,
 ) -> Result<Genome> {
     let source = &scenario.founder.genome;
     let division_mass = physical_to_int(
@@ -820,7 +948,7 @@ fn derive_genome(
     )?;
     let uptake_km_amount = physical_to_int(
         "genome uptake Km",
-        source.uptake_km_mol_m3 * scenario.chamber.volume_m3 * units_per_mol[limiting] as f64,
+        source.uptake_km_mol_m3 * volume_m3 * units_per_mol[limiting] as f64,
     )?;
     ensure!(
         uptake_km_amount > 0,
@@ -859,21 +987,22 @@ fn derive_genome(
         capture_denominator: source.capture_denominator,
         division_energy_cost: division_energy,
         starvation_tolerance_ticks: starvation_tolerance_ticks as u32,
+        spatial: source.spatial,
     })
 }
 
 fn fold_composition(
-    scenario: &MicroScenario,
     composition: &MediumComposition,
     ids: &[String],
     units_per_mol: &[i128],
+    volume_m3: f64,
 ) -> Result<Vec<i128>> {
     ids.iter()
         .zip(units_per_mol)
         .map(|(id, units)| {
             physical_to_int(
                 &format!("concentration of {id}"),
-                concentration(composition, id) * scenario.chamber.volume_m3 * *units as f64,
+                concentration(composition, id) * volume_m3 * *units as f64,
             )
         })
         .collect()
@@ -1177,3 +1306,7 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+#[path = "config_spatial_tests.rs"]
+mod spatial_tests;

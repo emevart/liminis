@@ -193,3 +193,51 @@ Astra фактически вызван, сверил authoritativeCDP/Chromiumc
 единственныйargs:['--enable-automation'] для раскрытияactualcommandline.
 Sandbox/CDPdenyflags/perms/platform не меняются, внешнийdebugport не открывается.
 Послеindependentreview нуженactualnewheadPASS; прежнийFAIL не скрывается.
+
+## Принятое завершение LIVE-1 и страховочное сохранение
+
+LIVE-1 PR #12 слит единственным CLOUD-интегратором. Exact tested HEAD
+`8874d2c39501adf6a9f26379c951ce471548de3a`, branch `codex/live-cells-pacing`,
+tree `caff90194bb66a0aa34c696feb149113c70afba2`; main merge
+`c5be8fc8652433c67378a689fbb151ea4bad510a` имеет этот же tree и родителей
+`f7c74a263bd1976bc31a35a440b19006546656eb` и указанный tested HEAD.
+Guarded GitHub merge выполнен после всех 10 SUCCESS exact-head checks,
+фактически вызванного Astra и независимого code/browser review без blockers.
+
+Protected browser run `37204679284`, job `111443336826`, artifact `11303903150`:
+official Playwright 1.61.1 / matching Chromium149, chromiumSandbox:true,
+фактический CDP argv без sandbox-disabling flags, clean exact HEAD/tree,
+13 checks PASS, errors0. Root и независимый reviewer просмотрели четыре
+desktop/mobile PNG и настоящий trace. Full workspace build/lint/test job
+`111443336993` SUCCESS. Предыдущие FAIL выше сохранены как историческое evidence.
+Временный ubuntu-22.04 compatibility pin требует будущего review поддерживаемого
+runner image; защиты не отключались. Публичный recorded site не изменён этим PR.
+
+Дополнительный честный occupied-culture release benchmark сохранён в Git:
+`docs/experiments/live-pacing/occupied-seed42.json` и
+`docs/experiments/live-pacing/benchmark_occupied_cells.py`.
+Named пятисекундный прогон: 67,216 ticks / 5.014882193 s = 13,403.3 TPS,
+living8→98, observed min/max8/248; все249 observations непусты. HTTP max111.66ms,
+Pause7.19ms, save acknowledgement67216, dt30 неизменен. CPU AMD EPYC9V74 VM;
+binary SHA256 `08dacd0309ee55a2e721a96d0f4ee9407073beaa866f052a87a758517127f555`.
+Это измерение одного окружения с затратами HTTP/Pause/storage, не общий предел.
+
+Воспроизведение: отдельный checkout exact tested HEAD, pinned Rust1.97.1,
+`cargo build --locked --release -p liminis`; из корня запустить сохранённый
+Python benchmark script. Он использует `scripts/check_live_cells_pacing.py`,
+свой свободный port/temp directory и пишет `target/qa/occupied_cells_benchmark.json`.
+Исходные JSON/script в старом checkout `target/qa/` не удалены.
+
+Отдельный ignored UI evidence: `target/qa/protected-8874d2c/` старого LIVE checkout,
+содержит downloaded report/PNG/trace из artifact11303903150; durable Actions link:
+https://github.com/emevart/liminis/actions/runs/37204679284/artifacts/11303903150
+Скриншоты/trace не включены в Git (artifact retention7days); это явный
+unsaved-to-Git gap, а не обещание бессрочного хранения. Воспроизводимая приёмка
+остаётся в `scripts/check_live_cells_browser.mjs` и существующем CI job.
+
+Следующий отдельный LIVE этап ведётся в `codex/cells-physical-transport` от
+main `c5be8fc8652433c67378a689fbb151ea4bad510a`; его уникальный checkpoint —
+`docs/checkpoints/2026-10-04-live-physical-transport.md`. Никакой handoff
+ownership не выполнен. Очередь, роли, gates восстанавливаются из issue #11;
+только CLOUD LIVE-интегратор сливает точный проверенный HEAD. Далее RECORDED-1
+#13, LAB-1 #14, отдельные dependent этапы; streams не сливают свои PR.

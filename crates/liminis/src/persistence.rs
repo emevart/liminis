@@ -582,7 +582,9 @@ fn snapshot_identity(sim: &Sim) -> SnapshotIdentity {
 }
 
 fn supports_eco_version(version: u32) -> bool {
-    version == WORLD_FORMAT_VERSION
+    // Version 31 changes only the separate opt-in physical cell chamber.
+    // The immutable eco-30 identity remains valid and is never relabelled.
+    version == WORLD_FORMAT_VERSION || version == 30
 }
 
 fn ensure_supported_eco_version(version: u32) -> Result<()> {

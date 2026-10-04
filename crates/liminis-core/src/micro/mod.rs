@@ -1,8 +1,8 @@
 //! A bounded, well-mixed individual-cell engine.
 //!
 //! This is deliberately a separate operator from the voxel world.  The chamber
-//! has real integer chemical pools and real individual cells, but no positions:
-//! any arrangement used by an observer is presentation, not simulated motion.
+//! has real integer chemical pools and real individual cells. Chamber format 2
+//! additionally stores passive positions; resources remain well mixed.
 
 use std::collections::BTreeSet;
 
@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::numeric::{Q, qadd, qdiv, qmul, rand, stochastic_round};
 
 pub mod config;
+mod transport;
 pub use config::{
     DeathSpec, FounderSpec, Genome, GrowthSpec, MediumExchange, MicroConfig, MicroNu, MutationSpec,
 };
@@ -35,6 +36,8 @@ pub struct Cell {
     pub birth_tick: u64,
     pub generation: u32,
     pub starvation_ticks: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub position_m: Option<[f64; 3]>,
 }
 
 impl MicroConfig {
@@ -206,6 +209,7 @@ impl MicroConfig {
     }
 
     fn validate_genome(&self, genome: &Genome) -> Result<()> {
+        transport::validate_genome(self, genome)?;
         ensure!(
             self.genome_contains(genome),
             "micro genome kinetics is outside the declared bounds"
@@ -279,18 +283,21 @@ impl MicroState {
     pub fn new(config: &MicroConfig) -> Result<Self> {
         config.validate()?;
         let cells = (0..config.founder.count)
-            .map(|id| Cell {
-                id: u64::from(id),
-                parent_id: None,
-                genome: config.founder.genome,
-                mass: config.founder.mass,
-                energy: config.founder.energy,
-                age: 0,
-                birth_tick: 0,
-                generation: 0,
-                starvation_ticks: 0,
+            .map(|id| {
+                Ok(Cell {
+                    id: u64::from(id),
+                    parent_id: None,
+                    genome: config.founder.genome,
+                    mass: config.founder.mass,
+                    energy: config.founder.energy,
+                    age: 0,
+                    birth_tick: 0,
+                    generation: 0,
+                    starvation_ticks: 0,
+                    position_m: transport::founder_position(config, u64::from(id))?,
+                })
             })
-            .collect();
+            .collect::<Result<Vec<_>>>()?;
         let state = Self {
             tick: 0,
             next_cell_id: u64::from(config.founder.count),
@@ -344,6 +351,7 @@ impl MicroState {
         );
         let mut ids = BTreeSet::new();
         for cell in &self.cells {
+            transport::validate_position(config, cell.position_m)?;
             ensure!(
                 ids.insert(cell.id),
                 "micro snapshot repeats cell id {}",
@@ -440,6 +448,10 @@ fn step_in_place(config: &MicroConfig, state: &mut MicroState) -> Result<MicroSt
     state.validate(config)?;
     ensure!(state.tick < u64::MAX, "micro tick counter is exhausted");
     state.cells.sort_unstable_by_key(|cell| cell.id);
+
+    // Transport uses the pre-existing cells and their mass at tick start.
+    // Fission below inherits the transported endpoint, without another kick.
+    transport::advance(config, state)?;
 
     let before_matter = combined_matter(config, state)?;
     let energy_before = total_energy(config, state)?;
@@ -859,6 +871,7 @@ fn apply_fission(config: &MicroConfig, state: &mut MicroState) -> Result<(u32, u
             birth_tick: state.tick + 1,
             generation,
             starvation_ticks: 0,
+            position_m: cell.position_m,
         });
         out.push(Cell {
             id: second_id,
@@ -870,6 +883,7 @@ fn apply_fission(config: &MicroConfig, state: &mut MicroState) -> Result<(u32, u
             birth_tick: state.tick + 1,
             generation,
             starvation_ticks: 0,
+            position_m: cell.position_m,
         });
         births = births
             .checked_add(2)
@@ -935,6 +949,7 @@ mod tests {
             capture_denominator: 5,
             division_energy_cost: 2,
             starvation_tolerance_ticks: 1,
+            spatial: None,
         }
     }
 
@@ -948,6 +963,7 @@ mod tests {
             volume_m3: 1.0,
             temperature_kelvin: 298.15,
             run_key: 17,
+            spatial: None,
             max_cells: 64,
             matter_ids: vec!["FOOD".into(), "BIO".into(), "DET".into()],
             units_per_mol: vec![1, 1, 1],
@@ -1217,6 +1233,7 @@ mod tests {
             birth_tick: 0,
             generation: 0,
             starvation_ticks: 0,
+            position_m: None,
         };
         let fast = Cell {
             id: 2,

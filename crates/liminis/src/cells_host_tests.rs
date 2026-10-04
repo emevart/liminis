@@ -575,3 +575,246 @@ fn autosave_backpressure_does_not_stop_maximum_and_retries_checkpoint() {
     assert!(sim.running);
     assert_eq!(sim.storage.as_ref().unwrap().status()["saved_tick"], 2);
 }
+
+fn spatial_scenario(mobility: f64) -> String {
+    include_str!("../../../configs/scenarios/cell-chamber-physical.toml").replace(
+        "mobility_scale = 1.0",
+        &format!("mobility_scale = {mobility}"),
+    )
+}
+
+fn position_bits(sim: &Sim) -> Vec<(u64, [u64; 3])> {
+    sim.state
+        .cells
+        .iter()
+        .map(|cell| (cell.id, cell.position_m.unwrap().map(f64::to_bits)))
+        .collect()
+}
+
+#[test]
+fn live_spatial_inventory_reports_actual_positions_and_full_seed() {
+    let sim = build(&spatial_scenario(1.0), u64::MAX).unwrap();
+    let value = state_json(&sim);
+    assert_eq!(value["chamber_format"], 2);
+    assert_eq!(value["seed"], u64::MAX.to_string());
+    assert_eq!(value["model"]["environment"], "well_mixed");
+    assert_eq!(value["model"]["spatial_positions"], true);
+    assert_eq!(
+        value["model"]["dimensions_m"],
+        json!([1.0e-4, 1.0e-4, 1.0e-4])
+    );
+    assert_eq!(value["model"]["excluded_volume"], false);
+    for (cell, output) in sim
+        .state
+        .cells
+        .iter()
+        .zip(value["cells"].as_array().unwrap())
+    {
+        assert_eq!(output["position_m"], json!(cell.position_m.unwrap()));
+        assert_eq!(
+            output["genome"]["spatial"],
+            json!(cell.genome.spatial.unwrap())
+        );
+    }
+    assert_eq!(sim.config.spatial.unwrap().transport_seed, u64::MAX);
+    let round_trip: MicroConfig =
+        serde_json::from_slice(&serde_json::to_vec(&sim.config).unwrap()).unwrap();
+    assert_eq!(round_trip, sim.config);
+    round_trip.validate().unwrap();
+    assert_eq!(round_trip.spatial.unwrap().transport_seed, u64::MAX);
+    assert!(validate_live_identity(&sim.config, u64::MAX - (1 << 32), 31).is_err());
+    assert!(validate_live_identity(&sim.config, u64::MAX, 30).is_err());
+    let legacy = fixture();
+    let runtime = serde_json::to_value(&legacy.config).unwrap();
+    assert!(runtime.get("spatial").is_none());
+    assert!(runtime["founder"]["genome"].get("spatial").is_none());
+    let round_trip: MicroConfig = serde_json::from_value(runtime).unwrap();
+    assert_eq!(round_trip, legacy.config);
+    round_trip.validate().unwrap();
+    let snapshot = serde_json::to_value(legacy.state.snapshot()).unwrap();
+    assert!(snapshot["cells"].as_array().unwrap().iter().all(|cell|
+        cell.get("position_m").is_none() && cell["genome"].get("spatial").is_none()));
+    let value = state_json(&legacy);
+    assert_eq!(value["model"]["spatial_positions"], false);
+    assert!(value["cells"].as_array().unwrap().iter().all(|cell|
+        cell.get("position_m").is_none() && cell["genome"].get("spatial").is_none()));
+}
+
+#[test]
+fn spatial_actual_disk_checkpoint_preserves_position_bits_seed_and_exact_future() {
+    for mobility in [0.0, 1.0] {
+        let root = Temp::new();
+        let mut original = build(&spatial_scenario(mobility), u64::MAX).unwrap();
+        let extent = original.config.spatial.unwrap().dimensions_m[0];
+        original.state.cells[0].position_m = Some([f64::from_bits(1), extent.next_down(), -0.0]);
+        original.state.cells[1].position_m = Some([extent, extent.next_down(), 0.0]);
+        original.state.validate(&original.config).unwrap();
+        let expected_bits = position_bits(&original);
+        start_storage(&mut original, &root.0).unwrap();
+        let run = original.storage.as_ref().unwrap().status()["run_id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let manifest: Value =
+            serde_json::from_slice(&std::fs::read(root.0.join(&run).join("run.json")).unwrap())
+                .unwrap();
+        assert_eq!(manifest["chamber_format"], 2);
+        assert_eq!(manifest["world_format_version"], 31);
+        assert_eq!(manifest["seed"], u64::MAX.to_string());
+        drop(original.storage.take());
+        let mut resumed = resume_after_writer(&root.0, &run);
+        assert_eq!(resumed.config.spatial.unwrap().transport_seed, u64::MAX);
+        assert_eq!(position_bits(&resumed), expected_bits);
+        assert_eq!(resumed.state.snapshot(), original.state.snapshot());
+        for _ in 0..64 {
+            advance_one(&mut original).unwrap();
+            advance_one(&mut resumed).unwrap();
+            assert_eq!(resumed.state.snapshot(), original.state.snapshot());
+            assert_eq!(position_bits(&resumed), position_bits(&original));
+            assert_eq!(metric(&resumed), metric(&original));
+        }
+        save(&mut resumed).unwrap();
+        resumed.storage.as_mut().unwrap().wait_for_save().unwrap();
+        let bits = position_bits(&resumed);
+        drop(resumed.storage.take());
+        let second = resume_after_writer(&root.0, &run);
+        assert_eq!(second.world_format_version, 31);
+        assert_eq!(second.config.chamber_format, 2);
+        assert_eq!(position_bits(&second), bits);
+        assert_eq!(second.state.snapshot(), original.state.snapshot());
+        drop(second.storage);
+    }
+}
+
+#[test]
+fn all_supported_legacy_worlds_resume_without_spatial_upgrade() {
+    for world in [29, 30, 31] {
+        let root = Temp::new();
+        let mut original = fixture();
+        original.world_format_version = world;
+        advance_one(&mut original).unwrap();
+        start_storage(&mut original, &root.0).unwrap();
+        let run = original.storage.as_ref().unwrap().status()["run_id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        let mut legacy = capture(&original);
+        legacy.state["format"] = json!(1);
+        legacy.state.as_object_mut().unwrap().remove("pacing");
+        original.storage.as_mut().unwrap().save(legacy).unwrap();
+        original.storage.as_mut().unwrap().wait_for_save().unwrap();
+        drop(original.storage.take());
+        let mut resumed = resume_after_writer(&root.0, &run);
+        assert_eq!(resumed.world_format_version, world);
+        assert_eq!(resumed.config.chamber_format, 1);
+        assert!(resumed.config.spatial.is_none());
+        assert!(
+            resumed
+                .state
+                .cells
+                .iter()
+                .all(|cell| cell.position_m.is_none() && cell.genome.spatial.is_none())
+        );
+        assert_eq!(resumed.config_text, original.config_text);
+        assert_eq!(resumed.config_hash, original.config_hash);
+        assert_eq!(resumed.config.run_key, original.config.run_key);
+        assert_eq!(resumed.state.snapshot(), original.state.snapshot());
+        for _ in 0..16 {
+            advance_one(&mut original).unwrap();
+            advance_one(&mut resumed).unwrap();
+            assert_eq!(resumed.state.snapshot(), original.state.snapshot());
+        }
+        save(&mut resumed).unwrap();
+        resumed.storage.as_mut().unwrap().wait_for_save().unwrap();
+        let latest: Value =
+            serde_json::from_slice(&std::fs::read(root.0.join(&run).join("latest.json")).unwrap())
+                .unwrap();
+        assert_eq!(latest["world_format_version"], world);
+        assert_eq!(latest["chamber_format"], 1);
+        drop(resumed.storage.take());
+    }
+}
+
+fn resume_error_after_writer(root: &Path, run: &str) -> String {
+    let deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        match resume_sim(root, run, None) {
+            Ok(_) => panic!("contradictory saved identity unexpectedly resumed"),
+            Err(error) if error.to_string().contains("writer") && Instant::now() < deadline => {
+                std::thread::sleep(Duration::from_millis(2));
+            }
+            Err(error) => return format!("{error:#}"),
+        }
+    }
+}
+
+#[test]
+fn spatial_resume_rejects_missing_coordinates_and_config_manifest_disagreement() {
+    for missing_position in [false, true] {
+        let root = Temp::new();
+        let mut original = build(&spatial_scenario(1.0), u64::MAX).unwrap();
+        start_storage(&mut original, &root.0).unwrap();
+        let run = original.storage.as_ref().unwrap().status()["run_id"]
+            .as_str()
+            .unwrap()
+            .to_string();
+        if missing_position {
+            let mut invalid = capture(&original);
+            invalid.state["core"]["cells"][0]
+                .as_object_mut()
+                .unwrap()
+                .remove("position_m");
+            original.storage.as_mut().unwrap().save(invalid).unwrap();
+            original.storage.as_mut().unwrap().wait_for_save().unwrap();
+        }
+        drop(original.storage.take());
+        if !missing_position {
+            // Make every storage identity internally agree on chamber1. The
+            // live adapter must still refuse its chamber2 canonical config.
+            let path = root.0.join(&run);
+            let mut latest: Value =
+                serde_json::from_slice(&std::fs::read(path.join("latest.json")).unwrap()).unwrap();
+            let checkpoint = latest["checkpoint_id"].as_str().unwrap().to_string();
+            latest["chamber_format"] = json!(1);
+            let bytes = serde_json::to_vec(&latest).unwrap();
+            std::fs::write(path.join("latest.json"), &bytes).unwrap();
+            std::fs::write(
+                path.join("checkpoints")
+                    .join(checkpoint)
+                    .join("metadata.json"),
+                &bytes,
+            )
+            .unwrap();
+            let mut manifest: Value =
+                serde_json::from_slice(&std::fs::read(path.join("run.json")).unwrap()).unwrap();
+            manifest["chamber_format"] = json!(1);
+            std::fs::write(
+                path.join("run.json"),
+                serde_json::to_vec(&manifest).unwrap(),
+            )
+            .unwrap();
+            for session in std::fs::read_dir(path.join("sessions")).unwrap() {
+                let metrics = session.unwrap().path().join("metrics.ndjson");
+                let text = std::fs::read_to_string(&metrics).unwrap();
+                std::fs::write(
+                    metrics,
+                    text.replacen("\"chamber_format\":2", "\"chamber_format\":1", 1),
+                )
+                .unwrap();
+            }
+        }
+        let error = resume_error_after_writer(&root.0, &run);
+        if missing_position {
+            assert!(error.contains("position"), "{error}");
+        } else {
+            assert!(error.contains("config chamber format"), "{error}");
+        }
+        let sessions = std::fs::read_dir(root.0.join(&run).join("sessions"))
+            .unwrap()
+            .count();
+        assert_eq!(
+            sessions, 1,
+            "invalid state must not create a resume lineage"
+        );
+    }
+}

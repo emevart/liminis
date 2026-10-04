@@ -483,3 +483,18 @@ derivation из объёма камеры и объявлений веществ
 NDJSON содержит точные decimal strings для пулов, накопленных переносов,
 энергии, BIO и экстентов, а также производные float для графиков. UI-картинка,
 её координаты, цвет и размер глифа не являются физическим состоянием камеры.
+
+Для opt-in chamber2 ADR-108 добавляет отдельные physical quantities:
+
+| Величина | Единица | Тип и хранение |
+|---|---|---|
+| Point-cell center, box dimensions | m | `[f64;3]`, checkpoint/live API; не экранный glyph layout |
+| Вязкость ванны | Pa·s | `f64`, canonical scenario |
+| Hydrodynamic radius при division mass | m | `f64`, spatial genome; не excluded-volume radius |
+| Mobility scale | безразмерная `[0,1]` | `f64`, spatial genome; ноль означает неподвижность |
+| Tick-start D, displacement sigma | m²/s, m | Производные `f64`, не сохраняемые количества matter/energy |
+
+Объём выводится только из трёх длин; biochemical integer scales и exact
+ledgers прежние. Координаты сохраняются в полном checkpoint; CellMetric/NDJSON
+содержит агрегаты и не хранит пространственную траекторию. Native float future
+ограничен проверенной сборкой; исключение из ADR-015/022 записано в ADR-108.

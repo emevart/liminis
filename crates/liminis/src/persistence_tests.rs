@@ -114,8 +114,9 @@ fn rewrite_session_format_and_header(
 }
 
 #[test]
-fn eco_resume_accepts_only_the_current_world_and_names_the_legacy_reader() {
+fn eco_resume_preserves_unchanged_world30_and_names_the_legacy_reader() {
     assert!(supports_eco_version(WORLD_FORMAT_VERSION));
+    assert!(supports_eco_version(30));
     for version in [27, 28, 29, WORLD_FORMAT_VERSION + 1] {
         if version != WORLD_FORMAT_VERSION {
             assert!(!supports_eco_version(version));
@@ -135,6 +136,94 @@ fn eco_resume_accepts_only_the_current_world_and_names_the_legacy_reader() {
                 .contains("matching older build")
         );
     }
+}
+
+#[test]
+fn eco_world30_actual_disk_resume_keeps_identity_and_exact_future() {
+    let root = Temp::new();
+    let mut continuous = fixture();
+    continuous.identity.world_format_version = 30;
+    let mut persistence = Persistence::create(&root.0, &continuous).unwrap();
+    persistence.wait_for_save().unwrap();
+    let run_id = persistence.lease.info.run_id.clone();
+    stop(persistence);
+
+    let mut resumed = resume(&root.0, &run_id, None).expect("unchanged eco30 resume");
+    let mut resumed_storage = resumed.persistence.take().unwrap();
+    assert_eq!(resumed.identity.world_format_version, 30);
+    assert_eq!(snapshot_identity(&resumed).world_format_version, 30);
+    for _ in 0..3 {
+        super::super::advance_one(&mut continuous);
+        super::super::advance_one(&mut resumed);
+    }
+    let mut expected = Vec::new();
+    let mut actual = Vec::new();
+    observe::snapshot_write(
+        &mut expected,
+        &snapshot_identity(&continuous),
+        &continuous.world,
+        &continuous.ledger,
+    )
+    .unwrap();
+    observe::snapshot_write(
+        &mut actual,
+        &snapshot_identity(&resumed),
+        &resumed.world,
+        &resumed.ledger,
+    )
+    .unwrap();
+    assert_eq!(actual, expected, "eco30 disk resume future must be exact");
+
+    resumed_storage.save(&resumed, true).unwrap();
+    resumed_storage.wait_for_save().unwrap();
+    let checkpoint = saved(&resumed_storage);
+    let run = resumed_storage.lease.path.clone();
+    let manifest: RunInfo = read_json(&run.join("run.json")).unwrap();
+    let latest: CheckpointInfo = read_json(&run.join("latest.json")).unwrap();
+    let generation = run.join("checkpoints").join(&checkpoint.checkpoint_id);
+    let published: CheckpointInfo = read_json(&generation.join("metadata.json")).unwrap();
+    assert_eq!(manifest.world_format_version, 30);
+    for info in [&checkpoint, &latest, &published] {
+        assert_eq!(info.world_format_version, 30);
+        assert_eq!(info.tick, 3);
+        assert_eq!(info.checkpoint_id, checkpoint.checkpoint_id);
+        assert_eq!(info.seed, manifest.seed);
+        assert_eq!(info.config_hash, manifest.config_hash);
+    }
+    assert_eq!(
+        fs::read(generation.join("state.limsnap")).unwrap(),
+        expected,
+        "eco30 resaved disk bytes must keep the original identity and state"
+    );
+    stop(resumed_storage);
+
+    let mut twice_resumed = resume(&root.0, &run_id, None).expect("resaved eco30 resume");
+    let twice_resumed_storage = twice_resumed.persistence.take().unwrap();
+    assert_eq!(twice_resumed.identity.world_format_version, 30);
+    assert_eq!(snapshot_identity(&twice_resumed).world_format_version, 30);
+    assert_eq!(twice_resumed.ticks, 3);
+    for _ in 0..3 {
+        super::super::advance_one(&mut continuous);
+        super::super::advance_one(&mut twice_resumed);
+        expected.clear();
+        actual.clear();
+        observe::snapshot_write(
+            &mut expected,
+            &snapshot_identity(&continuous),
+            &continuous.world,
+            &continuous.ledger,
+        )
+        .unwrap();
+        observe::snapshot_write(
+            &mut actual,
+            &snapshot_identity(&twice_resumed),
+            &twice_resumed.world,
+            &twice_resumed.ledger,
+        )
+        .unwrap();
+        assert_eq!(actual, expected, "eco30 second disk resume must be exact");
+    }
+    stop(twice_resumed_storage);
 }
 
 #[test]
