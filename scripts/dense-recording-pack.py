@@ -30,7 +30,7 @@ def pack(stream, output, max_bytes=None):
     header = read_record(stream)
     codec.validate_header(header)
     steps = header["experiment"]["steps"]
-    cap = codec.PILOT_TOTAL if steps <= 10_000 else codec.MAX_TOTAL
+    cap = codec.total_cap(steps)
     max_bytes = cap if max_bytes is None else max_bytes
     codec.require(type(max_bytes) is int and 1 <= max_bytes <= cap, "invalid total byte budget")
     horizons = sorted({steps, *(h for h in (10_000, 100_000, 1_000_000) if h <= steps)})

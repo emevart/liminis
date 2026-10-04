@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import random
 import struct
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -85,6 +86,92 @@ def mutated_member(records, first=0):
 
 
 class DenseCodecTests(unittest.TestCase):
+    def test_total_caps_enforce_exact_decimal_budget_and_thresholds_before_frames(self):
+        cases = ((1, 64 * 1024 * 1024), (10_000, 64 * 1024 * 1024),
+                 (10_001, 512 * 1024 * 1024), (100_000, 512 * 1024 * 1024),
+                 (100_001, 3_000_000_000), (1_000_000, 3_000_000_000))
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "data"
+            for horizon, cap in cases:
+                self.assertEqual(codec.total_cap(horizon), cap)
+                for custom in (cap + 1, 3 * 1024**3, True, 0):
+                    with self.subTest(horizon=horizon, custom=custom), self.assertRaisesRegex(ValueError, "budget"):
+                        packer.pack(io.BytesIO(codec.encode(header(horizon))), output, custom)
+                    self.assertFalse(output.exists())
+                for custom in (None, cap, cap - 1):
+                    with self.subTest(horizon=horizon, custom=custom), self.assertRaisesRegex(ValueError, "producer record"):
+                        packer.pack(io.BytesIO(codec.encode(header(horizon))), output, custom)
+                    self.assertFalse(output.exists())
+            for invalid in (0, 1_000_001, True):
+                with self.assertRaises(ValueError): codec.total_cap(invalid)
+
+    def test_old_producer_artifact_decodes_without_metadata_or_byte_changes(self):
+        # Execute only the old stdlib packer on synthetic codec values, no model.
+        with tempfile.TemporaryDirectory() as temporary:
+            old_scripts = Path(temporary) / "old"
+            old_scripts.mkdir()
+            for name in ("dense-recording-codec", "dense-recording-pack"):
+                path = old_scripts / (name + ".py")
+                path.write_bytes(subprocess.check_output(["git", "show", "bd2a7f25e61abd713109171fc25b7c3de86003ab:scripts/" + path.name], cwd=ROOT))
+            spec = importlib.util.spec_from_file_location("old_dense_packer", old_scripts / "dense-recording-pack.py")
+            old_packer = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(old_packer)
+            output = Path(temporary) / "artifact"
+            originals = [fixture(0), fixture(1)]
+            old_packer.pack(stream(originals), output)
+            before = {p.name: p.read_bytes() for p in output.iterdir()}
+            actual = list(decoder.frames(output / "horizon-1.json"))
+            self.assertTrue(all(codec.exact(frame, original) for (frame, _), original in zip(actual, originals)))
+            self.assertEqual(before, {p.name: p.read_bytes() for p in output.iterdir()})
+
+    def test_prefix_budget_uses_full_index_horizon_and_keeps_legacy_caps(self):
+        # Metadata-only unread ranges: no 100k/million trajectory is constructed.
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "artifact"
+            packer.pack(stream([fixture(0), fixture(1)]), output)
+            manifest = codec.parse((output / "horizon-1.json").read_bytes())
+            index = codec.parse((output / "index.json").read_bytes())
+            manifest["experiment"].update(steps=10_000, checked_ticks=10_000, frames=10_001)
+            for first in range(2, 10_001, 256):
+                last = min(first + 255, 10_000)
+                manifest["chunks"].append({"path": f"chunk-{first:07d}-{last:07d}.jsonl.gz", "first_tick": first,
+                                           "last_tick": last, "frames": last - first + 1, "gzip_bytes": 100,
+                                           "decoded_bytes": 1000, "gzip_sha256": "a" * 64, "decoded_sha256": "b" * 64})
+            path = output / "horizon-10000.json"
+            for full_horizon, cap, gzip_total in ((100_000, 512 * 1024 * 1024, 244_000_000),
+                                                 (1_000_000, 512 * 1024 * 1024, 244_000_000),
+                                                 (1_000_000, 3_000_000_000, 2_800_000_000),
+                                                 (1_000_000, 2_900_000_000, 2_800_000_000)):
+                manifest["bounds"]["total_artifact_bytes_cap"] = cap
+                data = codec.encode(manifest)
+                path.write_bytes(data)
+                index["manifests"] = [{"path": path.name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(),
+                                       "first_tick": 0, "last_tick": 10_000, "frames": 10_001},
+                                      {"path": f"horizon-{full_horizon}.json", "bytes": 2000, "sha256": "c" * 64,
+                                       "first_tick": 0, "last_tick": full_horizon, "frames": full_horizon + 1}]
+                index.update(unique_chunks=4000, unique_gzip_bytes=gzip_total, decoded_chunk_bytes=10_000_000_000)
+                (output / "index.json").write_bytes(codec.encode(index))
+                selected = list(decoder.frames(path, 0, 0))
+                self.assertTrue(codec.exact(selected[0][0], fixture(0)))
+            for full_horizon, cap, gzip_total in ((10_000, 512 * 1024 * 1024, 1_000_000),
+                                                 (100_000, 3_000_000_000, 1_000_000),
+                                                 (1_000_000, 3_000_000_001, 2_800_000_000),
+                                                 (1_000_000, 512 * 1024 * 1024, 2_800_000_000),
+                                                 (1_000_000, 3_000_000_000, 3_000_000_000)):
+                manifest["bounds"]["total_artifact_bytes_cap"] = cap
+                data = codec.encode(manifest)
+                path.write_bytes(data)
+                index["manifests"][0].update(bytes=len(data), sha256=hashlib.sha256(data).hexdigest())
+                if full_horizon == 10_000:
+                    index["manifests"] = index["manifests"][:1]
+                else:
+                    index["manifests"] = [index["manifests"][0], {"path": f"horizon-{full_horizon}.json", "bytes": 2000,
+                                          "sha256": "c" * 64, "first_tick": 0, "last_tick": full_horizon, "frames": full_horizon + 1}]
+                index["unique_gzip_bytes"] = gzip_total
+                (output / "index.json").write_bytes(codec.encode(index))
+                with self.subTest(full_horizon=full_horizon, cap=cap, gzip_total=gzip_total), self.assertRaises(ValueError):
+                    list(decoder.frames(path, 0, 0))
+
     def test_every_original_frame_and_known_genome_entry_roundtrips_exactly(self):
         for frame in legacy["frames"]:
             data, descriptor = member([codec.keyframe(frame, legacy["genomes"])], frame["tick"])

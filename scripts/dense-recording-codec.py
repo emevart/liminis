@@ -14,7 +14,8 @@ MAX_TICKS = 256
 MAX_DECODED = 4 * 1024 * 1024
 MAX_GZIP = 1024 * 1024
 MAX_CHUNKS = 8192
-MAX_TOTAL = 512 * 1024 * 1024
+MAX_TOTAL = 3_000_000_000
+MID_TOTAL = 512 * 1024 * 1024
 PILOT_TOTAL = 64 * 1024 * 1024
 GZIP_HEADER = b"\x1f\x8b\x08\x00\x00\x00\x00\x00\x02\xff"
 CANONICAL_SHA = "4e72889e4cc2857a7f259a359b8a9bda349861f8bb72d6c9dd74fe6511ca03de"
@@ -49,6 +50,13 @@ def fields(value, expected, optional=()):
 def natural(value, maximum=(1 << 53) - 1):
     require(type(value) is int and 0 <= value <= maximum, "invalid unsigned integer")
     return value
+
+
+def total_cap(steps):
+    require(1 <= natural(steps, 1_000_000), "invalid total budget horizon")
+    if steps <= 10_000:
+        return PILOT_TOTAL
+    return MID_TOTAL if steps <= 100_000 else MAX_TOTAL
 
 
 def cell_id(value):

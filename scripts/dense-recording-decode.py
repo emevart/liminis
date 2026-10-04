@@ -35,8 +35,9 @@ def frames(manifest_path, first=0, last=None):
                       and 0 < codec.natural(entry["bytes"], 16 * 1024 * 1024)
                       and type(entry["sha256"]) is str and codec.HEX.fullmatch(entry["sha256"]), "invalid index manifest descriptor")
         prior_horizon = horizon
+    full_cap = codec.total_cap(index["manifests"][-1]["last_tick"])
     codec.require(1 <= codec.natural(index["unique_chunks"], codec.MAX_CHUNKS)
-                  and 1 <= codec.natural(index["unique_gzip_bytes"], codec.MAX_TOTAL)
+                  and 1 <= codec.natural(index["unique_gzip_bytes"], full_cap)
                   and 1 <= codec.natural(index["decoded_chunk_bytes"], codec.MAX_CHUNKS * codec.MAX_DECODED), "invalid index counts")
     matches = [entry for entry in index["manifests"] if entry["path"] == path.name]
     codec.require(len(matches) == 1 and matches[0]["bytes"] == len(raw)
@@ -60,7 +61,7 @@ def frames(manifest_path, first=0, last=None):
     codec.require(bounds["frames_per_chunk"] == codec.MAX_TICKS and bounds["decoded_bytes_per_chunk"] == codec.MAX_DECODED
                   and bounds["gzip_bytes_per_chunk"] == codec.MAX_GZIP and bounds["max_chunks"] == codec.MAX_CHUNKS
                   and bounds["engineering_target_bytes"] == 256 * 1024 * 1024 and bounds["provider_limits_verified"] is False
-                  and 0 < codec.natural(bounds["total_artifact_bytes_cap"], codec.MAX_TOTAL), "unsupported bounds")
+                  and 0 < codec.natural(bounds["total_artifact_bytes_cap"], full_cap), "unsupported bounds")
     codec.fields(manifest["packer"], ("python", "zlib", "gzip_mtime", "gzip_filename", "gzip_os_byte"))
     codec.require(type(manifest["packer"]["python"]) is str and type(manifest["packer"]["zlib"]) is str
                   and type(manifest["packer"]["gzip_mtime"]) is int and manifest["packer"]["gzip_mtime"] == 0
