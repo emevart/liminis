@@ -1,0 +1,61 @@
+{
+  "kind": "bounded-evidence-only",
+  "product_release": false,
+  "original_ZIPs_without_repacking": true,
+  "assets": [
+    {
+      "filename": "live3-581acd5-fail.zip",
+      "bytes": 7518895,
+      "sha256": "fd4c22c5a90d559012eee06015b4809c8a3e0f855f5506dabecaac91a2630b84",
+      "artifact_id": 11309906858,
+      "source_head": "581acd538efe5c6caaf0008a57681103842519bb",
+      "workflow_run": 37220117918,
+      "status": "FAIL: mobile sticky readout overlays ID and physical geometry; diagnostic"
+    },
+    {
+      "filename": "live3-65d3a85-projection.zip",
+      "bytes": 28584623,
+      "sha256": "40faaff59416733ff32459d014312c944ece65e640bc9a35b3734a0bc973683f",
+      "artifact_id": 11309828336,
+      "source_head": "65d3a85dcc2050e6b01552abe3549c1ed4aad8eb",
+      "workflow_run": 37221244788,
+      "status": "Qualified PASS12, independent 7PNG/trace/geometry/keyboard/division review0blockers; fullCI pending"
+    },
+    {
+      "filename": "live3-65d3a85-default.zip",
+      "bytes": 5173818,
+      "sha256": "4198d7fa9e811c6418558dfc0ef86f4d7e465cbc9db9f7e18b7d0243d3ae9463",
+      "artifact_id": 11310207834,
+      "source_head": "65d3a85dcc2050e6b01552abe3549c1ed4aad8eb",
+      "workflow_run": 37221244788,
+      "status": "Protected job SUCCESS; independent remaining artifact review/fullCI pending"
+    },
+    {
+      "filename": "live3-65d3a85-recorded.zip",
+      "bytes": 12524095,
+      "sha256": "de4807dea8f8909d3af834552fc3a3fd8b6c17c4a713f23a9fbeccaba4b98f8b",
+      "artifact_id": 11310139426,
+      "source_head": "65d3a85dcc2050e6b01552abe3549c1ed4aad8eb",
+      "workflow_run": 37221244788,
+      "status": "Protected job SUCCESS; independent remaining artifact review/fullCI pending"
+    },
+    {
+      "filename": "live3-65d3a85-physical.zip",
+      "bytes": 5873392,
+      "sha256": "2d4a705a9332cff4648ee0ba3610b982f973832c90746a821a2f77179d73801e",
+      "artifact_id": 11310103070,
+      "source_head": "65d3a85dcc2050e6b01552abe3549c1ed4aad8eb",
+      "workflow_run": 37221244788,
+      "status": "Protected job SUCCESS; independent remaining artifact review/fullCI pending"
+    }
+  ],
+  "total_bytes": 59674823,
+  "projection_source_tree": "d9c69f71c50bc741f65e29dd72a050505faef550",
+  "privacy": {
+    "text_entries_pattern_scanned": 221,
+    "pattern_hits": 0,
+    "projection_PNGs_independently_viewed": 7,
+    "qualification": "Bounded pattern scan and projection screenshot review; not a full secret guarantee."
+  },
+  "scope": "Actual protected Chromium/Linux 2D observer; no collision/spatial chemistry/achieved FPS/kernel isolation/full accessibility claim. The original 28.6MB artifact ZIP contains the full verified trace; this evidence file is not a deployed static site asset."
+}
