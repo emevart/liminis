@@ -1,5 +1,5 @@
 import { loadRecording } from "./recording-loader.mjs?v=105";
-import { playbackIndex, validFrameRate } from "./playback.mjs?v=105";
+import { PlaybackClock, defaultPlaybackRate, validPlaybackRate } from "./playback.mjs?v=physical-clock-1";
 
 const $ = (id) => document.getElementById(id);
 const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
@@ -9,7 +9,7 @@ const icons = {
   pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg>',
   replay: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
 };
-const view = { data: null, ready: false, index: 0, frameRate: 1, playing: false, selected: null, hits: [], layout: new Map(), anchorWall: 0, anchorIndex: 0, raf: 0 };
+const view = { data: null, ready: false, index: 0, clock: null, drawFps: 30, lastDraw: 0, selected: null, hits: [], layout: new Map(), raf: 0 };
 
 function hash(text) { let value = 2166136261; for (const char of String(text)) { value ^= char.charCodeAt(0); value = Math.imul(value, 16777619); } return value >>> 0; }
 function color(key) { return palette[hash(key) % palette.length]; }
@@ -83,21 +83,75 @@ function renderFrequencies() { const cells = frame().cells, counts = new Map(); 
 function renderResources() { const resources = frame().resources, host = $("resources"), max = Math.max(...resources.map((item) => finite(item.concentration)), 1e-30); host.replaceChildren(); resources.forEach((resource) => { const row = document.createElement("div"); row.className = "resource"; const label = document.createElement("span"); label.textContent = resource.id; const value = document.createElement("span"); value.className = "mono"; value.textContent = `${numberText(resource.concentration)} mol/m³`; const track = document.createElement("div"); track.className = "track"; const fill = document.createElement("div"); fill.className = "fill"; fill.style.background = color(resource.id); fill.style.width = `${Math.max(0, Math.min(100, finite(resource.concentration) / max * 100))}%`; track.append(fill); row.append(label, value, track); host.append(row); }); }
 function renderFacts() { const data = view.data, identity = data.identity, model = data.model, experiment = data.experiment, list = $("experiment-facts"); list.replaceChildren(); addPair(list, "scenario", identity.scenario); addPair(list, "environment", model.environment); addPair(list, "volume", `${numberText(model.volume_m3)} m³`); addPair(list, "temperature", `${numberText(model.temperature_k)} K`); addPair(list, "frames", data.frames.length.toLocaleString("en-US")); addPair(list, "sample interval", `${experiment.sample_every} ticks`); addPair(list, "time step", `${numberText(experiment.dt_seconds)} s`); addPair(list, "matter residual max", experiment.matter_residual_max); addPair(list, "energy residual max", experiment.energy_residual_max); addPair(list, "canonical config", typeof data.canonical_config === "string" ? "included in dataset" : "unavailable"); const term = document.createElement("dt"), detail = document.createElement("dd"), link = document.createElement("a"); term.textContent = "source commit"; link.href = `https://github.com/emevart/liminis/commit/${encodeURIComponent(identity.source_commit)}`; link.textContent = identity.source_commit; detail.append(link); list.append(term, detail); (data.limitations || []).forEach((limitation, index) => addPair(list, `limitation ${index + 1}`, limitation)); $("checks").textContent = `${experiment.checked_ticks} checked ticks`; }
 
-function updatePlayButton() { const button = $("play"), ended = view.index === view.data.frames.length - 1; button.innerHTML = view.playing ? icons.pause : ended ? icons.replay : icons.play; button.setAttribute("aria-label", view.playing ? "Pause recording" : ended ? "Replay recording" : "Play recording"); button.title = view.playing ? "Pause" : ended ? "Replay" : "Play"; button.disabled = !view.ready; $("previous").disabled = !view.ready || view.index === 0; $("next").disabled = !view.ready || ended; }
+function updatePlayButton() {
+  const button = $("play"), ended = view.index === view.data.frames.length - 1, playing = view.clock.playing;
+  button.innerHTML = playing ? icons.pause : ended ? icons.replay : icons.play;
+  button.setAttribute("aria-label", playing ? "Pause recording" : ended ? "Replay recording" : "Play recording"); button.title = playing ? "Pause" : ended ? "Replay" : "Play";
+  button.disabled = !view.ready; $("previous").disabled = !view.ready || view.index === 0; $("next").disabled = !view.ready || ended;
+}
 function renderFrame() {
-  const sample = frame(), summary = sample.summary, previous = view.index ? view.data.frames[view.index - 1].summary : null; $("living").textContent = summary.living_cells.toLocaleString("en-US"); $("births").textContent = summary.births.toLocaleString("en-US"); $("deaths").textContent = summary.deaths.toLocaleString("en-US"); $("divisions").textContent = summary.divisions.toLocaleString("en-US"); $("generation").textContent = summary.generation_max; $("ledger").textContent = sample.residual ? `M ${sample.residual.matter} · E ${sample.residual.energy}` : "not checked"; $("tick").textContent = sample.tick.toLocaleString("en-US"); $("time").textContent = numberText(sample.sim_time); $("frame-label").textContent = `recorded frame ${view.index + 1} of ${view.data.frames.length}`; $("frame-count").textContent = `${view.index + 1} / ${view.data.frames.length}`; $("scrub").value = String(view.index);
+  const sample = frame(), summary = sample.summary, previous = view.index ? view.data.frames[view.index - 1].summary : null; $("living").textContent = summary.living_cells.toLocaleString("en-US"); $("births").textContent = summary.births.toLocaleString("en-US"); $("deaths").textContent = summary.deaths.toLocaleString("en-US"); $("divisions").textContent = summary.divisions.toLocaleString("en-US"); $("generation").textContent = summary.generation_max; $("ledger").textContent = sample.residual ? `M ${sample.residual.matter} · E ${sample.residual.energy}` : "not checked"; $("tick").textContent = sample.tick.toLocaleString("en-US"); $("time").textContent = numberText(sample.sim_time); $("frame-label").textContent = `recorded frame ${view.index + 1} of ${view.data.frames.length}`; $("frame-count").textContent = `${view.index + 1} / ${view.data.frames.length}`;
   $("frame-change").textContent = previous ? `+${summary.births - previous.births} births · +${summary.deaths - previous.deaths} deaths since prior frame` : "initial recorded frame"; drawChamber(); renderInspector(); renderFrequencies(); renderResources(); renderCharts(); updatePlayButton();
 }
-function pause() { view.playing = false; cancelAnimationFrame(view.raf); updatePlayButton(); }
-function start() { if (view.index === view.data.frames.length - 1) view.index = 0; view.playing = true; view.anchorWall = performance.now(); view.anchorIndex = view.index; renderFrame(); view.raf = requestAnimationFrame(advance); }
-function advance(now) { if (!view.playing) return; const next = playbackIndex(view.anchorIndex, now - view.anchorWall, view.frameRate, view.data.frames.length); if (next !== view.index) { view.index = next; renderFrame(); } if (view.index === view.data.frames.length - 1) { pause(); return; } view.raf = requestAnimationFrame(advance); }
-
+function durationText(seconds) {
+  if (!Number.isFinite(seconds)) return "beyond numeric range";
+  if (seconds === 0) return "0 s";
+  if (seconds < .01) return "< 0.01 s";
+  if (seconds < 60) return `${numberText(seconds, 3)} s`;
+  if (seconds < 3600) return `${numberText(seconds / 60, 3)} min`;
+  if (seconds < 86400) return `${numberText(seconds / 3600, 3)} h`;
+  return `${numberText(seconds / 86400, 3)} d`;
+}
+function renderClock(snapshot) {
+  $("playhead").textContent = numberText(snapshot.playhead, 8);
+  $("scrub").value = String(snapshot.playhead);
+  $("scrub").setAttribute("aria-valuetext", `${numberText(snapshot.playhead, 8)} model seconds; shown sample ${numberText(snapshot.stateTime)} model seconds`);
+  $("duration").textContent = durationText(snapshot.durationSeconds); $("remaining").textContent = durationText(snapshot.remainingSeconds);
+}
+function showSnapshot(snapshot, force = false) {
+  const changed = snapshot.index !== view.index; view.index = snapshot.index;
+  if (changed || force) renderFrame();
+  renderClock(snapshot); updatePlayButton();
+}
+function pause(message = "Paused") {
+  const snapshot = view.clock.pause(performance.now()); cancelAnimationFrame(view.raf); view.raf = 0;
+  showSnapshot(snapshot); $("playback-status").textContent = snapshot.ended ? "Recording ended · Replay available" : message;
+}
+function start() {
+  if (!view.ready || document.hidden) return;
+  cancelAnimationFrame(view.raf); const snapshot = view.clock.start(performance.now()); view.lastDraw = 0;
+  showSnapshot(snapshot); $("playback-status").textContent = snapshot.ended ? "Recording ended" : "Playing";
+  if (snapshot.playing) view.raf = requestAnimationFrame(advance);
+}
+function advance(now) {
+  view.raf = 0;
+  if (!view.clock.playing) return;
+  if (document.hidden) { pause("Paused while tab was hidden · press Play to resume"); return; }
+  const interval = 1000 / view.drawFps;
+  if (now - view.lastDraw >= interval - .5) {
+    view.lastDraw = now; const snapshot = view.clock.advance(now); showSnapshot(snapshot);
+    if (snapshot.ended) { $("playback-status").textContent = "Recording ended · Replay available"; return; }
+  }
+  view.raf = requestAnimationFrame(advance);
+}
+function setSpeed(value) {
+  if (!validPlaybackRate(value)) {
+    $("speed").value = String(view.clock.rate); $("rate-error").textContent = "Enter a positive finite speed multiplier. The previous speed is retained."; $("rate-error").hidden = false; return;
+  }
+  $("rate-error").hidden = true; const snapshot = view.clock.setRate(value, performance.now());
+  $("speed").value = String(view.clock.rate);
+  const overview = defaultPlaybackRate(view.data.frames.map((sample) => sample.sim_time));
+  $("speed-preset").value = view.clock.rate === overview ? "overview" : [...$("speed-preset").options].some((option) => option.value === String(view.clock.rate)) ? String(view.clock.rate) : "custom";
+  showSnapshot(snapshot); if (snapshot.ended) $("playback-status").textContent = "Recording ended · Replay available";
+}
 function bind() {
-  $("play").addEventListener("click", () => view.playing ? pause() : start());
-  $("previous").addEventListener("click", () => { pause(); view.index = Math.max(0, view.index - 1); renderFrame(); });
-  $("next").addEventListener("click", () => { pause(); view.index = Math.min(view.data.frames.length - 1, view.index + 1); renderFrame(); });
-  $("scrub").addEventListener("input", (event) => { pause(); view.index = Math.max(0, Math.min(view.data.frames.length - 1, finite(event.target.value))); renderFrame(); });
-  $("speed").addEventListener("change", () => { if (!validFrameRate($("speed").value)) { $("speed").value = String(view.frameRate); return; } view.frameRate = Number($("speed").value); if (view.playing) { view.anchorWall = performance.now(); view.anchorIndex = view.index; } });
+  $("play").addEventListener("click", () => view.clock.playing ? pause() : start());
+  for (const [id, offset] of [["previous", -1], ["next", 1]]) $(id).addEventListener("click", () => { cancelAnimationFrame(view.raf); view.raf = 0; showSnapshot(view.clock.step(offset, performance.now())); $("playback-status").textContent = "Paused at recorded sample"; });
+  $("scrub").addEventListener("input", (event) => { cancelAnimationFrame(view.raf); view.raf = 0; showSnapshot(view.clock.seek(Number(event.target.value), performance.now())); $("playback-status").textContent = "Paused at playback time · shown state is held"; });
+  $("speed").addEventListener("change", () => setSpeed($("speed").value));
+  $("speed-preset").addEventListener("change", () => setSpeed($("speed-preset").value === "overview" ? defaultPlaybackRate(view.data.frames.map((sample) => sample.sim_time)) : $("speed-preset").value));
+  $("draw-fps").addEventListener("change", () => { const fps = Number($("draw-fps").value); if (fps === 30 || fps === 60) view.drawFps = fps; });
+  document.addEventListener("visibilitychange", () => { if (document.hidden && view.clock.playing) pause("Paused while tab was hidden · press Play to resume"); });
   $("chamber").addEventListener("pointerdown", (event) => { const rect = event.currentTarget.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top, hit = [...view.hits].reverse().find((item) => Math.hypot(x - item.x, y - item.y) <= item.radius); view.selected = hit?.id ?? null; drawChamber(); renderInspector(); });
   $("chamber").addEventListener("keydown", (event) => { if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return; const cells = frame().cells; if (!cells.length) return; event.preventDefault(); const current = Math.max(0, cells.findIndex((cell) => cell.id === view.selected)), offset = event.key === "ArrowRight" ? 1 : -1; view.selected = cells[(current + offset + cells.length) % cells.length].id; drawChamber(); renderInspector(); });
   addEventListener("resize", () => { drawChamber(); renderCharts(); });
@@ -106,11 +160,14 @@ function bind() {
 async function load() {
   try {
     const { entry, data } = await loadRecording(location.search);
-    view.data = data; buildLayout(data); $("seed").textContent = data.identity.seed; $("config").textContent = data.identity.config_hash; $("world").textContent = data.identity.world_format_version; $("scrub").max = String(data.frames.length - 1);
+    view.data = data; view.clock = new PlaybackClock(data.frames.map((sample) => sample.sim_time)); buildLayout(data); $("seed").textContent = data.identity.seed; $("config").textContent = data.identity.config_hash; $("world").textContent = data.identity.world_format_version; $("scrub").min = String(view.clock.firstTime); $("scrub").max = String(view.clock.endTime); $("speed").value = String(view.clock.rate);
     document.title = `Liminis · ${entry.title}`;
-    renderFacts(); renderFrame(); bind();
+    const times = data.frames.map((sample) => sample.sim_time), gaps = times.slice(1).map((time, index) => time - times[index]);
+    const shortest = Math.min(...gaps), longest = Math.max(...gaps);
+    $("sample-cadence").textContent = `${data.frames.length} real samples · every ${numberText(data.experiment.sample_every)} ticks / ${numberText(data.experiment.sample_every * data.experiment.dt_seconds)} model s${shortest !== longest ? ` · final interval ${numberText(gaps.at(-1))} model s` : ""}.`;
+    renderFacts(); showSnapshot(view.clock.advance(performance.now()), true); bind();
     const download = document.querySelector(".download"); download.href = entry.recording; download.hidden = false;
-    view.ready = true; $("scrub").disabled = false; $("speed").disabled = false; updatePlayButton(); $("loading").hidden = true; $("workspace").setAttribute("aria-busy", "false");
-  } catch (error) { const download = document.querySelector(".download"); download.removeAttribute("href"); download.hidden = true; ["play", "previous", "next", "scrub", "speed"].forEach((id) => $(id).disabled = true); $("loading").hidden = true; $("error").hidden = false; $("error").textContent = error instanceof Error ? error.message : String(error); $("workspace").setAttribute("aria-busy", "false"); }
+    view.ready = true; ["scrub", "speed", "speed-preset", "draw-fps"].forEach((id) => $(id).disabled = false); updatePlayButton(); $("loading").hidden = true; $("workspace").setAttribute("aria-busy", "false");
+  } catch (error) { const download = document.querySelector(".download"); download.removeAttribute("href"); download.hidden = true; ["play", "previous", "next", "scrub", "speed", "speed-preset", "draw-fps"].forEach((id) => $(id).disabled = true); $("loading").hidden = true; $("error").hidden = false; $("error").textContent = error instanceof Error ? error.message : String(error); $("workspace").setAttribute("aria-busy", "false"); }
 }
 load();

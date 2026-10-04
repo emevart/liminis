@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Observe a recorded Liminis well-mixed cell experiment." />
     <link rel="canonical" href="https://liminis.dev/observe.html" />
-    <link rel="stylesheet" href="./observer.css?v=105" />
+    <link rel="stylesheet" href="./observer.css?v=physical-clock-1" />
     <title>Liminis · Recorded experiment</title>
   </head>
   <body>
@@ -27,13 +27,26 @@
             <div class="loading" id="loading">Loading recorded experiment…</div>
           </div>
           <div class="transport" aria-label="Playback controls">
-            <button class="icon-button" id="play" type="button" aria-label="Play recording" title="Play" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></button>
-            <button class="icon-button" id="previous" type="button" aria-label="Previous recorded frame" title="Previous recorded frame" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
-            <button class="icon-button" id="next" type="button" aria-label="Next recorded frame" title="Next recorded frame" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
-            <label class="sr-only" for="scrub">Recorded frame</label><input id="scrub" type="range" min="0" max="0" value="0" disabled />
-            <span class="transport-time mono"><b id="tick">—</b> tick · <b id="time">—</b> s</span>
-            <label class="frame-rate" for="speed"><span>Frames / s</span><input id="speed" type="number" min="0.05" max="60" step="0.05" value="1" inputmode="decimal" aria-label="Recorded frames per second" disabled /></label>
-            <span class="frame-count mono" id="frame-count">0 / 0</span>
+            <div class="timeline-controls">
+              <button class="icon-button" id="play" type="button" aria-label="Play recording" title="Play" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></button>
+              <button class="icon-button" id="previous" type="button" aria-label="Previous recorded frame" title="Previous recorded frame" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+              <button class="icon-button" id="next" type="button" aria-label="Next recorded frame" title="Next recorded frame" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+              <label class="sr-only" for="scrub">Playback time in model seconds</label><input id="scrub" type="range" min="0" max="0" step="any" value="0" disabled />
+              <span class="frame-count mono" id="frame-count">0 / 0</span>
+            </div>
+            <div class="playback-settings">
+              <label class="speed-control" for="speed"><span>Speed ×</span><input id="speed" type="number" step="any" value="1" inputmode="decimal" aria-describedby="clock-help rate-error" disabled /></label>
+              <label class="sr-only" for="speed-preset">Playback speed preset</label><select id="speed-preset" disabled><option value="overview">Overview · 2 min</option><option value="1">1×</option><option value="10">10×</option><option value="100">100×</option><option value="1000">1,000×</option><option value="10000">10,000×</option><option value="100000">100,000×</option><option value="1000000">1,000,000×</option><option value="custom" disabled>Custom</option></select>
+              <label class="draw-control" for="draw-fps"><span>Draw target</span><select id="draw-fps" disabled><option value="30">30 FPS</option><option value="60">60 FPS</option></select></label>
+              <span id="playback-status" role="status">Paused</span>
+              <span id="rate-error" role="alert" hidden></span>
+            </div>
+            <div class="clock-readout mono">
+              <span>Playback <b id="playhead">—</b> model s</span>
+              <span>Shown sample <b id="time">—</b> model s · tick <b id="tick">—</b></span>
+              <span>Full duration <b id="duration">—</b> · remaining <b id="remaining">—</b></span>
+            </div>
+            <div class="sampling-note"><span id="sample-cadence">Loading sample cadence…</span><span id="clock-help">1× = 1 model second per real second. States are held until the next recorded sample; no intermediate biology is reconstructed. Draw FPS does not add observations.</span></div>
           </div>
         </section>
         <aside class="inspector" aria-label="Observation details">
@@ -45,6 +58,6 @@
         </aside>
       </main>
     </div>
-    <script type="module" src="./observer.js?v=105"></script>
+    <script type="module" src="./observer.js?v=physical-clock-1"></script>
   </body>
 </html>
