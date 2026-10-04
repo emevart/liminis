@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { Script, createContext } from "node:vm";
-import { PlaybackClock, defaultPlaybackRate, validPlaybackRate } from "./playback.mjs";
+import { DensePlaybackSession, PlaybackClock, defaultPlaybackRate, validPlaybackRate } from "./playback.mjs";
 import { validateRecording } from "./recording.mjs";
 
 // Node event-wiring coverage only: this DOM/canvas/RAF harness is not a browser
@@ -57,6 +57,7 @@ class Element extends EventTarget {
     this.width = 0; this.height = 0; this.options = []; this.textWrites = 0; this.canvasCalls = [];
     this.context = new Proxy({ measureText: (text) => ({ width: String(text).length * 6 }) }, {
       get: (target, key) => key in target ? target[key] : (...args) => this.canvasCalls.push([key, ...args]),
+      set: (target, key, value) => { target[key] = value; this.canvasCalls.push(["set", key, value]); return true; },
     });
   }
   get textContent() { return this.text || ""; }
@@ -67,12 +68,13 @@ class Element extends EventTarget {
   getAttribute(name) { return this.attributes.get(name) ?? null; }
   removeAttribute(name) { this.attributes.delete(name); }
   append(...children) { this.children.push(...children); }
-  replaceChildren(...children) { this.children = [...children]; }
+  before(...siblings) { this.beforeNodes = [...(this.beforeNodes || []), ...siblings]; }
+  replaceChildren(...children) { this.children = [...children]; this.text = ""; }
   getBoundingClientRect() { return { left: 0, top: 0, width: 640, height: 360 }; }
   getContext(type) { assert.equal(type, "2d"); return this.context; }
 }
 
-function harness({ data = fixture(), loadError, deferred = false, hidden = false } = {}) {
+function harness({ data = fixture(), dense, loadError, deferred = false, hidden = false } = {}) {
   const nodes = new Map();
   for (const match of html.matchAll(/<([a-z]+)\b([^>]*\bid="([^"]+)"[^>]*)>/g)) {
     nodes.set(match[3], new Element(match[1], match[2]));
@@ -96,12 +98,12 @@ function harness({ data = fixture(), loadError, deferred = false, hidden = false
   const barrier = deferred ? new Promise((resolve) => { release = resolve; }) : Promise.resolve();
   const context = createContext({
     document, location: { search: "?experiment=fixture" }, devicePixelRatio: 1,
-    performance: { now: () => now }, PlaybackClock, defaultPlaybackRate, validPlaybackRate,
+    performance: { now: () => now }, PlaybackClock, DensePlaybackSession, defaultPlaybackRate, validPlaybackRate,
     loadRecording: async (search) => {
       assert.equal(search, "?experiment=fixture"); loadCalls++;
       await barrier;
       if (loadError) throw loadError;
-      return { entry: { title: "Fixture", recording: "./data/fixture.json" }, data };
+      return { entry: { title: "Fixture", recording: "./data/fixture.json" }, data, mode: dense ? "dense" : "archive", dense };
     },
     fetch: () => { fetchCalls++; throw new Error("Playback must not fetch again."); },
     addEventListener: window.addEventListener.bind(window),
@@ -125,6 +127,8 @@ function harness({ data = fixture(), loadError, deferred = false, hidden = false
       for (const [, callback] of pending) callback(time);
     },
     visibility: (value) => { document.hidden = value; document.dispatch("visibilitychange"); },
+    pagehide: () => window.dispatch("pagehide"),
+    get layoutCount() { return new Script("view.layout.size").runInContext(context); },
     get pending() { return rafs.size; }, get requested() { return requested; },
     get loadCalls() { return loadCalls; }, get fetchCalls() { return fetchCalls; },
     get playhead() { return Number(element("scrub").value); },
@@ -255,5 +259,118 @@ test("loader rejection and malformed clock times keep controls disabled and down
     assert.match(ui.element("error").textContent, /integrity|sample times/);
     assert.equal(ui.element("workspace").getAttribute("aria-busy"), "false");
     assert.equal(ui.pending, 0); assert.equal(ui.requested, 0); assertNoExtraIO(ui);
+  }
+});
+
+// Малый fixture границы loader для actual observer body. Он проверяет UI,
+// не объявляет синтетические frames записью Rust или браузерной приёмкой.
+function denseUIFixture({ delayed = false } = {}) {
+  const data = fixture(); data.identity.world_format_version = 30; data.identity.chamber_format = 1;
+  data.identity.source_commit = "4".repeat(40); data.experiment.dt_seconds = 30;
+  data.frames.forEach((sample) => { sample.sim_time *= 30; sample.cells[0].age_s *= 30; });
+  validateRecording(data);
+  const manifest = { ...data, identity: { ...data.identity, source_commit: "b".repeat(40) }, provenance: { producer_commit: "c".repeat(40) }, experiment: { ...data.experiment, sample_every: 1, frames: 24 }, genomes: { founder: { genome: { kinetics: 4 }, phenotype: { growth_per_s: .004 } }, newcomer: { genome: { kinetics: -2 }, phenotype: { growth_per_s: .002 } } } };
+  delete manifest.frames;
+  const sampleAt = (tick) => {
+    const sample = structuredClone(data.frames[0]); sample.tick = tick; sample.sim_time = tick * 30;
+    sample.cells[0].age_s = tick * 30; sample.cells[0].energy_j = tick + 1;
+    if (tick >= 17) sample.cells.push({ ...sample.cells[0], id: "9007199254740993", genome_key: "newcomer", parent_id: "1", birth_tick: 17, generation: 1, age_s: (tick - 17) * 30 });
+    if (tick === 23) sample.cells.shift();
+    sample.summary = { ...sample.summary, living_cells: sample.cells.length, births: tick >= 17 ? 1 : 0, deaths: tick === 23 ? 1 : 0, generation_max: tick >= 17 ? 1 : 0 };
+    sample.resources[0].concentration = tick + 1; sample.residual = tick ? { matter: "0", energy: "0" } : null;
+    return sample;
+  };
+  const requests = [], dense = {
+    manifest, closed: false,
+    seek: (tick, { signal }) => {
+      if (!delayed || tick === 0) { requests.push({ tick, signal }); return Promise.resolve({ frame: sampleAt(tick), genomes: manifest.genomes }); }
+      return new Promise((resolve, reject) => requests.push({ tick, signal, resolve: () => resolve({ frame: sampleAt(tick), genomes: manifest.genomes }), reject }));
+    },
+    close() { this.closed = true; },
+  };
+  return { data, dense, requests };
+}
+const settleDenseUI = async () => { await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); };
+function treeText(element) { return [element.textContent, ...element.children.map(treeText)].join(" ").replace(/\s+/g, " ").trim(); }
+
+test("dense UI показывает manifest facts/full genomes, один tick Next и только sparse графики/download", async () => {
+  const source = denseUIFixture(), ui = harness(source); await ui.loaded;
+  assert.equal(ui.element("world").textContent, "30"); assert.equal(ui.element("frame-count").textContent, "1 / 24");
+  assert.equal(ui.element("scrub").max, "690"); assert.match(ui.element("sample-cadence").textContent, /24 real states.*every tick \/ 30 model s.*4 sparse archive frames/);
+  const facts = treeText(ui.element("experiment-facts")); assert.match(facts, /frames 24 sample interval 1 ticks/);
+  assert.match(facts, new RegExp(`source commit ${"b".repeat(40)} dense producer ${"c".repeat(40)}`));
+  assert.match(facts, /archive source 4444/);
+  for (const id of ["population-chart", "genome-chart", "resource-chart"]) assert.match(ui.element(id).beforeNodes[0].textContent, /Sparse archive overview · 4 frames/);
+  assert.equal(ui.element("download").href, "./data/fixture.json"); assert.match(ui.element("download").textContent, /sparse archive \(4 frames\)/);
+  ui.click("next"); await settleDenseUI(); assertTime(ui, 30, 30); assert.equal(ui.element("tick").textContent, "1");
+  assert.match(ui.element("frame-change").textContent, /Cumulative counters/); assert.doesNotMatch(ui.element("frame-change").textContent, /since prior/);
+  ui.element("chamber").dispatch("keydown", { key: "ArrowRight" });
+  assert.match(treeText(ui.element("cell-detail")), /kinetics 4/);
+  ui.input("scrub", 510, "input"); await settleDenseUI();
+  assert.equal(ui.element("tick").textContent, "17"); assert.equal(ui.element("living").textContent, "2"); assert.equal(ui.element("births").textContent, "1");
+  ui.element("chamber").dispatch("keydown", { key: "ArrowRight" });
+  assert.match(treeText(ui.element("cell-detail")), /9007199254740993/); assert.match(treeText(ui.element("cell-detail")), /kinetics -2/);
+  assert.equal(ui.layoutCount, 2);
+  ui.input("scrub", 480, "input"); await settleDenseUI();
+  assert.equal(ui.element("tick").textContent, "16"); assert.equal(ui.element("living").textContent, "1"); assert.equal(ui.layoutCount, 1);
+  assert.equal(ui.element("selection-label").textContent, "not present"); assert.match(ui.element("cell-detail").textContent, /9007199254740993.*shown tick 16/);
+  assertNoExtraIO(ui);
+});
+
+test("dense buffering держит весь показанный state; superseded seek не меняет canvas/inspector/tick", async () => {
+  const source = denseUIFixture({ delayed: true }), ui = harness(source); await ui.loaded;
+  ui.element("chamber").dispatch("keydown", { key: "ArrowRight" });
+  const originalInspector = treeText(ui.element("cell-detail")), draws = ui.element("chamber").canvasCalls.length;
+  ui.input("scrub", 510, "input");
+  assert.equal(ui.element("workspace").getAttribute("aria-busy"), "true"); assert.match(ui.element("playback-status").textContent, /Buffering recorded tick 17 · shown tick 0/);
+  assertTime(ui, 0, 0); assert.equal(ui.element("living").textContent, "1"); assert.equal(treeText(ui.element("cell-detail")), originalInspector); assert.equal(ui.element("chamber").canvasCalls.length, draws);
+  ui.input("scrub", 300, "input"); assert.equal(source.requests[1].signal.aborted, true);
+  source.requests[2].resolve(); await settleDenseUI(); assertTime(ui, 300, 300);
+  const shownInspector = treeText(ui.element("cell-detail")); source.requests[1].resolve(); await settleDenseUI();
+  assertTime(ui, 300, 300); assert.equal(treeText(ui.element("cell-detail")), shownInspector);
+  assert.equal(ui.element("workspace").getAttribute("aria-busy"), "false"); assert.equal(ui.pending, 0);
+  ui.input("scrub", 510, "input"); assert.equal(ui.element("play").getAttribute("aria-label"), "Pause recording");
+  ui.click(); assert.equal(source.requests[3].signal.aborted, true); source.requests[3].resolve(); await settleDenseUI();
+  assertTime(ui, 300, 300); assert.equal(ui.element("playback-status").textContent, "Paused"); assert.equal(ui.pending, 0);
+});
+
+test("dense hidden-tab Pause отменяет fetch и поздний ответ не запускает playback", async () => {
+  const source = denseUIFixture({ delayed: true }), ui = harness(source); await ui.loaded;
+  ui.input("speed", 30); ui.click(); ui.frame(1100);
+  assert.equal(source.requests[1].tick, 1); assert.match(ui.element("playback-status").textContent, /Buffering/); assert.equal(ui.pending, 0);
+  ui.at(2000); ui.visibility(true); assert.equal(source.requests[1].signal.aborted, true);
+  ui.frame(600_000); source.requests[1].resolve(); await settleDenseUI();
+  assertTime(ui, 0, 0); assert.equal(ui.pending, 0); assert.match(ui.element("playback-status").textContent, /Paused while tab was hidden/);
+  ui.visibility(false); assert.equal(ui.pending, 0); ui.click(); ui.frame(600_100);
+  assertTime(ui, 3, 0); assert.equal(source.requests.length, 2); assert.equal(ui.pending, 1);
+  ui.pagehide(); assert.equal(source.dense.closed, true); assert.equal(ui.pending, 0);
+});
+
+test("dense error сохраняет кадр и inspector, отключает controls без архивного fallback", async () => {
+  const source = denseUIFixture({ delayed: true }), ui = harness(source); await ui.loaded;
+  ui.element("chamber").dispatch("keydown", { key: "ArrowRight" }); const inspector = treeText(ui.element("cell-detail"));
+  ui.click("next"); source.requests[1].reject(new Error("Chunk digest mismatch")); await settleDenseUI();
+  assertTime(ui, 0, 0); assert.equal(ui.element("tick").textContent, "0"); assert.equal(treeText(ui.element("cell-detail")), inspector);
+  for (const id of controls) assert.equal(ui.element(id).disabled, true, id);
+  assert.equal(ui.element("error").hidden, false); assert.match(ui.element("error").textContent, /digest mismatch.*last validated state.*recording=archive/i);
+  assert.equal(source.dense.closed, true); assert.equal(ui.pending, 0); assert.equal(ui.loadCalls, 1);
+  assert.equal(ui.element("download").href, "./data/fixture.json"); assert.match(ui.element("download").textContent, /sparse archive/);
+});
+
+test("dense end и Replay используют подтверждённые endpoints и не создают RAF дубликаты", async () => {
+  const source = denseUIFixture(), ui = harness(source); await ui.loaded;
+  ui.input("scrub", 690, "input"); await settleDenseUI();
+  assertTime(ui, 690, 690); assert.equal(ui.element("next").disabled, true); assert.equal(ui.element("play").getAttribute("aria-label"), "Replay recording");
+  ui.click(); await settleDenseUI(); assertTime(ui, 0, 0); assert.equal(ui.pending, 1);
+  assert.equal(ui.element("play").getAttribute("aria-label"), "Pause recording"); ui.click(); assert.equal(ui.pending, 0);
+});
+
+test("dense newborn highlight относится только к birth_tick === shown tick, включая skipped/backward seek", async () => {
+  const source = denseUIFixture(), ui = harness(source); await ui.loaded;
+  const commands = ui.element("chamber").canvasCalls;
+  for (const [tick, expected] of [[20, false], [17, true], [16, false], [18, false]]) {
+    const start = commands.length; ui.input("scrub", tick * 30, "input"); await settleDenseUI();
+    assert.equal(commands.slice(start).some(([operation, key, value]) => operation === "set" && key === "strokeStyle" && value === "#efbc77"), expected, `shown tick ${tick}`);
+    assert.match(ui.element("frame-change").textContent, /Cumulative counters/);
   }
 });
