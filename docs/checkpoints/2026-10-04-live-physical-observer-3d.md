@@ -122,3 +122,28 @@ paused polls и delayed same-seed reset.30/30Node/syntax/diffPASS; no Cargo/
 browser/model run. Projector/vendor/resources/QA source byte-identical,
 1440math proof не пересчитывается. Final independent fix/combined source
 verdict pending; fresh exact-head browser/fullCI и artifacts обязательны.
+
+## Первый actual run: 2D caption regression, 21:55 UTC
+
+Draft PR20 открыт на exact `09f3c64af37c9037aa291b9efeb249c4508eba91` /
+tree `77dd4de7d268523036bf09049eb30cd20bb26e4d`, run37237631167.
+Existing live/physical и recorded/dense gates SUCCESS; old2D projection
+gate FAIL на7th check: первые6actualchecks geometry/API/planes/atomicStep/
+ID/keyboard PASS, затем accepted `/outside the current slice/` не совпал
+с новым `outside slice` caption. Page/console/cleanup errors0. Новый3D step
+SKIPPED из-за preceding failure; WebGL2/3D PASS не заявляется. Rust/full run
+ещё выполнялся при finding; greenCI не объявлен и merge не выполнялся.
+
+Original diagnostic ZIP artifact11316008695 скачан без перепаковки:
+4254907bytes/SHA256
+`7afc4b88db78a9a32d83f99534ee13e463e18fd48411003e7b31b6cb29d56ffd`,
+9members/CRC PASS, содержит source-cube/failure PNG и trace/report. Будет
+сохранён в evidence-only `codex/native-3d-observer-evidence-20261004`;
+independent diagnostic artifact review/network readback pending.
+
+Narrow author fix clean/published `bea8cdc9fa9140fce2369f200f1afbe407dc0635`,
+tree `50c2754abc59fa14e50ed4388b8172ca86ec55d7`, только1HTMLline: restored
+accepted2D outside-slice caption,3D enum/text unchanged. Existing30Node/
+parse/diffPASS; ни QA regex, ни geometry/vendor/model/data не менялись.
+Final independent delta review и fresh exact-headCI required; старый
+diagnostic09FAIL никогда не выдаётся за accepted3D или новыйheadPASS.
