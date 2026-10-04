@@ -1762,3 +1762,37 @@ web security/GPU blocklist сохраняются. Software geometry acceptance 
 означает hardwareFPS или аттестацию изоляции ядра.
 Существующие chamber1/livephysical/2D projection gates сохраняются.
 Scope/pending: `docs/checkpoints/2026-10-04-live-physical-observer-3d.md`.
+
+## LAB-3a: агрегатный каталог 24 сохранённых прогонов (ADR-112)
+
+Отдельный stdlib builder проверяет pinned LAB source21cbe907/world30/chamber1,
+3 original JSON SHA/bytes,6 conditions × 4 seeds,4044 retained samples и TOML
+согласованность внутри условий. Original 6 494 550 bytes копируются без
+reserialization/recalculation; deterministic descriptor и `--check` должны
+отвергать stale/tampered bytes/source/schema/joins. Frozen/core/config/rawLAB,
+recorded catalog/oldJSON/SHA и existing player/clock/dense codec неизменны.
+
+Lab adapter и focused Node checks подтверждают exact IDs/strings/fixed URLs/
+SHA, retained sample выбор, published paired landmarks/latestcommon, missing
+null ranges, provenance separation и explicit integrity error.20 censored
+20000 runs и4 extinct 454 runs не смешиваются; common400/terminal454/landmark500
+имеют разные роли. Genesis residual неизвестен; living allele histogram
+не заменяет historical richness/fullgenomes/species. Эти source/data checks
+не являются actual browser или новым scientific validation PASS.
+
+`node scripts/check_lab_browser.mjs` в existing official protected pinned
+Chromium должен принять реально обслуженные JSON/descriptor/module bytes,
+24 run matrix, actual baseline/mutation_off/starvation controls/retainedsample/
+4 paired curve geometry, living/biomass/freeFOOD/O2 units и declaredenvironment,
+published differences/available0of4/null, terminal454 lineend/common400,
+kineticsalleles/provenance links, deepURL/reload/back и keyboard. Независимый
+expected oracle не импортирует production adapter для calculations. Counts
+и signed exact counters не теряют precision. Synthetic corrupted-transport
+case показывает integrity failure, не новую model trajectory.
+
+Обязательны desktop/short/390/320 PNG и trace, tracked clean expectedHEAD/tree,
+chromiumSandbox:true / observed argv guard, bounded deadlines, final console/page/
+request/cleanup verdict. Existing recorded/live regressions сохраняются.
+Independent source/numerics и actualartifact review обязательны перед merge;
+existing public LAB bytes/browser delivery принимаются после merge отдельно.
+Scope/pending: `docs/checkpoints/2026-10-04-lab-aggregate-catalog.md`.
