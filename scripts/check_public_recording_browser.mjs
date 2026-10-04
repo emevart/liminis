@@ -434,6 +434,10 @@ try {
       evidence.denseAdmission = { indexSha256: entry.dense.index_sha256, manifest: entry.dense.manifest, actualStates: control.states, sourceValidation: "Local publication was independently validated before merge; expected states decoded by reviewed source module", browserScope: "Deployed initial and prefetched chunks plus exact every-tick Step; whole-horizon rendering is not claimed", publicationRuntimeVerification: false };
     } finally { loader.close(); }
   }
+  // Preserve the actual default-browser request contract independently of
+  // delivery-only HTTPS probes below; nondefault assets are not page requests.
+  const browserAssets = assets.slice();
+  evidence.browserSourceFiles = browserAssets;
   // Bounded production delivery evidence for every published horizon. Only
   // metadata and each final chunk are fetched: this is neither a whole-data
   // public download nor browser rendering of the nondefault endpoints.
@@ -488,7 +492,7 @@ try {
   context = await bounded(browser.newContext({ acceptDownloads: false }), timeouts.operation, "Public context creation");
   await bounded(context.tracing.start({ screenshots: true, snapshots: true, sources: true }), timeouts.cdp, "Public trace start"); tracing = true;
   for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mobile", { width: 390, height: 844 }]]) {
-    await check(`Public default observer ready, real canvas, physical 1× hold and ${control.dense ? "every-tick" : "archival sample"} stepping: ${name}`, () => bounded(viewportSmoke(name, viewport, assets, entry, control), timeouts.viewport, `${name} public smoke`));
+    await check(`Public default observer ready, real canvas, physical 1× hold and ${control.dense ? "every-tick" : "archival sample"} stepping: ${name}`, () => bounded(viewportSmoke(name, viewport, browserAssets, entry, control), timeouts.viewport, `${name} public smoke`));
   }
   evidence.status = evidence.checks.every((item) => item.status === "PASS") ? "PASS" : "FAIL";
 } catch (error) { evidence.status = "FAIL"; evidence.blocker = error.stack || String(error); }
