@@ -2,7 +2,7 @@
   "schema_version": 1,
   "kind": "dense_browser_handoff_evidence",
   "archive_scope": "Original workflow ZIP bytes, evidence-only branch; no product release/deploy.",
-  "total_zip_bytes": 16581557,
+  "total_zip_bytes": 45312641,
   "files": [
     {
       "path": "dense-97aed6f-failure-original.zip",
@@ -14,9 +14,33 @@
       "artifact_id": 11312631748,
       "overall_status": "FAIL",
       "qualification": "All11 required subchecks PASS, final actual request cancellation classification fails. Not accepted; subsequent exact-head protected run required."
+    },
+    {
+      "path": "dense-e2451e3-success-original.zip",
+      "bytes": 16267063,
+      "sha256": "c43ab8e81c8da5b4980d78121dca652b72d18cf06c9848135eb57904904d1d9c",
+      "head": "e2451e3142def791eb44aba4fcb19ada1aa1ed78",
+      "tree": "27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a",
+      "workflow_run": 37231067824,
+      "artifact_id": 11314645215,
+      "overall_status": "PASS",
+      "required_checks": 14,
+      "qualification": "Independent actual dense artifact qualified PASS,0 blockers; full CI/public deployment separate pending gates."
+    },
+    {
+      "path": "recorded-e2451e3-success-original.zip",
+      "bytes": 12464021,
+      "sha256": "bb538216ff1c74c3e7d12c85b9a8f2bbc14e2582f44e29dd29c60c143b270fef",
+      "head": "e2451e3142def791eb44aba4fcb19ada1aa1ed78",
+      "tree": "27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a",
+      "workflow_run": 37231067824,
+      "artifact_id": 11314136248,
+      "overall_status": "PASS",
+      "required_checks": 22,
+      "qualification": "Observed protected workflow report PASS; independent artifact acceptance and full CI pending."
     }
   ],
-  "readback": "Pending independent fresh network fetch of this evidence branch.",
+  "readback": "New candidate original ZIPs pending independent fresh network fetch.",
   "independent_review": {
     "overall_status": "FAIL",
     "new_blockers_beyond_unclassified_abort": 0,
@@ -29,5 +53,37 @@
       "qualification": "Bounded obvious credentials/private context scan; no full secret guarantee for binary content."
     },
     "trace_response_body_limit": "26 response bodies absent; no blanket byte attestation."
+  },
+  "current_candidate_independent_review": {
+    "head": "e2451e3142def791eb44aba4fcb19ada1aa1ed78",
+    "tree": "27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a",
+    "dense_artifact_status": "QUALIFIED PASS",
+    "blockers": 0,
+    "actual_pngs_viewed": 5,
+    "review_files": [
+      {
+        "path": "e245-independent-review.md",
+        "bytes": 4652,
+        "sha256": "b40211a9a923d81712d46065aeb8f0f47ff26763f382ebb2fdf2ff836ba33b20"
+      },
+      {
+        "path": "e245-independent-review.json",
+        "bytes": 10707,
+        "sha256": "028862115a1853403fb5d122265badd0dea949b87925a5128e48233d9116017a"
+      },
+      {
+        "path": "e245-contract-validation.json",
+        "bytes": 309,
+        "sha256": "a7b35874506f3660cc2ebf8412f706b598eb746a7658e4323c5c312b85895cf3"
+      },
+      {
+        "path": "e245-independent-validation.json",
+        "bytes": 945,
+        "sha256": "8a68984d88185f842c29f2352244c7241037f154f7d35ea27f3a606096341a67"
+      }
+    ],
+    "legacy_regression_review": "Pending independent numerics/regression acceptance.",
+    "full_ci": "Pending Rust completion; actual artifacts do not replace mandatory full CI.",
+    "public_dense": "Pending existing post-merge deployment verification."
   }
 }

@@ -1,0 +1,15 @@
+{
+  "allHttpFilePins": 70,
+  "uniqueHttpFiles": 31,
+  "servedBytes": 33393079,
+  "returnedLoaderStates": 111,
+  "realTinyTick0to100Present": true,
+  "tracePageClosures": [
+    "call@333",
+    "call@386",
+    "call@1122",
+    "call@1287",
+    "call@1454"
+  ],
+  "holdRateErrorSeconds": 0.0003999999994122039
+}

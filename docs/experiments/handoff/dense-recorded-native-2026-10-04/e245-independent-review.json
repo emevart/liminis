@@ -1,0 +1,329 @@
+{
+  "verdict": "QUALIFIED_PASS",
+  "blockers": 0,
+  "scope": "Independent acceptance of this original protected Chromium dense-recording artifact; not overall CI, merge, public deployment or full million-frame browser decode.",
+  "sourceHead": "e2451e3142def791eb44aba4fcb19ada1aa1ed78",
+  "sourceTree": "27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a",
+  "workflowRun": "https://github.com/emevart/liminis/actions/runs/37231067824",
+  "originalZip": {
+    "bytes": 16267063,
+    "sha256": "c43ab8e81c8da5b4980d78121dca652b72d18cf06c9848135eb57904904d1d9c",
+    "crc": "PASS",
+    "closedInventoryFiles": 7,
+    "uncompressedBytes": 16468287
+  },
+  "trace": {
+    "status": "PASS",
+    "filename": "trace.zip",
+    "bytes": 14970232,
+    "sha256": "2f9ab79c15518666c21eb052c0b2cbc838ddc0d7ec0b81700db3d7c8a9d2d6c0",
+    "crc": "PASS",
+    "safePaths": "PASS",
+    "entries": 130,
+    "uncompressedBytes": 33029298,
+    "combinedZipDecodedBytes": 49497585,
+    "decodedBudgetBytes": 67108864
+  },
+  "source": {
+    "gitPinnedFilesVerified": 20,
+    "scriptBytes": 65135,
+    "scriptSha256": "2458878a2db655f5e9d6c396d11dd683ce4f7f384c3692abf358795c1609e1a1",
+    "traceSourceExact": "PASS",
+    "actualHttpFilePinsVerified": 70,
+    "uniqueActualHttpFiles": 31
+  },
+  "protectedBrowser": {
+    "playwright": "1.61.1",
+    "chromium": "149.0.7827.55",
+    "runner": {
+      "os": "Linux",
+      "arch": "X64",
+      "imageOS": "ubuntu22"
+    },
+    "chromiumSandbox": true,
+    "actualCdpArgvForbiddenSwitches": [],
+    "qualification": "Observed argv and sandbox-enabled launch; not kernel attestation or native BFCache proof."
+  },
+  "checks": {
+    "allRuntimeChecks": 14,
+    "allRuntimeChecksStatus": "PASS",
+    "tracedReturnedLoaderStates": 111,
+    "actualTinyTicks0Through100Present": true,
+    "realFramesComparedByRuntimePythonOracle": 101,
+    "tracePageClosures": 5
+  },
+  "requestProof": {
+    "postCleanupClassification": {
+      "status": "PASS",
+      "phase": "after bounded cleanup and settlement",
+      "pages": 5
+    },
+    "independentRevalidation": [
+      {
+        "pageId": 1,
+        "failures": 6,
+        "classes": {
+          "completeEofBeforeDefaultCleanup": 3,
+          "explicit": 3
+        },
+        "uniqueBijection": "PASS"
+      },
+      {
+        "pageId": 2,
+        "failures": 1,
+        "classes": {
+          "signalOnlyExplicit": 1
+        },
+        "uniqueBijection": "PASS"
+      },
+      {
+        "pageId": 3,
+        "failures": 1,
+        "classes": {
+          "completeEofBeforeDefaultCleanup": 1
+        },
+        "uniqueBijection": "PASS"
+      },
+      {
+        "pageId": 4,
+        "failures": 1,
+        "classes": {
+          "completeEofBeforeDefaultCleanup": 1
+        },
+        "uniqueBijection": "PASS"
+      },
+      {
+        "pageId": 5,
+        "failures": 2,
+        "classes": {
+          "completeEofBeforeDefaultCleanup": 2
+        },
+        "uniqueBijection": "PASS"
+      }
+    ],
+    "totalActualFailures": 11,
+    "explicitModuleTestCancellation": 3,
+    "signalOnlyExplicitCancellation": 1,
+    "verifiedCompleteEofBeforeDefaultCleanup": 7,
+    "blanketAbortAllowance": false,
+    "unexpectedErrors": 0,
+    "signalOnly": {
+      "status": "PASS",
+      "nativePromiseObservers": false,
+      "nativeReaderWrappers": false,
+      "preAbortedDataRequests": 0,
+      "caughtMidBody": "AbortError",
+      "productionUnhandled": 0,
+      "responseBytes": "Actual first 16 original saved index bytes, unchanged",
+      "sensitivityControl": {
+        "expectedEvents": 1,
+        "actualEvents": 1,
+        "exactReasonIdentity": true,
+        "unexpectedEvents": 0,
+        "label": "Synthetic native ReadableStream error-channel sensitivity control"
+      }
+    },
+    "rawExpectedSyntheticUnhandledEvents": 1,
+    "syntheticControlQualification": "Exact object-identity sentinel only, one armed event retained raw, default reporting prevented only for that first event; not saved recording/model state."
+  },
+  "responseBytes": {
+    "traceResponses": 73,
+    "availableBrowserBodies": 42,
+    "gitExactSavedAssetBodies": 40,
+    "gitExactGzipBodies": 19,
+    "gitExactMetadataBodies": 15,
+    "generatedHarnessBodies": 2,
+    "omittedBodies": 31,
+    "mismatches": 0,
+    "qualification": "Omitted JS/canceled body entries are not claimed as raw trace body attestations. Source/server pins and runtime SHA checks remain; no Content-Encoding in observed responses."
+  },
+  "ui": {
+    "screenshotsAllViewed": [
+      {
+        "filename": "dense-desktop.png",
+        "bytes": 331442,
+        "sha256": "708e7886ae67aeca27dc5c1bc5e8269a182910f8bba0ebadbc1ceae7b417c897"
+      },
+      {
+        "filename": "dense-desktop-short.png",
+        "bytes": 288656,
+        "sha256": "2d8934fda817489787af16a14f38553e1aa8395ba0a6297637431a9723bf12e2"
+      },
+      {
+        "filename": "dense-mobile.png",
+        "bytes": 251728,
+        "sha256": "b4399c042b2f6c632d0e255b3efce835639b2c153d9884e92a03f020a1ee203c"
+      },
+      {
+        "filename": "dense-mobile-narrow.png",
+        "bytes": 236348,
+        "sha256": "bc7a2ec6c8ddd6a51b9c87a1105a5aeb251841f3a5a52fbd10506243d875e2e4"
+      },
+      {
+        "filename": "dense-million-end.png",
+        "bytes": 230938,
+        "sha256": "cfbbfe29d4ba980f29589ead36ccac170684e413e03bec76d5ac38b781885c9e"
+      }
+    ],
+    "viewports": [
+      [
+        "dense-desktop.png",
+        {
+          "width": 1440,
+          "height": 900
+        }
+      ],
+      [
+        "dense-desktop-short.png",
+        {
+          "width": 1440,
+          "height": 720
+        }
+      ],
+      [
+        "dense-mobile.png",
+        {
+          "width": 390,
+          "height": 844
+        }
+      ],
+      [
+        "dense-mobile-narrow.png",
+        {
+          "width": 320,
+          "height": 844
+        }
+      ]
+    ],
+    "controls": "All recorded required controls have positive geometry, fit viewport and unobscured hit targets.",
+    "atomicBoundary": {
+      "fromTick": 255,
+      "toTick": 256,
+      "oldPixelSha256": "27bcead9b5246c82e52f3f63cebd9eac2fb37605dcf91a647debebd1a2a2d45e",
+      "oldInspectorId": "57",
+      "heldDuringBuffer": true,
+      "delayExcludedFromPlayhead": true
+    },
+    "delayedOriginal": {
+      "url": "http://127.0.0.1:41409/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+      "status": "RELEASED",
+      "bytes": 917524,
+      "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1",
+      "fabricatedBytes": false
+    },
+    "hold": {
+      "tick": 992,
+      "rate": 1,
+      "targets": [
+        30,
+        60
+      ],
+      "requestedHoldMs": 1400,
+      "measuredWallMs": 1503.4000000000233,
+      "wallMeasurement": "Browser performance.now() at actual Play and Pause click events; includes intervening commands",
+      "browserClickTimesMs": [
+        7027.399999999994,
+        8530.800000000017
+      ],
+      "modelSecondsAdvanced": 1.5030000000006112,
+      "toleranceSeconds": 0.1,
+      "fromPlayhead": 29760,
+      "toPlayhead": 29761.503,
+      "pixelSha256": "079a9e811bf75e7b62da7a186cb7dbbe17472bf95cb3954e50468da056165404",
+      "httpRequests": 0
+    },
+    "independentRateErrorSeconds": 0.0003999999994122039,
+    "endpoints": [
+      {
+        "horizon": 100000,
+        "shownTick": 100000,
+        "chunkRequests": 3,
+        "method": "actual DOM/canvas and original archival endpoint values"
+      },
+      {
+        "horizon": 1000000,
+        "shownTick": 1000000,
+        "chunkRequests": 3,
+        "method": "actual DOM/canvas and original archival endpoint values"
+      }
+    ],
+    "millionEndVisible": {
+      "tick": 1000000,
+      "states": 1000001,
+      "living": 88,
+      "births": 89646,
+      "deaths": 44743,
+      "divisions": 44823,
+      "generation": 493,
+      "ledgerMatter": 0,
+      "ledgerEnergy": 0
+    },
+    "canvasQualification": "Schematic well-mixed inventory, no spatial coordinates or within-tick event reconstruction; overview plots remain explicitly 201 sparse archive frames."
+  },
+  "performance": {
+    "largest": {
+      "elapsedMs": 2762,
+      "gzipBytes": 1046390,
+      "decodedBytes": 4135813,
+      "records": 225,
+      "controlTicks": [
+        0,
+        50,
+        100,
+        768,
+        992
+      ],
+      "heapObservation": {
+        "usedSize": 21775564,
+        "totalSize": 50069504,
+        "embedderHeapUsedSize": 836664,
+        "backingStorageSize": 9360450
+      },
+      "heapQualification": "One CDP snapshot, not peak or universal device memory",
+      "timer": {
+        "intervalMs": 10,
+        "samples": 273,
+        "maxGapMs": 329.6000000000058
+      },
+      "stats": {
+        "retainedChunks": 1,
+        "cachedChunks": 1,
+        "loadingChunks": 0,
+        "maxRetainedChunks": 1,
+        "retainedFrames": 1,
+        "currentTick": 768,
+        "closed": false,
+        "failed": false,
+        "notificationFailed": false
+      }
+    },
+    "servedBytes": 33393079,
+    "httpRequests": 72,
+    "limits": [
+      "The 100k fixture is PARTIAL original metadata plus only two saved chunks, never a complete 100k recording.",
+      "Chromium/Linux and four viewport sizes; no achieved-FPS, full accessibility, native background or universal performance claim.",
+      "Elapsed time, a 10ms timer gap and heap observations describe this bounded workload/runner, not peak heap or every device.",
+      "The actual final catalog/UI/data are mandatory; their absence fails this gate, without substituting a catalog or frames.",
+      "No browser biology, interpolated states, full million-frame array or full 3GB browser download. High rates may skip displayed states."
+    ],
+    "qualification": "Largest-chunk bounded workload, one heap snapshot and timer gaps on this runner; not peak heap, achieved FPS or all-device guarantee."
+  },
+  "privacy": {
+    "utf8Files": 17,
+    "textBytes": 21194295,
+    "binarySkipped": 114,
+    "findings": [],
+    "status": "NO_OBVIOUS_FINDINGS",
+    "scope": "Bounded obvious-credential/private-key/Bearer/private-chat/old-private-context UTF-8 scan of report and nested trace; all five outer PNG visually viewed. Binary gzip bodies not inflated for privacy. Not a guarantee against every possible secret."
+  },
+  "remainingGates": [
+    "Full exact-head CI including pending Rust job must succeed before overall acceptance/merge.",
+    "Existing actual public dense bytes/playback gate after deployment remains separate."
+  ],
+  "priorFailure": {
+    "sourceHead": "97aed6f1c0c0dba7886fb34d0febf4c189eedf29",
+    "overallStatus": "FAIL",
+    "originalZipSha256": "0fdff34b12e5304ad718980061e10ddeb9cffedc097cdc0add3176c0fc8f3b6a",
+    "preserved": true
+  }
+}

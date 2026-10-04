@@ -1,0 +1,51 @@
+{
+  "abortRevalidation": [
+    {
+      "pageId": 1,
+      "failures": 6,
+      "classes": {
+        "completeEofBeforeDefaultCleanup": 3,
+        "explicit": 3
+      },
+      "uniqueBijection": "PASS"
+    },
+    {
+      "pageId": 2,
+      "failures": 1,
+      "classes": {
+        "signalOnlyExplicit": 1
+      },
+      "uniqueBijection": "PASS"
+    },
+    {
+      "pageId": 3,
+      "failures": 1,
+      "classes": {
+        "completeEofBeforeDefaultCleanup": 1
+      },
+      "uniqueBijection": "PASS"
+    },
+    {
+      "pageId": 4,
+      "failures": 1,
+      "classes": {
+        "completeEofBeforeDefaultCleanup": 1
+      },
+      "uniqueBijection": "PASS"
+    },
+    {
+      "pageId": 5,
+      "failures": 2,
+      "classes": {
+        "completeEofBeforeDefaultCleanup": 2
+      },
+      "uniqueBijection": "PASS"
+    }
+  ],
+  "privacy": {
+    "utf8Files": 17,
+    "textBytes": 21194295,
+    "binarySkipped": 114,
+    "findings": []
+  }
+}
