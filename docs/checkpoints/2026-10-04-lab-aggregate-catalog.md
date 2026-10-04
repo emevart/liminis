@@ -79,3 +79,35 @@ diffcount/bounds сохраняются до assert. Никаких masks/tolera
 production3D bytes main5bea-exact.4 meaningful syntheticPNG controls PASS;
 source/numerics/UX independent review идёт, actual fixed3D/LAB браузер ещё
 NOT_RUN. Существующий FAIL не превращается в PASS после смены oracle.
+
+## First actual LAB FAIL и узкие исправления, 23:50 UTC
+
+Exact79df352/tree0c9b9a/run37243706546 завершился FAILURE: LAB2checksPASS,
+check3 histogram CSSOM96.7391% вместо raw89/92×100=96.7391304347 отвергнут
+прежним1e-5. Original artifact11318651498/2210725bytes/SHA256
+`bbd3f4dce56469c082be6e61f8d9abdd913d48987af6575620a6493e4bcb3a09`
+сохранён без перепаковки, outerCRC PASS, report/PNG/trace проверены независимо.
+Новых биологических данных это расхождение не устанавливает.
+
+Astra и независимые reviewers одобрили exact detachedCSSOM reference из raw
+counts/living, без broadtolerance и изменения product histogram arithmetic.
+Actual PNG подтвердил мелкие оси: clean published UI follow-up a0e5461
+cherry-picked02aeab1; dynamicSVG1unit1CSSpx,height210,axisfont11/3sig,
+один width-change ResizeObserver.14 meaningful UI Node PASS у автора,
+rootQA теперь независимо проверяет rawframes/axes,4actualtypography layouts,
+clip/nonoverlap и exactcounts; source/numerics review0. Старый FAIL сохранён;
+новый source требует полного fresh CI и original artifacts.
+
+Fixed3D79 original11318935319/59183146bytes/SHA256
+`8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60`
+доставлен через unchanged bounded helper pattern: fb3a5b47/run37244552112,
+4exact rawparts. Original SHA/size/CRC PASS;13checksPASS,all3PNG1130×752,
+same raw+RGBA SHA,changedPixels0/statepoll3each. Independent actual review
+и durablearchive ещё в работе. Overall79FAIL и прежний main5FAIL не relabel;
+этот 3D verdict не переносится на следующий LAB candidate.
+
+Подготовлен отдельный publicLAB evidence-only smoke по Astra scope:
+8asset pins/productcandidate отдельно от QAhead; deployedProductHead:null
+запрещает runtime. Preparation branch не запускает QA. После acceptedmerge/
+existingdeployment root закрепит actualproductSHA и запустит protected smoke.
+Новая infrastructure/secrets/spend/security bypass не создаётся.

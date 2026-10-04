@@ -1810,3 +1810,22 @@ camera/viewport/revision/mode/drawnTick и actual API/все layer settings до
 и bounds. Synthetic PNG filter/encoding/one-byte/alpha/dimension controls
 проверяют сам oracle, не объявляют actual browser PASS. Production3D bytes
 не меняются. Независимый review и свежий protected artifact обязательны.
+
+### LAB histogram CSSOM и фактическая читаемость осей
+
+Original LAB79/run37243706546 остаётся FAIL: browser CSSOM сериализовал
+89/92×100 как96.7391%, что прежний fixed1e-5 oracle отверг. Новая проверка
+берёт ratio только из pinned raw counts/living, применяет detached CSS width
+setter и требует точного совпадения serialized declarations. Counts/text/
+composition/empty histogram остаются exact; rawratio/actual/reference строки
+сохраняются. Это declaration proof, не измерение pixel width; общие SVG и
+accounting допуски не расширяются.
+
+Actual PNG показал слишком мелкие оси. Responsive SVG имеет210 CSSpx height,
+viewBox width равен фактической ширине; frame x72→width−12, y12→178. Text11px
+и axis-only3significantdigits сохраняют original data/detail/domains/units.
+Actual desktop/short/390/320 gate должен подтвердить font≥10CSSpx через
+getScreenCTM, labels внутри SVG и без перекрытия. Axis values независимо
+привязываются к raw observed quantities и model-time domain, каждый sample
+path/dot — к raw данным с прежним1e-5. Свежий exact protected CI обязателен;
+прежний FAIL и новый source-only review не считаются actual LAB PASS.
