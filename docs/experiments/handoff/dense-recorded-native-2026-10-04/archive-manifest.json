@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "kind": "dense_browser_handoff_evidence",
+  "archive_scope": "Original workflow ZIP bytes, evidence-only branch; no product release/deploy.",
+  "total_zip_bytes": 16581557,
+  "files": [
+    {
+      "path": "dense-97aed6f-failure-original.zip",
+      "bytes": 16581557,
+      "sha256": "0fdff34b12e5304ad718980061e10ddeb9cffedc097cdc0add3176c0fc8f3b6a",
+      "head": "97aed6f1c0c0dba7886fb34d0febf4c189eedf29",
+      "tree": "f6feff861be3da22c6166264fcdde65e9c11c362",
+      "workflow_run": 37228121227,
+      "artifact_id": 11312631748,
+      "overall_status": "FAIL",
+      "qualification": "All11 required subchecks PASS, final actual request cancellation classification fails. Not accepted; subsequent exact-head protected run required."
+    }
+  ],
+  "readback": "Pending independent fresh network fetch of this evidence branch.",
+  "independent_review": {
+    "overall_status": "FAIL",
+    "new_blockers_beyond_unclassified_abort": 0,
+    "actual_pngs_viewed": 5,
+    "privacy_scan": {
+      "utf8_files": 20,
+      "utf8_bytes": 22335115,
+      "obvious_marker_hits": 0,
+      "binary_members_not_text_scanned": 111,
+      "qualification": "Bounded obvious credentials/private context scan; no full secret guarantee for binary content."
+    },
+    "trace_response_body_limit": "26 response bodies absent; no blanket byte attestation."
+  }
+}
