@@ -1,0 +1,158 @@
+{
+  "status": "PASS",
+  "kind": "byte-exact original reconstruction from fixed GitHub Actions companions",
+  "original": {
+    "artifact_id": 11316208815,
+    "run_id": 37238281987,
+    "source_head": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+    "source_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+    "bytes": 44944288,
+    "sha256": "e417e0a26e61a28315d080e0ea4b42153bd033d090449e9c52958b9301097e98",
+    "zip_crc": "PASS",
+    "members": [
+      {
+        "path": "coincident-daughters.png",
+        "bytes": 123037,
+        "compressed_bytes": 116000
+      },
+      {
+        "path": "desktop.png",
+        "bytes": 123430,
+        "compressed_bytes": 116451
+      },
+      {
+        "path": "context-loss-current-2d.png",
+        "bytes": 89454,
+        "compressed_bytes": 83340
+      },
+      {
+        "path": "first-division-state.json",
+        "bytes": 18198,
+        "compressed_bytes": 2065
+      },
+      {
+        "path": "held-history.json",
+        "bytes": 130,
+        "compressed_bytes": 90
+      },
+      {
+        "path": "held-module.mjs",
+        "bytes": 15849,
+        "compressed_bytes": 5282
+      },
+      {
+        "path": "host.log",
+        "bytes": 413,
+        "compressed_bytes": 181
+      },
+      {
+        "path": "legacy-schematic.png",
+        "bytes": 97680,
+        "compressed_bytes": 90932
+      },
+      {
+        "path": "mobile320.png",
+        "bytes": 128042,
+        "compressed_bytes": 120955
+      },
+      {
+        "path": "mobile390.png",
+        "bytes": 130532,
+        "compressed_bytes": 122403
+      },
+      {
+        "path": "physical-nonsquare.toml",
+        "bytes": 3538,
+        "compressed_bytes": 1381
+      },
+      {
+        "path": "nonsquare-state.json",
+        "bytes": 10016,
+        "compressed_bytes": 1513
+      },
+      {
+        "path": "report.json",
+        "bytes": 225662,
+        "compressed_bytes": 17137
+      },
+      {
+        "path": "short.png",
+        "bytes": 110295,
+        "compressed_bytes": 104386
+      },
+      {
+        "path": "source-cube-state.json",
+        "bytes": 10017,
+        "compressed_bytes": 1512
+      },
+      {
+        "path": "source-cube.png",
+        "bytes": 101092,
+        "compressed_bytes": 95992
+      },
+      {
+        "path": "trace.zip",
+        "bytes": 44950139,
+        "compressed_bytes": 43960894
+      },
+      {
+        "path": "webgl-unavailable-current-2d.png",
+        "bytes": 109684,
+        "compressed_bytes": 101468
+      }
+    ]
+  },
+  "transport": {
+    "run_id": 37240071604,
+    "source_head": "ea6bba6a930e88715f7898a5da658a81f4d44ccd",
+    "containers": [
+      {
+        "artifact_id": 11317470978,
+        "bytes": 16778353,
+        "sha256": "62378f9d91330fcc57ed1711256bbc63c1b4fe926f255c5951f99273eedb85df",
+        "crc": "PASS",
+        "part": {
+          "ordinal": 1,
+          "count": 3,
+          "offset": 0,
+          "file": "original.part-001.bin",
+          "bytes": 16777216,
+          "sha256": "03441fcb11fe34112355cee09875dd944dcf6e891448e9fe26a12b4c1c0213b8"
+        }
+      },
+      {
+        "artifact_id": 11317361201,
+        "bytes": 11391000,
+        "sha256": "7a1b0a10ea83d352f9b8f4fec03fc30e5367a1b5a31ff3d3d6ff92b7f5ff54b8",
+        "crc": "PASS",
+        "part": {
+          "ordinal": 3,
+          "count": 3,
+          "offset": 33554432,
+          "file": "original.part-003.bin",
+          "bytes": 11389856,
+          "sha256": "a90e8679e8e7cf17f3a280e1a1a72d73e49bc9e6f97fa3783504ae636c6e07cf"
+        }
+      },
+      {
+        "artifact_id": 11316956909,
+        "bytes": 16778360,
+        "sha256": "b37c3c17aec085303d87f92090ad32e6ea12f18bb73f8bf37936e6fdba7edee0",
+        "crc": "PASS",
+        "part": {
+          "ordinal": 2,
+          "count": 3,
+          "offset": 16777216,
+          "file": "original.part-002.bin",
+          "bytes": 16777216,
+          "sha256": "2ddad73ba2697ee1d69d20219be3dd3ff577425cc16f636708d17a71ccc66433"
+        }
+      }
+    ]
+  },
+  "report_sha256": "feb6a99a95359727338359588d833b25e99701dbdca86a69430282dc232af4fe",
+  "qualifications": [
+    "Byte delivery only, independent actual 3D acceptance pending",
+    "Original outer ZIP bytes reconstructed exactly; no repacking, model or browser rerun"
+  ]
+}

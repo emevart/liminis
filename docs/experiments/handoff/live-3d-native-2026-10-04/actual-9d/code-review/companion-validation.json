@@ -1,0 +1,32 @@
+{
+  "status": "PASS",
+  "containers": [
+    {
+      "ordinal": 1,
+      "containerBytes": 16778353,
+      "containerSha256": "62378f9d91330fcc57ed1711256bbc63c1b4fe926f255c5951f99273eedb85df",
+      "crc": "PASS",
+      "closedInventory": 2,
+      "receiptExact": true,
+      "rawSliceExact": true
+    },
+    {
+      "ordinal": 2,
+      "containerBytes": 16778360,
+      "containerSha256": "b37c3c17aec085303d87f92090ad32e6ea12f18bb73f8bf37936e6fdba7edee0",
+      "crc": "PASS",
+      "closedInventory": 2,
+      "receiptExact": true,
+      "rawSliceExact": true
+    },
+    {
+      "ordinal": 3,
+      "containerBytes": 11391000,
+      "containerSha256": "7a1b0a10ea83d352f9b8f4fec03fc30e5367a1b5a31ff3d3d6ff92b7f5ff54b8",
+      "crc": "PASS",
+      "closedInventory": 2,
+      "receiptExact": true,
+      "rawSliceExact": true
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "liminis-original-artifact-byte-part-v1",
+  "purpose": "transport only; browser acceptance belongs to original run",
+  "repository": "emevart/liminis",
+  "original": {
+    "artifact_id": 11316208815,
+    "run_id": 37238281987,
+    "source_head": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+    "source_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+    "bytes": 44944288,
+    "sha256": "e417e0a26e61a28315d080e0ea4b42153bd033d090449e9c52958b9301097e98",
+    "zip_crc": "PASS",
+    "zip_members": 18
+  },
+  "transport": {
+    "run_id": 37240071604,
+    "run_attempt": 1,
+    "source_head": "ea6bba6a930e88715f7898a5da658a81f4d44ccd"
+  },
+  "part": {
+    "ordinal": 3,
+    "count": 3,
+    "offset": 33554432,
+    "file": "original.part-003.bin",
+    "bytes": 11389856,
+    "sha256": "a90e8679e8e7cf17f3a280e1a1a72d73e49bc9e6f97fa3783504ae636c6e07cf"
+  }
+}

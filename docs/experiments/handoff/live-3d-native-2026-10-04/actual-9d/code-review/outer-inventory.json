@@ -1,0 +1,92 @@
+[
+  {
+    "name": "coincident-daughters.png",
+    "bytes": 123037,
+    "compressedBytes": 116000
+  },
+  {
+    "name": "desktop.png",
+    "bytes": 123430,
+    "compressedBytes": 116451
+  },
+  {
+    "name": "context-loss-current-2d.png",
+    "bytes": 89454,
+    "compressedBytes": 83340
+  },
+  {
+    "name": "first-division-state.json",
+    "bytes": 18198,
+    "compressedBytes": 2065
+  },
+  {
+    "name": "held-history.json",
+    "bytes": 130,
+    "compressedBytes": 90
+  },
+  {
+    "name": "held-module.mjs",
+    "bytes": 15849,
+    "compressedBytes": 5282
+  },
+  {
+    "name": "host.log",
+    "bytes": 413,
+    "compressedBytes": 181
+  },
+  {
+    "name": "legacy-schematic.png",
+    "bytes": 97680,
+    "compressedBytes": 90932
+  },
+  {
+    "name": "mobile320.png",
+    "bytes": 128042,
+    "compressedBytes": 120955
+  },
+  {
+    "name": "mobile390.png",
+    "bytes": 130532,
+    "compressedBytes": 122403
+  },
+  {
+    "name": "physical-nonsquare.toml",
+    "bytes": 3538,
+    "compressedBytes": 1381
+  },
+  {
+    "name": "nonsquare-state.json",
+    "bytes": 10016,
+    "compressedBytes": 1513
+  },
+  {
+    "name": "report.json",
+    "bytes": 225662,
+    "compressedBytes": 17137
+  },
+  {
+    "name": "short.png",
+    "bytes": 110295,
+    "compressedBytes": 104386
+  },
+  {
+    "name": "source-cube-state.json",
+    "bytes": 10017,
+    "compressedBytes": 1512
+  },
+  {
+    "name": "source-cube.png",
+    "bytes": 101092,
+    "compressedBytes": 95992
+  },
+  {
+    "name": "trace.zip",
+    "bytes": 44950139,
+    "compressedBytes": 43960894
+  },
+  {
+    "name": "webgl-unavailable-current-2d.png",
+    "bytes": 109684,
+    "compressedBytes": 101468
+  }
+]

@@ -1,0 +1,189 @@
+{
+  "status": "QUALIFIED_ACTUAL_PASS",
+  "blockers": 0,
+  "head": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+  "tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "run": 37238281987,
+  "artifact": 11316208815,
+  "requiredChecks": 13,
+  "checksPass": 13,
+  "allNinePngViewed": true,
+  "geometryReports": 40,
+  "elapsedSecondsIncludingCleanup": 33.066,
+  "observedSandboxForbidden": [],
+  "actualBackend": {
+    "vendor": "Google Inc. (Google)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "softwareGpu": "Stock pinned officialPlaywright149/SwiftShader ANGLE baseline, not hardwareGPU or isolation/FPS attestation",
+  "mandatoryNativeContexts": [
+    1,
+    1,
+    0,
+    0
+  ],
+  "originalOnlyDelays": {
+    "moduleBytes": 15849,
+    "historyBytes": 130,
+    "sourceShaExact": true,
+    "released": true,
+    "atomicStep": {
+      "fromTick": 0,
+      "toTick": 1,
+      "selectedId": "0",
+      "historyReleasedAtAssertion": false,
+      "lazyActivationTick": 1
+    }
+  },
+  "realDivision": {
+    "tick": 47,
+    "realStepCount": 46,
+    "parentId": "5",
+    "daughterIds": [
+      "16",
+      "17"
+    ],
+    "position_m": [
+      0.0001680090356467213,
+      5.394273663219153e-05,
+      4.654609064929371e-05
+    ],
+    "candidateIds": [
+      "16",
+      "17"
+    ],
+    "parentAbsenceIsNotDeath": true
+  },
+  "pausedDraw": {
+    "tick": 1,
+    "windows": [
+      {
+        "fps": 30,
+        "requestedHoldMs": 1400,
+        "measuredWallMs": 1400.1070359999994,
+        "stateRequests": 3
+      },
+      {
+        "fps": 60,
+        "requestedHoldMs": 1400,
+        "measuredWallMs": 1400.4508690000002,
+        "stateRequests": 2
+      }
+    ],
+    "compositorSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+    "achievedFPS": "UNASSERTED"
+  },
+  "glyphRasterTolerance": {
+    "fullContrast": 212,
+    "opacity020Contrast": 42,
+    "opacityZeroContrast": 0,
+    "actualPixelChanges": true,
+    "noHiddenPointerTargets": true,
+    "glyph": {
+      "widthCSS": 8,
+      "heightCSS": 8.988779920212766,
+      "nominalCSS": 7,
+      "rasterToleranceCSS": 2
+    },
+    "zoomGlyph": {
+      "widthCSS": 8,
+      "heightCSS": 7.9900265957446805,
+      "nominalCSS": 7,
+      "rasterToleranceCSS": 2
+    }
+  },
+  "resourceToggles": {
+    "toggles": 6,
+    "contextCreations": 1,
+    "currentPopulation": 15,
+    "baseline": {
+      "sprites": 15,
+      "visibleSprites": 15,
+      "selectionSprites": 1,
+      "paletteMaterials": 8,
+      "materials": 15,
+      "textures": 2,
+      "geometries": 7,
+      "rendererGeometries": 7,
+      "rendererTextures": 2,
+      "disposed": false,
+      "lost": false,
+      "contextCreations": 1
+    },
+    "resources": {
+      "sprites": 15,
+      "visibleSprites": 15,
+      "selectionSprites": 1,
+      "paletteMaterials": 8,
+      "materials": 15,
+      "textures": 2,
+      "geometries": 7,
+      "rendererGeometries": 7,
+      "rendererTextures": 2,
+      "disposed": false,
+      "lost": false,
+      "contextCreations": 1
+    }
+  },
+  "contextLoss": {
+    "label": "Synthetic GPU-loss negative control via actual native extension; no fabricated model state",
+    "current2DTick": 48,
+    "realStepFrom": 47,
+    "resources": {
+      "sprites": 0,
+      "visibleSprites": 0,
+      "selectionSprites": 0,
+      "paletteMaterials": 8,
+      "materials": 0,
+      "textures": 0,
+      "geometries": 0,
+      "rendererGeometries": 0,
+      "rendererTextures": 0,
+      "disposed": true,
+      "lost": true,
+      "contextCreations": 1
+    }
+  },
+  "unavailable": {
+    "label": "Synthetic allocation-negative control: only target canvas WebGL getContext returns null; actual API is unchanged",
+    "shownTick": 48,
+    "contextCreations": 0
+  },
+  "chamber1": {
+    "chamberFormat": 1,
+    "tick": 0,
+    "schematic": true,
+    "no3DRequests": true
+  },
+  "errors": {
+    "pageErrors": 0,
+    "nodeUnhandled": 0,
+    "cleanupErrors": 0,
+    "pageUnhandled": 0,
+    "requestFailures": 0,
+    "expectedUnavailableConsoleErrors": 1,
+    "unacknowledgedConsoleErrors": 0,
+    "rawTraceGpuWarnings": 4
+  },
+  "privacy": {
+    "status": "PASS_BOUNDED_PATTERN_REVIEW",
+    "utf8Files": 127,
+    "decodedUtf8Bytes": 6488588,
+    "maximumUtf8FileBytes": 4753393,
+    "binaryFilesNotTextScanned": 1152,
+    "obviousCredentialPrivateChatOldVmFindings": [],
+    "actualOuterImagesViewed": 9,
+    "outerPlusNestedExpandedBytes": 101164861,
+    "qualification": "No combined-expanded64MiB claim. All nested entries bounded<16MiB; nestedexpanded54,917,653. UTF8 total bounded<64MiB; binary skipped text scan. Nine actualPNG viewed. No exhaustive guarantee that every possible secret is absent."
+  },
+  "limits": [
+    "13checks are this Chromium/Linux/SwiftShader acceptance only; no hardwareFPS/fullaccessibility/nativeBFCache/kernel/crossplatform science claim.",
+    "Context loss/unavailable are labelled negative controls; modelAPI/currentticks/coordinates remain actual.",
+    "Current-population resource counters/native context observer prove bounded count under tested6toggles, not peak heap orGPUmemory benchmark.",
+    "Rawtrace lacks12ordinaryJS response bodies and directCDP commands; Git/actualNodehost source assets and native screenshot/state controls supplement proof.",
+    "Report has40runtime compositor PNG hashes/pixel checks; only9fullPNG independently viewable in outerZIP; trace1148screencast JPEG.",
+    "Original09FAIL remainsFAIL; this is fresh9d actualartifact, not retroactive acceptance.",
+    "FullCI/other5regressions/guardedmerge and publicall3horizonNode endpoint delivery remain separate coordinator gates."
+  ]
+}

@@ -1,115 +1,232 @@
 {
   "schema_version": 1,
   "kind": "live_3d_native_evidence_archive",
-  "candidate_commit": "09f3c64af37c9037aa291b9efeb249c4508eba91",
-  "candidate_tree": "77dd4de7d268523036bf09049eb30cd20bb26e4d",
-  "workflow_run": 37237631167,
-  "status": "SOURCE_REVIEW_QUALIFIED_PASS_2D_REGRESSION_FAIL_3D_NOT_RUN",
+  "candidate_commit": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+  "candidate_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "workflow_run": 37238281987,
+  "status": "QUALIFIED_ACTUAL_3D_PASS_WITH_PRESERVED_INITIAL_09FAIL",
   "files": [
+    {
+      "path": "README.md",
+      "bytes": 5027,
+      "sha256": "5d810958bed947ac444ff262f8be062e64d012db2e714dec48babbcbb7cd9f0b",
+      "scope": "preserved initial09 original/qualified source evidence"
+    },
+    {
+      "path": "actual-9d/code-review/REVIEW.md",
+      "bytes": 6906,
+      "sha256": "d8ae16f687edc3687958ee9f580b68332990534f98ec2f1496cb9ae0e80e2661",
+      "scope": "exact independent own review/proof"
+    },
+    {
+      "path": "actual-9d/code-review/actual-review.json",
+      "bytes": 5734,
+      "sha256": "0ea9d8bccce95c7d000622b88d47318cda663c2854c619664a5e54cee038aa0f",
+      "scope": "exact independent own review/proof"
+    },
+    {
+      "path": "actual-9d/code-review/companion-validation.json",
+      "bytes": 840,
+      "sha256": "6361955c6db357640618081d26b9de852aafd4dc683f87253c3f4b7cf1ddd561",
+      "scope": "exact independent own review/proof"
+    },
+    {
+      "path": "actual-9d/code-review/delayed-atomic-validation.json",
+      "bytes": 781,
+      "sha256": "e46cb962947d23c245e94d7e22a535e41c0303cd85f058bdedb1bc0959e93e19",
+      "scope": "exact independent own review/proof"
+    },
+    {
+      "path": "actual-9d/code-review/nested-inventory.json",
+      "bytes": 136881,
+      "sha256": "9cad1af595e5690f12c3e1a117a7167151c3aafde28585771d93a5ed74809a53",
+      "scope": "exact independent own review/proof"
+    },
+    {
+      "path": "actual-9d/code-review/outer-inventory.json",
+      "bytes": 1654,
+      "sha256": "0c018400b451b98ebe4b548b688de7382b8f16b0f5aa2cac0e20d6f59baaf9f9",
+      "scope": "exact independent own review/proof"
+    },
+    {
+      "path": "actual-9d/code-review/privacy-review.json",
+      "bytes": 549,
+      "sha256": "2426d303385b4055d83c61151b97640ffef2b84c1cd344cd65a5a97191acbd8c",
+      "scope": "exact independent own review/proof"
+    },
+    {
+      "path": "actual-9d/code-review/source-transport-validation.json",
+      "bytes": 2039,
+      "sha256": "f1deb6dbc0cb4a06565718b5f36fdb8431b48dfec7500bc7064a878649fc88bb",
+      "scope": "exact independent own review/proof"
+    },
+    {
+      "path": "actual-9d/code-review/trace-validation.json",
+      "bytes": 3109,
+      "sha256": "4586db9ef31be619c41e9463f13b5ad627197760c605b884a7a6d02871529c1b",
+      "scope": "exact independent own review/proof"
+    },
+    {
+      "path": "actual-9d/evidence-3d-transport-source.yml",
+      "bytes": 8295,
+      "sha256": "a87ec3c1ecbd211f5d1d9419d97435138cb4f066d1c4b1854c781228d124f7d2",
+      "scope": "byte-exact original report / transport receipt or coordinator qualification"
+    },
+    {
+      "path": "actual-9d/numerics-review/geometry-integrity.json",
+      "bytes": 1796,
+      "sha256": "5e727c4015eb5e8b3edc9fa7aaeebd507d25368f57d18f4b6204c4bb2b7a9d00",
+      "scope": "exact independent own review/proof"
+    },
+    {
+      "path": "actual-9d/numerics-review/review.json",
+      "bytes": 7146,
+      "sha256": "962e9ef09fc821b7ce54ffafb87dca6dcda37a8c683fd38bc7287724150ee5e3",
+      "scope": "exact independent own review/proof"
+    },
+    {
+      "path": "actual-9d/numerics-review/review.md",
+      "bytes": 6547,
+      "sha256": "4c5e26e1abe92fa9bcab27ff2a91b954e548104bdf63505b6c9331843bf3dc0a",
+      "scope": "exact independent own review/proof"
+    },
+    {
+      "path": "actual-9d/original-reconstruction-receipt.json",
+      "bytes": 4252,
+      "sha256": "061f0d2948eaf451f80b532b3c26dd5425560e2f793e860bf52b2aa2fddf9a70",
+      "scope": "byte-exact original report / transport receipt or coordinator qualification"
+    },
+    {
+      "path": "actual-9d/physical-3d-9d9f709-success-original.zip",
+      "bytes": 44944288,
+      "sha256": "e417e0a26e61a28315d080e0ea4b42153bd033d090449e9c52958b9301097e98",
+      "scope": "original GitHub artifact ZIP; byte-exact without repack"
+    },
+    {
+      "path": "actual-9d/report.json",
+      "bytes": 225662,
+      "sha256": "feb6a99a95359727338359588d833b25e99701dbdca86a69430282dc232af4fe",
+      "scope": "byte-exact original report / transport receipt or coordinator qualification"
+    },
+    {
+      "path": "actual-9d/transport-part-001-receipt.json",
+      "bytes": 865,
+      "sha256": "396a819d9bfc2ae6616bb2200f3f8d9dc0bce55d46d991b7cc5fe7b1bea6077e",
+      "scope": "byte-exact original report / transport receipt or coordinator qualification"
+    },
+    {
+      "path": "actual-9d/transport-part-002-receipt.json",
+      "bytes": 872,
+      "sha256": "449116d6c69de54500e43df34304e229ec85e046664cfd375755111161187a6a",
+      "scope": "byte-exact original report / transport receipt or coordinator qualification"
+    },
+    {
+      "path": "actual-9d/transport-part-003-receipt.json",
+      "bytes": 872,
+      "sha256": "a39dbd8f335fd25f8ee9e1855813669efb3daf22423ef61d08d74b572a9084f9",
+      "scope": "byte-exact original report / transport receipt or coordinator qualification"
+    },
     {
       "path": "code/REVIEW.md",
       "bytes": 3827,
       "sha256": "f57fdce7bd433e17747a2a0afac6287cfb3b9d05918dad656d9f195b9c4f5656",
-      "scope": "exact independent pre-browser review bytes"
-    },
-    {
-      "path": "code/source-review.json",
-      "bytes": 10443,
-      "sha256": "983a0825b6dc928e35a531230a5a442b3dd3a73b4c733ae6e82aee45fcfb9aa8",
-      "scope": "exact independent pre-browser review bytes"
-    },
-    {
-      "path": "code/scope-review.json",
-      "bytes": 2630,
-      "sha256": "6fc3d209d6f5b7bd1b70237f55938239ae757bcbac930a7c062de52f953027a0",
-      "scope": "exact independent pre-browser review bytes"
+      "scope": "preserved initial09 original/qualified source evidence"
     },
     {
       "path": "code/independent-upstream-pins.json",
       "bytes": 854,
       "sha256": "adae1516bc5d6de987df64fc5875088d292014adf73cf7dccaa58f197422aa6c",
-      "scope": "exact independent pre-browser review bytes"
+      "scope": "preserved initial09 original/qualified source evidence"
     },
     {
-      "path": "numerics/source-review.json",
-      "bytes": 4173,
-      "sha256": "bbd85aa6bf16acab47db7762348fe6168d13e41e25b2f39f3ec3a197c4a13bc0",
-      "scope": "exact independent pre-browser review bytes"
+      "path": "code/scope-review.json",
+      "bytes": 2630,
+      "sha256": "6fc3d209d6f5b7bd1b70237f55938239ae757bcbac930a7c062de52f953027a0",
+      "scope": "preserved initial09 original/qualified source evidence"
     },
     {
-      "path": "numerics/qa-source-review.json",
-      "bytes": 3486,
-      "sha256": "f1be1f8634b18932c111382fcc2c0090ef870114b564fffa5f25b81109adc5a2",
-      "scope": "exact independent pre-browser review bytes"
-    },
-    {
-      "path": "numerics/identity-fix-review.json",
-      "bytes": 1460,
-      "sha256": "996591bf6ff589ccd03694e4668c706964d9637f5a0201e0a2540eba157bf4e0",
-      "scope": "exact independent pre-browser review bytes"
-    },
-    {
-      "path": "numerics/source-review-e9-superseded.json",
-      "bytes": 3506,
-      "sha256": "16921038c0c48a207dc5ebc1963be51ad78bc3c91533d165499d32bff220874d",
-      "scope": "exact independent pre-browser review bytes"
-    },
-    {
-      "path": "numerics/source-oracle.json",
-      "bytes": 860,
-      "sha256": "49640ba63404f25f2427d510b5c7b6dc582281ecfe0a743c76148def02a87759",
-      "scope": "exact independent pre-browser review bytes"
-    },
-    {
-      "path": "numerics/geometry-oracle.mjs",
-      "bytes": 3588,
-      "sha256": "682594006bf5e62abc44a006d9bb8f4f499a4a7081fa3a9222e85433bdb4e76e",
-      "scope": "exact independent pre-browser review bytes"
-    },
-    {
-      "path": "README.md",
-      "bytes": 2185,
-      "sha256": "9b461ab6934715b2c55c3330865da2be1a37327479038e8062a2f026ca298f67",
-      "scope": "coordinator qualification"
-    },
-    {
-      "path": "physical-projection-09-report.json",
-      "bytes": 40058,
-      "sha256": "4581b1e0e6a0e591b62fddaab74562f74815d02e0e3a369991bbe940f8b98a03",
-      "scope": "exact original diagnostic report bytes"
-    },
-    {
-      "path": "physical-projection-09f3c64-failure-original.zip",
-      "bytes": 4254907,
-      "sha256": "7afc4b88db78a9a32d83f99534ee13e463e18fd48411003e7b31b6cb29d56ffd",
-      "scope": "original GH artifact ZIP, no repacking; overall FAIL"
+      "path": "code/source-review.json",
+      "bytes": 10443,
+      "sha256": "983a0825b6dc928e35a531230a5a442b3dd3a73b4c733ae6e82aee45fcfb9aa8",
+      "scope": "preserved initial09 original/qualified source evidence"
     },
     {
       "path": "initial-09-failure/REVIEW.md",
       "bytes": 3593,
       "sha256": "8090eac4f2ccb521975fde0196db37d61b0b616f224ed9fd31fc7d75f04baae9",
-      "scope": "exact independent original09 diagnostic / narrow9d caption-fix review"
-    },
-    {
-      "path": "initial-09-failure/diagnostics.json",
-      "bytes": 4648,
-      "sha256": "e1f348dea178d16d5b3b1c705f813a58cded07963050408f0e3904c68811bca8",
-      "scope": "exact independent original09 diagnostic / narrow9d caption-fix review"
+      "scope": "preserved initial09 original/qualified source evidence"
     },
     {
       "path": "initial-09-failure/caption-fix-review.json",
       "bytes": 978,
       "sha256": "b06d7ed6f00a260b94791c39d8706a9059f0dd1347d678046ed3bd59bd1bb8fb",
-      "scope": "exact independent original09 diagnostic / narrow9d caption-fix review"
+      "scope": "preserved initial09 original/qualified source evidence"
+    },
+    {
+      "path": "initial-09-failure/diagnostics.json",
+      "bytes": 4648,
+      "sha256": "e1f348dea178d16d5b3b1c705f813a58cded07963050408f0e3904c68811bca8",
+      "scope": "preserved initial09 original/qualified source evidence"
+    },
+    {
+      "path": "numerics/geometry-oracle.mjs",
+      "bytes": 3588,
+      "sha256": "682594006bf5e62abc44a006d9bb8f4f499a4a7081fa3a9222e85433bdb4e76e",
+      "scope": "preserved initial09 original/qualified source evidence"
+    },
+    {
+      "path": "numerics/identity-fix-review.json",
+      "bytes": 1460,
+      "sha256": "996591bf6ff589ccd03694e4668c706964d9637f5a0201e0a2540eba157bf4e0",
+      "scope": "preserved initial09 original/qualified source evidence"
+    },
+    {
+      "path": "numerics/qa-source-review.json",
+      "bytes": 3486,
+      "sha256": "f1be1f8634b18932c111382fcc2c0090ef870114b564fffa5f25b81109adc5a2",
+      "scope": "preserved initial09 original/qualified source evidence"
+    },
+    {
+      "path": "numerics/source-oracle.json",
+      "bytes": 860,
+      "sha256": "49640ba63404f25f2427d510b5c7b6dc582281ecfe0a743c76148def02a87759",
+      "scope": "preserved initial09 original/qualified source evidence"
+    },
+    {
+      "path": "numerics/source-review-e9-superseded.json",
+      "bytes": 3506,
+      "sha256": "16921038c0c48a207dc5ebc1963be51ad78bc3c91533d165499d32bff220874d",
+      "scope": "preserved initial09 original/qualified source evidence"
+    },
+    {
+      "path": "numerics/source-review.json",
+      "bytes": 4173,
+      "sha256": "bbd85aa6bf16acab47db7762348fe6168d13e41e25b2f39f3ec3a197c4a13bc0",
+      "scope": "preserved initial09 original/qualified source evidence"
+    },
+    {
+      "path": "physical-projection-09-report.json",
+      "bytes": 40058,
+      "sha256": "4581b1e0e6a0e591b62fddaab74562f74815d02e0e3a369991bbe940f8b98a03",
+      "scope": "preserved initial09 original/qualified source evidence"
+    },
+    {
+      "path": "physical-projection-09f3c64-failure-original.zip",
+      "bytes": 4254907,
+      "sha256": "7afc4b88db78a9a32d83f99534ee13e463e18fd48411003e7b31b6cb29d56ffd",
+      "scope": "original GitHub artifact ZIP; byte-exact without repack"
     }
   ],
-  "unique_bytes": 4341196,
+  "unique_bytes": 49703126,
   "archive_group_cap_bytes": 67108864,
-  "original_zip_count": 1,
+  "original_zip_count": 2,
   "qualifications": [
-    "pre-browser independent reviews only",
-    "no transferred actual WebGL/fullCI/public endpoint PASS",
-    "historical e9 review superseded by861 identity fix"
+    "Exact9d actualcode/numerics13checks QUALIFIED PASS; original09overallFAIL/3DNOTRUN preserved",
+    "Software WebGL2 and observed sandbox argv; no hardwareFPS/kernel sandbox attestation/new science",
+    "Bounded UTF8/header/privacy evidence; no full binary secret guarantee",
+    "Original outer ZIP byte-exact via fixed officialActions raw companions; no rerun/repack",
+    "64MiB published unique-byte cap is not a combined expanded trace cap",
+    "Current provider status, guarded merge and futurepublic endpoint delivery are separate coordinator gates"
   ],
   "diagnostic": {
     "artifact_id": 11316008695,
@@ -119,9 +236,32 @@
     "failed_subchecks": 1,
     "page_errors": 0,
     "console_errors": 0,
-    "cleanup_errors": 0
+    "cleanup_errors": 0,
+    "source_head": "09f3c64af37c9037aa291b9efeb249c4508eba91",
+    "source_tree": "77dd4de7d268523036bf09049eb30cd20bb26e4d",
+    "workflow_run": 37237631167
   },
   "subsequent_candidate_commit": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
   "subsequent_candidate_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
-  "subsequent_workflow_run": 37238281987
+  "subsequent_workflow_run": 37238281987,
+  "historical_initial_candidate_commit": "09f3c64af37c9037aa291b9efeb249c4508eba91",
+  "historical_initial_candidate_tree": "77dd4de7d268523036bf09049eb30cd20bb26e4d",
+  "historical_initial_workflow_run": 37237631167,
+  "actual_3d": {
+    "artifact_id": 11316208815,
+    "source_head": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+    "source_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+    "workflow_run": 37238281987,
+    "original_zip_bytes": 44944288,
+    "original_zip_sha256": "e417e0a26e61a28315d080e0ea4b42153bd033d090449e9c52958b9301097e98",
+    "status": "QUALIFIED_PASS",
+    "code_blockers": 0,
+    "numerics_blockers": 0,
+    "mandatory_checks": 13,
+    "all_outer_png_viewed": 9,
+    "independent_projection_points": 384,
+    "projection_error_max_css_pixels": 4.547473508864641e-13,
+    "transport_run": 37240071604,
+    "transport_source_head": "ea6bba6a930e88715f7898a5da658a81f4d44ccd"
+  }
 }

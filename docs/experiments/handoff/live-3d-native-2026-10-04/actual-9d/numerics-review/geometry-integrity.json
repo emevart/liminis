@@ -1,0 +1,43 @@
+{
+  "status": "PASS",
+  "source_head": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+  "source_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "original_zip": {
+    "bytes": 44944288,
+    "sha256": "e417e0a26e61a28315d080e0ea4b42153bd033d090449e9c52958b9301097e98",
+    "members": 18,
+    "expanded_bytes": 46247208,
+    "crc": "PASS",
+    "unique_safe_paths": true
+  },
+  "report_sha256": "feb6a99a95359727338359588d833b25e99701dbdca86a69430282dc232af4fe",
+  "trace": {
+    "bytes": 44950139,
+    "sha256": "3232e9d12af244eb85e96fe67e49bb64d62dbe4d8b5b2ed60f9095827b7fd546",
+    "members": 1258,
+    "expanded_bytes": 54917653,
+    "crc": "PASS",
+    "unique_safe_paths": true
+  },
+  "mandatory_checks": 13,
+  "source_hash_checks": 10,
+  "geometry_observations": 40,
+  "independently_recomputed_points": 384,
+  "maximum_projection_error_css_pixels": 4.547473508864641e-13,
+  "maximum_camera_basis_error": 2.220446049250313e-16,
+  "actual_trace_api_state_responses": 90,
+  "exact_source_asset_trace_response_checks": 1,
+  "source_asset_trace_success_responses": 13,
+  "trace_asset_body_qualification": "Fulfilled vendor requests preserve status/URL in trace, with no stored body. Their exact served-byte hashes are recorded by the pinned acceptance script; the held module also has an independently checked trace body.",
+  "representative_pixel_center_probes": 38,
+  "representative_pixel_box_edge_probes": 36,
+  "axis_labels": 3,
+  "archive_screenshot_hash_checks": 9,
+  "privacy_scan": {
+    "utf8_members": 123,
+    "utf8_bytes": 6481727,
+    "credential_token": 0,
+    "private_context": 0
+  },
+  "method": "Saved API states and camera facts -> inverse quaternion -> explicit orthographic frustum/zoom -> CSS. No production projector, Three.js math, hit map, model or browser executed."
+}

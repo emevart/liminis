@@ -1,0 +1,11 @@
+{
+  "status": "PASS_BOUNDED_PATTERN_REVIEW",
+  "utf8Files": 127,
+  "decodedUtf8Bytes": 6488588,
+  "maximumUtf8FileBytes": 4753393,
+  "binaryFilesNotTextScanned": 1152,
+  "obviousCredentialPrivateChatOldVmFindings": [],
+  "actualOuterImagesViewed": 9,
+  "outerPlusNestedExpandedBytes": 101164861,
+  "qualification": "No combined-expanded64MiB claim. All nested entries bounded<16MiB; nestedexpanded54,917,653. UTF8 total bounded<64MiB; binary skipped text scan. Nine actualPNG viewed. No exhaustive guarantee that every possible secret is absent."
+}

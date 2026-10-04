@@ -1,0 +1,108 @@
+{
+  "status": "PASS",
+  "exactQaScriptTrace": true,
+  "gitExactHtmlBodies": 4,
+  "httpResponses": 166,
+  "originalOnlyLoopbackHttp200": true,
+  "authCookieHeaders": [],
+  "browserJsBodiesOmitted": 12,
+  "heldOriginalModuleTraceStored": true,
+  "apiStates": 90,
+  "actualStepPosts": 48,
+  "pageRows": [
+    {
+      "page": "page@336709c1892b47c191076834f82d09f4",
+      "closeStartTime": 1556.339,
+      "nativeGL": {
+        "creations": 1,
+        "calls": [
+          {
+            "canvasId": "chamber-3d",
+            "type": "webgl2",
+            "success": true
+          }
+        ],
+        "backend": {
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+        }
+      },
+      "unhandledBeforeClose": [],
+      "resources": 8
+    },
+    {
+      "page": "page@52f98518c21c9390cf959c85982e841e",
+      "closeStartTime": 29763.192,
+      "nativeGL": {
+        "creations": 1,
+        "calls": [
+          {
+            "canvasId": "chamber-3d",
+            "type": "webgl2",
+            "success": true
+          },
+          {
+            "canvasId": "chamber-3d",
+            "type": "webgl2",
+            "success": true
+          }
+        ],
+        "backend": {
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+        }
+      },
+      "unhandledBeforeClose": [],
+      "resources": 146
+    },
+    {
+      "page": "page@cadb86a4d99367aa4576982f7bdedc6c",
+      "closeStartTime": 30450.289,
+      "nativeGL": {
+        "creations": 0,
+        "calls": [],
+        "backend": null
+      },
+      "unhandledBeforeClose": [],
+      "resources": 7
+    },
+    {
+      "page": "page@7e65d162203142de789ee8f4d5374a0a",
+      "closeStartTime": 30827.421,
+      "nativeGL": {
+        "creations": 0,
+        "calls": [],
+        "backend": null
+      },
+      "unhandledBeforeClose": [],
+      "resources": 3
+    }
+  ],
+  "reported40AuditsExactTrace": true,
+  "reportedGeometryActualApiIds": true,
+  "nativeGlSnapshots": 44,
+  "emptyUnhandledPageSnapshots": 4,
+  "console": {
+    "errors": 1,
+    "expectedUnavailableError": true,
+    "warnings": 4,
+    "warningMeaning": "4softwareGPU stalls due to screenshot ReadPixels; no FPS claim",
+    "logs": 1
+  },
+  "traceCallErrors": 0,
+  "eventCounts": {
+    "context-options": 1,
+    "before": 1246,
+    "event": 8,
+    "after": 1246,
+    "frame-snapshot": 2362,
+    "log": 2911,
+    "screencast-frame": 1148,
+    "input": 270,
+    "console": 6
+  },
+  "directCdpCommands": "Not retained in standard Playwright trace; mandatory reviewed source and actual report retain CDPargv/touch-control result.",
+  "compositorPngQualification": "40runtime compositor checks/report hashes;9original full-pagePNG retained and viewed. Per-geometry canvasPNG buffers are not separately retained; trace1148screencast frames are JPEG."
+}

@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "originalBodiesFulfilledExact": [
+    {
+      "filename": "held-module.mjs",
+      "time": 2201.914,
+      "status": 200,
+      "bytes": 15849,
+      "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac",
+      "fulfillBodyExactOriginal": true
+    },
+    {
+      "filename": "held-history.json",
+      "time": 2614.19,
+      "status": 200,
+      "bytes": 130,
+      "sha256": "c7c996ce3f7f9a7f20775258b2ba0ae9a48bd4782e2d994d46c0f09fc42a8e87",
+      "fulfillBodyExactOriginal": true
+    }
+  ],
+  "shownCurrent2DTick1BeforeModuleReleaseTimes": [
+    2165.007
+  ],
+  "actual3DTick1AuditTimesBeforeHistoryRelease": [
+    2395.464,
+    2611.812
+  ],
+  "current2DBeforeModuleRelease": true,
+  "latestCurrent3DBeforeHistoryRelease": true
+}

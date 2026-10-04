@@ -1,0 +1,65 @@
+{
+  "status": "PASS_WITH_SCOPE",
+  "blockers": 0,
+  "other_findings": 0,
+  "source_head": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+  "source_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "workflow_run": "https://github.com/emevart/liminis/actions/runs/37238281987",
+  "original_archive_sha256": "e417e0a26e61a28315d080e0ea4b42153bd033d090449e9c52958b9301097e98",
+  "original_archive_bytes": 44944288,
+  "raw_report_sha256": "feb6a99a95359727338359588d833b25e99701dbdca86a69430282dc232af4fe",
+  "scope": "Independent saved actual API/camera/PNG geometry and numerical-state acceptance, following prior source review. No model, browser, Cargo or earlier1440-case source-oracle rerun.",
+  "detail": "geometry-integrity.json",
+  "mandatory_checks": 13,
+  "independent_calculations": {
+    "saved_trace_api_state_responses": 90,
+    "geometry_observations": 40,
+    "actual_si_center_projections": 384,
+    "maximum_projection_difference_css_pixels": 4.547473508864641e-13,
+    "maximum_camera_basis_difference": 2.220446049250313e-16,
+    "method": "Actual saved API xyz multiplied by one sceneScale; subtract camera translation, apply inverse unit quaternion, apply explicit orthographic frustum/zoom, then map to CSS viewport. Independently check lookAt direction, handedness, aspect, near/far membership, inclusive slice/layer membership and drawn revision/tick. No production projection matrices, Three.js helper or hit map used."
+  },
+  "independent_pixels": {
+    "representative_pngs": ["source-cube.png","desktop.png","mobile320.png"],
+    "center_probes": 38,
+    "box_edge_probes": 36,
+    "actual_axis_labels": 3,
+    "axis_label_position_tolerance_css_pixels": 0.02,
+    "screenshot_hashes_checked": 9,
+    "qualification": "Center observations include the two truly coincident daughters, so the probe count does not imply38 distinct projected locations. Three representative originals were viewed. A separate code/artifact reviewer inspects all9 images."
+  },
+  "numerical_state": {
+    "common_scale_and_nonsquare": "Cube100x100x100µm and dimensions-only nonsquare200x100x50µm use one common SI scale; equal orthographic screen scale is verified in all40 observations, including actual orbit, zoom, pan, reset and mobile aspect changes. Parsed fixture content differs only in dimensions_m. Both actual host volumes record1e-12m3; mathematical product equality is checked without a general cross-config binary-equality assertion.",
+    "snapshot_truth": "All geometry observations bind to real saved trace cells at the same tick and dimensions. API dt remains30s, seed42, world31; physical format2 records finite in-box positions, shared well-mixed chemistry and excluded_volume=false. Slice membership remains inclusive in all axes and exact for zero-width inputs; invisible/frustum-excluded/disabled/zero-opacity centers do not enter visible candidates.",
+    "atomic_latest_snapshot": "The real tick0-to1 Step commits readouts, inspector and geometry before the held original history response. Lazy module activation draws tick1. Each audited drawnTick/revision matches its committed snapshot. Existing same-tick identity/reset invalidation remains source/unit-regression evidence; the browser camera-reset gesture is not represented as a real no-persistence simulation reset.",
+    "division_selection": {"tick":47,"real_paused_steps_since_tick1":46,"parent_id":"5","daughter_ids":["16","17"],"candidate_ids":["16","17"],"inherited_positions_exactly_equal":true,"parent_absent_is_not_death":true,"living_cells":15,"births":14,"deaths":0,"divisions":7,"u64_qualification":"Runtime ties use actual IDs16/17. Extreme-u64 ordering is established by reviewed source and synthetic oracle, without fabricated high-ID browser cells."},
+    "draw_clock": "Actual paused tick1 holds identical compositor pixels/API at target30 and60 with respectively3 and2 state polls in approximately1.400s; single-flight polling is maintained. These are display targets, not achieved-FPS measurements.",
+    "layers_and_resources": "Full/0.2/zero opacity records212/42/0 contrast; fixed glyph size stays within7±2CSSpx through actual zoom. Six toggles preserve one context and15 current-population sprites with fixed shared resources. Bounded counters are not a proof of universal memory limits.",
+    "renderer_negative_controls": "Actual native-extension context loss retains current2D and a real Step to tick48; explicit WebGL-allocation refusal retains current API/inspector at tick48. Exactly one expected THREE context-creation console error belongs to that identified negative control; no page/unhandled/cleanup errors are present.",
+    "legacy": "Actual current chamber1 remains schematic2D without physical coordinates or WebGL asset requests. Existing separate15-check LIVE and12-check2D regressions also pass."
+  },
+  "integrity_and_source": {
+    "outer_members":18,
+    "nested_trace_members":1258,
+    "outer_and_nested_crc": "PASS",
+    "source_hash_checks":10,
+    "successful_trace_asset_requests":13,
+    "independently_checked_stored_trace_module_bodies":1,
+    "qualification": "Fulfilled vendor requests retain URL/status but do not store bodies in the trace. The exact pinned acceptance script records their served-byte hashes; local Git source hashes match. The held module is also checked byte-for-byte against Git and its actual stored trace body. Transport companion headea6bba6a only delivers the unchanged original; the browser source/run remain9d/37238281987."
+  },
+  "privacy": {
+    "utf8_members_scanned":123,
+    "utf8_bytes_scanned":6481727,
+    "obvious_credential_matches":0,
+    "private_old_context_matches":0,
+    "nonempty_sensitive_request_response_headers":0,
+    "qualification":"Bounded obvious-token/private-context UTF8 and structured-header scan only. Binary/PNG contents are not covered by a comprehensive secret guarantee."
+  },
+  "qualifications": [
+    "Actual WebGL2 backend is Chromium ANGLE/Vulkan SwiftShader software rendering. Pinned official Playwright1.61.1 launch supplies only enable-automation and retains chromiumSandbox; no listed sandbox opt-out switches occur. This does not attest kernel/container sandbox internals or hardware GPU performance.",
+    "Saved API point centers, visual Sprite size/opacity and shared well-mixed chemistry remain the interpretation. No bodies, hydrodynamic radius rendering, morphology, collisions, excluded volume, spatial chemistry, turbidity or science result is claimed.",
+    "Four Chromium viewport layouts are bounded acceptance. Achieved FPS, every device/accessibility behavior, native background scheduling and cross-platform floating-point equivalence remain unasserted.",
+    "Current physical LIVE world31/chamber2 is separate from accepted archived REC2 world30/chamber1. No archived observations, producer provenance, simulation core/configuration or conserved model quantities change.",
+    "Prior09 regression failure remains a distinct diagnostic. This report accepts the actual9d3D artifact and five9d regression artifacts separately; release/merge and provider/public-site gates remain the integrator's responsibility."
+  ]
+}
