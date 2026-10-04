@@ -329,3 +329,69 @@ code/numerics browserdecoder и publisher; затем подготовить sha
 everytick async observer/clock безmilliontimestamps, existingprotected realbrowser,
 freshmain exactCI и actualproduction acceptance. Old201samples допускаются
 только как явно подписанный sparseoverview/archive, не denseplayback.
+
+### Full миллион принят; bounded delivery в работе
+
+2026-10-04, 19:15 UTC. Native OWNERSHIP ACCEPTED сохраняется, прежние авторы
+STOPPED. Все перечисленные разрешения/immutable boundaries действуют.
+
+После main61d существующий run37223230012 завершилсяSUCCESS: все10 обязательных
+jobs, actualpublic4checksPASS и2PNG просмотрены. OriginalpublicZIP3440989bytes,
+SHA256`7f8f98e8d4ec0f067dfcd83583e6df97204d3d4afafa438f938dc02a3cb0a87f`
+сохранён в evidence ref `codex/native-physical-observer-evidence`, commit
+`5432dc91bfc376e9700546c86b745952331f51a5`; все6 originalZIP/63115812bytes
+перечитаны новой networkobjectDB, size/SHA/CRC PASS; manifestSHA
+`e075b6bf06c51b0ea4c17b9b5dc302ddd86d0d6019274238de77714358906481`.
+Это старое sparsepublicplayback на принятом main, не denseproductionPASS.
+
+Единственный полный1M export и full independent decode завершились PASS:
+1000001frames/3909chunks/2421968874originalbytes, gzip2420633565bytes;
+maxgzip1046955/maxdecoded4135813bytes. Export3058.079s/full decode1545.721s.
+Все603 архивных frame comparisons на561ticks,826 used genotype checks,
+полные known archive dictionaries и bothledger0 на1000000ticks PASS.
+Qualified sampled producer+packer RSS23429120bytes/waited max23621632bytes
+не обозначают общий peak всех процессов. Producer actualclean bb70/sourceb202/
+world30/chamber1/seed42/dt30 и binarySHA455101… сохранились без смены identity.
+
+После полногоPASS root выпустил закрытый pinned receiptSHA
+`0cff85b03a18a63efeea14bc617a13dee956ac69b84dfd305b492fba9e7db1bd`,
+public normalized reportSHA
+`af409a80ff61fecd4600c971fac21b3fbc1cb30cbfbdb24f43af225156f88f47`.
+Independent numerics receipt/report/source review0blockers; это доверенное
+root evidence, не cryptographic binary/kernelattestation. Числа не изменены,
+нормализованы только private runtime command paths; rawreportSHA сохранён.
+
+Cleanpublisher923ea079a8b26ce4a98a797ea582683708585655, tree59fc932…,
+выполнил actualLinuxFS no-replace probe и полную path-only публикацию всех3909
+gzip: всеsize/SHA/CRC/inflatedSHA повторно PASS, prefixgenotypesPASS,
+source receipt reused, decoded_frames_here0. Published complete total
+2424602694bytes со всей metadata <3000000000. SourceindexSHA44b142…,
+publishedindexSHA`c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b`,
+publicationSHA`48cf7367c19e3fed7669e0a26473f6ceb02b720d6d0e70d19f140a672aa6368b`.
+Исходныеgzip bytes unchanged; originalsindex/manifests/receipt сохранены.
+Нового modelrun или повторного full schema decode publisher не запускал.
+
+Combinedsource reviews0blockers: decoder bounded caches/abort/SHAstrings/
+failure diagnostics; asyncUI pausedprefetchstickyfailure/pagehide; Linuxpublisher
+FIFO/race fixes; catalog closedinventory/sharedprefix guard; protectedQA real
+measured1× wall/modeltime вместо hardcoded hold; official sandbox/pins сохранены.
+Source109Node/29Python/focusedfreshmainexamplecompilePASS, не browserPASS.
+Review выявил CIshallow missingarchivedhelperbd2; root23ce2dd добавил exact
+publishedSHA boundedfetch до29Python, independentreview0. Core/config/version/
+LAB/oldJSON/frozen unchanged, ADRmainprefix+110appendonly. Actualcombinedtree
+с complete data/catalog, fullCI/browser/evidence ещё pending.
+
+Remote staging branch создан connector от опубликованного main61d:
+`codex/dense-recorded-observer`. Первый partial2259chunks1399591759gzipbytes,
+commit`1db6d26c094ebf25be93fc7cca912a8a1137945a`/treebba18e9… загружается;
+catalog ещё старый, PR/main/deploy не обновлены. Второй boundedpush:
+1650chunks1021041806gzipbytes + metadata/catalog. Partialbranch не PASSdataset.
+Source/evidence docs: docs/experiments/dense-recording/million-2026-10-04 и
+docs/checkpoints/2026-10-04-dense-recorded-observer.md на staging candidate.
+
+Следующий конкретный шаг: закончить оба boundedpush и completeinventory/
+catalog checks; exacthead protectedbrowser/fullCI+independentactualartifacts,
+guardedmerge затем existingpublicdeployment/rawgzipbytes/capacity verification.
+Документированные hostinglimits не заменяют actualdeployment. СтарыеURL/SHA,
+LAB24 и все historicalevidence сохраняются. Автопробуждение послеactiveCloudturn
+всё ещё не подтверждено.
