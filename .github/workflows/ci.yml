@@ -21,6 +21,38 @@ jobs:
       - name: Validate recordings, catalog freshness, and download integrity
         run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs
 
+  live-browser:
+    name: live cells browser acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Evidence belongs to the PR candidate, not GitHub's synthetic merge.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Build actual pinned release host
+        run: cargo build --locked --release -p liminis
+      - name: Install pinned official browser test runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/liminis-browser" --no-save --package-lock=false playwright@1.61.1
+          "$RUNNER_TEMP/liminis-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Real live cells desktop and mobile browser acceptance
+        env:
+          LIMINIS_PLAYWRIGHT_MODULE: ${{ runner.temp }}/liminis-browser/node_modules/playwright
+          LIMINIS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/check_live_cells_browser.mjs
+      - name: Attach screenshots and exact-head browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-cells-browser-${{ github.event.pull_request.head.sha || github.sha }}
+          path: target/qa/live-browser/
+          if-no-files-found: warn
+          retention-days: 7
+
   check:
     name: build, lint, test
     runs-on: ubuntu-latest

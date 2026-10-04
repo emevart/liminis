@@ -120,3 +120,23 @@ LIVE-1 может быть опубликован как draft review candidate,
 остаётся закрыт до настоящей UI приёмки. Полный CI также ещё не завершён.
 `attach_artifact` не доступен; проверяемые результаты хранятся в этом checkpoint
 и воспроизводимом live acceptance script.
+
+
+## GitHub Candidate И Независимая Browser CI Приёмка
+
+Draft PR12 открыт через existing GitHub connector; прямой gitpush не имеет
+настроенной аутентификации, новые credentials не запрашивались. Первый remote
+head35392adfe2a5b0f637498d9f8a5f006af6aab254/tree31db427ceb92512a849aeb93ab9c34171514b1c5
+побайтно совпадает с проверенным локальным tree. Последующий narrow CI commit
+добавляет actual browser gate, не меняет core/live pacing semantics.
+
+Astra фактически вызван и одобрил существующий GitHub Actions Ubuntu runner:
+actual release cells и pinned Playwright1.61.1/его официальный Chromium в одном
+job; exact PRhead checkout (не syntheticmerge), report gitHEAD/tree/browser/scenario,
+скриншоты1440/590/420/320, held-pixel30/60comparison, HTTPcadence, realcontrols,
+console/pageerror assertions. `scripts/check_live_cells_browser.mjs` запускает
+только свой server/tempdata и убирает их. JSON/screenshots загружаются через
+existing actions/upload-artifact даже при падении. Exactfavicon404 называется
+resourceWarning, прочие browsererrors fail. Independent review workflow/script:
+blockers0 после fixes importdir/headassert/UIrace. Actual browser job пока pending;
+merge gate закрыт до PASS и визуального просмотра артефактов точного кандидата.
