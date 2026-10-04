@@ -214,14 +214,29 @@ struct State {
     error: Option<String>,
     capture_bytes: usize,
     capture_ms: f64,
+    skipped_observations: u64,
     history: History,
 }
+
+/// Temporary backpressure: no checkpoint was accepted or acknowledged.
+#[derive(Debug)]
+pub(crate) struct QueueBusy;
+
+impl std::fmt::Display for QueueBusy {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str("cell storage queue is busy")
+    }
+}
+
+impl std::error::Error for QueueBusy {}
 
 enum Job {
     Sample(CellMetric),
     Checkpoint(Vec<u8>, Box<CheckpointInfo>, Option<CellMetric>),
     #[cfg(test)]
     Barrier(mpsc::SyncSender<()>),
+    #[cfg(test)]
+    Block(mpsc::SyncSender<()>, mpsc::Receiver<()>),
 }
 
 pub(crate) struct CellsStorage {
@@ -387,6 +402,11 @@ impl CellsStorage {
                             Job::Barrier(done) => {
                                 let _ = done.send(());
                             }
+                            #[cfg(test)]
+                            Job::Block(started, release) => {
+                                let _ = started.send(());
+                                let _ = release.recv();
+                            }
                         }
                     }
                     Ok(())
@@ -450,6 +470,7 @@ impl CellsStorage {
             "capture_bytes": state.capture_bytes,
             "capture_ms": state.capture_ms,
             "history_samples": state.history.count,
+            "skipped_observations": state.skipped_observations,
         })
     }
 
@@ -466,8 +487,9 @@ impl CellsStorage {
         .expect("serializing cell history contract")
     }
 
-    /// Enqueues one actual observation. A full queue is a visible busy result,
-    /// not a fabricated sample or a fatal disk error.
+    /// Enqueues one optional actual observation. A saturated bounded queue skips
+    /// it visibly without stopping the culture; history counts persisted samples.
+    /// Checkpoint requests and real storage failures retain their stronger contract.
     pub(crate) fn sample(&mut self, metric: CellMetric) -> Result<()> {
         validate_metric(&metric)?;
         if let Some(error) = self.error() {
@@ -490,10 +512,9 @@ impl CellsStorage {
                 Ok(())
             }
             Err(mpsc::TrySendError::Full(_)) => {
-                let message =
-                    "cell history queue is full; no observation was discarded silently".to_string();
-                state_lock(&self.state).error = Some(message.clone());
-                bail!(message)
+                let mut state = state_lock(&self.state);
+                state.skipped_observations = state.skipped_observations.saturating_add(1);
+                Ok(())
             }
             Err(mpsc::TrySendError::Disconnected(_)) => {
                 let message = "cell storage worker is unavailable".to_string();
@@ -554,7 +575,7 @@ impl CellsStorage {
             }
             Err(mpsc::TrySendError::Full(_)) => {
                 state_lock(&self.state).saving = false;
-                bail!("cell storage queue is busy")
+                Err(QueueBusy.into())
             }
             Err(mpsc::TrySendError::Disconnected(_)) => {
                 let message = "cell storage worker is unavailable".to_string();
@@ -571,6 +592,31 @@ impl CellsStorage {
     }
 
     #[cfg(test)]
+    pub(crate) fn test_make_autosave_due(&mut self) {
+        self.last_capture = Instant::now() - AUTOSAVE;
+    }
+
+    /// Holds the writer and fills its single pending slot until released.
+    #[cfg(test)]
+    pub(crate) fn test_block_worker(&self) -> mpsc::SyncSender<()> {
+        self.flush().expect("flush before holding storage worker");
+        let (started, ready) = mpsc::sync_channel(0);
+        let (release, blocked) = mpsc::sync_channel(0);
+        self.sender
+            .send(Job::Block(started, blocked))
+            .expect("enqueue test storage hold");
+        ready
+            .recv_timeout(Duration::from_secs(5))
+            .expect("storage worker entered test hold");
+        let (done, receiver) = mpsc::sync_channel(0);
+        drop(receiver);
+        self.sender
+            .try_send(Job::Barrier(done))
+            .expect("fill held storage queue");
+        release
+    }
+
+    #[cfg(test)]
     fn flush(&self) -> Result<()> {
         if let Some(error) = self.error() {
             bail!(error);
@@ -578,7 +624,7 @@ impl CellsStorage {
         let (sender, receiver) = mpsc::sync_channel(0);
         self.sender
             .send(Job::Barrier(sender))
-            .context("cell storage worker is unavailable")?;
+            .map_err(|_| anyhow::anyhow!("cell storage worker is unavailable"))?;
         receiver
             .recv_timeout(Duration::from_secs(30))
             .context("cell storage flush did not finish within 30 seconds")?;
