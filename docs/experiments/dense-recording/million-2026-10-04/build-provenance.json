@@ -1,0 +1,18 @@
+{
+  "producer_head": "bb70c9eb448b55ef3f50dfd6cd2a70213157bd8d",
+  "producer_tree": "93975cb83da179e15c60e937772bf9b656e5279b",
+  "engine_ref": "b2024cef08f0aa910a711a41c6a37fbc7b2ba35a",
+  "legacy_recording_ref": "43f4a2df25c356ff387b71ac1961b516975f999b",
+  "build_command": "cargo build --locked --release -p liminis --example export_dense_cell_replay",
+  "build_elapsed_seconds": 0.04,
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+  "binary_sha256": "455101bd41793dfdd76334c9e1f3205f785467563a545d1804b60114ff669c56",
+  "binary_bytes": 2767960,
+  "source_refusal_checks": "Same Rust producer bytes as bd2a7f25 previously black-box tested. Current runtime repeats clean_HEAD/archive_objects checks before header.",
+  "actual_model_steps": 0,
+  "codec_author_fixture_tests": 17,
+  "build_attestation": "Coordinator observed clean-source compilation and binary hash; not a standalone runtime attestation",
+  "scope": "Only Python/docs total budgets revised by user accepted decimal3GB cap; Rust/core/config/Cargo/toolchain unchanged; source/code/numerics reviews0blockers.",
+  "private_raw_report_sha256": "24314473b8fe7d2705246422fd086817c34dff89b6adcb39f1f3a0c572db8ce1",
+  "build_context": "Clean producer checkout, pinned Rust1.97.1, isolated CARGO_TARGET_DIR; public command paths normalized. Incremental build reused the unchanged compiled Rust source; this is observed provenance, not runtime binary attestation."
+}

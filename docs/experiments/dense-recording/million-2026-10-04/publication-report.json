@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "publisher_commit": "923ea079a8b26ce4a98a797ea582683708585655",
+  "publisher_tree": "59fc932ab33a6868484abf70ea50c5d9c8bff2af",
+  "publication_sha256": "48cf7367c19e3fed7669e0a26473f6ceb02b720d6d0e70d19f140a672aa6368b",
+  "publication_bytes": 1254602,
+  "artifact_bytes": 2424602694,
+  "source_index_sha256": "44b142721927011cef693ba75bb9867d928d6a1d9cd172f050f2bf54832685b9",
+  "published_index_sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+  "chunks": 3909,
+  "source_validation": {
+    "method": "externally_pinned_full_decode_receipt",
+    "all_gzip_size_sha_crc_inflated_sha_checked": true,
+    "decoded_frames_here": 0,
+    "external_receipt_sha256": "0cff85b03a18a63efeea14bc617a13dee956ac69b84dfd305b492fba9e7db1bd",
+    "validation_report_sha256": "af409a80ff61fecd4600c971fac21b3fbc1cb30cbfbdb24f43af225156f88f47"
+  },
+  "scope": "Actual path-only publication with complete file/hash/CRC checks, no new model steps. Network and browser acceptance pending."
+}

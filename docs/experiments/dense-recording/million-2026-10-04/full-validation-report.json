@@ -1,0 +1,94 @@
+{
+  "status": "PASS",
+  "producer_head": "bb70c9eb448b55ef3f50dfd6cd2a70213157bd8d",
+  "binary_sha256": "455101bd41793dfdd76334c9e1f3205f785467563a545d1804b60114ff669c56",
+  "commands": {
+    "producer": [
+      "target/release/examples/export_dense_cell_replay",
+      "--producer-commit",
+      "bb70c9eb448b55ef3f50dfd6cd2a70213157bd8d",
+      "--steps",
+      "1000000"
+    ],
+    "packer": [
+      "python3",
+      "-B",
+      "scripts/dense-recording-pack.py",
+      "--output-dir",
+      "target/dense/pilot-1000000",
+      "--max-total-bytes",
+      "3000000000"
+    ]
+  },
+  "steps": 1000000,
+  "frames": 1000001,
+  "chunks": 3909,
+  "artifact_bytes": 2421968874,
+  "manifests": [
+    {
+      "path": "horizon-10000.json",
+      "bytes": 18450,
+      "sha256": "85ef3ae01c4a938023b3027cae18d4346f1bcc4deb1bb84b3dd74c14fc4c7ffc",
+      "first_tick": 0,
+      "last_tick": 10000,
+      "frames": 10001
+    },
+    {
+      "path": "horizon-100000.json",
+      "bytes": 124765,
+      "sha256": "57a3cb21f7384fc8e0d38466926cd0a2ec57266c3bf9ea179d55feed9745cf7c",
+      "first_tick": 0,
+      "last_tick": 100000,
+      "frames": 100001
+    },
+    {
+      "path": "horizon-1000000.json",
+      "bytes": 1190117,
+      "sha256": "f6fe405247b1192174df124fd4730815a9ef531933941093ae323043d5d5238c",
+      "first_tick": 0,
+      "last_tick": 1000000,
+      "frames": 1000001
+    }
+  ],
+  "index_bytes": 1977,
+  "index_sha256": "44b142721927011cef693ba75bb9867d928d6a1d9cd172f050f2bf54832685b9",
+  "gzip_bytes": 2420633565,
+  "decoded_payload_bytes": 8502264552,
+  "max_gzip_chunk_bytes": 1046955,
+  "max_decoded_chunk_bytes": 4135813,
+  "export_pack_elapsed_seconds": 3058.0787904530007,
+  "full_decode_elapsed_seconds": 1545.7210627000022,
+  "sampled_producer_plus_packer_peak_rss_bytes": 23429120,
+  "waited_children_max_rss_bytes": 23621632,
+  "memory_limits": "Sampled RSS sum excludes grandchildren; waited max RSS is maximum for an individual waited child, not aggregate simultaneous RSS.",
+  "decoded_frames": 1000001,
+  "unique_archival_control_ticks": 561,
+  "archival_frame_comparisons": 603,
+  "used_genome_definition_checks": 826,
+  "legacy_sources": [
+    {
+      "filename": "cell-chamber-seed-42.json",
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+      "control_frames": 201
+    },
+    {
+      "filename": "cell-chamber-seed-42-100k.json",
+      "sha256": "b8db46c1dc83f8cd642ee2a3bd7913890e6868e265c61a8d390797399b37a4c9",
+      "control_frames": 201
+    },
+    {
+      "filename": "cell-chamber-seed-42-1m.json",
+      "sha256": "ee236189e9b6891599bc428aefb0e4b892c7397e712bcf045f7db14a5bc4061d",
+      "control_frames": 201
+    }
+  ],
+  "ledger": {
+    "checked_ticks": 1000000,
+    "matter_residual_max": "0",
+    "energy_residual_max": "0"
+  },
+  "provider_limits_verified": false,
+  "private_raw_report_sha256": "a42f461830be88417671352f8d1c9082cadfaf085b7cdd0423d203139baa88a5",
+  "command_paths": "Public paths normalized relative to the clean producer checkout; source parameters, values and measured results unchanged. Raw runtime path context stays in native workspace.",
+  "observed_validation_harness_sha256": "e3534cbfa2c9102e1d90cc524562dd3e9f73636107d5f1da7f97161071e73396"
+}

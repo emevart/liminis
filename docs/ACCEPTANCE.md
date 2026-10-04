@@ -1673,3 +1673,36 @@ Desktop/mobile/shortviewport реальныеPNG, trace и report публику
 после cleanup verdict; code/geometry review независимо от authors. Срез только
 фильтрует центры в изображении; он не меняет volumes, biology, numericbudget
 или savedpositions. Everytick publicrecording является другим отдельным этапом.
+
+## REC-2: lossless every-tick архивные записи (ADR-110)
+
+Каждый реальный tick0…H для H=10000/100000/1000000; один shared trajectory,
+старые JSON/URL/SHA неизменны. Source identity world30/chamber1 и clean archival
+producer закрепляются отдельно от нынешнего main/world31. Полный native
+последовательный decode обязан восстановить H+1states, точно сравнить все
+общие архивные frames/known genomes, подтвердить оба producer ledger0 и cap.
+Проверенный externally pinned coordinator receipt допускает publisher reuse
+без повторной симуляции/decode; все gzip size/SHA/CRC/inflated SHA всё равно
+перечитываются. Path-only sharding и полная metadata входят в3000000000bytes.
+
+Source gates: `python3 scripts/dense-recording-tests.py` и
+`node --test site/*.test.mjs scripts/cell-viewer.test.mjs`. Закреплённый catalog
+строится только из complete closed inventory, хеширует каждый bounded файл,
+проверяет shared prefixes/provenance и immutable archive. Это не browser PASS.
+
+`node scripts/check_dense_recording_browser.mjs` выполняется только в существующем
+protected pinned Chromium job с chromiumSandbox/CDP argv и expected HEAD/tree.
+Обязательны настоящие saved Python reference frames/negative transport controls,
+native fetch abort и stale intents, delayed original chunk255→256, actual
+endpoints всех трёх horizons, requested/validated tick separation, held pixels,
+измеренная1× model/wall скорость, display30/60, bounded caches, mobile/desktop
+PNG/trace и final cleanup/error verdict. Никакие ответы/states не фабрикуются.
+BFCache wiring unit check именуется synthetic; native BFCache PASS не заявляется.
+
+Существующий public browser gate отдельно проверяет deployed catalog/index/
+manifest/module/gzip SHA, реальные browser response bytes и dense Next0→1,
+1×/held state. Известная фиксированная Cloudflare analytics insertion проверяется
+по отдельному source pin и блокируется; analytics execution PASS не заявляется.
+Документированные hosting limits не заменяют actual upload/deployment verdict.
+Evidence и pending boundaries:
+`docs/checkpoints/2026-10-04-dense-recorded-observer.md`.
