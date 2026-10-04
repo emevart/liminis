@@ -1716,3 +1716,38 @@ manifest/module/gzip SHA, реальные browser response bytes и dense Next0
 Документированные hosting limits не заменяют actual upload/deployment verdict.
 Evidence и pending boundaries:
 `docs/checkpoints/2026-10-04-dense-recorded-observer.md`.
+
+## LIVE-3b: ортографический Three.js observer реальных центров (ADR-111)
+
+Chamber2 получает opt-in3D при прежнем2D default; chamber1 остаётся schematic.
+Model/core/config/version, сохранённые координаты и архивные записи неизменны.
+`node --test scripts/cell-viewer.test.mjs scripts/cell-viewer-3d.test.mjs`
+проверяет common xyz scale/finite geometry, exact ID/candidate sorting,
+camera revision и gesture/lifecycle boundaries. Focused host tests проверяют
+literal local module routes, byte pins/import closure и JavaScript MIME.
+Эти source checks не являются browser PASS.
+
+`node scripts/check_physical_3d_browser.mjs` работает только в существующем
+protected official pinned Chromium с clean expected HEAD/tree и CDP argv guard.
+Требуется actual WebGL2/backend, независимый API→canvas-pixels oracle для cube
+и temporary nonsquare fixture с тем же volume product, handedness/z/common
+SI scale/aspect/µm и actual camera pointer rotation. Production hit-map или
+Three.js projection helpers не являются independent expected geometry.
+
+Paused rotate/zoom/pan/reset/slice/layers/opacity и draw30/60 не меняют
+actual tick/positions/dt/pacing и не создают modelcontrols/extra polling.
+Delayed original history после настоящего Step проверяет атомарные
+geometry/readouts/inspector. Actual bounded Steps дают настоящих coincident
+daughters без fabricated API; short-click/cancel/drag-return и keyboard
+проверяют projected candidates по distance затем exact BigInt ID. Hidden,
+outside slice/view и absent IDs имеют разные честные статусы.
+
+Actual compositor pixels подтверждают opacity/layers и отсутствие hidden hit
+targets, counts/data остаются прежними. Полная vendored import closure и SHA,
+отсутствие внешних dependency requests, один context/current-population
+resources, explicit current2D fallback при unavailable/loss входят в gate.
+Synthetic GPU-loss control подписан отдельно; software GPU не hardware FPS.
+Desktop/short/390/320 PNG, trace/report и итоговые cleanup/errors публикуются
+на exact candidate, source/artifacts принимает независимый reviewer.
+Существующие chamber1/livephysical/2D projection gates сохраняются.
+Scope/pending: `docs/checkpoints/2026-10-04-live-physical-observer-3d.md`.
