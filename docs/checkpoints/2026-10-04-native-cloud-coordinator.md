@@ -676,3 +676,38 @@ source checks; actual LAB browser/fullCI/independent acceptance ещё pending.
 Поручение пользователя сохраняет write-go и делегирует решения Astra.
 Следующий шаг: narrow QA repair/review, LAB source integration и один
 fresh protected exact-head CI; merge только после green независимой приёмки.
+
+### LAB-3a exact source опубликован, один fresh CI в работе
+
+2026-10-04, 23:28 UTC. Draft PR21:
+`79df352a045cf7dd0efc14a232e867365c7b75a7`, tree
+`0c9b9a5530111e418e49a675a946b5f007367c21`,
+https://github.com/emevart/liminis/actions/runs/37243706546.
+Data/UI/QA authors clean published и завершены. Root integration объединён
+normal cherry-pick; homepage Lab link, builder freshness/focused checks и
+новый LAB gate в existing protected recorded job добавлены root. Observer
+HTML/knownEdgeInsertion/source pins остаются byte-exact; production3D/core/
+config/frozen/rawLAB/oldREC сохранены. Integratedpreflight160pairedrecords,
+all24/4044/3raw pins PASS, actual browser ещё NOT_RUN.
+
+Отдельный QA-only repair commit3d48f47 сохраняет whole exact dimensions+
+RGBA/all3originals и pre/post actualAPI/camera/viewport/mode/revision/layers,
+diffcount/bounds до assertions;4 focused PNG controls PASS, independent
+source review0. Astra одобрил один полный CI без пропуска mandatoryjobs;
+production3D не правился и oldmainFAIL не relabel. LAB numerical review
+независимо проверил3672 differences+2835 range/count records по raw24,
+без импортов producer/validator/UI; итоговый source verdict оформляется.
+Astra source/UX architecture0; actual mobile PNG должны подтвердить
+читаемость осей, source/Node её не доказывают. Merge/publicLAB pending.
+
+Оба новых main originals и собственные diagnostic/public reviews сохранены
+в evidence-only `codex/native-main-3d-followup-evidence-20261004`, commit
+`7500fadc65aa8639f0c31820ed9a7b5654cea76f`, tree
+`3dff3a5abc8707f5326d0482bcd81862833e7a90`. Original main3D FAIL и public
+qualified PASS остаются раздельными. Новый независимый Git object database
+без alternates: closed17files/2ZIP size/SHA/CRC PASS; published24,084,194B
+сmanifest<64MiB, manifestSHA256
+`03076ccab35263b905a29465649a6aada415bc45b294f71f80464bc9e9e4016d`.
+Small readback: `docs/experiments/handoff/main-3d-followup-network-readback.json`.
+Следующий шаг — exactCI и originalfixed3D/LAB artifact acceptance;
+public LAB QA подготовка обсуждается с Astra отдельно от production candidate.

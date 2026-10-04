@@ -1,0 +1,117 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "7500fadc65aa8639f0c31820ed9a7b5654cea76f",
+  "archive_tree": "3dff3a5abc8707f5326d0482bcd81862833e7a90",
+  "closed_inventory": true,
+  "manifest_sha256": "03076ccab35263b905a29465649a6aada415bc45b294f71f80464bc9e9e4016d",
+  "file_count": 17,
+  "unique_bytes_excluding_manifest": 24080466,
+  "original_zip_count": 2,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1915,
+      "sha256": "c56e92aaee1fcc246b3ed2d6b0f944dba441e9fe9ba2472610f014dd5559861d",
+      "verified": true
+    },
+    {
+      "path": "diagnostic-code/REVIEW.md",
+      "bytes": 4714,
+      "sha256": "29d398101fde359eda38ebe5b9adc85b3293848ac15e046b2e82284755312313",
+      "verified": true
+    },
+    {
+      "path": "diagnostic-code/diagnostic-review.json",
+      "bytes": 4688,
+      "sha256": "4911d200c5e13baded9cd02b7ca36c506df00c6c915f8d13f7995b1018df9f7a",
+      "verified": true
+    },
+    {
+      "path": "diagnostic-code/held-history.json",
+      "bytes": 130,
+      "sha256": "2bf7a9322b1d8a22ace60d63980f8d0ddd92bf37963946e809c3d06659c35a9d",
+      "verified": true
+    },
+    {
+      "path": "diagnostic-code/nonsquare-state.json",
+      "bytes": 10016,
+      "sha256": "de0a765262b1ad7ed4c9cc931dac62d5201c73351c304ac6780e329c06ddbd48",
+      "verified": true
+    },
+    {
+      "path": "diagnostic-code/report.json",
+      "bytes": 125208,
+      "sha256": "0340d94b3c5d44b15c3b9339ab44e671687a88169f062fe461903bfc76f07f2b",
+      "verified": true
+    },
+    {
+      "path": "diagnostic-code/source-cube-state.json",
+      "bytes": 10016,
+      "sha256": "46d78a24d81e32c73686bcfb45e3e9ea25614558a0275b6093d3e259669fccf6",
+      "verified": true
+    },
+    {
+      "path": "original-11317418838/download-integrity.json",
+      "bytes": 2033,
+      "sha256": "d73990cc379be0d96bf35d3b4ad5d47797d63ffebee0585ea7c715f9114b4bd3",
+      "verified": true
+    },
+    {
+      "path": "original-11317418838/evidence.json",
+      "bytes": 68376,
+      "sha256": "7e3a0387a66464accab4a1330650ebd970cf6a4c70276aadd543f7047e457b91",
+      "verified": true
+    },
+    {
+      "path": "original-11317433841/download-integrity.json",
+      "bytes": 3462,
+      "sha256": "3c8458b0ba9ae42c4f63a11229215c5d9755e90ae0274111909851df03227ac2",
+      "verified": true
+    },
+    {
+      "path": "original-11317433841/report.json",
+      "bytes": 125208,
+      "sha256": "0340d94b3c5d44b15c3b9339ab44e671687a88169f062fe461903bfc76f07f2b",
+      "verified": true
+    },
+    {
+      "path": "physical-3d-browser-5beaafb2c4f717862b62e67fd3e23e7d81860535-original.zip",
+      "bytes": 18078055,
+      "sha256": "71ab3e8085e7c13e49920b4b505e118c0df882d3ee89678c66b528a2e8e874ab",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "public-playback-5beaafb2c4f717862b62e67fd3e23e7d81860535-original.zip",
+      "bytes": 5634585,
+      "sha256": "7686895bf55e00810d676aeaf2ebd948bc68678481c238eebe26fb1b82cc7d1f",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "public-review/integrity.json",
+      "bytes": 2268,
+      "sha256": "d11716f43ccd50df1da1a316a27d3a12f1505713251b5ae63ef97fd13c72dc83",
+      "verified": true
+    },
+    {
+      "path": "public-review/review.json",
+      "bytes": 5131,
+      "sha256": "c6ce28ff34e7b92af96454c130ac28c64a2b05a9a95a7a448a3960e0e0eafba8",
+      "verified": true
+    },
+    {
+      "path": "public-review/review.md",
+      "bytes": 4661,
+      "sha256": "35e71d0bd97c120c5910d8989c55ee4c5823fcdeba350e67c541fc1bb349100c",
+      "verified": true
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}
