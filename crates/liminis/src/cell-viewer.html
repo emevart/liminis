@@ -38,6 +38,8 @@
       .stage-head { position:absolute; z-index:2; top:15px; left:17px; pointer-events:none; }
       .stage-head h1 { margin:1px 0 0; font-size:22px; font-weight:550; }
       .stage-head strong { color:var(--mint); font-size:28px; font-weight:600; }
+      .stage-caption { position:absolute; z-index:2; top:82px; left:17px; right:17px; max-width:54ch; color:var(--muted); font-size:11px; pointer-events:none; }
+      .stage-caption p { margin:0 0 5px; }
       .stage-meta { position:absolute; z-index:2; left:17px; right:17px; bottom:13px; display:flex; gap:5px 14px; flex-wrap:wrap; color:var(--muted); pointer-events:none; }
       .event-mark { position:absolute; z-index:2; top:18px; right:18px; color:#b9c8c0; text-align:right; pointer-events:none; }
       .side { min-height:0; overflow:auto; border-left:1px solid var(--rule); background:var(--surface); }
@@ -120,9 +122,10 @@
       </header>
       <div class="offline" id="offline" data-open="0">No cell host answering on this port.</div>
       <main class="workspace">
-        <section class="stage" aria-label="Well-mixed cell chamber">
-          <canvas id="chamber" tabindex="0" aria-label="Living cells in a well-mixed chamber. Select a cell to inspect it."></canvas>
-          <div class="stage-head"><span class="micro">Well-mixed chamber</span><h1><strong id="cell-count">0</strong> living cells</h1></div>
+        <section class="stage" aria-label="Cell culture inventory schematic">
+          <canvas id="chamber" tabindex="0" aria-label="Schematic inventory of living cells, not physical coordinates. Select a cell to inspect it."></canvas>
+          <div class="stage-head"><span class="micro">Culture inventory</span><h1><strong id="cell-count">0</strong> living cells</h1></div>
+          <div class="stage-caption"><p>Culture inventory schematic. Icon placement does not represent physical coordinates.</p><p id="physical-state-note" hidden>Physical positions are saved; chemical resources remain shared and well mixed.</p></div>
           <div class="event-mark num" id="event-mark">—</div>
           <div class="stage-meta num"><span id="volume">— m³</span><span id="temperature">— K</span><span id="sim-time">model time — s</span><span id="dt">dt — s</span><span id="event-totals">—</span></div>
         </section>
@@ -213,7 +216,7 @@
           roundRect(ctx,-length/2-3,-thickness/2-3,length+6,thickness+6,(thickness+6)/2);ctx.stroke();ctx.restore();
           view.hits.push({id:cell.id,x,y,r:Math.max(8,length*.62)});
         }
-        $("chamber").setAttribute("aria-label",`${cells.length} living cells in a well-mixed chamber. Select a cell to inspect it.`);
+        $("chamber").setAttribute("aria-label",`${cells.length} living cells in a schematic inventory, not physical coordinates. Select a cell to inspect it.`);
       }
 
       function addPair(list,key,value){const dt=document.createElement("dt"),dd=document.createElement("dd");dt.textContent=key;dd.textContent=value;dd.className="num";list.append(dt,dd);}
@@ -263,7 +266,7 @@
 
       function renderSave(){const p=view.state?.persistence,status=$("save-status"),button=$("save");if(view.saveRequest&&view.pollSerial>view.saveRequest.serial&&!p?.saving&&!view.state?.save_pending&&p?.saved_tick!=null&&finite(p.saved_tick)>=view.saveRequest.tick){view.saveRequest=null;view.saveError=null;}if(p?.error)view.saveRequest=null;const error=view.saveError||p?.error,saving=!!p?.saving||!!view.state?.save_pending||!!view.saveRequest;button.disabled=saving||!p?.enabled;status.dataset.state=error?"error":saving?"saving":"saved";if(error){status.textContent=`error · ${error}`;status.title=error;}else if(saving){status.textContent=`${view.state?.save_pending?"queued":"saving"} ${view.saveRequest?.tick??view.state.tick}`;}else if(p?.saved_tick!=null){status.textContent=`saved ${p.saved_tick}`;status.title=p.saved_at?new Date(p.saved_at).toLocaleString():"";}else status.textContent="not saved";}
       function renderState(){
-        const s=view.state;if(!s)return;$("scenario").textContent=s.scenario;$("seed").textContent=s.seed;$("hash").textContent=s.config_hash;$("wfv").textContent=s.world_format_version;$("tick").textContent=finite(s.tick).toLocaleString("en-US");$("tps").textContent=format(s.measured_tps);$("actual-speed").textContent=`×${format(s.measured_multiplier)}`;$("target-speed").textContent=s.pacing?.mode==="maximum"?"Maximum":`×${format(s.pacing?.multiplier)} / ${format(s.target_tps)}`;$("dt").textContent=`dt ${format(s.dt_seconds)} s`;$("generation").textContent=String(s.summary?.generation_max??0);$("matter").textContent=s.residual?.matter??"—";$("energy").textContent=s.residual?.energy??"—";$("cell-count").textContent=finite(s.summary?.living_cells).toLocaleString("en-US");$("volume").textContent=`${format(s.model?.volume_m3)} m³`;$("temperature").textContent=`${format(s.model?.temperature_k)} K`;$("sim-time").textContent=`model time ${format(s.sim_time)} s`;$("event-totals").textContent=`${finite(s.summary?.births)} born · ${finite(s.summary?.deaths)} died · ${finite(s.summary?.divisions)} divisions`;$("live").dataset.live=String(s.running&&s.alive!==false?1:0);$("live-label").textContent=s.error?"simulation error":s.alive===false?"stopped":s.running?"evolving":"paused";
+        const s=view.state;if(!s)return;$("scenario").textContent=s.scenario;$("seed").textContent=s.seed;$("hash").textContent=s.config_hash;$("wfv").textContent=s.world_format_version;$("tick").textContent=finite(s.tick).toLocaleString("en-US");$("tps").textContent=format(s.measured_tps);$("actual-speed").textContent=`×${format(s.measured_multiplier)}`;$("target-speed").textContent=s.pacing?.mode==="maximum"?"Maximum":`×${format(s.pacing?.multiplier)} / ${format(s.target_tps)}`;$("dt").textContent=`dt ${format(s.dt_seconds)} s`;$("generation").textContent=String(s.summary?.generation_max??0);$("matter").textContent=s.residual?.matter??"—";$("energy").textContent=s.residual?.energy??"—";$("cell-count").textContent=finite(s.summary?.living_cells).toLocaleString("en-US");$("physical-state-note").hidden=!s.model?.spatial_positions;$("volume").textContent=`${format(s.model?.volume_m3)} m³`;$("temperature").textContent=`${format(s.model?.temperature_k)} K`;$("sim-time").textContent=`model time ${format(s.sim_time)} s`;$("event-totals").textContent=`${finite(s.summary?.births)} born · ${finite(s.summary?.deaths)} died · ${finite(s.summary?.divisions)} divisions`;$("live").dataset.live=String(s.running&&s.alive!==false?1:0);$("live-label").textContent=s.error?"simulation error":s.alive===false?"stopped":s.running?"evolving":"paused";
         $("play").innerHTML=s.running?'<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="4" height="16" x="6" y="4" rx="1"/><rect width="4" height="16" x="14" y="4" rx="1"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>';$("play").setAttribute("aria-label",s.running?"Pause simulation":"Run simulation");$("play").title=s.running?"Pause":"Run";
         if(document.activeElement!==$("reset-seed"))$("reset-seed").value=s.seed;if(document.activeElement!==$("speed")&&Number.isFinite(s.pacing?.multiplier))$("speed").value=String(s.pacing.multiplier);$("maximum").setAttribute("aria-pressed",String(s.pacing?.mode==="maximum"));renderSave();renderInspector();renderResources();renderEvents();renderCharts();
       }

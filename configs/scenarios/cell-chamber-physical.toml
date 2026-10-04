@@ -1,0 +1,157 @@
+# Opt-in format-2 dilute point-cell chamber with persisted physical positions.
+# Uncalibrated CH2O-equivalent biology; common well-mixed chemical pools.
+# Passive Brownian transport has reflecting point-center walls, no excluded
+# volume, collisions, adhesion, spatial resources or morphology.
+chamber_format = 2
+name = "cell-chamber-physical"
+dt = 30.0
+extent_fraction = 0.015625
+
+[conserved]
+C = 12.01070
+H = 1.007940
+O = 15.99940
+
+[chamber]
+temperature_k = 298.15
+max_cells = 512
+# Independently capped reservoir exchange, 1/s. This is not a coupled
+# fixed-volume chemostat flow; each free pool approaches its declared target
+# with a per-tick cap derived from that substance's max_conc.
+medium_exchange_per_s = 2.0e-6
+
+[chamber.spatial]
+# 100 micrometers on each axis; derived volume is (x*y)*z in m^3.
+dimensions_m = [1.0e-4, 1.0e-4, 1.0e-4]
+# Declared prototype viscosity, Pa*s; not a calibration of living cells.
+viscosity_pa_s = 1.0e-3
+
+[growth]
+id = "aerobic_growth"
+enthalpy_j_per_extent = -459340.0
+biomass_substance = "BIO"
+limiting_substance = "FOOD"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { BIO = 1, CO2 = 1, WATER = 1 }
+
+[death]
+detritus_substance = "DET"
+
+# Only kinetics mutates. Spatial radius/mobility and physiology are copied
+# into both daughters; no phenotype constant is supplied by the step code.
+[genome]
+kinetics_min = -4
+kinetics_max = 4
+mutation_probability = 0.02
+mutation_step = 1
+speed_factor_per_step = 1.35
+affinity_cost_per_step = 1.8
+
+[founder]
+count = 8
+structural_mass_mol = 3.0e-14
+internal_energy_j = 5.0e-12
+
+[founder.genome]
+kinetics = 0
+max_growth_rate_per_s = 5.0e-4
+uptake_km_mol_m3 = 0.05
+division_mass_mol = 6.0e-14
+maintenance_power_w = 5.0e-16
+capture_numerator = 1
+capture_denominator = 1000
+division_energy_j = 1.0e-12
+starvation_tolerance_s = 3600.0
+
+[founder.genome.spatial]
+# Equivalent hydrodynamic radius at division, m; uncalibrated prototype.
+radius_at_division_m = 1.0e-6
+mobility_scale = 1.0
+
+[initial.concentration]
+WATER = 55500.0
+FOOD = 10.0
+O2 = 2.0
+CO2 = 0.01
+DET = 0.0
+BIO = 0.0
+
+[medium.concentration]
+WATER = 55500.0
+FOOD = 10.0
+O2 = 2.0
+CO2 = 0.01
+DET = 0.0
+BIO = 0.0
+
+[[substance]]
+id = "WATER"
+composition = { H = 2, O = 1 }
+molar_mass = 18.01528
+diffusivity = 2.3e-9
+typical_conc = 55500.0
+max_conc = 55600.0
+partial_molar_volume = 1.807e-5
+settling_radius = 0.0
+c_p = 75.3
+enthalpy_formation = -285830.0
+
+[[substance]]
+id = "FOOD"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 8.0e-10
+typical_conc = 10.0
+max_conc = 100.0
+partial_molar_volume = 3.0e-5
+settling_radius = 0.0
+c_p = 75.0
+enthalpy_formation = -200000.0
+
+[[substance]]
+id = "O2"
+composition = { O = 2 }
+molar_mass = 31.9988
+diffusivity = 2.0e-9
+typical_conc = 2.0
+max_conc = 100.0
+partial_molar_volume = 3.0e-5
+settling_radius = 0.0
+c_p = 30.0
+enthalpy_formation = 0.0
+
+[[substance]]
+id = "CO2"
+composition = { C = 1, O = 2 }
+molar_mass = 44.0095
+diffusivity = 1.6e-9
+typical_conc = 0.01
+max_conc = 100.0
+partial_molar_volume = 3.0e-5
+settling_radius = 0.0
+c_p = 75.0
+enthalpy_formation = -393510.0
+
+[[substance]]
+id = "DET"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 4.0e-11
+typical_conc = 0.002
+max_conc = 20.0
+partial_molar_volume = 3.0e-5
+settling_radius = 0.0
+c_p = 75.0
+enthalpy_formation = -181000.0
+
+[[substance]]
+id = "BIO"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 0.0
+typical_conc = 0.002
+max_conc = 20.0
+partial_molar_volume = 3.0e-5
+settling_radius = 0.0
+c_p = 75.0
+enthalpy_formation = -180000.0

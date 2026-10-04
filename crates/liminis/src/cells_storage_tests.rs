@@ -541,3 +541,52 @@ fn optional_sample_saturation_is_visible_and_checkpoint_busy_is_not_acknowledged
     assert_eq!(prepared.state().capture, capture(2));
     assert_eq!(prepared.history.count, 2);
 }
+
+#[test]
+fn spatial_storage_identity_is_paired_across_disk_manifests_and_history() {
+    let root = Temp::new();
+    let (config, hash) = identity();
+    assert!(
+        CellsStorage::new_run(&root.0, config.clone(), hash.clone(), "42".into(), 30, 2).is_err()
+    );
+    let mut storage =
+        CellsStorage::new_run(&root.0, config, hash, u64::MAX.to_string(), 31, 2).unwrap();
+    let mut captured = capture(7);
+    captured.world_format_version = 31;
+    storage.save(captured.clone()).unwrap();
+    storage.wait_for_save().unwrap();
+    let run_id = storage.run_id().to_string();
+    let path = storage.lease.path.clone();
+    let info = state_lock(&storage.state).saved.clone().unwrap();
+    assert_eq!(storage.lease.info.chamber_format, 2);
+    assert_eq!(info.chamber_format, 2);
+    let stream = path
+        .join("sessions")
+        .join(storage.session_id())
+        .join("metrics.ndjson");
+    let header: HistoryHeader =
+        serde_json::from_str(fs::read_to_string(&stream).unwrap().lines().next().unwrap()).unwrap();
+    assert_eq!(header.chamber_format, 2);
+    assert_eq!(header.world_format_version, 31);
+    assert_eq!(header.seed, u64::MAX.to_string());
+    stop(storage);
+    let prepared = prepare_resume(&root.0, &run_id, None).unwrap();
+    assert_eq!(prepared.state().capture, captured);
+    assert_eq!(prepared.state().stored.chamber_format, 2);
+    assert_eq!(prepared.state().stored.seed, u64::MAX.to_string());
+    drop(prepared);
+    let mut contradictory = info.clone();
+    contradictory.chamber_format = 1;
+    rewrite_envelope(&path, &contradictory);
+    assert!(prepare_error(&root, &run_id, None).contains("identity"));
+    contradictory = info.clone();
+    contradictory.seed = (u64::MAX - (1 << 32)).to_string();
+    rewrite_envelope(&path, &contradictory);
+    assert!(prepare_error(&root, &run_id, None).contains("identity"));
+    rewrite_envelope(&path, &info);
+    let text = fs::read_to_string(&stream).unwrap();
+    let changed = text.replacen("\"chamber_format\":2", "\"chamber_format\":1", 1);
+    assert_ne!(changed, text);
+    fs::write(&stream, changed).unwrap();
+    assert!(prepare_error(&root, &run_id, None).contains("header"));
+}

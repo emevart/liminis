@@ -114,8 +114,9 @@ fn rewrite_session_format_and_header(
 }
 
 #[test]
-fn eco_resume_accepts_only_the_current_world_and_names_the_legacy_reader() {
+fn eco_resume_preserves_unchanged_world30_and_names_the_legacy_reader() {
     assert!(supports_eco_version(WORLD_FORMAT_VERSION));
+    assert!(supports_eco_version(30));
     for version in [27, 28, 29, WORLD_FORMAT_VERSION + 1] {
         if version != WORLD_FORMAT_VERSION {
             assert!(!supports_eco_version(version));
@@ -135,6 +136,44 @@ fn eco_resume_accepts_only_the_current_world_and_names_the_legacy_reader() {
                 .contains("matching older build")
         );
     }
+}
+
+#[test]
+fn eco_world30_actual_disk_resume_keeps_identity_and_exact_future() {
+    let root = Temp::new();
+    let mut continuous = fixture();
+    continuous.identity.world_format_version = 30;
+    let mut persistence = Persistence::create(&root.0, &continuous).unwrap();
+    persistence.wait_for_save().unwrap();
+    let run_id = persistence.lease.info.run_id.clone();
+    stop(persistence);
+
+    let mut resumed = resume(&root.0, &run_id, None).expect("unchanged eco30 resume");
+    let resumed_storage = resumed.persistence.take().unwrap();
+    assert_eq!(resumed.identity.world_format_version, 30);
+    assert_eq!(snapshot_identity(&resumed).world_format_version, 30);
+    for _ in 0..3 {
+        super::super::advance_one(&mut continuous);
+        super::super::advance_one(&mut resumed);
+    }
+    let mut expected = Vec::new();
+    let mut actual = Vec::new();
+    observe::snapshot_write(
+        &mut expected,
+        &snapshot_identity(&continuous),
+        &continuous.world,
+        &continuous.ledger,
+    )
+    .unwrap();
+    observe::snapshot_write(
+        &mut actual,
+        &snapshot_identity(&resumed),
+        &resumed.world,
+        &resumed.ledger,
+    )
+    .unwrap();
+    assert_eq!(actual, expected, "eco30 disk resume future must be exact");
+    stop(resumed_storage);
 }
 
 #[test]

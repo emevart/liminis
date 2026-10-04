@@ -110,3 +110,157 @@ Ignored scientific benchmark raw JSON/script now copied unchanged to Git under
 docs/experiments/live-pacing; original target/qa copies remain. Protected LIVE1
 PNG/trace remain Actions artifact11303903150 and ignored local directory, not in
 Git. Reproduction and all LIVE1 exact tested SHA/evidence recorded in its checkpoint.
+
+## PAUSED FOR HANDOFF — физика не завершена
+
+Последнее прямое человеческое указание: контролируемая передача coordinator/release
+ownership в созданную пользователем native Cloud задачу. Новый координатор пока
+READ-ONLY, write-go не получал. Этот checkpoint фиксирует остановку прежнего LIVE,
+не принятие LIVE2. Новые этапы/назначения, merge, deploy, auto-merge запрещены
+после этого pause до сообщения нового координатора. RECORDED/LAB — независимые
+авторы, их полезные проверки этим pause не отменены.
+
+Последний опубликованный WIP перед final snapshot:
+HEAD `090dc94dc0eb25a8a0a9ff0fae81e960f9ba99cc`,
+tree `23bd39cb3af3abf7ab948ed96503dd449add3bf9`,
+branch `codex/cells-physical-transport`, base
+`c5be8fc8652433c67378a689fbb151ea4bad510a`. Final preservation commit включает
+весь scoped diff ниже. Его точный HEAD/tree публикуется в последней STOPPED
+записи issue11 и виден в Git history; документ не содержит невозможную
+самоссылку на свой будущий SHA. LIVE2 PR не открыт, branch push не запускает
+CI (workflow реагирует на main push и PR), main не изменялся после LIVE12 merge.
+
+Сохранённые изменения после090: config opt-in tests и unconditional finite2L
+guard; transport tests/statistics/rational fixtures и atomic-refusal fixture fix;
+WORLD31; eco30 admission + actual disk future test; physical scenario;
+host/storage API/version/seed/disk tests; честная inventory schematic caption;
+optional physical browser acceptance в существующем live script. SPEC/NORTH_STAR,
+DECISIONS, CI, Cargo.lock, RECORDED/LAB owned files не изменены этим snapshot.
+ADR ещё НЕ добавлена: обязательно append следующего свободного номера после
+fresh-main RECORDED107, с «Отвергнуто» и уже названными исключениями/semantics.
+
+### Реально выполненные проверки
+
+Один последовательный Cargo-процесс, pinned Rust1.97.1, общий existing target dir
+старого LIVE checkout. Команды выполнялись из нового physical worktree:
+
+```
+cargo fmt --all
+CARGO_TARGET_DIR=/workspace/scratch/f993df36ab84/liminis-cloud/target cargo test --locked -p liminis-core micro:: -- --nocapture
+CARGO_TARGET_DIR=/workspace/scratch/f993df36ab84/liminis-cloud/target cargo test --locked -p liminis cells_host -- --nocapture
+```
+
+Core micro: **42 PASS, 1 FAIL, 1 ignored**, 2.80s. Golden v1 bytes/hash,
+opt-in/2L validation, full counters, projected biology/report balances,
+zero-mobility bits, daughter inheritance, rational reflection/FMA/budget,
+Gaussian/6Dt multilag before walls и reflected-uniform ensemble tests PASS.
+Fail: `unsupported_numeric_range_rejects_entire_tick_after_earlier_candidate_motion`:
+fixture изменял отдельной клетке неизменяемый inherited spatial genome, поэтому
+state validation останавливал её до transport. Автор исправил fixture:
+одинаковая mobility1e-14 для всех и большая масса поздней клетки; проверяются
+valid initial state, успешное движение first-only candidate, полный cause
+numeric-budget refusal и rollback. **Исправление NOT RETESTED** после human pause;
+его фактический результат не выдумывается.
+
+Live host/storage: **31 PASS, 0 FAIL**, 3.49s. Включены actual old/new disk
+resume/to_bits (minsubnormal, -0, wall-adjacent), fullu64 seed, future после64ticks,
+повторный resume, все cells29/30/31 identities1 без upgrade, chamber2 pair31,
+реальные позиции API и старые pacing/backpressure/manual/max/step tests.
+Новый отдельный eco30 actual disk future test **NOT RUN** (фильтр cells_host).
+
+Final `git diff --check` PASS. Formatter выполнен до последнего atomic-fixture
+исправления; final fmt check не повторялся. Browser script author syntax/diff
+PASS; физический browser script НЕ запускался. Existing CI ещё НЕ wired для
+второго physical invocation. Нет release benchmark D0/Dpositive, final independent
+code/numerics review, full necessary final-candidate CI или physical browser QA.
+Physics/UX acceptance **NOT PASS**. Полная локальная full suite не повторялась.
+
+Actual Astra final design approved; independent numerical initial090 audit не
+нашёл algorithm blockers, потребовал finite2L даже D0 — исправлено и core test PASS.
+Final candidate после всех edits пока independently не проверен. Доказательство B
+не относится к coefficient/transcendental/longtime error и не даёт post-wall6Dt.
+
+### Остановка авторов, процессов и queued writes
+
+Все production авторы закончены на coherent boundary. `acceptance` явно ACK
+STOPPED с сохранёнными файлами и NOT RETESTED fix; `review` явно ACK STOPPED.
+`host`, `storage`, `viewer`, `transport_design_review` уже completed, им направлен
+STOP, interrupt подтвердил completed. Никаких их writes/processes не осталось.
+Завершившийся actual Astra advisor отсутствует в active registry (`not_found`
+на interrupt), новых вызовов не назначено. Root завершил только уже запущенный
+host Cargo; exit0 получен. Собственных Cargo/rustc/livehost/Chromium/Playwright
+процессов нет, queued writes0, future LIVE dispatch0, merge/deploy0. Auto-merge
+не включался: PR12 closed/merged, PR13/14/15 `auto_merge:null`; LIVE2 PR отсутствует.
+Goal/automatic continuation tools отсутствовали и ничего не создавалось.
+
+Dirty before final stage: 13 modified scoped source/test/script files плюс этот
+checkpoint; untracked `configs/scenarios/cell-chamber-physical.toml`,
+`micro/config_spatial_tests.rs`, `docs/experiments/live-pacing/http-acceptance.json`.
+Все полезные scoped изменения final snapshot опубликованы. После publication
+новый worktree tracked/untracked clean. Старый LIVE checkout остаётся HEAD8874,
+единственный untracked `scripts/__pycache__/` generated cache сохранён, не stage.
+Private-only source/secret changes0; ignored build/QA и downloaded artifact ZIP
+сохранены отдельно, не удалены. Чужие процессы/checkout не менялись.
+
+### Artifacts: сохранность и bounded archive proposal
+
+Raw supplemental benchmark уже в Git `occupied-seed42.json` (SHA256
+`3cce6e6a62c4668b3fb999cf0d334fcc356fd9015cc303d5d7f460af3787c153`) и script
+`benchmark_occupied_cells.py` (SHA256
+`8f62689975e92722aea961c328b3c940dfbeecb46cde8817772c53c9493c78a4`).
+Дополнительно raw HTTP acceptance592bytes сохранён в Git как
+`docs/experiments/live-pacing/http-acceptance.json`, SHA256
+`67ffbf21a136f8077b2cff227a02f5cef254bd6daeab1b37ecebf51deb862e97`.
+Этот исторический raw report не содержит собственного HEAD/binary hash;
+он не является приёмкой LIVE2 или нового final commit. Исходные target/qa copies
+и старый release binary не удалены.
+
+Старый LIVE checkout ignored inventory:
+
+| Path under target/qa | Contents / bytes | Durable source / limit |
+| --- | --- | --- |
+| protected-8874d2c/ | accepted JSON/4PNG/trace/log, 9files / 7,090,095bytes | run37204679284 artifact11303903150, ZIP3,997,658bytes, expires2026-10-11T13:12:15Z |
+| recorded-f9fb7a2/ | failed diagnostic report/8PNG/trace, 10files / 14,116,427bytes | run37206398277 artifact11305036205, ZIP12,845,994bytes, expires2026-10-11T13:40:42Z |
+| actions-live-browser/ | superseded default-sandbox evidence, 8files / 956,968bytes | historical run37201843089/artifact11302379823; НЕ protected PASS |
+| browser-cells/ | local blocked/diagnostic attempts, 15files / 643,019bytes | reproducible gap; НЕ browser PASS |
+| occupied_cells_benchmark.json + benchmark_occupied_cells.py | 22,621 +3,056bytes | exact copied Git artifacts above |
+| live-cells-pacing.json | 592bytes | exact copied Git artifact above |
+
+Downloaded Actions ZIP also remains outside checkout in workspace attachments;
+restore public bytes via artifact IDs rather than private workspace handles.
+CI scripts reproduce scenarios, but screenshots/trace timestamps and byte hashes
+не обещаны детерминированными. PNG/report/trace НЕ saved-to-Git: bounded retention
+— явный durability gap. Ничего не удалялось и security protections не менялись.
+
+Предложение новому координатору после write-go: один отдельный evidence-only
+GitHub archive commit/PR в существующем repo, ≤32MiB total и ≤20MiB per artifact,
+только exact-head reports/PNG/trace ZIP + INDEX с SHA256/source/expiry/status;
+проверить отсутствие private identifiers/secrets, не включать caches/temp dirs.
+Начать с accepted LIVE1 и corrected REC1, failure ZIP при необходимости сохранить
+в оставшемся bound. Это постоянный Git archive без новой интеграции/infra,
+без release/deploy и без изменения browser sandbox. **Сейчас archive не создан**:
+остановка ownership/dispatch соблюдается, artifacts можно скачать до expiry.
+
+### Следующая очередь для нового координатора
+
+1. Read issue11 и exact candidates; REC13 теперь HEAD
+   `f72fe98e50b4e6dca216421998213ff978d6b35a`, tree
+   `f75d48bce5870565483e96f049ce64c364456dad`, basec5, draft. Author сообщает run
+   `37207963950`, recorded job `111453040333` SUCCESS,22/22browser+17/17HTTP,
+   artifact11305057269; root не выполнил independent final technical artifact
+   acceptance, full build/test ещё pending по последнему author report.
+   Independent root reviewer earlierf9 source/security/actualscreenshots:0extra
+   blockers, но это не перенос приёмки на новый HEAD. Merge до всех exact gates нет.
+2. LAB14 accepted oldhead21c/basef7; rebasefreshmain afterREC13 и finalCI.
+   LAB15 dependent headff402c/tree9adc/baseLAB14, draft8newfiles; исправления
+   review/validation pending. Independent authors НЕ остановлены этим LIVE pause.
+3. LIVE2 восстановить branch+checkpoint, сначала retest исправленного atomic
+   fixture, затем targeted suite/finalfmt/eco30/bench/browser/review/ADR gate;
+   read shared schema acknowledgements (RECORDED ack5980834090, LAB pending).
+   Rebase sequentially freshmain после интеграций, не смешивать чужие PR.
+   Physics принять только с фактическими numerics/statistical/disk/HTTP/CI gates.
+4. После physics отдельный LIVE3 actual2D/Three3D, recorded bounded chunks и LAB UI
+   по issue dependencies; никакой concurrent chemistry/GRN/S1′ semantic rewrite.
+
+Это final pause для handoff. Выполненные LIVE1 и WIP LIVE2 сохранены; завершение
+физики, новый write-go, merge или deployment этим документом не объявляются.

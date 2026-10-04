@@ -292,7 +292,13 @@ impl CellsStorage {
         world_format_version: u32,
         chamber_format: u32,
     ) -> Result<Self> {
-        validate_identity(&config_text, &config_hash, &seed, world_format_version, chamber_format)?;
+        validate_identity(
+            &config_text,
+            &config_hash,
+            &seed,
+            world_format_version,
+            chamber_format,
+        )?;
         fs::create_dir_all(root)
             .with_context(|| format!("creating cell experiment storage {}", root.display()))?;
         let root = fs::canonicalize(root)?;
@@ -748,7 +754,8 @@ fn validate_identity(
     chamber_format: u32,
 ) -> Result<()> {
     ensure!(!config_text.is_empty(), "cell canonical config is empty");
-    ensure!(!seed.is_empty(), "cell seed identity is empty");
+    seed.parse::<u64>()
+        .context("cell seed identity must be a decimal u64")?;
     let digest = blake3::hash(config_text.as_bytes()).to_hex();
     let expected_hash = format!("blake3:{}", &digest.as_str()[..16]);
     ensure!(
@@ -788,7 +795,8 @@ fn validate_run_info(info: &RunInfo, run_id: &str) -> Result<()> {
 
 fn validate_checkpoint_info(info: &CheckpointInfo, run: &RunInfo) -> Result<()> {
     ensure!(
-        info.format == FORMAT && info.kind == KIND
+        info.format == FORMAT
+            && info.kind == KIND
             && supports_cell_identity(info.world_format_version, info.chamber_format),
         "unsupported cell checkpoint envelope"
     );

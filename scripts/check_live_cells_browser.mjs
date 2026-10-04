@@ -6,7 +6,7 @@ import { once } from 'node:events';
 import { createServer } from 'node:net';
 import { mkdtemp, mkdir, rm, writeFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { resolve, join } from 'node:path';
+import { resolve, join, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const modulePath = process.env.LIMINIS_PLAYWRIGHT_MODULE;
@@ -21,7 +21,12 @@ assert.equal(trackedStatus, '', 'browser QA requires a clean tracked checkout');
 if (process.env.LIMINIS_EXPECTED_TREE) assert.equal(tree, process.env.LIMINIS_EXPECTED_TREE, 'browser QA must run the expected tree');
 assert.ok(process.env.LIMINIS_EXPECTED_HEAD, 'LIMINIS_EXPECTED_HEAD must identify the exact PR head');
 assert.equal(head, process.env.LIMINIS_EXPECTED_HEAD, 'browser QA must run the exact requested PR head');
-const output = resolve('target/qa/live-browser');
+const scenarioConfig = process.env.LIMINIS_LIVE_BROWSER_CONFIG;
+if (scenarioConfig) {
+  const scenarioPath = resolve(scenarioConfig);
+  assert.ok(scenarioPath.startsWith(resolve('configs/scenarios') + sep) && scenarioPath.endsWith('.toml') && (await stat(scenarioPath)).isFile(), 'LIMINIS_LIVE_BROWSER_CONFIG must name a repository scenario TOML');
+}
+const output = resolve(scenarioConfig ? 'target/qa/live-browser-physical' : 'target/qa/live-browser');
 await mkdir(output, { recursive: true });
 const temporary = await mkdtemp(resolve(tmpdir(), 'liminis-browser-'));
 const report = { gitHead: head, gitTree: tree, trackedClean: true, chromiumSandbox: true, playwright: '1.61.1 (pinned by CI)', status: 'running', checks: [], screenshots: [], consoleErrors: [], pageErrors: [], resourceWarnings: [] };
@@ -66,14 +71,38 @@ async function run() {
   const port = reservation.address().port;
   await new Promise(done => reservation.close(done));
   const origin = `http://127.0.0.1:${port}`;
-  host = spawn(resolve('target/release/liminis'), ['cells', '--seed', '42', '--port', String(port), '--data-dir', temporary], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const hostArguments = ['cells', '--seed', '42', '--port', String(port), '--data-dir', temporary];
+  if (scenarioConfig) hostArguments.push('--config', resolve(scenarioConfig));
+  host = spawn(resolve('target/release/liminis'), hostArguments, { stdio: ['ignore', 'pipe', 'pipe'] });
   host.on('error', error => appendHostLog(`${error.stack}\n`));
   host.stdout.on('data', appendHostLog);
   host.stderr.on('data', appendHostLog);
+  let identity;
+  const positions = state => state.cells.map(cell => ({ id: cell.id, position_m: cell.position_m }));
   const state = async () => {
     const response = await fetch(`${origin}/api/state`, { signal: AbortSignal.timeout(5000) });
     assert.equal(response.status, 200);
-    return response.json();
+    const result = await response.json();
+    const currentIdentity = { seed: result.seed, dt_seconds: result.dt_seconds, config_hash: result.config_hash, chamber_format: result.chamber_format, model: result.model };
+    identity ??= currentIdentity;
+    assert.deepEqual(currentIdentity, identity, 'seed, dt, config and chamber model must stay unchanged');
+    assert.equal(result.seed, '42');
+    assert.equal(result.dt_seconds, 30);
+    if (scenarioConfig) {
+      assert.equal(result.chamber_format, 2, 'opt-in browser config must be physical chamber format 2');
+      assert.equal(result.model.spatial_positions, true);
+      const dimensions = result.model.dimensions_m;
+      assert.ok(Array.isArray(dimensions) && dimensions.length === 3 && dimensions.every(length => Number.isFinite(length) && length > 0), 'physical box dimensions must be finite and positive');
+      for (const cell of result.cells) {
+        assert.ok(Array.isArray(cell.position_m) && cell.position_m.length === 3, `physical position missing for ${cell.id}`);
+        cell.position_m.forEach((coordinate, axis) => assert.ok(Number.isFinite(coordinate) && coordinate >= 0 && coordinate <= dimensions[axis], `cell ${cell.id} position outside reported physical box`));
+      }
+    } else {
+      assert.equal(result.chamber_format, 1, 'default browser run must retain legacy chamber format 1');
+      assert.equal(result.model.spatial_positions, false);
+      assert.ok(result.cells.every(cell => !Object.hasOwn(cell, 'position_m')), 'legacy state must not invent physical positions');
+    }
+    return result;
   };
   await eventually(async () => { try { return (await state()).kind === 'cells'; } catch { return false; } }, 'real host readiness');
   browser = await chromium.launch({ headless: true, chromiumSandbox: true, args: ['--enable-automation'], timeout: 20000 });
@@ -111,6 +140,12 @@ async function run() {
   report.scenario = initial.scenario;
   report.configHash = initial.config_hash;
   report.seed = initial.seed;
+  report.chamberFormat = initial.chamber_format;
+  report.scenarioConfig = scenarioConfig || 'default';
+  report.model = initial.model;
+  report.canvasMeaning = 'inventory schematic; glyph placement is not physical coordinates';
+  if (scenarioConfig) check('format-2 API reports finite in-box persisted coordinates; seed/dt/model identity unchanged');
+  else check('default format-1 API has no fabricated physical coordinates');
   check('real Rust cells response rendered in Chromium');
 
   await page.locator('#play').click();
@@ -118,12 +153,22 @@ async function run() {
   const paused = await state();
   assert.equal(paused.running, false);
   await delay(300);
-  assert.equal((await state()).tick, paused.tick);
+  const heldPaused = await state();
+  assert.equal(heldPaused.tick, paused.tick);
+  if (scenarioConfig) assert.deepEqual(positions(heldPaused), positions(paused), 'physical coordinates cannot move while paused');
   check('Pause acknowledgment has no subsequent accumulated ticks');
 
   await page.locator('#step').click();
   await eventually(async () => (await state()).tick === paused.tick + 1, 'one manual Step');
-  assert.equal((await state()).running, false);
+  const stepped = await state();
+  assert.equal(stepped.running, false);
+  if (scenarioConfig) {
+    const previous = new Map(paused.cells.map(cell => [cell.id, cell.position_m]));
+    const moved = stepped.cells.filter(cell => previous.has(cell.id) && cell.position_m.some((coordinate, axis) => coordinate !== previous.get(cell.id)[axis]));
+    assert.ok(moved.length > 0, 'a real Step must advance at least one surviving physical cell position');
+    report.physicalStep = { fromTick: paused.tick, toTick: stepped.tick, movedSurvivingCells: moved.length };
+    check('one real model tick advances persisted positions for surviving IDs');
+  }
   check('Step advances exactly one real tick while paused');
 
   await page.locator('#speed').fill('1');
@@ -180,7 +225,9 @@ async function run() {
   assert.ok(requests30 >= 1 && requests30 <= 3 && requests60 >= 1 && requests60 <= 3 && Math.abs(requests30 - requests60) <= 1, `screen FPS must not scale HTTP polling: ${requests30}/${requests60}`);
   report.pausedStateRequests = { fps30: requests30, fps60: requests60, intervalMs: 1400 };
   assert.ok(held30.equals(held60), 'paused chamber pixels must stay identical at 30/60 FPS');
-  assert.equal((await state()).tick, manual.tick);
+  const heldAfterFps = await state();
+  assert.equal(heldAfterFps.tick, manual.tick);
+  if (scenarioConfig) assert.deepEqual(positions(heldAfterFps), positions(manual), '30/60 FPS must not move persisted physical coordinates');
   check('30/60 FPS hold pixel-identical confirmed paused state without model advancement');
 
   await page.locator('#maximum').click();
@@ -214,10 +261,17 @@ async function run() {
     await page.setViewportSize({ width, height: 1000 });
     await delay(150);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `horizontal overflow at ${width}px`);
+    const disclaimer = page.locator('.stage-caption p').first();
+    assert.equal(await disclaimer.isVisible(), true, `inventory disclaimer must remain visible at ${width}px`);
+    assert.match(await disclaimer.textContent(), /Icon placement does not represent physical coordinates/);
+    const physicalNote = page.locator('#physical-state-note');
+    assert.equal(await physicalNote.isVisible(), Boolean(scenarioConfig), `physical-position note visibility at ${width}px`);
+    if (scenarioConfig) assert.match(await physicalNote.textContent(), /Physical positions are saved; chemical resources remain shared and well mixed/);
     const filename = `viewer-${width}.png`;
     await page.screenshot({ path: resolve(output, filename), fullPage: true });
     report.screenshots.push(filename);
   }
+  check('desktop/mobile captions distinguish schematic inventory from persisted physical state');
   check('real desktop/mobile screenshots and no horizontal overflow at 1440/590/420/320');
   assert.deepEqual(report.pageErrors, []);
   assert.deepEqual(report.consoleErrors, []);

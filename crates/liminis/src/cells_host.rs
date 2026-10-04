@@ -199,7 +199,7 @@ fn state_json(sim: &Sim) -> Value {
     let affinity_units = sim.config.units_per_mol[limiting] as f64;
     let cells: Vec<_> = sim.state.cells.iter().map(|cell| {
         let decoded = micro::config::decode_genome(&sim.config, &cell.genome);
-        json!({"id":cell.id.to_string(), "parent_id":cell.parent_id.map(|id|id.to_string()),
+        let mut value = json!({"id":cell.id.to_string(), "parent_id":cell.parent_id.map(|id|id.to_string()),
             "generation":cell.generation,"birth_tick":cell.birth_tick,
             "age_s":cell.age as f64 * sim.config.dt_seconds,"genome_key":genome_key(cell),
             "mass_mol":cell.mass as f64 / bio_units,"energy_j":cell.energy as f64 / energy_units,
@@ -215,12 +215,19 @@ fn state_json(sim: &Sim) -> Value {
                 "starvation_tolerance_s":f64::from(cell.genome.starvation_tolerance_ticks)*sim.config.dt_seconds},
             "phenotype":{"growth_per_s":decoded.max_growth_rate_per_second,
                 "km_mol_m3":decoded.affinity_km_amount / affinity_units / sim.config.volume_m3}
-        })
+        });
+        if let Some(position) = cell.position_m {
+            value["position_m"] = json!(position);
+        }
+        if let Some(spatial) = cell.genome.spatial {
+            value["genome"]["spatial"] = json!(spatial);
+        }
+        value
     }).collect();
     let resources: Vec<_> = summary.resources.iter().map(|(id, concentration)| {
         json!({"id":id,"concentration":concentration,"amount_mol":concentration*sim.config.volume_m3})
     }).collect();
-    json!({"kind":"cells","tick":sim.state.tick,"sim_time":summary.sim_time,
+    let mut value = json!({"kind":"cells","tick":sim.state.tick,"sim_time":summary.sim_time,
         "seed":sim.seed.to_string(),"scenario":sim.config.name,"config_hash":sim.config_hash,
         "world_format_version":sim.world_format_version,"chamber_format":sim.config.chamber_format,
         "running":sim.running,"alive":sim.alive,"pacing":sim.pacing,
@@ -237,14 +244,45 @@ fn state_json(sim: &Sim) -> Value {
             "divisions":sim.observation.divisions,
             "generation_max":sim.state.cells.iter().map(|c|c.generation).max().unwrap_or(0),
             "total_biomass_mol":summary.biomass_mol,"total_cell_energy_j":summary.cell_energy_j},
-        "resources":resources,"cells":cells,"events":sim.observation.events})
+        "resources":resources,"cells":cells,"events":sim.observation.events});
+    value["model"]["spatial_positions"] = json!(sim.config.spatial.is_some());
+    if let Some(spatial) = sim.config.spatial {
+        value["model"]["dimensions_m"] = json!(spatial.dimensions_m);
+        value["model"]["viscosity_pa_s"] = json!(spatial.viscosity_pa_s);
+        value["model"]["transport"] = json!("passive_dilute_brownian");
+        value["model"]["boundaries"] = json!("reflecting");
+        value["model"]["excluded_volume"] = json!(false);
+    }
+    value
+}
+
+fn validate_live_identity(config: &MicroConfig, seed: u64, world: u32) -> Result<()> {
+    ensure!(
+        storage::supports_cell_identity(world, config.chamber_format),
+        "unsupported live cell world/chamber identity"
+    );
+    match config.spatial {
+        None => ensure!(config.chamber_format == 1, "spatial cell config is missing"),
+        Some(spatial) => {
+            ensure!(
+                config.chamber_format == 2,
+                "legacy chamber cannot contain spatial config"
+            );
+            ensure!(
+                spatial.transport_seed == seed,
+                "cell transport seed differs from saved full seed"
+            );
+        }
+    }
+    Ok(())
 }
 
 fn build(text: &str, seed: u64) -> Result<Sim> {
-    let scenario = micro::config::parse(text)?;
+    let scenario = micro::config::parse_live(text)?;
     let config_text = micro::config::canonical(&scenario)?;
     let config_hash = micro::config::config_hash(&scenario)?;
-    let config = micro::config::derive(&scenario, seed)?;
+    let config = micro::config::derive_live(&scenario, seed)?;
+    validate_live_identity(&config, seed, WORLD_FORMAT_VERSION)?;
     let state = MicroState::new(&config)?;
     let observation = Observation {
         medium_matter: vec![0; config.matter_ids.len()],
@@ -512,6 +550,7 @@ fn save(sim: &mut Sim) -> Result<()> {
         sim.alive && sim.error.is_none(),
         "cannot save an incomplete cell tick"
     );
+    validate_live_identity(&sim.config, sim.seed, sim.world_format_version)?;
     let capture = capture(sim);
     sim.storage
         .as_mut()
@@ -557,8 +596,8 @@ pub fn run(
     };
     println!("Liminis cells on http://127.0.0.1:{port}/");
     println!(
-        "seed={} config_hash={} world_format_version={} chamber_format=1",
-        sim.seed, sim.config_hash, sim.world_format_version
+        "seed={} config_hash={} world_format_version={} chamber_format={}",
+        sim.seed, sim.config_hash, sim.world_format_version, sim.config.chamber_format
     );
     let shared = Arc::new(Mutex::new(sim));
     let ticking = Arc::clone(&shared);
@@ -571,6 +610,7 @@ pub fn run(
 }
 
 fn start_storage(sim: &mut Sim, root: &Path) -> Result<()> {
+    validate_live_identity(&sim.config, sim.seed, sim.world_format_version)?;
     let mut storage = storage::CellsStorage::new_run(
         root,
         sim.config_text.clone(),
@@ -627,11 +667,23 @@ fn resume_sim(root: &Path, run: &str, checkpoint: Option<&str>) -> Result<Sim> {
     );
     ensure!(
         saved.stored.kind == "cells"
-            && saved.stored.chamber_format == 1
-            && matches!(saved.stored.world_format_version, 29 | 30),
+            && storage::supports_cell_identity(
+                saved.stored.world_format_version,
+                saved.stored.chamber_format
+            ),
         "this build cannot restore this cell chamber identity"
     );
-    let mut sim = build(&saved.stored.config_text, saved.stored.seed.parse()?)?;
+    let seed: u64 = saved
+        .stored
+        .seed
+        .parse()
+        .context("saved cell seed must be a decimal u64")?;
+    let mut sim = build(&saved.stored.config_text, seed)?;
+    ensure!(
+        sim.config.chamber_format == saved.stored.chamber_format,
+        "saved config chamber format differs from run manifest"
+    );
+    validate_live_identity(&sim.config, seed, saved.stored.world_format_version)?;
     ensure!(
         sim.config_hash == saved.stored.config_hash,
         "saved cell config hash differs"

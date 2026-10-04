@@ -283,18 +283,20 @@ impl MicroState {
     pub fn new(config: &MicroConfig) -> Result<Self> {
         config.validate()?;
         let cells = (0..config.founder.count)
-            .map(|id| Ok(Cell {
-                id: u64::from(id),
-                parent_id: None,
-                genome: config.founder.genome,
-                mass: config.founder.mass,
-                energy: config.founder.energy,
-                age: 0,
-                birth_tick: 0,
-                generation: 0,
-                starvation_ticks: 0,
-                position_m: transport::founder_position(config, u64::from(id))?,
-            }))
+            .map(|id| {
+                Ok(Cell {
+                    id: u64::from(id),
+                    parent_id: None,
+                    genome: config.founder.genome,
+                    mass: config.founder.mass,
+                    energy: config.founder.energy,
+                    age: 0,
+                    birth_tick: 0,
+                    generation: 0,
+                    starvation_ticks: 0,
+                    position_m: transport::founder_position(config, u64::from(id))?,
+                })
+            })
             .collect::<Result<Vec<_>>>()?;
         let state = Self {
             tick: 0,
