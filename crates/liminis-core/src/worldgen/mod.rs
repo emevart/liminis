@@ -51,14 +51,13 @@
 //!
 //! # Where the numbers come from, and where they do not
 //!
-//! The `[initial]` section exists and declares exactly one thing: the side of
-//! the sediment/water boundary each substance is enriched on (ADR-077). Of the
-//! four numbers this module is built out of, that is the one that is a property
-//! of a scenario. The band around `typical_conc` is a consequence and is
-//! ratified as a rule rather than as a key — see [`excursion_of`] — and the
-//! remaining two, the spectrum of the octaves and the base of the `purpose`
-//! counter, stay build-time boundaries with an open question against them: they
-//! were refused a key by name, and the `TODO`s below say by whom.
+//! The stochastic background takes the side of the sediment/water boundary from
+//! `[initial.layer]` (ADR-077). A scenario may then replace that background for
+//! named substances with `[initial.concentration]` and spherical
+//! `[[initial.inoculum]]` overwrites. The band around `typical_conc` remains a
+//! consequence and not a key — see [`excursion_of`] — and the spectrum of the
+//! octaves and base of the `purpose` counter remain build-time boundaries with
+//! an open question against them.
 //!
 //! Everything else comes from something that already exists: the derived
 //! `amount_at_typical` and `amount_at_max` of each substance (ADR-039), the
@@ -66,7 +65,7 @@
 
 use anyhow::{Result, bail};
 
-use crate::config::{Derived, Layer};
+use crate::config::{Derived, DerivedInitial, Layer};
 use crate::numeric::{M32, M64, rand};
 use crate::world::{Grid, LaneRef, MAX_SUBSTANCES, World};
 
@@ -212,8 +211,13 @@ impl WorldgenReport {
         );
         for fill in &self.per_substance {
             out.push_str(&format!(
-                "substance {}: [{}, {}] around {} under a ceiling of {}\n",
-                fill.id, fill.floor, fill.peak, fill.amount_at_typical, fill.amount_at_max
+                "substance {}: actual [{}, {}], typical {}, ceiling {}, uniform {}\n",
+                fill.id,
+                fill.floor,
+                fill.peak,
+                fill.amount_at_typical,
+                fill.amount_at_max,
+                fill.uniform
             ));
         }
         out
@@ -231,8 +235,9 @@ impl WorldgenReport {
 ///
 /// Returns an error if the derivation and the registry hold different substances
 /// or hold them in a different order, if the grid carries no octave of noise, if
-/// a substance's declared band does not fit its derived storage width, or if an
-/// amount that was written falls outside `[0, amount_at_max]`.
+/// a substance's declared band does not fit its derived storage width, if an
+/// amount that was written falls outside `[0, amount_at_max]`, or if a declared
+/// inoculum reaches no voxel centre.
 pub fn generate(world: &mut World, derived: &Derived, run_key: u32) -> Result<WorldgenReport> {
     let n = world.registry().n_substances() as usize;
     if derived.substances().len() != n {
@@ -281,7 +286,14 @@ pub fn generate(world: &mut World, derived: &Derived, run_key: u32) -> Result<Wo
     // side of a substance is the canonical form of the config, which names every
     // one of them (ADR-077).
     let layers: Vec<Layer> = derived.substances().iter().map(|s| s.layer).collect();
-    fill_world(world, &mut fills, &layers, octaves, run_key)?;
+    fill_world(
+        world,
+        derived.initial(),
+        &mut fills,
+        &layers,
+        octaves,
+        run_key,
+    )?;
 
     Ok(WorldgenReport {
         octaves,
@@ -401,6 +413,7 @@ fn octave_count(grid: &Grid) -> u32 {
 /// lanes already written back out again and leave half of them at zero by parity.
 fn fill_world(
     world: &mut World,
+    initial: &DerivedInitial,
     fills: &mut [SubstanceFill],
     layers: &[Layer],
     octaves: u32,
@@ -410,6 +423,7 @@ fn fill_world(
     // `Grid` is four numbers and six boundary conditions.
     let grid = *world.grid();
     let n_voxels = grid.n_voxels();
+    let mut inoculum_hits = vec![0u32; initial.inocula.len()];
 
     // The sides arrive in the order the fills were built in, which is the order
     // of the derivation, which `generate` has already checked against the
@@ -429,6 +443,17 @@ fn fill_world(
         };
         let slot = substance_slot(s as u32);
         let lane = world.lane_of(s as u32);
+        let background = initial
+            .concentration
+            .iter()
+            .find(|decl| decl.substance == s as u32)
+            .map(|decl| decl.amount);
+        let inocula: Vec<_> = initial
+            .inocula
+            .iter()
+            .enumerate()
+            .filter(|(_, inoculum)| inoculum.substance == s as u32)
+            .collect();
 
         // The theorem the narrowing below stands on, stated and checked rather
         // than assumed. `version.rs` names the alternative as the defect it
@@ -466,7 +491,20 @@ fn fill_world(
                 let field = world.amounts_32_mut().expect("the narrow field");
                 let (_, dst) = field.lane_pair_mut(lane);
                 for idx in 0..n_voxels {
-                    let amount = amount_at(&grid, level, slot, octaves, idx, run_key);
+                    let stochastic = || amount_at(&grid, level, slot, octaves, idx, run_key);
+                    let background = background.unwrap_or_else(stochastic);
+                    let amount = if inocula.is_empty() {
+                        background
+                    } else {
+                        declared_amount_at(
+                            &grid,
+                            initial.dx,
+                            idx,
+                            background,
+                            &inocula,
+                            &mut inoculum_hits,
+                        )
+                    };
                     floor = floor.min(amount);
                     peak = peak.max(amount);
                     dst[idx as usize] = M32::from_i64_clamping(narrowed(amount));
@@ -476,7 +514,20 @@ fn fill_world(
                 let field = world.amounts_64_mut().expect("the wide field");
                 let (_, dst) = field.lane_pair_mut(lane);
                 for idx in 0..n_voxels {
-                    let amount = amount_at(&grid, level, slot, octaves, idx, run_key);
+                    let stochastic = || amount_at(&grid, level, slot, octaves, idx, run_key);
+                    let background = background.unwrap_or_else(stochastic);
+                    let amount = if inocula.is_empty() {
+                        background
+                    } else {
+                        declared_amount_at(
+                            &grid,
+                            initial.dx,
+                            idx,
+                            background,
+                            &inocula,
+                            &mut inoculum_hits,
+                        )
+                    };
                     floor = floor.min(amount);
                     peak = peak.max(amount);
                     dst[idx as usize] = M64::from_i64_clamping(narrowed(amount));
@@ -502,6 +553,20 @@ fn fill_world(
         fill.uniform = floor == peak;
     }
 
+    for (inoculum, hits) in initial.inocula.iter().zip(inoculum_hits) {
+        if hits == 0 {
+            let id = world.registry().id_of(inoculum.substance);
+            bail!(
+                "initial inoculum of substance `{id}` at [{}, {}, {}] m with \
+                 radius {} m contains no voxel centre",
+                inoculum.center[0],
+                inoculum.center[1],
+                inoculum.center[2],
+                inoculum.radius
+            );
+        }
+    }
+
     // One swap per field, after the last lane of it. See the function doc.
     if let Some(field) = world.amounts_32_mut() {
         field.swap();
@@ -510,6 +575,64 @@ fn fill_world(
         field.swap();
     }
     Ok(())
+}
+
+/// Apply the declared spatial initial state to one stochastic voxel amount.
+///
+/// A concentration override has already replaced the stochastic amount before
+/// this function is called. An inoculum then overwrites the voxel when its
+/// centre lies in the closed sphere. Same-substance spheres cannot overlap (the
+/// config validator rejects them), so this loop has no declaration-order
+/// semantics; different substances necessarily write different lanes.
+fn declared_amount_at(
+    grid: &Grid,
+    dx: f64,
+    idx: u32,
+    background: i128,
+    inocula: &[(usize, &crate::config::DerivedInoculum)],
+    hits: &mut [u32],
+) -> i128 {
+    let (x, y, z) = grid.coords(idx);
+    let mut amount = background;
+
+    for &(inoculum_idx, inoculum) in inocula {
+        if voxel_centre_in_closed_sphere([x, y, z], dx, inoculum.center, inoculum.radius) {
+            amount = inoculum.amount;
+            hits[inoculum_idx] += 1;
+        }
+    }
+
+    amount
+}
+
+/// Whether one voxel centre lies in a declared closed sphere.
+///
+/// Shared with config validation so the validator cannot reject a sphere that
+/// world generation would seed. The comparison is in voxel units: decimal metre
+/// coordinates such as `0.00015` cannot generally be represented exactly, and
+/// comparing their metre squares made mathematically tangent centres disagree by
+/// one ulp. Sixteen arithmetic ulps preserve the closed boundary without a
+/// physically meaningful expansion.
+pub(crate) fn voxel_centre_in_closed_sphere(
+    voxel: [u32; 3],
+    dx: f64,
+    declared_centre: [f64; 3],
+    declared_radius: f64,
+) -> bool {
+    let centre = voxel.map(|coordinate| f64::from(coordinate) + 0.5);
+    let declared_centre = declared_centre.map(|coordinate| coordinate / dx);
+    let radius = declared_radius / dx;
+    let distance_squared = centre
+        .iter()
+        .zip(declared_centre)
+        .map(|(voxel, declared)| {
+            let delta = *voxel - declared;
+            delta * delta
+        })
+        .sum::<f64>();
+    let radius_squared = radius * radius;
+    let tolerance = 16.0 * f64::EPSILON * distance_squared.abs().max(radius_squared.abs()).max(1.0);
+    distance_squared <= radius_squared + tolerance
 }
 
 /// An `i128` amount inside the storage range, as an `i64`.
@@ -1108,7 +1231,12 @@ mod tests {
         // One on a side and one without, so that neither branch of `amount_at`
         // is the only one the walk is checked over.
         let layers = [Layer::Water, Layer::Uniform];
-        fill_world(&mut world, &mut fills, &layers, octaves, key).expect("the fill");
+        let initial = DerivedInitial {
+            dx: 1.0,
+            concentration: Vec::new(),
+            inocula: Vec::new(),
+        };
+        fill_world(&mut world, &initial, &mut fills, &layers, octaves, key).expect("the fill");
 
         let n_voxels = grid.n_voxels();
         for (s, fill) in fills.iter().enumerate() {
@@ -1141,6 +1269,105 @@ mod tests {
             };
             assert_eq!(written, expected, "substance {s}");
         }
+    }
+
+    #[test]
+    fn declared_initial_state_keeps_species_identity_across_storage_widths() {
+        let grid = grid(N, N, N);
+        let registry = Registry::new(&[
+            SubstanceDecl {
+                id: "narrow".to_string(),
+                width: Width::Bits32,
+                k: 20,
+            },
+            SubstanceDecl {
+                id: "wide".to_string(),
+                width: Width::Bits64,
+                k: 20,
+            },
+        ])
+        .expect("the registry");
+        let mut world = World::new(
+            grid,
+            registry,
+            &WorldLayout {
+                enthalpy_lod: 2,
+                velocity_lod: 1,
+            },
+        )
+        .expect("the world");
+        let mut fills = vec![
+            SubstanceFill {
+                id: "narrow".to_string(),
+                floor: 0,
+                peak: 0,
+                amount_at_typical: 1_000,
+                amount_at_max: 10_000,
+                excursion: 500,
+                uniform: false,
+            },
+            SubstanceFill {
+                id: "wide".to_string(),
+                floor: 0,
+                peak: 0,
+                amount_at_typical: 8_000_000_000,
+                amount_at_max: 32_000_000_000,
+                excursion: 4_000_000_000,
+                uniform: false,
+            },
+        ];
+        let initial = DerivedInitial {
+            dx: 1.0e-4,
+            concentration: vec![
+                crate::config::DerivedConcentration {
+                    substance: 0,
+                    amount: 0,
+                },
+                crate::config::DerivedConcentration {
+                    substance: 1,
+                    amount: 0,
+                },
+            ],
+            inocula: vec![
+                crate::config::DerivedInoculum {
+                    substance: 0,
+                    center: [0.00015; 3],
+                    radius: 0.0001,
+                    amount: 123,
+                },
+                crate::config::DerivedInoculum {
+                    substance: 1,
+                    center: [0.00015; 3],
+                    radius: 0.0001,
+                    amount: 8_000_000_123,
+                },
+            ],
+        };
+
+        fill_world(
+            &mut world,
+            &initial,
+            &mut fills,
+            &[Layer::Uniform; 2],
+            octave_count(&grid),
+            7,
+        )
+        .expect("the fill");
+
+        let narrow = world.amounts_32().expect("the narrow field").lane(0);
+        let wide = world.amounts_64().expect("the wide field").lane(0);
+        let occupied = narrow.iter().filter(|amount| amount.raw() != 0).count();
+        assert_eq!(occupied, 7, "the closed radius-dx ball");
+        for (narrow, wide) in narrow.iter().zip(wide) {
+            if narrow.raw() == 0 {
+                assert_eq!(wide.raw(), 0);
+            } else {
+                assert_eq!(narrow.raw(), 123);
+                assert_eq!(wide.raw(), 8_000_000_123);
+            }
+        }
+        assert_eq!((fills[0].floor, fills[0].peak), (0, 123));
+        assert_eq!((fills[1].floor, fills[1].peak), (0, 8_000_000_123));
     }
 
     #[test]

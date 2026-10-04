@@ -11,16 +11,21 @@ separates a field from an object, and the evolutionary threshold of a transition
 
 ## Status
 
-The local living-world milestone runs a small eco-mode microbial culture in
-Rust and serves an offline browser observer. Five inherited ecotypes grow,
-compete for food and oxygen, produce mutated offspring, turn over into detritus
-and change their population shares. Biomass uses the same integer chemistry,
-transport and matter/energy accounting as the environment.
+The local observer runs a microbial culture in Rust and serves an offline web
+application. A new genetic-colony experiment begins with a single founder
+population. Two binary loci encode growth speed/affinity and allocation between
+food and detritus. Reproduction creates single-locus mutant offspring; resource
+competition changes genotype shares, turnover supplies detritus, and diffusion
+and growth spread the colony. Biomass uses the same integer chemistry,
+transport and matter/energy accounting as the environment. The earlier
+five-ecotype `living-world` scenario remains available.
 
-This is finite mutation and selection in biomass fields. Individual cells,
-open-ended genomes and multicellular development are future stages. The full
-research acceptance criteria of S0/S1 are not claimed complete. Current scope
-and verification are recorded in [the local living-world plan](docs/plans/2026-10-04-local-living-world.md).
+This is finite mutation and selection among four possible genotypes in biomass
+fields. The capsule marks represent voxel aggregates, not individual cells.
+Open-ended genomes and multicellular development are future stages. The full
+research acceptance criteria of S0/S1 are not claimed complete. Scope and
+verification are recorded in [the genetic-colony plan](docs/plans/2026-10-04-genetic-colony.md)
+and [the earlier living-world plan](docs/plans/2026-10-04-local-living-world.md).
 
 ## Expectations
 
@@ -43,9 +48,26 @@ Or run the server in a terminal on any supported platform:
 cargo run --release -p liminis -- serve
 ```
 
-Open the printed localhost URL. The default culture uses seed 42; the viewer
-can pause, step, change speed, choose a slice, restart with a seed and export the
-current observation. Nothing is deployed or sent to an external service.
+Open the printed localhost URL. The default experiment is `genetic-colony`
+with seed 42; the viewer can pause,
+step, change speed, choose a slice, restart with a seed and export the current
+observation. A paused restart exposes tick 0. The observer includes actual food,
+detritus and oxygen fields, session histories and decoded genotype traits with
+first-detection ticks, not a reconstructed ancestry tree. Nothing is deployed
+or sent to an external service.
+
+Choose an experiment explicitly:
+
+```powershell
+.\scripts\start-local.ps1 -Config configs/scenarios/genetic-colony.toml -Seed 42 -Port 8081
+.\scripts\start-local.ps1 -Config configs/scenarios/living-world.toml
+```
+
+The current local genetic culture on port 8081 was retained across the final
+loader-only refusal guard so its accumulated growth is not lost. Its valid
+scenario, hash and dynamics are unchanged; the freshly rebuilt release binary
+includes that guard for subsequent launches. The earlier culture on 8080 is
+paused with its state preserved.
 
 The existing scenario identity command remains available:
 
@@ -57,7 +79,7 @@ cargo run -p liminis -- run --config configs/scenarios/hello.toml --seed 42
 The second command prints the triple that identifies a run:
 
 ```
-seed=42 config_hash=blake3:<hex16> world_format_version=27 code_version=0.1.0
+seed=42 config_hash=blake3:<hex16> world_format_version=28 code_version=0.1.0
 ```
 
 `config_hash` is computed after defaults are applied and over a canonical

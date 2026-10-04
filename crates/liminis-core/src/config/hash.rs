@@ -48,7 +48,7 @@ use serde::Serialize;
 use std::collections::BTreeMap;
 
 use super::schema::{
-    Boundary, Config, Field, Grid, Initial, Physics, Process, Reaction, Substance,
+    Boundary, Config, Field, Genetics, Grid, Initial, Physics, Process, Reaction, Substance,
 };
 
 /// Root sections of the schema that the canonical form leaves out.
@@ -101,6 +101,8 @@ struct Hashed<'a> {
     /// that starts elsewhere is a different run and the section is hashed like
     /// any other thing the simulator reads (ADR-077).
     initial: &'a Initial,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    genetics: &'a Option<Genetics>,
 }
 
 /// Build the projection.
@@ -130,6 +132,7 @@ fn project(config: &Config) -> Hashed<'_> {
         field,
         process,
         initial,
+        genetics,
         // ADR-038: read by the search driver, never by a tick. Listed in
         // `NOT_HASHED`, which is what keeps this underscore honest.
         calibration: _,
@@ -149,6 +152,7 @@ fn project(config: &Config) -> Hashed<'_> {
         field,
         process,
         initial,
+        genetics,
     }
 }
 

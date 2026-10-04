@@ -282,12 +282,15 @@ fn build(scenario: &Config, seed: u64) -> Result<Sim> {
     );
 
     let scratch = Scratch::new(&world, &tick).context("the scratch buffers")?;
+    let fields = fields_of(&world, &derived);
+    let mut ecology = ecology::Ecology::new(scenario);
+    ecology.observe(&world, &fields, 0);
 
     Ok(Sim {
         scenario: scenario.clone(),
-        ecology: ecology::Ecology::new(scenario),
+        ecology,
         error: None,
-        fields: fields_of(&world, &derived),
+        fields,
         world,
         tick,
         ledger: Ledger::with_reactions(n_substances, scenario.reaction.len() as u32)
@@ -524,6 +527,7 @@ fn advance_one(sim: &mut Sim) {
     // counter would disagree with the phase of `every_n_ticks` at 2^32 and say
     // nothing about it.
     sim.ticks = sim.ticks.wrapping_add(1);
+    sim.ecology.observe(&sim.world, &sim.fields, sim.ticks);
 }
 
 /// Keep a failed world stopped and observable until an explicit reset.
@@ -933,6 +937,7 @@ fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
             match build(&sim.scenario, seed) {
                 Ok(mut reset) => {
                     reset.target_tps = sim.target_tps;
+                    reset.running = sim.running;
                     *sim = reset;
                 }
                 Err(error) => return Response::error(400, &format!("reset failed: {error:#}")),
@@ -1985,6 +1990,7 @@ mod tests {
             Some("18446744073709551615")
         );
         assert_eq!(tick_of(&shared), 0);
+        assert!(lock(&shared).running, "a running reset continues the run");
         assert_eq!(
             post(
                 &shared,
@@ -2034,6 +2040,10 @@ mod tests {
         scenario.grid.nz = 8;
         let mut sim = build(&scenario, 42).unwrap();
         let frame = sim.ecology.frame(&sim, 3);
+        assert_eq!(frame["scenario"], scenario.name);
+        assert_eq!(frame["config_hash"], sim.identity.config_hash.to_string());
+        assert_eq!(frame["world_format_version"], WORLD_FORMAT_VERSION);
+        assert_eq!(frame["seed"], "42");
         assert_eq!(frame["cells"].as_array().unwrap().len(), 64);
         let types = frame["ecotypes"].as_array().unwrap();
         assert_eq!(types.len(), 5);
@@ -2045,6 +2055,128 @@ mod tests {
         let last = sim.last.as_ref().unwrap();
         assert_eq!(last.matter, 0);
         assert_eq!(last.energy, Some(0));
+        assert!(frame["genetics"].is_null());
+        assert!(types.iter().all(|t| t["genome"].is_null()));
+        assert!(types.iter().all(|t| t["first_seen_tick"] == 0));
+        assert_eq!(
+            frame["cells"][0]["resources"]["FOOD"],
+            frame["cells"][0]["resource"]
+        );
+    }
+
+    fn small_genetic_scenario() -> Config {
+        let mut scenario = config::parse(include_str!(
+            "../../../configs/scenarios/genetic-colony.toml"
+        ))
+        .unwrap();
+        scenario.grid.nx = 8;
+        scenario.grid.ny = 8;
+        scenario.grid.nz = 8;
+        scenario.initial.inoculum[0].center = [0.0004; 3];
+        scenario.initial.inoculum[0].radius = 0.00015;
+        scenario
+    }
+
+    #[test]
+    fn genetic_observation_uses_the_decoder_and_actual_first_appearance() {
+        let scenario = small_genetic_scenario();
+        let genotypes = config::decode_genotypes(scenario.genetics.as_ref().unwrap());
+        let mut sim = build(&scenario, 42).unwrap();
+        let frame = sim.ecology.frame(&sim, 3);
+        assert_eq!(frame["genetics"]["mutation_probability"], 0.02);
+        assert_eq!(
+            frame["genetics"]["resources"],
+            serde_json::json!(["FOOD", "DET"])
+        );
+        let types = frame["ecotypes"].as_array().unwrap();
+        assert_eq!(types.len(), 4);
+        for genotype in genotypes {
+            let t = types.iter().find(|t| t["id"] == genotype.id).unwrap();
+            assert_eq!(t["genome"]["code"], genotype.code);
+            assert_eq!(t["genome"]["bits"], format!("{:02b}", genotype.code));
+            assert_eq!(t["genome"]["rate_factor"], genotype.rate_factor);
+            assert_eq!(t["genome"]["km_factor"], genotype.km_factor);
+            for (i, expected) in genotype.resource_allocation.iter().enumerate() {
+                assert_eq!(t["genome"]["allocation"][i]["fraction"], *expected);
+            }
+            if genotype.code == 0 {
+                assert_eq!(t["first_seen_tick"], 0);
+                assert!(t["total_mol"].as_f64().unwrap() > 0.0);
+            } else {
+                assert!(t["first_seen_tick"].is_null());
+                assert_eq!(t["total_mol"], 0.0);
+            }
+        }
+        for cell in frame["cells"].as_array().unwrap() {
+            assert_eq!(cell["resources"]["DET"], 0.0);
+            assert_eq!(cell["resources"]["FOOD"], cell["resource"]);
+            assert_eq!(cell["resources"]["O2"], cell["oxygen"]);
+            assert!(cell["resources"].get("WATER").is_none());
+        }
+
+        advance_one(&mut sim);
+        let frame = sim.ecology.frame(&sim, 3);
+        let types = frame["ecotypes"].as_array().unwrap();
+        let double_mutant = types.iter().find(|t| t["genome"]["code"] == 3).unwrap();
+        assert!(double_mutant["first_seen_tick"].is_null());
+        for _ in 1..100 {
+            advance_one(&mut sim);
+        }
+        let frame = sim.ecology.frame(&sim, 3);
+        for t in frame["ecotypes"].as_array().unwrap() {
+            if t["total_mol"].as_f64().unwrap() > 0.0 {
+                assert!(t["first_seen_tick"].as_u64().unwrap() <= u64::from(sim.ticks));
+            }
+        }
+        assert_eq!(sim.last.as_ref().unwrap().matter, 0);
+        assert_eq!(sim.last.as_ref().unwrap().energy, Some(0));
+    }
+
+    #[test]
+    fn a_genetic_reset_clears_first_appearance_history() {
+        let scenario = small_genetic_scenario();
+        let shared = Arc::new(Mutex::new(build(&scenario, 42).unwrap()));
+        {
+            let mut sim = lock(&shared);
+            sim.running = false;
+            for _ in 0..100 {
+                advance_one(&mut sim);
+            }
+            assert!(
+                sim.ecology.frame(&sim, 3)["ecotypes"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|t| t["genome"]["code"] != 0 && !t["first_seen_tick"].is_null())
+            );
+        }
+        assert_eq!(
+            post(
+                &shared,
+                "/api/control",
+                "{\"action\":\"reset\",\"seed\":\"42\"}"
+            )
+            .status,
+            200
+        );
+        let sim = lock(&shared);
+        assert!(
+            !sim.running,
+            "a paused reset exposes the actual initial state"
+        );
+        assert_eq!(sim.ticks, 0);
+        let frame = sim.ecology.frame(&sim, 3);
+        assert_eq!(frame["scenario"], scenario.name);
+        assert_eq!(frame["config_hash"], sim.identity.config_hash.to_string());
+        assert_eq!(frame["world_format_version"], WORLD_FORMAT_VERSION);
+        assert_eq!(frame["seed"], "42");
+        for t in frame["ecotypes"].as_array().unwrap() {
+            if t["genome"]["code"] == 0 {
+                assert_eq!(t["first_seen_tick"], 0);
+            } else {
+                assert!(t["first_seen_tick"].is_null());
+            }
+        }
     }
 
     // --- the identity -----------------------------------------------------

@@ -1,0 +1,202 @@
+# Two-locus population genetics and detritus cross-feeding (ADR-093/094).
+# An uncalibrated CH2O-equivalent culture, not individual cellular organisms.
+# Starts with only G00 in a declared sphere. New genotypes require reproduction.
+name = "genetic-colony"
+dt = 1.0
+beta = 0.015625
+T_ref = 298.15
+
+[conserved]
+C = 12.01070
+H = 1.007940
+O = 15.99940
+
+[grid]
+nx = 24
+ny = 24
+nz = 24
+dx = 1.0e-4
+
+[boundary]
+z_min = "closed"
+z_max = "exchange"
+
+[boundary.reservoir]
+t_out = 298.15
+k_ex = 1.0e-6
+conc_out = { WATER = 55500.0, FOOD = 0.8, O2 = 0.25, CO2 = 0.01, DET = 0.0, G00 = 0.0, G01 = 0.0, G10 = 0.0, G11 = 0.0 }
+
+[[substance]]
+id = "WATER"
+composition = { H = 2, O = 1 }
+molar_mass = 18.01528
+diffusivity = 2.3e-9
+typical_conc = 55500
+max_conc = 55600
+partial_molar_volume = 0.00001807
+settling_radius = 0.0
+c_p = 75.3
+enthalpy_formation = -285830
+
+[[substance]]
+id = "FOOD"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 8e-10
+typical_conc = 0.2
+max_conc = 10
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 75
+enthalpy_formation = -200000
+
+[[substance]]
+id = "O2"
+composition = { O = 2 }
+molar_mass = 31.9988
+diffusivity = 2e-9
+typical_conc = 0.25
+max_conc = 5
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 30
+enthalpy_formation = 0
+
+[[substance]]
+id = "CO2"
+composition = { C = 1, O = 2 }
+molar_mass = 44.0095
+diffusivity = 1.6e-9
+typical_conc = 0.01
+max_conc = 100
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 75
+enthalpy_formation = -393510
+
+[[substance]]
+id = "DET"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 4e-11
+typical_conc = 0.002
+max_conc = 20
+partial_molar_volume = 0.00003
+settling_radius = 0.0
+c_p = 75
+enthalpy_formation = -181000
+
+# Bit 0: speed/affinity. Fast growth costs a larger substrate Km.
+# Bit 1: enzyme allocation. G00/G01 prefer FOOD, G10/G11 prefer DET.
+# Mutation flips one locus; genotype 11 cannot be a direct child of 00.
+# Resource weights sum to one: access to a second substrate is not free.
+[genetics]
+prefix = "G"
+mutation_probability = 0.02
+preferred_fraction = 0.98
+fast_vmax_factor = 3.0
+fast_km_factor = 20.0
+
+[genetics.biomass]
+id = "BIO"
+composition = { C = 1, H = 2, O = 1 }
+molar_mass = 30.02598
+diffusivity = 2.0e-12
+typical_conc = 0.002
+max_conc = 20.0
+partial_molar_volume = 3.0e-5
+settling_radius = 0.0
+c_p = 75.0
+enthalpy_formation = -180000.0
+
+[[genetics.growth]]
+resource = "FOOD"
+[genetics.growth.reaction]
+id = "food_growth"
+inputs = { FOOD = 2, O2 = 1 }
+outputs = { BIO = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:BIO"
+enthalpy = -459340.0
+[genetics.growth.reaction.rate]
+vmax = 0.004
+t_vmax = 298.15
+q10 = 1.0
+km = { FOOD = 0.005, O2 = 0.01 }
+
+[[genetics.growth]]
+resource = "DET"
+[genetics.growth.reaction]
+id = "detritus_growth"
+inputs = { DET = 2, O2 = 1 }
+outputs = { BIO = 1, CO2 = 1, WATER = 1 }
+catalyst = "guild:BIO"
+enthalpy = -497340.0
+[genetics.growth.reaction.rate]
+vmax = 0.003
+t_vmax = 298.15
+q10 = 1.0
+km = { DET = 0.005, O2 = 0.01 }
+
+# Detritus is supplied only by biomass turnover, never by the reservoir.
+# Even fast DET specialists cannot meet mortality through their 2% FOOD path
+# alone: 0.004 * 3 * 0.02 = 0.00024 < turnover 0.0004 per second.
+[genetics.turnover]
+id = "turnover"
+inputs = { BIO = 1 }
+outputs = { DET = 1 }
+catalyst = "guild:BIO"
+enthalpy = -1000.0
+[genetics.turnover.rate]
+vmax = 0.0004
+t_vmax = 298.15
+q10 = 1.0
+km = { BIO = 1.0e-9 }
+
+[[field]]
+id = "enthalpy"
+lod = 2
+thermal_diffusivity = 1.4e-7
+t_min = 273.15
+t_max = 323.15
+
+[[process]]
+id = "diffusion"
+enabled = true
+
+[[process]]
+id = "reactions"
+enabled = true
+
+[[process]]
+id = "velocity_field"
+enabled = false
+
+[[process]]
+id = "advection"
+enabled = false
+
+[[process]]
+id = "external_channels"
+enabled = false
+
+[initial.layer]
+WATER = "uniform"
+FOOD = "sediment"
+O2 = "water"
+CO2 = "uniform"
+DET = "uniform"
+
+[initial.concentration]
+DET = 0.0
+G00 = 0.0
+G01 = 0.0
+G10 = 0.0
+G11 = 0.0
+
+# Physical coordinates and radius, in metres; concentration in mol/m3.
+# This is a population inoculum, not a manually drawn multicellular organism.
+[[initial.inoculum]]
+substance = "G00"
+center = [0.0012, 0.0012, 0.0012]
+radius = 0.00035
+concentration = 0.03

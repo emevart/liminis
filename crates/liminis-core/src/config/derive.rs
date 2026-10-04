@@ -247,6 +247,29 @@ pub struct Derived {
     /// `None` on a scenario whose settling process is off, or on which is on and
     /// declares no `physics.mu` — the second of which the validator refuses.
     medium: Option<DerivedMedium>,
+    initial: DerivedInitial,
+}
+
+/// Initial-state declarations resolved to lanes and integer storage units.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DerivedInitial {
+    pub dx: f64,
+    pub concentration: Vec<DerivedConcentration>,
+    pub inocula: Vec<DerivedInoculum>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DerivedConcentration {
+    pub substance: u32,
+    pub amount: i128,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct DerivedInoculum {
+    pub substance: u32,
+    pub center: [f64; 3],
+    pub radius: f64,
+    pub amount: i128,
 }
 
 /// The outside reservoir, folded once at load (ADR-059).
@@ -951,6 +974,13 @@ impl Derived {
         self.medium.as_ref()
     }
 
+    /// Initial concentration overrides and inocula, resolved once at load.
+    #[inline]
+    #[must_use]
+    pub fn initial(&self) -> &DerivedInitial {
+        &self.initial
+    }
+
     /// The one record every scenario has: the enthalpy field (ADR-062).
     ///
     /// A named door rather than a search at the call site, because the host that
@@ -1408,6 +1438,7 @@ pub fn derive(config: &Config) -> Result<Derived> {
     //     `r -> k -> rho_bar -> w -> c` lives in `process/settle.rs` and is
     //     folded against the grid a world actually has.
     let medium = resolve_medium(config);
+    let initial = resolve_initial(config, &substances, v_voxel)?;
 
     Ok(Derived {
         v_voxel,
@@ -1420,6 +1451,54 @@ pub fn derive(config: &Config) -> Result<Derived> {
         velocity,
         pressure,
         medium,
+        initial,
+    })
+}
+
+fn resolve_initial(
+    config: &Config,
+    substances: &[DerivedSubstance],
+    v_voxel: f64,
+) -> Result<DerivedInitial> {
+    let substance_index = |id: &str| {
+        substances
+            .iter()
+            .position(|substance| substance.id == id)
+            .map(|index| index as u32)
+    };
+    let mut concentration = Vec::with_capacity(config.initial.concentration.len());
+    for (id, value) in &config.initial.concentration {
+        let substance = substance_index(id).ok_or_else(|| {
+            anyhow::anyhow!("initial concentration names unknown substance `{id}`")
+        })?;
+        let k = substances[substance as usize].k;
+        concentration.push(DerivedConcentration {
+            substance,
+            amount: amount_in_units(*value, v_voxel, k)
+                .with_context(|| format!("initial.concentration.{id}"))?,
+        });
+    }
+    let mut inocula = Vec::with_capacity(config.initial.inoculum.len());
+    for (index, declared) in config.initial.inoculum.iter().enumerate() {
+        let substance = substance_index(&declared.substance).ok_or_else(|| {
+            anyhow::anyhow!(
+                "initial.inoculum[{index}] names unknown substance `{}`",
+                declared.substance
+            )
+        })?;
+        let k = substances[substance as usize].k;
+        inocula.push(DerivedInoculum {
+            substance,
+            center: declared.center,
+            radius: declared.radius,
+            amount: amount_in_units(declared.concentration, v_voxel, k)
+                .with_context(|| format!("initial.inoculum[{index}].concentration"))?,
+        });
+    }
+    Ok(DerivedInitial {
+        dx: config.grid.dx,
+        concentration,
+        inocula,
     })
 }
 

@@ -1,6 +1,9 @@
 param(
     [ValidateRange(1024, 65535)]
     [int]$Port = 8080,
+    [string]$Config,
+    [ValidatePattern('^[0-9]{1,20}$')]
+    [string]$Seed = '42',
     [switch]$OpenBrowser
 )
 
@@ -30,7 +33,12 @@ try {
     Copy-Item -LiteralPath $binaryPath -Destination $runPath -Force
     $logPath = Join-Path $projectPath "target\local-$chosenPort.log"
     $errorPath = Join-Path $projectPath "target\local-$chosenPort.error.log"
-    $serverProcess = Start-Process -FilePath $runPath -ArgumentList @('serve', '--port', $chosenPort) `
+    $serverArgs = @('serve', '--port', $chosenPort, '--seed', $Seed)
+    if ($Config) {
+        $configPath = (Resolve-Path -LiteralPath $Config).Path
+        $serverArgs += @('--config', "`"$configPath`"")
+    }
+    $serverProcess = Start-Process -FilePath $runPath -ArgumentList $serverArgs `
         -WorkingDirectory $projectPath -WindowStyle Hidden -PassThru `
         -RedirectStandardOutput $logPath -RedirectStandardError $errorPath
     $localUrl = "http://127.0.0.1:$chosenPort/"

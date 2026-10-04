@@ -27,18 +27,20 @@
 //! is a separate entry point, for the reason written on [`load`].
 
 mod derive;
+mod genetics;
 mod hash;
 mod schema;
 mod validate;
 
 pub use derive::{
-    Derived, DerivedEnergy, DerivedField, DerivedLight, DerivedReaction, DerivedSubstance, Nu,
-    derive,
+    Derived, DerivedConcentration, DerivedEnergy, DerivedField, DerivedInitial, DerivedInoculum,
+    DerivedLight, DerivedReaction, DerivedSubstance, Nu, derive,
 };
+pub use genetics::decode_genotypes;
 pub use hash::{NOT_HASHED, canonical, config_hash};
 pub use schema::{
-    Boundary, Calibration, Config, Face, Field, Grid, Initial, Layer, Physics, Process, Rate,
-    Reaction, Requirement, Reservoir, Scale, Substance,
+    Boundary, Calibration, Config, Face, Field, GeneticPathway, Genetics, Genotype, Grid, Initial,
+    Inoculum, Layer, Physics, Process, Rate, Reaction, Requirement, Reservoir, Scale, Substance,
 };
 pub use validate::validate;
 
@@ -163,6 +165,7 @@ pub fn parse(text: &str) -> Result<Config> {
 /// pedantry: "the last one wins" would make the canonical form depend on the
 /// order the records were typed in.
 pub fn materialise(config: &mut Config) -> Result<()> {
+    genetics::materialise(config).context("materialising bounded genetics")?;
     let mut written = [false; ROSTER_LEN];
     for record in &config.process {
         let Some(id) = ProcessId::from_id(&record.id) else {

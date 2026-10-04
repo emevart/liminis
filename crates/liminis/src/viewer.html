@@ -608,7 +608,7 @@ SOFTWARE.
       .field-overlay .chip { background:rgba(9,13,12,.76); backdrop-filter:blur(8px); }
       .observer { min-width:0; min-height:0; display:grid; grid-template-rows:minmax(520px,65vh) 220px auto; overflow:auto; background:#0e1311; order:1; }
       .instrument { position:relative; min-height:0; padding:12px 14px; border-bottom:1px solid var(--rule); }
-      .instrument.culture { display:grid; grid-template-rows:auto auto minmax(0,1fr); }
+      .instrument.culture { display:grid; grid-template-rows:auto auto auto minmax(0,1fr); }
       .instrument-head { min-height:28px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
       .instrument-head strong { color:var(--ink-2); font-size:11px; font-weight:500; }
       .instrument canvas { display:block; width:100%; height:calc(100% - 28px); min-height:120px; }
@@ -621,6 +621,20 @@ SOFTWARE.
       .metric b { display:block; margin-top:2px; font:500 15px ui-monospace,SFMono-Regular,Menlo,monospace; overflow:hidden; text-overflow:ellipsis; }
       .ecotypes { padding:9px 14px 13px; }
       .culture .chips { margin:4px 0 8px; }
+      .culture #microscope { grid-row:4; }
+      .mode-control { display:flex; gap:2px; flex-wrap:wrap; margin:3px 0 4px; }
+      .mode-control button { padding:3px 9px; border-color:transparent; color:var(--muted); font-size:11px; }
+      .mode-control button[aria-pressed="true"] { color:var(--ink); border-color:var(--axis); background:#17201c; }
+      .genetics-panel { margin-top:12px; padding-top:10px; border-top:1px solid var(--rule); }
+      .genome-map { position:relative; width:min(100%,310px); margin:8px auto; display:grid; grid-template-columns:1fr 1fr; gap:24px 74px; }
+      .genome-edges { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+      .genome-edges line { stroke:#44534b; stroke-width:1; }
+      .genome-node { position:relative; z-index:1; min-height:48px; padding:5px 7px; background:#111815; border-color:#344039; color:var(--muted); font:11px ui-monospace,SFMono-Regular,Menlo,monospace; }
+      .genome-node[data-seen="1"] { color:var(--ink); border-color:var(--genome-color); box-shadow:inset 3px 0 0 var(--genome-color); }
+      .genome-node[aria-pressed="true"] { background:#1a241f; }
+      .genome-node small { display:block; color:var(--muted); font:9px ui-sans-serif,sans-serif; }
+      .genome-detail { min-height:34px; color:var(--ink-2); font-size:10px; line-height:1.45; }
+      .genome-detail b { color:var(--ink); font-weight:500; }
       .eco-row { display:grid; grid-template-columns:minmax(88px,1fr) 2.2fr auto; align-items:center; gap:9px; padding:4px 0; font-size:11px; }
       .eco-name { display:flex; align-items:center; gap:7px; min-width:0; }
       .eco-name span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -673,6 +687,7 @@ SOFTWARE.
         .shell { padding-bottom:108px; }
         .instrument { padding:10px; }
         .culture .chip { padding:3px 6px; }
+        .genome-map { gap:18px 44px; }
       }
     </style>
   </head>
@@ -716,13 +731,14 @@ SOFTWARE.
               <strong id="slice-scale" class="num">— mol/m³</strong>
               <label class="slice-control micro">z <span id="slice-value" class="num">—</span><input id="slice" type="range" min="0" max="0" value="0" /></label>
             </div>
+            <div class="mode-control" id="field-modes" role="group" aria-label="Observed field"></div>
             <div class="chips" id="chips" role="group" aria-label="Ecotypes"></div>
             <canvas id="microscope" aria-label="Horizontal voxel slice"></canvas>
             <div class="tip micro-tip" id="micro-tip" role="status"></div>
           </section>
           <section class="instrument ecology-only" aria-label="Ecology history">
             <div class="instrument-head">
-              <span class="micro">Ecology history · this session</span>
+              <span class="micro" id="history-label">Ecology history · this session</span>
               <strong><span id="history-span">0</span> ticks</strong>
             </div>
             <canvas id="timeline"></canvas>
@@ -739,6 +755,11 @@ SOFTWARE.
               <div class="micro" style="margin-top:8px">Inherited maximum growth rate · weighted share</div>
               <div class="trait-mark" id="trait-mark"></div>
               <div class="trait-labels num"><span id="trait-min">—</span><span>vmax</span><span id="trait-max">—</span></div>
+              <div class="genetics-panel" id="genetics-panel" hidden>
+                <div class="micro">Genetic neighbours · one-bit mutation, not ancestry</div>
+                <div class="genome-map" id="genome-map"><svg class="genome-edges" aria-hidden="true"></svg></div>
+                <div class="genome-detail" id="genome-detail"></div>
+              </div>
             </div>
           </div>
           <section class="reading chemistry" aria-label="Vertical chemistry profile">
@@ -894,6 +915,8 @@ SOFTWARE.
         ecology: null,
         history: [],
         sliceZ: null,
+        fieldMode: "biomass",
+        genomeSelected: null,
         hoverCell: null,
         connected: true,
         everConnected: false,
@@ -1438,6 +1461,34 @@ SOFTWARE.
         return { ctx, w, h };
       }
 
+      const resourceLabel = (id) => ({ FOOD: "Food", DET: "Detritus", O2: "Oxygen" })[id]
+        || String(id).toLowerCase().replaceAll("_", " ").replace(/^./, (c) => c.toUpperCase());
+      function availableModes() {
+        const e = view.ecology;
+        const ids = [...(e?.genetics?.resources || [])];
+        if ((e?.cells || []).some((cell) => Object.hasOwn(cell.resources || {}, "O2"))) ids.push("O2");
+        const unique = [...new Set(ids)];
+        const palette = ["#67d6a5", "#ff8b79", "#65bff0", "#d4a9f5"];
+        return [{ id:"biomass", label:"Biomass", color:null }, ...unique.map((id, i) => ({ id, label:resourceLabel(id), color:palette[i % palette.length] }))];
+      }
+      function renderFieldModes() {
+        const modes = availableModes();
+        if (!modes.some((m) => m.id === view.fieldMode)) view.fieldMode = "biomass";
+        const host = el("field-modes"); host.textContent = "";
+        host.hidden = modes.length <= 1;
+        for (const mode of modes) {
+          const button = document.createElement("button");
+          button.type = "button"; button.textContent = mode.label;
+          button.setAttribute("aria-pressed", String(mode.id === view.fieldMode));
+          button.addEventListener("click", () => {
+            view.fieldMode = mode.id;
+            renderFieldModes(); drawMicroscope(); drawTimeline();
+          });
+          host.append(button);
+        }
+        el("chips").hidden = view.fieldMode !== "biomass";
+      }
+
       function drawMicroscope() {
         const e = view.ecology;
         if (!e || !Array.isArray(e.cells)) return;
@@ -1448,12 +1499,24 @@ SOFTWARE.
         const ny = number(e.grid?.ny, view.state?.grid?.ny || 1);
         const side = Math.min(w / nx, h / ny);
         const ox = (w - nx * side) / 2, oy = (h - ny * side) / 2;
-        const positive = e.cells.map((c) => number(c.biomass)).filter((v) => v > 0).sort((a,b) => a-b);
-        const scale = positive.length ? positive[Math.min(positive.length - 1, Math.floor(positive.length * .95))] : 1;
+        const mode = availableModes().find((m) => m.id === view.fieldMode) || availableModes()[0];
+        const valueOf = mode.id === "biomass"
+          ? (cell) => number(cell.biomass)
+          : (cell) => number(cell.resources?.[mode.id]);
+        const positive = e.cells.map(valueOf).filter((v) => v > 0).sort((a,b) => a-b);
+        const scale = positive.length ? positive[Math.min(positive.length - 1, Math.floor(positive.length * .95))] : 0;
         const colors = (e.ecotypes || []).map((x) => hexRgb(x.color));
         const enabled = new Set(view.fields.filter((f) => f.on).map((f) => f.id));
         for (const cell of e.cells) {
-          const biomass = number(cell.biomass);
+          const biomass = valueOf(cell);
+          if (mode.id !== "biomass") {
+            const ratio = Math.min(1, biomass / Math.max(scale, 1e-30));
+            const [r,g,b] = hexRgb(mode.color);
+            ctx.fillStyle = `rgba(${r},${g},${b},${ratio > 0 ? .1 + .9 * Math.sqrt(ratio) : 0})`;
+            const inset = Math.min(.7, side*.06);
+            ctx.fillRect(ox + number(cell.x)*side + inset, oy + (ny-1-number(cell.y))*side + inset, Math.max(0,side-2*inset), Math.max(0,side-2*inset));
+            continue;
+          }
           const shares = Array.isArray(cell.shares) ? cell.shares : [];
           const active = shares.map((share, i) => ({ i, share: enabled.has(e.ecotypes?.[i]?.id) ? Math.max(0, number(share)) : 0 }));
           const sum = active.reduce((total, part) => total + part.share, 0);
@@ -1487,10 +1550,10 @@ SOFTWARE.
           ctx.restore();
         }
         ctx.strokeStyle = "rgba(190,220,204,.25)"; ctx.strokeRect(ox+.5, oy+.5, nx*side-1, ny*side-1);
-        el("slice-scale").textContent = `0–${formatSI(scale)} mol/m³ · p95`;
+        el("slice-scale").textContent = `0–${formatSI(scale)} mol/m³ · occupied p95`;
         const dx = number(e.grid?.dx, view.state?.grid?.dx);
         const sample = dx < 1e-3 ? `${formatSI(dx * 1e6)} µm` : dx < 1 ? `${formatSI(dx * 1e3)} mm` : `${formatSI(dx)} m`;
-        el("culture-label").textContent = `Biomass · ${sample} samples`;
+        el("culture-label").textContent = `${mode.label} · ${sample} samples`;
         view.sliceGeometry = { ox, oy, side, nx, ny };
       }
 
@@ -1503,6 +1566,7 @@ SOFTWARE.
         view.history.push({
           tick: number(e.tick), biomass: number(e.metrics?.biomass_mol),
           shares: Object.fromEntries(e.ecotypes.map((x) => [x.id, number(x.share)])),
+          resources: Object.fromEntries((e.resources || []).map((x) => [x.id, number(x.mean)])),
         });
         if (view.history.length > 360) view.history.splice(0, view.history.length - 360);
       }
@@ -1517,6 +1581,26 @@ SOFTWARE.
         for (let i=0;i<=4;i++) { const y=p.t+ih*i/4+.5; ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(w-p.r,y);ctx.stroke(); }
         if (!data.length) return;
         const xAt = (i) => p.l + (data.length === 1 ? iw : i*iw/(data.length-1));
+        const mode = availableModes().find((m) => m.id === view.fieldMode) || availableModes()[0];
+        if (mode.id !== "biomass") {
+          const values = data.map((d) => number(d.resources?.[mode.id]));
+          const maxValue = Math.max(...values, 0), denominator = Math.max(maxValue, 1e-30);
+          ctx.beginPath(); ctx.moveTo(xAt(0), p.t+ih);
+          values.forEach((v,i) => ctx.lineTo(xAt(i),p.t+ih*(1-v/denominator)));
+          ctx.lineTo(xAt(values.length-1),p.t+ih);ctx.closePath();
+          ctx.fillStyle=mode.color;ctx.globalAlpha=.14;ctx.fill();ctx.globalAlpha=1;
+          ctx.beginPath();values.forEach((v,i)=>{const y=p.t+ih*(1-v/denominator);i?ctx.lineTo(xAt(i),y):ctx.moveTo(xAt(i),y);});
+          ctx.strokeStyle=mode.color;ctx.lineWidth=1.6;ctx.stroke();
+          ctx.fillStyle="#829188";ctx.font="9px ui-monospace,monospace";
+          ctx.fillText(formatSI(maxValue),3,p.t+4);ctx.fillText("0",26,p.t+ih+3);
+          ctx.fillText(String(data[0].tick),p.l,h-5);
+          const lastTick=String(data.at(-1).tick);ctx.fillText(lastTick,w-p.r-ctx.measureText(lastTick).width,h-5);
+          ctx.fillStyle="#dce8e1";ctx.fillText(`${mode.label.toLowerCase()} ${formatSI(values.at(-1))} mol/m³`,p.l+5,p.t+12);
+          el("history-label").textContent=`${mode.label} history · mean concentration`;
+          el("history-span").textContent=Math.max(0,data.at(-1).tick-data[0].tick).toLocaleString("en-US");
+          return;
+        }
+        el("history-label").textContent="Ecology history · this session";
         let lower = data.map(() => 0);
         eco.forEach((ec) => {
           ctx.beginPath(); ctx.moveTo(xAt(0), p.t+ih);
@@ -1534,6 +1618,45 @@ SOFTWARE.
         const last=String(data.at(-1).tick);ctx.fillText(last,w-p.r-ctx.measureText(last).width,h-5);
         ctx.fillStyle="#dce8e1";ctx.fillText(`biomass ${formatSI(data.at(-1).biomass)} mol`,p.l+5,p.t+12);
         el("history-span").textContent = Math.max(0, data.at(-1).tick-data[0].tick).toLocaleString("en-US");
+      }
+
+      function renderGenetics() {
+        const genetics = view.ecology?.genetics;
+        const typed = (view.ecology?.ecotypes || []).filter((ec) => ec.genome?.bits);
+        const panel = el("genetics-panel");
+        if (!genetics || !typed.length) { panel.hidden = true; return; }
+        panel.hidden = false;
+        const byBits = [...typed].sort((a,b) => number(a.genome.code)-number(b.genome.code));
+        if (!byBits.some((ec) => ec.genome.bits === view.genomeSelected)) {
+          view.genomeSelected = (byBits.find((ec) => ec.first_seen_tick != null) || byBits[0]).genome.bits;
+        }
+        const map = el("genome-map"); map.textContent = "";
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.classList.add("genome-edges"); svg.setAttribute("viewBox", "0 0 100 100"); svg.setAttribute("aria-hidden", "true");
+        const pos = (bits) => ({ x:25+50*number(bits.at(-1)), y:25+50*number(bits[0]) });
+        for (let i=0;i<byBits.length;i++) for (let j=i+1;j<byBits.length;j++) {
+          const a=byBits[i].genome.bits,b=byBits[j].genome.bits;
+          if ([...a].filter((bit,k)=>bit!==b[k]).length!==1) continue;
+          const p=pos(a),q=pos(b),line=document.createElementNS("http://www.w3.org/2000/svg","line");
+          line.setAttribute("x1",p.x);line.setAttribute("y1",p.y);line.setAttribute("x2",q.x);line.setAttribute("y2",q.y);svg.append(line);
+        }
+        map.append(svg);
+        for (const ec of byBits) {
+          const button=document.createElement("button"), bits=ec.genome.bits;
+          button.type="button";button.className="genome-node";button.style.gridColumn=String(number(bits.at(-1))+1);button.style.gridRow=String(number(bits[0])+1);
+          button.style.setProperty("--genome-color",ec.color);button.dataset.seen=String(ec.first_seen_tick!=null?1:0);
+          button.setAttribute("aria-pressed",String(bits===view.genomeSelected));
+          const code=document.createElement("span");code.textContent=ec.label||ec.id;
+          const seen=document.createElement("small");seen.textContent=ec.first_seen_tick!=null?`first seen · t${ec.first_seen_tick}`:"not observed";
+          button.append(code,seen);button.addEventListener("click",()=>{view.genomeSelected=bits;renderGenetics();});map.append(button);
+        }
+        const ec=byBits.find((x)=>x.genome.bits===view.genomeSelected), detail=el("genome-detail");detail.textContent="";
+        if (!ec) return;
+        const title=document.createElement("b");title.textContent=`${ec.label||ec.id} · ${ec.first_seen_tick!=null?`observed at tick ${ec.first_seen_tick}`:"not yet observed"}`;
+        const loci=(genetics.loci||[]).map((locus)=>`${locus.label}: ${locus.alleles?.[number(ec.genome.bits.at(-1-number(locus.bit)))]||"—"}`);
+        const allocation=(ec.genome.allocation||[]).map((a)=>`${resourceLabel(a.resource)} ${(number(a.fraction)*100).toFixed(0)}%`).join(" · ");
+        const traits=document.createElement("div");traits.textContent=`${loci.join(" · ")} · rate ×${formatSI(ec.genome.rate_factor)} · Kₘ ×${formatSI(ec.genome.km_factor)}${allocation?` · ${allocation}`:""} · mutation p ${formatSI(genetics.mutation_probability)}`;
+        detail.append(title,traits);
       }
 
       function renderEcology() {
@@ -1568,6 +1691,8 @@ SOFTWARE.
         const mark=el("trait-mark");mark.textContent="";
         ecotypes.forEach((ec)=>{const pin=document.createElement("span");pin.className="trait-pin";pin.style.left=`${(number(ec.vmax)-lo)/span*100}%`;pin.style.height=`${3+number(ec.share)*15}px`;pin.style.background=ec.color;pin.title=`${ec.label || ec.id}: vmax ${formatSI(ec.vmax)}, share ${(number(ec.share)*100).toFixed(1)}%`;mark.append(pin);});
         el("trait-min").textContent=Number.isFinite(lo)?formatSI(lo):"—";el("trait-max").textContent=Number.isFinite(hi)?formatSI(hi):"—";
+        renderFieldModes();
+        renderGenetics();
         drawMicroscope(); recordHistory(); drawTimeline();
       }
 
@@ -1897,7 +2022,13 @@ SOFTWARE.
           const cell=(e.cells||[]).find((c)=>number(c.x)===x&&number(c.y)===y);
           if(!cell){tip.dataset.open="0";return;}
           const ec=(e.ecotypes||[])[cell.dominant];
-          tip.textContent=`voxel ${x},${y},${e.slice_z} · biomass ${formatSI(cell.biomass)} mol/m³ · ${ec?.label || "no dominant type"} · resource ${formatSI(cell.resource)} mol/m³ · O2 ${formatSI(cell.oxygen)} mol/m³`;
+          const mode=availableModes().find((m)=>m.id===view.fieldMode)||availableModes()[0];
+          const primary=mode.id==="biomass"?number(cell.biomass):number(cell.resources?.[mode.id]);
+          let extras=availableModes().filter((m)=>m.id!=="biomass"&&m.id!==mode.id)
+            .map((m)=>`${m.label} ${formatSI(cell.resources?.[m.id])}`).join(" · ");
+          if (!cell.resources) extras=`resource ${formatSI(cell.resource)} · Oxygen ${formatSI(cell.oxygen)}`;
+          const dominant=number(cell.biomass)>0?(ec?.label||"mixed biomass"):"no biomass";
+          tip.textContent=`voxel ${x},${y},${e.slice_z} · ${mode.label} ${formatSI(primary)} mol/m³ · ${dominant}${extras?` · ${extras} mol/m³`:""}`;
           tip.style.left=`${Math.min(innerWidth-320,event.clientX+14)}px`;tip.style.top=`${Math.min(innerHeight-50,event.clientY+14)}px`;tip.dataset.open="1";
         });
         canvas.addEventListener("pointerleave",()=>{tip.dataset.open="0";});

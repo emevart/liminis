@@ -1216,4 +1216,6 @@
 /// Version 27 enables counted chemistry, runtime ceilings and eco catalysis
 /// from registry biomass (ADR-088, ADR-091). Previous run semantics remain
 /// reproducible on version 26.
-pub const WORLD_FORMAT_VERSION: u32 = 27;
+/// Version 28 compiles two-locus genotypes into checked chemistry and permits
+/// declared inocula over explicit initial concentrations (ADR-093, ADR-094).
+pub const WORLD_FORMAT_VERSION: u32 = 28;

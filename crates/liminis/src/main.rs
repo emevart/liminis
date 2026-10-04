@@ -60,14 +60,14 @@ enum Command {
     },
     /// Run a scenario and serve the viewer on a local port.
     ///
-    /// Defaults to the small living-world scenario; config and seed remain
-    /// explicit overrides for reproducible experiments (ADR-092).
+    /// Defaults to the small genetic-colony scenario; config and seed remain
+    /// explicit overrides for reproducible experiments (ADR-095).
     Serve {
         /// Path to a scenario TOML file.
         #[arg(
             long,
             value_name = "PATH",
-            default_value = "configs/scenarios/living-world.toml"
+            default_value = "configs/scenarios/genetic-colony.toml"
         )]
         config: PathBuf,
         /// Seed for the run.
@@ -146,6 +146,21 @@ fn route(shared: &Arc<Mutex<serve::Sim>>, request: &Request) -> Response {
 mod tests {
     use super::*;
     use serve::fixture;
+
+    #[test]
+    fn serve_defaults_to_the_accepted_genetic_experiment() {
+        let Command::Serve { config, seed, port } =
+            Cli::try_parse_from(["liminis", "serve"]).unwrap().command
+        else {
+            panic!("serve must select the local observer");
+        };
+        assert_eq!(
+            config,
+            PathBuf::from("configs/scenarios/genetic-colony.toml")
+        );
+        assert_eq!(seed, 42);
+        assert_eq!(port, 8080);
+    }
 
     fn get(shared: &Arc<Mutex<serve::Sim>>, path: &str) -> Response {
         route(
