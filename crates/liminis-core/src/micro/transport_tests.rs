@@ -228,6 +228,50 @@ fn transport_order_is_id_counter_keyed_and_resume_restores_exact_future() {
 }
 
 #[test]
+fn stokes_einstein_absolute_si_oracle_and_parameter_proportionalities() {
+    let mut config = spatial_config(42, 0.375);
+    config.temperature_kelvin = 310.0;
+    config.dt_seconds = 0.125;
+    config.spatial.as_mut().unwrap().viscosity_pa_s = 0.00125;
+    let mut genome = config.founder.genome;
+    genome.division_mass = 800;
+    genome.spatial.as_mut().unwrap().radius_at_division_m = 2.5e-6;
+    let mass = 100; // mass/division_mass = 1/8, so current radius is 1.25e-6 m.
+
+    // Independent 80-decimal-digit evaluation using the SI-defined exact
+    // k_B = 1.380649e-23 J/K and an 80-digit decimal pi, without production
+    // constants: D = mobility*k_B*T/(6*pi*eta*r), sigma = sqrt(2*D*dt).
+    // Inputs are T=310 K, eta=0.00125 Pa s, r_division=2.5e-6 m,
+    // mass fraction=1/8, mobility=0.375, dt=0.125 s.
+    const EXPECTED_D_M2_PER_S: f64 = 5.449_480_403_017_079e-14;
+    const EXPECTED_SIGMA_M: f64 = 1.167_206_108_943_176_2e-7;
+    let assert_relative = |label: &str, actual: f64, expected: f64| {
+        // Allow native cbrt/sqrt rounding, while rejecting unit/factor errors.
+        assert!(
+            actual.is_finite() && (actual / expected - 1.0).abs() <= 1e-12,
+            "{label}: {actual:e}, expected {expected:e}"
+        );
+    };
+    for (label, temperature, viscosity, dt, diffusion_factor, sigma_factor) in [
+        ("absolute SI", 310.0, 0.00125, 0.125, 1.0, 1.0),
+        ("fourfold T", 1240.0, 0.00125, 0.125, 4.0, 2.0),
+        ("fourfold eta", 310.0, 0.005, 0.125, 0.25, 0.5),
+        ("fourfold dt", 310.0, 0.00125, 0.5, 1.0, 2.0),
+    ] {
+        config.temperature_kelvin = temperature;
+        config.spatial.as_mut().unwrap().viscosity_pa_s = viscosity;
+        config.dt_seconds = dt;
+        let actual_sigma = sigma(&config, &genome, mass).unwrap();
+        assert_relative(label, actual_sigma, EXPECTED_SIGMA_M * sigma_factor);
+        assert_relative(
+            label,
+            actual_sigma * actual_sigma / (2.0 * dt),
+            EXPECTED_D_M2_PER_S * diffusion_factor,
+        );
+    }
+}
+
+#[test]
 fn preexisting_mass_sets_radius_and_daughters_inherit_one_parent_endpoint() {
     let config = spatial_config(42, 1.0);
     let mut state = MicroState::new(&config).unwrap();
