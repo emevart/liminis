@@ -74,6 +74,7 @@ fn capture(tick: u64) -> Capture {
     state["core"]["tick"] = json!(tick);
     Capture {
         tick,
+        world_format_version: 29,
         running: tick.is_multiple_of(2),
         tps: 3.0,
         state,
@@ -157,6 +158,79 @@ fn exact_json_round_trips_and_resume_is_two_phase() {
 }
 
 #[test]
+fn cell_world_compatibility_is_exactly_29_or_30() {
+    assert!(supports_cell_version(29));
+    assert!(supports_cell_version(30));
+    assert!(!supports_cell_version(28));
+    assert!(!supports_cell_version(31));
+
+    let mut legacy = serde_json::to_value(capture(7)).unwrap();
+    legacy
+        .as_object_mut()
+        .unwrap()
+        .remove("world_format_version");
+    let decoded: Capture = serde_json::from_value(legacy).unwrap();
+    assert_eq!(decoded.world_format_version, 29);
+
+    let root = Temp::new();
+    let mut storage = new_storage(&root);
+    let mut wrong = capture(1);
+    wrong.world_format_version = 30;
+    assert!(
+        storage
+            .save(wrong)
+            .unwrap_err()
+            .to_string()
+            .contains("world identity")
+    );
+    stop(storage);
+}
+
+#[test]
+fn validated_implicit_latest_repairs_only_its_missing_marker() {
+    let root = Temp::new();
+    let mut storage = new_storage(&root);
+    let info = save(&mut storage, 1);
+    let run_id = storage.run_id().to_string();
+    let marker = storage
+        .lease
+        .path
+        .join("checkpoints")
+        .join(&info.checkpoint_id)
+        .join("published");
+    stop(storage);
+    fs::remove_file(&marker).unwrap();
+    let prepared = prepare_resume(&root.0, &run_id, None).unwrap();
+    assert!(!marker.exists(), "prepare is still read-only");
+    let resumed = prepared.start().unwrap();
+    assert!(
+        marker.is_file(),
+        "validated implicit latest repairs its marker"
+    );
+    stop(resumed);
+
+    let root = Temp::new();
+    let mut storage = new_storage(&root);
+    let info = save(&mut storage, 1);
+    let run_id = storage.run_id().to_string();
+    let marker = storage
+        .lease
+        .path
+        .join("checkpoints")
+        .join(&info.checkpoint_id)
+        .join("published");
+    stop(storage);
+    fs::remove_file(&marker).unwrap();
+    let prepared = prepare_resume(&root.0, &run_id, Some(&info.checkpoint_id)).unwrap();
+    let resumed = prepared.start().unwrap();
+    assert!(
+        !marker.exists(),
+        "explicit orphan recovery does not publish the generation"
+    );
+    stop(resumed);
+}
+
+#[test]
 fn corrupt_truncated_trailing_and_wrong_identity_state_are_rejected() {
     for case in 0..4 {
         let root = Temp::new();
@@ -165,6 +239,11 @@ fn corrupt_truncated_trailing_and_wrong_identity_state_are_rejected() {
         let run = storage.lease.path.clone();
         let run_id = storage.run_id().to_string();
         stop(storage);
+        let marker = run
+            .join("checkpoints")
+            .join(&info.checkpoint_id)
+            .join("published");
+        fs::remove_file(&marker).unwrap();
         let path = run
             .join("checkpoints")
             .join(&info.checkpoint_id)
@@ -198,6 +277,7 @@ fn corrupt_truncated_trailing_and_wrong_identity_state_are_rejected() {
         };
         let error = prepare_error(&root, &run_id, None);
         assert!(error.contains(expected), "case {case}: {error}");
+        assert!(!marker.exists(), "invalid latest must remain unmarked");
     }
 }
 

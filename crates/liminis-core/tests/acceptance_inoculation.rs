@@ -69,6 +69,38 @@ fn front(world: &World, substance: u32) -> Vec<i128> {
 }
 
 #[test]
+fn same_substance_inocula_cannot_share_a_tolerant_boundary_voxel() {
+    let text = with_initial(
+        r#"
+[[initial.inoculum]]
+substance = "FOOD"
+center = [0.0001, 0.00015, 0.00015]
+radius = 0.00005
+concentration = 1.0
+
+[[initial.inoculum]]
+substance = "FOOD"
+center = [0.0002, 0.00015, 0.00015]
+radius = 0.00005
+concentration = 2.0
+"#,
+    );
+    let mut parsed = config::parse(&text).unwrap();
+    for inoculum in &mut parsed.initial.inoculum {
+        inoculum.radius = (0.5 - 1.0e-15) * DX;
+    }
+    let error = config::validate(&parsed).unwrap_err().to_string();
+    assert!(error.contains("overlap"), "{error}");
+
+    parsed.initial.inoculum[1].center[0] = 3.0 * DX;
+    config::validate(&parsed).expect("separated closed inocula remain valid");
+
+    parsed.initial.inoculum[1].center[0] = 2.0 * DX;
+    parsed.initial.inoculum[1].substance = "WATER".into();
+    config::validate(&parsed).expect("distinct substances may share a boundary voxel");
+}
+
+#[test]
 fn declared_founders_overwrite_the_closed_ball_on_their_own_lanes() {
     let scenario = with_initial(
         r#"

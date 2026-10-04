@@ -1221,4 +1221,8 @@
 /// Version 29 adds a separate, well-mixed individual-cell chamber (ADR-099,
 /// ADR-101). Eco tick semantics are unchanged; ADR-100 permits only eco28
 /// resume with its original identity preserved, never cross-kind loading.
-pub const WORLD_FORMAT_VERSION: u32 = 29;
+/// Version 30 replaces floating shared reaction competition with conservative
+/// integer Q31 scaling and rejects unsafe accumulator bounds (ADR-102).
+/// Eco trajectories change: eco28/29 resume is refused (ADR-103). The separate
+/// cell engine is unchanged, so cells29 may resume preserving identity 29.
+pub const WORLD_FORMAT_VERSION: u32 = 30;

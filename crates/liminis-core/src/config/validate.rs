@@ -616,17 +616,28 @@ fn domains(config: &Config) -> Result<()> {
             if a.substance != b.substance {
                 continue;
             }
-            let distance_squared: f64 = a
-                .center
+            let centre_a = a.center.map(|coordinate| coordinate / config.grid.dx);
+            let centre_b = b.center.map(|coordinate| coordinate / config.grid.dx);
+            let distance_squared: f64 = centre_a
                 .iter()
-                .zip(b.center)
+                .zip(centre_b)
                 .map(|(a, b)| {
                     let delta = *a - b;
                     delta * delta
                 })
                 .sum();
-            let radii = a.radius + b.radius;
-            if distance_squared <= radii * radii {
+            // Bound the generator's closed-sphere tolerance in the same voxel
+            // units, so nominally disjoint declarations cannot overwrite one
+            // shared boundary voxel through floating-point expansion.
+            let epsilon = 16.0 * f64::EPSILON;
+            let effective_radius = |radius: f64| {
+                let radius = radius / config.grid.dx;
+                ((radius * radius + epsilon) / (1.0 - epsilon)).sqrt()
+            };
+            let radii = effective_radius(a.radius) + effective_radius(b.radius);
+            let radii_squared = radii * radii;
+            let allowance = epsilon * distance_squared.max(radii_squared).max(1.0);
+            if distance_squared <= radii_squared + allowance {
                 bail!(
                     "initial.inoculum[{left}] and initial.inoculum[{right}] overlap for substance `{}`; same-substance sphere overwrites must be disjoint",
                     a.substance

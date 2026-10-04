@@ -91,37 +91,124 @@ fn rewrite_envelope(run: &Path, info: &CheckpointInfo) {
     .expect("replace test generation metadata");
 }
 
+fn rewrite_session_format_and_header(
+    run: &Path,
+    session_id: &str,
+    format: u32,
+    edit_header: impl FnOnce(&mut serde_json::Map<String, Value>),
+) {
+    let session_root = run.join("sessions").join(session_id);
+    let session_path = session_root.join("session.json");
+    let mut session: SessionInfo = read_json(&session_path).unwrap();
+    session.format = format;
+    fs::write(session_path, serde_json::to_vec(&session).unwrap()).unwrap();
+    let history_path = session_root.join("metrics.ndjson");
+    let text = fs::read_to_string(&history_path).unwrap();
+    let (header, tail) = text.split_once('\n').unwrap();
+    let mut header: Value = serde_json::from_str(header).unwrap();
+    edit_header(header.as_object_mut().unwrap());
+    let mut bytes = serde_json::to_vec(&header).unwrap();
+    bytes.push(b'\n');
+    bytes.extend_from_slice(tail.as_bytes());
+    fs::write(history_path, bytes).unwrap();
+}
+
 #[test]
-fn eco28_compatibility_is_narrow_and_preserves_saved_identity() {
+fn eco_resume_accepts_only_the_current_world_and_names_the_legacy_reader() {
     assert!(supports_eco_version(WORLD_FORMAT_VERSION));
-    assert!(!supports_eco_version(27));
-    assert!(!supports_eco_version(WORLD_FORMAT_VERSION + 1));
-    if WORLD_FORMAT_VERSION != 29 {
-        return;
+    for version in [27, 28, 29, WORLD_FORMAT_VERSION + 1] {
+        if version != WORLD_FORMAT_VERSION {
+            assert!(!supports_eco_version(version));
+        }
     }
-    assert!(supports_eco_version(28));
+    assert!(
+        ensure_supported_eco_version(28)
+            .unwrap_err()
+            .to_string()
+            .contains("eco-world28.exe")
+    );
+    if WORLD_FORMAT_VERSION != 29 {
+        assert!(
+            ensure_supported_eco_version(29)
+                .unwrap_err()
+                .to_string()
+                .contains("matching older build")
+        );
+    }
+}
+
+#[test]
+fn world28_format_one_history_remains_explicitly_legacy_unbound() {
     let root = Temp::new();
     let mut sim = fixture();
     sim.identity.world_format_version = 28;
-    for _ in 0..7 {
-        assert!(super::super::safe_advance(&mut sim));
-    }
-    sim.running = false;
-    let mut storage = Persistence::create(&root.0, &sim).unwrap();
-    storage.wait_for_save().unwrap();
-    let run_id = storage.lease.info.run_id.clone();
-    stop(storage);
-    let mut resumed = resume(&root.0, &run_id, None).unwrap();
-    assert_eq!(resumed.identity.world_format_version, 28);
-    assert_eq!(resumed.ticks, sim.ticks);
-    assert!(resumed.last.is_none());
-    assert!(super::super::safe_advance(&mut resumed));
-    let mut storage = resumed.persistence.take().unwrap();
-    storage.save(&resumed, true).unwrap();
-    storage.wait_for_save().unwrap();
-    assert_eq!(saved(&storage).world_format_version, 28);
-    assert_eq!(storage.lease.info.world_format_version, 28);
-    stop(storage);
+    let mut persistence = Persistence::create(&root.0, &sim).unwrap();
+    persistence.wait_for_save().unwrap();
+    let checkpoint = saved(&persistence);
+    let run = persistence.lease.path.clone();
+    let lease_root = persistence.lease.root.clone();
+    let run_info = persistence.lease.info.clone();
+    stop(persistence);
+    rewrite_session_format_and_header(
+        &run,
+        &checkpoint.session_id,
+        LEGACY_SESSION_FORMAT,
+        |header| {
+            header.remove("run_id");
+            header.remove("session_id");
+        },
+    );
+    let lock = acquire(&run).unwrap();
+    let lease = Lease {
+        root: lease_root,
+        path: run,
+        info: run_info,
+        _lock: lock,
+    };
+    load_history(&lease, &checkpoint, &Model::of(&sim))
+        .expect("world 28 legacy history stays readable without claiming binding");
+}
+
+#[test]
+fn new_history_sessions_bind_the_run_and_session() {
+    assert!(!supports_eco_version(WORLD_FORMAT_VERSION + 1));
+    let root = Temp::new();
+    let (_, persistence) = stored(&root);
+    let run = persistence.lease.path.clone();
+    let run_id = persistence.lease.info.run_id.clone();
+    let checkpoint = saved(&persistence);
+    let session: SessionInfo = read_json(
+        &run.join("sessions")
+            .join(&checkpoint.session_id)
+            .join("session.json"),
+    )
+    .unwrap();
+    assert_eq!(session.format, SESSION_FORMAT);
+    stop(persistence);
+    rewrite_session_format_and_header(&run, &checkpoint.session_id, SESSION_FORMAT, |header| {
+        header.insert("session_id".into(), Value::String("session-other".into()));
+    });
+    assert!(resume_error(&root, &run_id, None).contains("run or session"));
+}
+
+#[test]
+fn format_one_history_is_not_accepted_for_a_newer_eco_world() {
+    let root = Temp::new();
+    let (_, persistence) = stored(&root);
+    let run = persistence.lease.path.clone();
+    let run_id = persistence.lease.info.run_id.clone();
+    let checkpoint = saved(&persistence);
+    stop(persistence);
+    rewrite_session_format_and_header(
+        &run,
+        &checkpoint.session_id,
+        LEGACY_SESSION_FORMAT,
+        |header| {
+            header.remove("run_id");
+            header.remove("session_id");
+        },
+    );
+    assert!(resume_error(&root, &run_id, None).contains("session format"));
 }
 
 #[test]
@@ -211,6 +298,62 @@ fn explicit_checkpoint_cannot_redirect_to_another_generation() {
     fs::create_dir(&alias).unwrap();
     write_json_new(&alias.join("metadata.json"), &info).unwrap();
     assert!(resume_error(&root, &id, Some("checkpoint-alias")).contains("requested"));
+}
+
+#[test]
+fn validated_latest_repairs_its_missing_retention_marker() {
+    let root = Temp::new();
+    let (_, persistence) = stored(&root);
+    let run = persistence.lease.path.clone();
+    let run_id = persistence.lease.info.run_id.clone();
+    let checkpoint = saved(&persistence);
+    let marker = run
+        .join("checkpoints")
+        .join(&checkpoint.checkpoint_id)
+        .join("published");
+    stop(persistence);
+    fs::remove_file(&marker).unwrap();
+    let mut resumed = resume(&root.0, &run_id, None).expect("validated latest resumes");
+    assert!(
+        marker.is_file(),
+        "implicit latest repairs its commit marker"
+    );
+    stop(resumed.persistence.take().unwrap());
+}
+
+#[test]
+fn explicit_or_invalid_checkpoint_does_not_gain_a_publication_marker() {
+    let root = Temp::new();
+    let (_, persistence) = stored(&root);
+    let run = persistence.lease.path.clone();
+    let run_id = persistence.lease.info.run_id.clone();
+    let checkpoint = saved(&persistence);
+    let generation = run.join("checkpoints").join(&checkpoint.checkpoint_id);
+    let marker = generation.join("published");
+    stop(persistence);
+    fs::remove_file(&marker).unwrap();
+
+    let mut resumed = resume(&root.0, &run_id, Some(&checkpoint.checkpoint_id))
+        .expect("complete orphan remains available for explicit manual recovery");
+    assert!(
+        !marker.exists(),
+        "manual recovery does not publish the orphan"
+    );
+    stop(resumed.persistence.take().unwrap());
+
+    let latest: CheckpointInfo = read_json(&run.join("latest.json")).unwrap();
+    let latest_generation = run.join("checkpoints").join(&latest.checkpoint_id);
+    let latest_marker = latest_generation.join("published");
+    fs::remove_file(&latest_marker).unwrap();
+    let state = latest_generation.join("state.limsnap");
+    let mut bytes = fs::read(&state).unwrap();
+    bytes[0] ^= 1;
+    fs::write(state, bytes).unwrap();
+    assert!(resume_error(&root, &run_id, None).contains("checksum"));
+    assert!(
+        !latest_marker.exists(),
+        "failed validation cannot repair a marker"
+    );
 }
 
 #[test]

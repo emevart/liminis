@@ -372,8 +372,8 @@ impl React {
                 lod: shape.enthalpy_lod,
                 cnx: shape.enthalpy_grid.nx(),
                 cny: shape.enthalpy_grid.ny(),
-                volume: Q::from_f64(v_voxel),
-                dt: Q::from_f64(config.dt),
+                volume: finite(v_voxel, "voxel volume", "all")?,
+                dt: finite(config.dt, "dt", "all")?,
             },
         };
 
@@ -424,7 +424,11 @@ impl React {
                 // exactly on the wrong extent.
                 this.km.push(if value < 0 {
                     let id = &derived.substances()[entry.substance as usize].id;
-                    Q::from_f64(record.rate.km.get(id).copied().unwrap_or(0.0))
+                    finite(
+                        record.rate.km.get(id).copied().unwrap_or(0.0),
+                        "rate.km",
+                        &reaction.id,
+                    )?
                 } else {
                     Q::ZERO
                 });
@@ -485,6 +489,14 @@ impl React {
                 .push(finite(record.rate.t_vmax, "rate.t_vmax", &reaction.id)?);
         }
 
+        check_accumulator_bounds(
+            this.nu(),
+            &derived
+                .substances()
+                .iter()
+                .map(|s| s.amount_at_max)
+                .collect::<Vec<_>>(),
+        )?;
         Ok(this)
     }
 
@@ -722,7 +734,7 @@ fn concentration_per_unit(derived: &Derived, v_voxel: f64) -> Result<Vec<Q>> {
     for substance in derived.substances() {
         let per_unit = 1.0 / (2f64.powi(i32::from(substance.k)) * v_voxel);
         let folded = Q::from_f64(per_unit);
-        if !per_unit.is_finite() || folded <= Q::ZERO {
+        if !per_unit.is_finite() || !folded.debug_f64().is_finite() || folded <= Q::ZERO {
             bail!(
                 "substance `{}` at k = {} in a voxel of {v_voxel} m^3 gives one \
                  storage unit a concentration of {per_unit} mol/m^3, which is not \
@@ -960,10 +972,55 @@ fn check_unimplemented_keys(reaction: &Reaction) -> Result<()> {
 /// a kernel `FLOAT` mode carries the infinity through the arithmetic and `FIXED`
 /// mode would carry a wrapped integer that no assertion sees.
 fn finite(value: f64, key: &str, reaction: &str) -> Result<Q> {
-    if !value.is_finite() {
-        bail!("reaction `{reaction}` declares {key} = {value}, which is not finite");
+    let folded = Q::from_f64(value);
+    if !value.is_finite() || !folded.debug_f64().is_finite() || (value != 0.0 && folded == Q::ZERO)
+    {
+        bail!(
+            "reaction `{reaction}` declares {key} = {value}, which is not representable as a finite nonzero Q"
+        );
     }
-    Ok(Q::from_f64(value))
+    Ok(folded)
+}
+
+/// A host-only proof for the kernel's i64 accumulators (ADR-102). The tick
+/// checks these source ceilings immediately before dispatch, after transport.
+fn check_accumulator_bounds(nu: Nu<'_>, ceilings: &[i128]) -> Result<()> {
+    let energy = ceilings.len();
+    let mut demand = vec![0i128; energy + 1];
+    let mut absolute_delta = vec![0i128; energy + 1];
+    let mut positive_delta = vec![0i128; energy + 1];
+    for (&begin, &len) in nu.begin.iter().zip(nu.len) {
+        let range = begin as usize..(begin + len) as usize;
+        let mut cap = i128::from(i32::MAX);
+        for entry in range.clone() {
+            let s = nu.nu_sub[entry] as usize;
+            let coefficient = i128::from(nu.nu[entry]);
+            if s != energy && coefficient < 0 {
+                cap = cap.min(ceilings[s] / -coefficient);
+            }
+        }
+        for entry in range {
+            let s = nu.nu_sub[entry] as usize;
+            let delta = i128::from(nu.nu[entry]) * cap;
+            demand[s] += (-delta).max(0);
+            absolute_delta[s] += delta.abs();
+            positive_delta[s] += delta.max(0);
+        }
+    }
+    for s in 0..=energy {
+        let limit = i128::from(i64::MAX);
+        if demand[s] > limit || absolute_delta[s] > limit {
+            bail!(
+                "reaction accumulator for slot {s} can exceed i64: demand {}, absolute delta {}",
+                demand[s],
+                absolute_delta[s]
+            );
+        }
+        if s != energy && ceilings[s] + positive_delta[s] > limit {
+            bail!("reaction source plus positive delta for substance {s} can exceed i64");
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -973,6 +1030,53 @@ mod tests {
     use crate::ledger::DomainSums;
     use crate::numeric::{q_conc_64, qadd, qdiv, qmul, rand, xi};
     use crate::world::{Boundary, LaneRef, World, WorldLayout};
+
+    #[test]
+    fn q_fold_rejects_finite_overflow_and_nonzero_underflow() {
+        for value in [f64::MAX, -f64::MAX, f64::MIN_POSITIVE] {
+            assert!(finite(value, "rate", "test").is_err());
+        }
+        assert_eq!(finite(0.0, "rate", "test").unwrap(), Q::ZERO);
+        assert_eq!(finite(1.0, "rate", "test").unwrap(), Q::ONE);
+    }
+
+    #[test]
+    fn accumulator_proof_rejects_aggregate_demand_and_delta_overflow() {
+        let coefficients = [-i32::MAX, i32::MAX, 0];
+        let substances = [0, 1, 2];
+        let begins = [0; 3];
+        let lengths = [3; 3];
+        let table = Nu {
+            nu: &coefficients,
+            nu_sub: &substances,
+            begin: &begins,
+            len: &lengths,
+        };
+        assert!(
+            check_accumulator_bounds(table, &[i128::from(i64::MAX), 0])
+                .unwrap_err()
+                .to_string()
+                .contains("accumulator")
+        );
+        // Input caps, not the raw table alone, determine the actual bound.
+        check_accumulator_bounds(table, &[i128::from(i32::MAX), 0]).unwrap();
+    }
+
+    #[test]
+    fn accumulator_proof_checks_source_plus_outputs() {
+        let table = Nu {
+            nu: &[-1, 1, 0],
+            nu_sub: &[0, 1, 2],
+            begin: &[0],
+            len: &[3],
+        };
+        assert!(
+            check_accumulator_bounds(table, &[1, i128::from(i64::MAX)])
+                .unwrap_err()
+                .to_string()
+                .contains("source plus positive delta")
+        );
+    }
 
     // --- the fixture ------------------------------------------------------
     //

@@ -50,6 +50,8 @@ pub(crate) struct CellMetric {
 #[serde(deny_unknown_fields)]
 pub(crate) struct Capture {
     pub tick: u64,
+    #[serde(default = "legacy_cell_world_format")]
+    pub world_format_version: u32,
     pub running: bool,
     pub tps: f64,
     pub state: Value,
@@ -238,6 +240,7 @@ pub(crate) struct PreparedResume {
     checkpoint: CheckpointInfo,
     state: ResumeState,
     history: History,
+    repair_published_marker: bool,
 }
 
 impl PreparedResume {
@@ -246,6 +249,14 @@ impl PreparedResume {
     }
 
     pub(crate) fn start(self) -> Result<CellsStorage> {
+        if self.repair_published_marker {
+            let generation = self
+                .lease
+                .path
+                .join("checkpoints")
+                .join(&self.checkpoint.checkpoint_id);
+            repair_published_marker(&generation)?;
+        }
         CellsStorage::start(self.lease, Some(&self.checkpoint), self.history, false)
     }
 }
@@ -498,6 +509,10 @@ impl CellsStorage {
             bail!(error);
         }
         validate_capture(&capture)?;
+        ensure!(
+            capture.world_format_version == self.lease.info.world_format_version,
+            "cell capture world identity differs from run"
+        );
         let started = Instant::now();
         let metric = capture
             .metric
@@ -599,6 +614,7 @@ fn prepare_resume(root: &Path, run: &str, checkpoint: Option<&str>) -> Result<Pr
         config_text,
         _lock: lock,
     });
+    let repair_published_marker = checkpoint.is_none();
     let latest: CheckpointInfo = if let Some(id) = checkpoint {
         let metadata: CheckpointInfo = read_json(
             &lease
@@ -643,7 +659,8 @@ fn prepare_resume(root: &Path, run: &str, checkpoint: Option<&str>) -> Result<Pr
     ensure!(
         capture.tick == latest.tick
             && capture.running == latest.running
-            && capture.tps == latest.tps,
+            && capture.tps == latest.tps
+            && capture.world_format_version == latest.world_format_version,
         "cell checkpoint state differs from metadata"
     );
     let history = load_history(&lease, &latest)?;
@@ -659,6 +676,7 @@ fn prepare_resume(root: &Path, run: &str, checkpoint: Option<&str>) -> Result<Pr
         checkpoint: latest,
         state,
         history,
+        repair_published_marker,
     })
 }
 
@@ -690,10 +708,18 @@ fn validate_identity(
         "cell canonical config hash differs"
     );
     ensure!(
-        world_format_version == 29,
-        "cell storage requires world format version 29"
+        supports_cell_version(world_format_version),
+        "cell storage requires world format version 29 or 30"
     );
     Ok(())
+}
+
+fn legacy_cell_world_format() -> u32 {
+    29
+}
+
+fn supports_cell_version(version: u32) -> bool {
+    matches!(version, 29 | 30)
 }
 
 fn validate_run_info(info: &RunInfo, run_id: &str) -> Result<()> {
@@ -729,6 +755,10 @@ fn validate_checkpoint_info(info: &CheckpointInfo, run: &RunInfo) -> Result<()> 
 }
 
 fn validate_capture(capture: &Capture) -> Result<()> {
+    ensure!(
+        supports_cell_version(capture.world_format_version),
+        "cell capture has an unsupported world format version"
+    );
     ensure!(
         capture.tps.is_finite() && capture.tps > 0.0,
         "cell capture rate is invalid"
@@ -974,6 +1004,18 @@ fn write_new(path: &Path, bytes: &[u8]) -> Result<()> {
 
 fn write_json_new(path: &Path, value: &impl Serialize) -> Result<()> {
     write_new(path, &serde_json::to_vec(value)?)
+}
+
+fn repair_published_marker(generation: &Path) -> Result<()> {
+    let marker = generation.join("published");
+    if marker.exists() {
+        ensure!(
+            marker.is_file(),
+            "cell checkpoint publication marker is not a file"
+        );
+        return Ok(());
+    }
+    write_new(&marker, b"")
 }
 
 fn write_line(file: &mut File, value: &impl Serialize) -> Result<()> {

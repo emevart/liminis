@@ -56,7 +56,7 @@
 //! tables of ADR-041 do not carry it at all. Implementing it would be deciding
 //! all three in code.
 
-use crate::numeric::{M32, M64, Q, q_conc_64, q_round_64, qadd, qdiv, qmul, qpow, qsub, rand, xi};
+use crate::numeric::{M32, M64, Q, q_conc_64, qadd, qdiv, qmul, qpow, qsub, rand, xi};
 
 /// How many substances the local arrays of this kernel are sized for.
 ///
@@ -75,6 +75,13 @@ pub const S_MAX: usize = 32;
 
 /// How many reactions the local `xi[R_MAX]` is sized for (ADR-041).
 pub const R_MAX: usize = 64;
+
+/// One in the conservative fixed-point coefficient used for local competition.
+///
+/// The numerator occupies 31 fractional bits and deliberately lives in a `u32`:
+/// `2^31` is the exact identity coefficient, while every scarce-pool ratio is
+/// rounded down below it (ADR-102).
+const COMPETITION_ONE: u32 = 1 << 31;
 
 /// `cat[r]` of a reaction with no catalyst at all.
 ///
@@ -374,11 +381,18 @@ pub fn react_voxel(
         for j in rx.begin[r]..rx.begin[r] + rx.len[r] {
             let s = rx.nu_sub[j as usize] as usize;
             // Exact: `nu` is integer and was rounded once, at load (ADR-041).
-            delta[s] += i64::from(rx.nu[j as usize]) * i64::from(extent);
+            let change = i64::from(rx.nu[j as usize])
+                .checked_mul(i64::from(extent))
+                .expect("one reaction delta must fit i64");
+            delta[s] = delta[s]
+                .checked_add(change)
+                .expect("aggregate reaction delta must fit i64");
         }
     }
     for s in 0..p.n_substances {
-        let after = amount_get(src32, src64, rx, p, idx, s) + delta[s as usize];
+        let after = amount_get(src32, src64, rx, p, idx, s)
+            .checked_add(delta[s as usize])
+            .expect("source amount plus aggregate reaction delta must fit i64");
         amount_store(dst32, dst64, rx, p, idx, s, after);
     }
 
@@ -417,11 +431,10 @@ fn amount_get(src32: &[M32], src64: &[M64], rx: &Rx, p: &ReactParams, idx: u32, 
 
 /// Write the new amount of substance `s` back into state `N+1`.
 ///
-/// The narrowing is the second half of the width branch and it goes through
-/// `from_i64_clamping`, not through `as i32`. An amount out of range means the
-/// width derivation of ADR-040 was fed a wrong `max_conc`; the assertion says so
-/// in debug, and in release the clamp keeps a full pool from becoming a negative
-/// one, which is precisely what a bare cast would do.
+/// The narrowing is the second half of the width branch. An amount out of range
+/// means the width derivation of ADR-040 was fed a wrong `max_conc`; it is refused
+/// in every build rather than silently clamped into a state the extent ledger did
+/// not produce.
 #[inline(always)]
 fn amount_store(
     dst32: &mut [M32],
@@ -434,9 +447,10 @@ fn amount_store(
 ) {
     let at = (rx.lane[s as usize] * p.lane_len + idx) as usize;
     if p.width_mask & (1 << s) != 0 {
-        dst64[at] = M64::from_i64_clamping(value);
+        dst64[at] = M64::new(value);
     } else {
-        dst32[at] = M32::from_i64_clamping(value);
+        let value = i32::try_from(value).expect("reaction result must fit its narrow lane");
+        dst32[at] = M32::new(value);
     }
 }
 
@@ -624,21 +638,12 @@ fn accumulate_demand(demand: &mut [i64; S_MAX], rx: &Rx, p: &ReactParams, r: usi
         if s == p.s_energy as usize || nu >= 0 {
             continue;
         }
-        demand[s] += -nu * i64::from(want);
-        // TODO(demand-bound): nothing in the corpus bounds this sum. It
-        // accumulates `|nu| * want` over up to R_MAX = 64 reactions in an i64,
-        // while the ceiling of a wide substance under ADR-039 and ADR-062 is
-        // `2^(w-4)`; neither ADR-039 nor ADR-041 gives an inequality from which
-        // non-overflow would follow. In release an overflow wraps into a
-        // *negative* demand, that is a competition coefficient out of nowhere,
-        // so the assertion below is the whole of the guard until a record
-        // supplies the bound.
-        debug_assert!(
-            demand[s] >= 0,
-            "the demand accumulator of substance {s} wrapped: the bound on \
-             |nu| * want summed over the reactions of one voxel is not written \
-             down anywhere"
-        );
+        let contribution = (-nu)
+            .checked_mul(i64::from(want))
+            .expect("one reaction demand must fit i64");
+        demand[s] = demand[s]
+            .checked_add(contribution)
+            .expect("aggregate reaction demand must fit i64");
     }
 }
 
@@ -659,12 +664,10 @@ fn accumulate_demand(demand: &mut [i64; S_MAX], rx: &Rx, p: &ReactParams, r: usi
 /// the second lock on the same door, and it is the one that holds if the two
 /// passes are ever reordered.
 ///
-/// TODO(competition-rounding): the representation of the coefficient is not
-/// decided by any record. As a `Q` the comparison and the division go through
-/// `qdiv`, so the guarantee "the scaled demands do not exceed what is there"
-/// rests on `f32`; as a pair of integers it would be exact and would need a
-/// different signature. The corpus gives only "the shared multiplier is the
-/// minimum over the oversold" (ADR-041) and "`scale = max(0, .)`" (ADR-068).
+/// The coefficient is a shared unsigned Q31 numerator. For an oversold pool it
+/// is `floor(have / asked * 2^31)`, computed by binary long division without a
+/// product that could overflow. Rounding down is what makes the substrate bound
+/// true for integer amounts above the exact range of `f32` (ADR-102).
 #[inline(always)]
 fn competition_scale(
     demand: &[i64; S_MAX],
@@ -673,8 +676,8 @@ fn competition_scale(
     rx: &Rx,
     p: &ReactParams,
     idx: u32,
-) -> Q {
-    let mut scale = Q::ONE;
+) -> u32 {
+    let mut scale = COMPETITION_ONE;
     for s in 0..p.n_substances {
         let asked = demand[s as usize];
         if asked <= 0 {
@@ -685,16 +688,43 @@ fn competition_scale(
             continue;
         }
         let ratio = if have > 0 {
-            qdiv(as_number(have), as_number(asked))
+            competition_ratio(have, asked)
         } else {
             // Saturated at zero rather than allowed negative (ADR-068).
-            Q::ZERO
+            0
         };
         if ratio < scale {
             scale = ratio;
         }
     }
     scale
+}
+
+/// `floor(numerator / denominator * 2^31)` for `0 < numerator < denominator`.
+///
+/// The remainder is always below `denominator`. On the zero-bit branch it is
+/// below half the denominator, so doubling cannot overflow; on the one-bit
+/// branch `remainder - (denominator - remainder)` is the same value as
+/// `2*remainder - denominator` without performing the dangerous doubling.
+#[inline(always)]
+fn competition_ratio(numerator: i64, denominator: i64) -> u32 {
+    assert!(
+        numerator > 0 && numerator < denominator,
+        "competition ratio requires 0 < numerator < denominator"
+    );
+    let mut remainder = numerator;
+    let mut quotient = 0u32;
+    for _ in 0..31 {
+        quotient <<= 1;
+        let complement = denominator - remainder;
+        if remainder >= complement {
+            remainder -= complement;
+            quotient |= 1;
+        } else {
+            remainder += remainder;
+        }
+    }
+    quotient
 }
 
 /// `floor(want * scale)`, and the floor is the point.
@@ -710,47 +740,20 @@ fn competition_scale(
 /// The floor is safe for the reason everything else about `xi` is safe:
 /// conservation is a property of `nu`, not of the extent (ADR-027).
 ///
-/// TODO(scale-rounding): which rule applies here is not assigned by any record.
-/// NUMERIC.md section 3 knows two — halves away from zero, and stochastic — and
-/// neither is named for this operation; a fourth rounding site in the chemistry
-/// is not opened by any entry either. The exact integer form,
-/// `want * have / asked`, is not available: at the ceiling `2^60` of a 64-bit
-/// substance and a `want` up to `2^31` the product does not fit an i64, and WGSL
-/// has no i128. This wants a line in the journal, not a decision here.
+/// The product is strictly below `2^62`: `want <= 2^31 - 1` and the numerator is
+/// at most `2^31`. Shifting it right is therefore the exact floor in both host
+/// and shader integer arithmetic (ADR-102).
 #[inline(always)]
-fn scale_extent(want: i32, scale: Q) -> i32 {
+fn scale_extent(want: i32, scale: u32) -> i32 {
     if want <= 0 {
         return 0;
     }
-    // The common case, and it is not an optimisation: `f32` cannot hold a `want`
-    // above 2^24 exactly, and a voxel where nothing is oversold must not lose a
-    // quantum to a round trip through `Q`.
-    if scale >= Q::ONE {
+    if scale == COMPETITION_ONE {
         return want;
     }
 
-    let scaled = qmul(as_number(i64::from(want)), scale);
-    // Floor, built out of the one rounding the numeric layer offers plus a step
-    // down when it rounded up. `numeric/` exposes no floor of its own: a fourth
-    // named crossing between `M` and `Q` was refused by ADR-060, and this is not
-    // one — it is two calls of the same crossing.
-    let nearest = q_round_64(scaled).to_i64();
-    let floored = if as_number(nearest) > scaled {
-        nearest - 1
-    } else {
-        nearest
-    };
-    if floored > 0 { floored as i32 } else { 0 }
-}
-
-/// An integer as a number of the same value, for a comparison or a ratio.
-///
-/// `q_conc` with a per-unit factor of one, which is the idiom `kernels/diffuse.rs`
-/// already uses for "an amount difference, as a number": it is a named crossing
-/// (NUMERIC.md section 1) rather than a new place where rounding may happen.
-#[inline(always)]
-fn as_number(value: i64) -> Q {
-    q_conc_64(M64::new(value), Q::ONE)
+    let scaled = i64::from(want) * i64::from(scale);
+    (scaled >> 31) as i32
 }
 
 /// The coarse cell covering a fine voxel.
@@ -1306,8 +1309,7 @@ mod tests {
         demand[Y as usize] = 32;
         let scale = competition_scale(&demand, &world.src32, &world.src64, &t.rx(), &p, 0);
         assert_eq!(
-            scale,
-            Q::ZERO,
+            scale, 0,
             "a pool of -24 against a demand of 32 turned the multiplier of every \
              reaction of the voxel negative, including the ones that never \
              touched it (ADR-068)"
@@ -1320,8 +1322,87 @@ mod tests {
         none[Y as usize] = 32;
         assert_eq!(
             competition_scale(&none, &healthy.src32, &healthy.src64, &t.rx(), &p, 0),
-            Q::ONE
+            COMPETITION_ONE
         );
+    }
+
+    #[test]
+    fn competition_above_f32_integer_precision_never_overdraws() {
+        // These adjacent integers used to become the same `f32`, turning the
+        // ratio into one and leaving the pool at -1. Q31 is conservative: both
+        // scaled extents together stay within the exact integer pool.
+        const HAVE: i64 = 16_777_216;
+        const ASKED: i64 = HAVE + 1;
+        let t = one_reaction();
+        let p = params(1);
+        let world = World::new([100_000, HAVE, 0, 0]);
+        let mut demand = [0i64; S_MAX];
+        demand[Y as usize] = ASKED;
+
+        let scale = competition_scale(&demand, &world.src32, &world.src64, &t.rx(), &p, 0);
+        let consumed =
+            i64::from(scale_extent(8_388_608, scale)) + i64::from(scale_extent(8_388_609, scale));
+
+        assert!(scale < COMPETITION_ONE);
+        assert_eq!(consumed, HAVE - 1);
+        assert!(consumed <= HAVE);
+    }
+
+    #[test]
+    fn competition_ratio_matches_i128_oracle_near_i64_max() {
+        for denominator in [i64::MAX, i64::MAX - 1, i64::MAX - 2] {
+            for numerator in [
+                1,
+                denominator / 2 - 1,
+                denominator / 2,
+                denominator / 2 + 1,
+                denominator - 2,
+                denominator - 1,
+            ] {
+                let expected = ((i128::from(numerator) << 31) / i128::from(denominator)) as u32;
+                assert_eq!(
+                    competition_ratio(numerator, denominator),
+                    expected,
+                    "Q31 long division differs at {numerator}/{denominator}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn sampled_q31_ratios_are_conservative_with_at_most_one_extent_loss() {
+        // A local deterministic sequence, not the simulation RNG: these values
+        // sample the arithmetic implementation and carry no world semantics.
+        let mut state = 0x6a09_e667_f3bc_c909u64;
+        for sample in 0..4096 {
+            state = state
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            let denominator = 2 + (state % (i64::MAX as u64 - 1)) as i64;
+            state = state
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            let numerator = 1 + (state % (denominator as u64 - 1)) as i64;
+            state = state
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            let want = 1 + (state % i32::MAX as u64) as i32;
+
+            let q31 = competition_ratio(numerator, denominator);
+            let oracle_q31 = ((i128::from(numerator) << 31) / i128::from(denominator)) as u32;
+            assert_eq!(q31, oracle_q31, "Q31 numerator differs at sample {sample}");
+
+            let scaled = scale_extent(want, q31);
+            let exact = (i128::from(want) * i128::from(numerator) / i128::from(denominator)) as i32;
+            assert!(
+                scaled <= exact,
+                "Q31 scaling exceeded exact rational floor at sample {sample}"
+            );
+            assert!(
+                exact - scaled <= 1,
+                "Q31 scaling lost more than one extent at sample {sample}: exact={exact}, scaled={scaled}"
+            );
+        }
     }
 
     #[test]
@@ -1405,17 +1486,21 @@ mod tests {
     #[test]
     fn a_scaled_extent_rounds_down() {
         // Any other rule breaks the guarantee the coefficient exists for.
-        assert_eq!(scale_extent(4, q(0.5)), 2);
-        assert_eq!(scale_extent(5, q(0.5)), 2);
-        assert_eq!(scale_extent(3, q(0.5)), 1);
-        assert_eq!(scale_extent(1, q(0.5)), 0);
-        assert_eq!(scale_extent(7, q(0.999)), 6);
-        assert_eq!(scale_extent(0, q(0.5)), 0);
-        assert_eq!(scale_extent(-3, q(0.5)), 0);
-        // A coefficient of one leaves the extent alone exactly, including above
-        // the 2^24 where an `f32` stops being able to hold it.
-        assert_eq!(scale_extent(1 << 25, Q::ONE), 1 << 25);
-        assert_eq!(scale_extent(4, Q::ZERO), 0);
+        assert_eq!(scale_extent(4, COMPETITION_ONE / 2), 2);
+        assert_eq!(scale_extent(5, COMPETITION_ONE / 2), 2);
+        assert_eq!(scale_extent(3, COMPETITION_ONE / 2), 1);
+        assert_eq!(scale_extent(1, COMPETITION_ONE / 2), 0);
+        assert_eq!(scale_extent(0, COMPETITION_ONE / 2), 0);
+        assert_eq!(scale_extent(-3, COMPETITION_ONE / 2), 0);
+        assert_eq!(scale_extent(4, 0), 0);
+    }
+
+    #[test]
+    fn high_extent_scaling_stays_exact_and_in_range() {
+        // The product is below 2^62 even at both public maxima. Identity must
+        // preserve the exact want; one Q31 unit below identity loses exactly one.
+        assert_eq!(scale_extent(i32::MAX, COMPETITION_ONE), i32::MAX);
+        assert_eq!(scale_extent(i32::MAX, COMPETITION_ONE - 1), i32::MAX - 1);
     }
 
     #[test]

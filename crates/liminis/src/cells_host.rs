@@ -41,6 +41,7 @@ struct Sim {
     config_text: String,
     config_hash: String,
     seed: u64,
+    world_format_version: u32,
     state: MicroState,
     observation: Observation,
     running: bool,
@@ -182,7 +183,7 @@ fn state_json(sim: &Sim) -> Value {
     }).collect();
     json!({"kind":"cells","tick":sim.state.tick,"sim_time":summary.sim_time,
         "seed":sim.seed.to_string(),"scenario":sim.config.name,"config_hash":sim.config_hash,
-        "world_format_version":WORLD_FORMAT_VERSION,"chamber_format":sim.config.chamber_format,
+        "world_format_version":sim.world_format_version,"chamber_format":sim.config.chamber_format,
         "running":sim.running,"alive":sim.alive,"target_tps":sim.target_tps,
         "measured_tps":sim.measured_tps,"error":sim.error,
         "residual":sim.residual.map(|(matter,energy)|json!({"matter":matter.to_string(),"energy":energy.to_string()})),
@@ -211,6 +212,7 @@ fn build(text: &str, seed: u64) -> Result<Sim> {
         config_text,
         config_hash,
         seed,
+        world_format_version: WORLD_FORMAT_VERSION,
         state,
         observation,
         running: true,
@@ -424,6 +426,7 @@ fn route(shared: &Arc<Mutex<Sim>>, request: &Request) -> Response {
 fn capture(sim: &Sim) -> storage::Capture {
     storage::Capture {
         tick: sim.state.tick,
+        world_format_version: sim.world_format_version,
         running: sim.running && sim.alive,
         tps: sim.target_tps,
         state: json!({"format":1,"core":sim.state.snapshot(),"observation":sim.observation}),
@@ -481,7 +484,7 @@ pub fn run(
     println!("Liminis cells on http://127.0.0.1:{port}/");
     println!(
         "seed={} config_hash={} world_format_version={} chamber_format=1",
-        sim.seed, sim.config_hash, WORLD_FORMAT_VERSION
+        sim.seed, sim.config_hash, sim.world_format_version
     );
     let shared = Arc::new(Mutex::new(sim));
     let ticking = Arc::clone(&shared);
@@ -499,7 +502,7 @@ fn start_storage(sim: &mut Sim, root: &Path) -> Result<()> {
         sim.config_text.clone(),
         sim.config_hash.clone(),
         sim.seed.to_string(),
-        WORLD_FORMAT_VERSION,
+        sim.world_format_version,
     )?;
     storage.save(capture(sim))?;
     storage.wait_for_save()?;
@@ -525,7 +528,7 @@ fn resume_sim(root: &Path, run: &str, checkpoint: Option<&str>) -> Result<Sim> {
     ensure!(
         saved.stored.kind == "cells"
             && saved.stored.chamber_format == 1
-            && saved.stored.world_format_version == WORLD_FORMAT_VERSION,
+            && matches!(saved.stored.world_format_version, 29 | 30),
         "this build cannot restore this cell chamber identity"
     );
     let mut sim = build(&saved.stored.config_text, saved.stored.seed.parse()?)?;
@@ -533,6 +536,11 @@ fn resume_sim(root: &Path, run: &str, checkpoint: Option<&str>) -> Result<Sim> {
         sim.config_hash == saved.stored.config_hash,
         "saved cell config hash differs"
     );
+    ensure!(
+        saved.capture.world_format_version == saved.stored.world_format_version,
+        "saved cell state world identity differs"
+    );
+    sim.world_format_version = saved.stored.world_format_version;
     ensure!(
         saved.capture.tps.is_finite() && (MIN_TPS..=MAX_TPS).contains(&saved.capture.tps),
         "saved cell speed is invalid"

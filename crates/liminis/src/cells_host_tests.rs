@@ -1,5 +1,28 @@
 use super::*;
 
+struct Temp(std::path::PathBuf);
+
+impl Temp {
+    fn new() -> Self {
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!(
+            "liminis-cells-host-test-{}-{unique}",
+            std::process::id()
+        ));
+        std::fs::create_dir(&path).unwrap();
+        Self(path)
+    }
+}
+
+impl Drop for Temp {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
 const SCENARIO: &str = include_str!("../../../configs/scenarios/cell-chamber.toml");
 
 fn fixture() -> Sim {
@@ -138,4 +161,42 @@ fn inherited_float_physiology_survives_the_actual_json_checkpoint_codec() {
         );
         assert_eq!(sim.state.snapshot(), restored.snapshot());
     }
+}
+
+#[test]
+fn cell_world_29_resume_step_and_resave_preserve_its_identity() {
+    let root = Temp::new();
+    let mut original = fixture();
+    original.world_format_version = 29;
+    start_storage(&mut original, &root.0).unwrap();
+    advance_one(&mut original).unwrap();
+    save(&mut original).unwrap();
+    original.storage.as_mut().unwrap().wait_for_save().unwrap();
+    let run_id = original.storage.as_ref().unwrap().status()["run_id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    drop(original.storage.take());
+
+    let deadline = Instant::now() + Duration::from_secs(5);
+    let mut resumed = loop {
+        match resume_sim(&root.0, &run_id, None) {
+            Ok(sim) => break sim,
+            Err(error) if error.to_string().contains("writer") && Instant::now() < deadline => {
+                std::thread::sleep(Duration::from_millis(2));
+            }
+            Err(error) => panic!("world 29 resume failed: {error:#}"),
+        }
+    };
+    assert_eq!(resumed.world_format_version, 29);
+    assert_eq!(state_json(&resumed)["world_format_version"], 29);
+    assert_eq!(capture(&resumed).world_format_version, 29);
+    advance_one(&mut resumed).unwrap();
+    save(&mut resumed).unwrap();
+    resumed.storage.as_mut().unwrap().wait_for_save().unwrap();
+    let latest: Value =
+        serde_json::from_slice(&std::fs::read(root.0.join(&run_id).join("latest.json")).unwrap())
+            .unwrap();
+    assert_eq!(latest["world_format_version"], 29);
+    drop(resumed.storage.take());
 }

@@ -18,6 +18,8 @@ use serde_json::{Value, json};
 use super::{LaneRef, Sim, WORLD_FORMAT_VERSION, build};
 
 const FORMAT: u32 = 1;
+const LEGACY_SESSION_FORMAT: u32 = 1;
+const SESSION_FORMAT: u32 = 2;
 pub(super) const AUTOSAVE: Duration = Duration::from_secs(60);
 const SAMPLE_EVERY: u32 = 30;
 const HISTORY_LIMIT: usize = 360;
@@ -257,7 +259,7 @@ impl Persistence {
         fs::create_dir_all(&sessions)?;
         let (session_id, session_path) = create_directory(&sessions, "session")?;
         let session = SessionInfo {
-            format: FORMAT,
+            format: SESSION_FORMAT,
             session_id,
             parent_session: parent.map(|p| p.session_id.clone()),
             parent_tick: parent.map(|p| p.tick),
@@ -268,7 +270,11 @@ impl Persistence {
             history,
             ..State::default()
         }));
-        let header = metrics(sim, false)?;
+        let header = bind_history_header(
+            metrics(sim, false)?,
+            &lease.info.run_id,
+            &session.session_id,
+        )?;
         let canonical = liminis_core::config::canonical(&sim.scenario)?;
         let worker_lease = Arc::clone(&lease);
         let worker_state = Arc::clone(&state);
@@ -471,6 +477,7 @@ pub(super) fn resume(root: &Path, run: &str, checkpoint: Option<&str>) -> Result
         info,
         _lock: lock,
     });
+    let repair_latest_marker = checkpoint.is_none();
     let latest: CheckpointInfo = if let Some(id) = checkpoint {
         let info: CheckpointInfo = read_json(
             &lease
@@ -503,10 +510,7 @@ pub(super) fn resume(root: &Path, run: &str, checkpoint: Option<&str>) -> Result
             && latest.world_format_version == lease.info.world_format_version,
         "checkpoint identity differs from run manifest"
     );
-    ensure!(
-        supports_eco_version(latest.world_format_version),
-        "saved world version is not supported by this build"
-    );
+    ensure_supported_eco_version(latest.world_format_version)?;
     ensure!(
         latest.target_tps.is_finite()
             && (super::MIN_TPS..=super::MAX_TPS).contains(&latest.target_tps),
@@ -523,8 +527,8 @@ pub(super) fn resume(root: &Path, run: &str, checkpoint: Option<&str>) -> Result
         sim.identity.config_hash == latest.config_hash,
         "saved canonical config hash differs from this build"
     );
-    // ADR-100: the new chamber does not change the eco tick. A resumed eco28
-    // experiment keeps its original identity in every subsequent artifact.
+    // A supported checkpoint keeps its exact world identity; this reader never
+    // relabels an older world's physics as the current format.
     sim.identity.world_format_version = latest.world_format_version;
     let bytes = fs::read(generation.join("state.limsnap"))?;
     ensure!(
@@ -556,6 +560,9 @@ pub(super) fn resume(root: &Path, run: &str, checkpoint: Option<&str>) -> Result
     sim.running = latest.running;
     sim.last = None;
     let history = load_history(&lease, &latest, &Model::of(&sim))?;
+    if repair_latest_marker {
+        repair_published_marker(&generation)?;
+    }
     let mut persistence = Persistence::start(lease, &sim, Some(&latest), history, false)?;
     // A fresh segment is durable before accepting requests. This checkpoint has
     // the same physics and tick but identifies the new observer session.
@@ -575,7 +582,21 @@ fn snapshot_identity(sim: &Sim) -> SnapshotIdentity {
 }
 
 fn supports_eco_version(version: u32) -> bool {
-    version == WORLD_FORMAT_VERSION || (WORLD_FORMAT_VERSION == 29 && version == 28)
+    version == WORLD_FORMAT_VERSION
+}
+
+fn ensure_supported_eco_version(version: u32) -> Result<()> {
+    if supports_eco_version(version) {
+        return Ok(());
+    }
+    if version == 28 {
+        bail!(
+            "saved eco world 28 requires .liminis/legacy/eco-world28.exe; this build uses world {WORLD_FORMAT_VERSION}"
+        );
+    }
+    bail!(
+        "saved eco world {version} requires its matching older build; this build uses world {WORLD_FORMAT_VERSION}"
+    )
 }
 
 fn metrics(sim: &Sim, tick_record: bool) -> Result<Vec<u8>> {
@@ -669,6 +690,19 @@ fn metrics(sim: &Sim, tick_record: bool) -> Result<Vec<u8>> {
     }
 }
 
+fn bind_history_header(mut bytes: Vec<u8>, run_id: &str, session_id: &str) -> Result<Vec<u8>> {
+    let mut value: Value = serde_json::from_slice(&bytes)?;
+    ensure!(value["record"] == "header", "history header record differs");
+    let object = value
+        .as_object_mut()
+        .context("history header is not an object")?;
+    object.insert("run_id".into(), Value::String(run_id.into()));
+    object.insert("session_id".into(), Value::String(session_id.into()));
+    bytes = serde_json::to_vec(&value)?;
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
 fn load_history(lease: &Lease, checkpoint: &CheckpointInfo, model: &Model) -> Result<History> {
     let mut chain = Vec::new();
     let mut visited = BTreeSet::new();
@@ -681,15 +715,18 @@ fn load_history(lease: &Lease, checkpoint: &CheckpointInfo, model: &Model) -> Re
         );
         let path = lease.path.join("sessions").join(checked_id(&id)?);
         let session: SessionInfo = read_json(&path.join("session.json"))?;
-        ensure!(
-            session.format == FORMAT && session.session_id == id,
-            "session manifest differs"
-        );
+        ensure!(session.session_id == id, "session manifest differs");
         ensure!(
             session.parent_session.is_some() == session.parent_tick.is_some(),
             "session parent is incomplete"
         );
-        chain.push((path, through, session.parent_tick));
+        ensure!(
+            session.format == SESSION_FORMAT
+                || (session.format == LEGACY_SESSION_FORMAT
+                    && lease.info.world_format_version == 28),
+            "unsupported history session format"
+        );
+        chain.push((path, id, session.format, through, session.parent_tick));
         session_id = session.parent_session;
         if let Some(tick) = session.parent_tick {
             ensure!(tick <= through, "history parent tick is in the future");
@@ -697,7 +734,7 @@ fn load_history(lease: &Lease, checkpoint: &CheckpointInfo, model: &Model) -> Re
         }
     }
     let mut history = History::default();
-    for (path, through, after) in chain.into_iter().rev() {
+    for (path, expected_session, session_format, through, after) in chain.into_iter().rev() {
         let mut reader = BufReader::new(File::open(path.join("metrics.ndjson"))?);
         let mut line = Vec::new();
         let mut header = true;
@@ -724,6 +761,13 @@ fn load_history(lease: &Lease, checkpoint: &CheckpointInfo, model: &Model) -> Re
                         && value["columns"] == json!(model.columns),
                     "history header metric roster differs"
                 );
+                if session_format == SESSION_FORMAT {
+                    ensure!(
+                        value["run_id"] == lease.info.run_id
+                            && value["session_id"] == expected_session,
+                        "history header belongs to another run or session"
+                    );
+                }
                 header = false;
             } else {
                 let sample = model
@@ -826,6 +870,18 @@ fn write_new(path: &Path, bytes: &[u8]) -> Result<()> {
 
 fn write_json_new(path: &Path, value: &impl Serialize) -> Result<()> {
     write_new(path, &serde_json::to_vec(value)?)
+}
+
+fn repair_published_marker(generation: &Path) -> Result<()> {
+    let marker = generation.join("published");
+    if marker.exists() {
+        ensure!(
+            marker.is_file(),
+            "checkpoint publication marker is not a file"
+        );
+        return Ok(());
+    }
+    write_new(&marker, b"")
 }
 
 fn atomic_json(path: &Path, value: &impl Serialize) -> Result<()> {

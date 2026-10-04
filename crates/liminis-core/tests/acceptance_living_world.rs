@@ -196,6 +196,31 @@ fn shares(totals: [i128; 5]) -> [f64; 5] {
 }
 
 #[test]
+#[should_panic(expected = "is negative at tick 0")]
+fn negative_biomass_is_rejected_before_chemistry_in_release_too() {
+    let mut culture = Culture::new(&config(8), 42);
+    let s = culture.ecotypes[0];
+    let stride = culture.world.grid().lane_len() as usize;
+    match culture.world.lane_of(s) {
+        LaneRef::Narrow(lane) => {
+            let field = culture.world.amounts_32_mut().unwrap();
+            let current = field.read().to_vec();
+            field.write_mut().copy_from_slice(&current);
+            field.write_mut()[lane as usize * stride] = M32::new(-1);
+            field.swap();
+        }
+        LaneRef::Wide(lane) => {
+            let field = culture.world.amounts_64_mut().unwrap();
+            let current = field.read().to_vec();
+            field.write_mut().copy_from_slice(&current);
+            field.write_mut()[lane as usize * stride] = M64::new(-1);
+            field.swap();
+        }
+    }
+    culture.advance(1);
+}
+
+#[test]
 fn living_ecotypes_share_chemistry_and_have_a_real_resource_tradeoff() {
     let config = config(8);
     config::validate(&config).expect("valid chemistry");

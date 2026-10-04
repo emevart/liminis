@@ -24,6 +24,7 @@ const MUTATION_SIGN_PURPOSE: u32 = 0x6d69_6305;
 /// One simulated cell.  Mass is structural `BIO` in that substance's integer
 /// storage units; energy is in the same integer units as chamber heat.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Cell {
     pub id: u64,
     pub parent_id: Option<u64>,
@@ -265,6 +266,7 @@ pub struct MicroState {
 /// Persistence DTO.  The host is responsible for representing its `i128`
 /// values as decimal strings in JSON intended for JavaScript.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MicroSnapshot {
     pub tick: u64,
     pub next_cell_id: u64,
@@ -383,6 +385,18 @@ impl MicroState {
             ensure!(
                 cell.age == self.tick - cell.birth_tick,
                 "micro snapshot cell {} age is inconsistent with birth_tick",
+                cell.id
+            );
+            ensure!(
+                cell.starvation_ticks <= cell.genome.starvation_tolerance_ticks
+                    && u64::from(cell.starvation_ticks) <= cell.age,
+                "micro snapshot cell {} has an impossible starvation clock",
+                cell.id
+            );
+            ensure!(
+                cell.starvation_ticks == 0
+                    || (cell.energy == 0 && cell.genome.maintenance_energy_per_tick > 0),
+                "micro snapshot cell {} has starvation inconsistent with its energy or upkeep",
                 cell.id
             );
             ensure!(
@@ -1087,6 +1101,87 @@ mod tests {
         assert!(state.cells.is_empty());
         assert_eq!(state.matter[config.death.detritus_substance], biomass);
         assert_eq!(total_energy(&config, &state).unwrap(), before_energy);
+    }
+
+    #[test]
+    fn starvation_tolerates_exactly_the_declared_failed_upkeep_intervals() {
+        let mut config = fixture();
+        config.initial_matter[0] = 0;
+        config.medium[0].target_amount = 0;
+        config.founder.genome.maintenance_energy_per_tick = 100;
+        config.founder.genome.starvation_tolerance_ticks = 3;
+        let mut state = MicroState::new(&config).unwrap();
+        for expected_clock in 1..=3 {
+            let report = step(&config, &mut state).unwrap();
+            assert_eq!(report.deaths, 0);
+            assert_eq!(state.cells.len(), config.founder.count as usize);
+            assert!(
+                state
+                    .cells
+                    .iter()
+                    .all(|cell| cell.starvation_ticks == expected_clock)
+            );
+            MicroState::from_snapshot(&config, state.snapshot()).unwrap();
+        }
+        let report = step(&config, &mut state).unwrap();
+        assert_eq!(report.deaths, config.founder.count);
+        assert!(state.cells.is_empty());
+    }
+
+    #[test]
+    fn completed_snapshots_reject_impossible_starvation_states() {
+        let config = fixture();
+        let state = MicroState::new(&config).unwrap();
+        let mut invalid = state.snapshot();
+        invalid.cells[0].starvation_ticks = 1;
+        assert!(MicroState::from_snapshot(&config, invalid).is_err());
+
+        let mut snapshot = state.snapshot();
+        snapshot.tick = 1;
+        for cell in &mut snapshot.cells {
+            cell.age = 1;
+        }
+        snapshot.cells[0].starvation_ticks = 1;
+        snapshot.cells[0].energy = 0;
+        MicroState::from_snapshot(&config, snapshot.clone()).unwrap();
+
+        let mut invalid = snapshot.clone();
+        invalid.cells[0].energy = 1;
+        assert!(MicroState::from_snapshot(&config, invalid).is_err());
+        let mut invalid = snapshot;
+        invalid.cells[0].starvation_ticks = 2;
+        assert!(MicroState::from_snapshot(&config, invalid).is_err());
+    }
+
+    #[test]
+    fn snapshot_and_nested_cell_genome_reject_unknown_fields() {
+        use serde::de::value::{Error, MapDeserializer};
+
+        let unknown = || MapDeserializer::<_, Error>::new([("unexpected", 0)].into_iter());
+        assert!(
+            MicroSnapshot::deserialize(unknown())
+                .unwrap_err()
+                .to_string()
+                .contains("unknown field")
+        );
+        assert!(
+            Cell::deserialize(unknown())
+                .unwrap_err()
+                .to_string()
+                .contains("unknown field")
+        );
+        assert!(
+            Genome::deserialize(unknown())
+                .unwrap_err()
+                .to_string()
+                .contains("unknown field")
+        );
+        assert!(
+            MicroConfig::deserialize(unknown())
+                .unwrap_err()
+                .to_string()
+                .contains("unknown field")
+        );
     }
 
     #[test]

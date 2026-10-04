@@ -1815,6 +1815,7 @@ impl Tick {
                     );
                 }
                 Step::Reactions => {
+                    self.assert_ceilings(world, tick);
                     // `expect` and not `unreachable!`: `runs` is true here only if
                     // the roster enabled the reactions, and `fold_react` refuses
                     // that roster — so this is the same statement seen from the
@@ -2020,21 +2021,26 @@ impl Tick {
 
     fn assert_ceilings(&self, world: &World, tick: u32) {
         for (id, lane, ceiling) in &self.ceilings {
-            let maximum = match *lane {
+            let invalid = match *lane {
                 LaneRef::Narrow(lane) => world.amounts_32().expect("narrow field").lane(lane)
                     [..self.n_voxels as usize]
                     .iter()
                     .enumerate()
                     .map(|(i, n)| (i, i128::from(n.to_i64())))
-                    .max_by_key(|(_, n)| *n),
+                    .find(|(_, n)| *n < 0 || *n > *ceiling),
                 LaneRef::Wide(lane) => world.amounts_64().expect("wide field").lane(lane)
                     [..self.n_voxels as usize]
                     .iter()
                     .enumerate()
                     .map(|(i, n)| (i, i128::from(n.to_i64())))
-                    .max_by_key(|(_, n)| *n),
+                    .find(|(_, n)| *n < 0 || *n > *ceiling),
             };
-            if let Some((idx, amount)) = maximum {
+            if let Some((idx, amount)) = invalid {
+                assert!(
+                    amount >= 0,
+                    "substance `{id}` is negative at tick {tick}, voxel {:?}: {amount}",
+                    world.grid().coords(idx as u32)
+                );
                 assert!(
                     amount <= *ceiling,
                     "substance `{id}` exceeds declared ceiling at tick {tick}, voxel {:?}: {amount} > {ceiling}",

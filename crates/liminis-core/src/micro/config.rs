@@ -16,7 +16,7 @@ use crate::config::{
     self, Boundary, Config, Face, Field, Grid, Initial, Layer, Nu, Physics, Process, Rate,
     Reaction, Substance,
 };
-use crate::numeric::run_key;
+use crate::numeric::{Q, run_key};
 use crate::process::ProcessId;
 
 pub const CHAMBER_FORMAT_VERSION: u32 = 1;
@@ -116,6 +116,7 @@ pub struct FounderDeclaration {
 
 /// Runtime-only integer configuration consumed by the chamber step.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MicroConfig {
     pub chamber_format: u32,
     pub name: String,
@@ -139,12 +140,14 @@ pub struct MicroConfig {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MicroNu {
     pub substance: usize,
     pub value: i64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct GrowthSpec {
     pub nu: Vec<MicroNu>,
     pub biomass_substance: usize,
@@ -153,6 +156,7 @@ pub struct GrowthSpec {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct DeathSpec {
     pub detritus_substance: usize,
     /// Heat added per structural storage unit when BIO becomes DET.
@@ -160,6 +164,7 @@ pub struct DeathSpec {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MutationSpec {
     pub min_kinetics: i8,
     pub max_kinetics: i8,
@@ -169,6 +174,7 @@ pub struct MutationSpec {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Genome {
     pub kinetics: i8,
     pub max_growth_rate_per_second: f64,
@@ -182,6 +188,7 @@ pub struct Genome {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct FounderSpec {
     pub count: u32,
     pub mass: i128,
@@ -190,6 +197,7 @@ pub struct FounderSpec {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MediumExchange {
     pub target_amount: i128,
     pub max_delta_per_tick: i128,
@@ -351,12 +359,13 @@ pub fn validate(scenario: &MicroScenario) -> Result<()> {
         "format 1 mutates the kinetics locus by exactly one step"
     );
     ensure!(
-        program.speed_factor_per_step.is_finite() && program.speed_factor_per_step >= 1.0,
-        "genome.speed_factor_per_step must be finite and at least one"
+        program.speed_factor_per_step.is_finite() && program.speed_factor_per_step > 1.0,
+        "genome.speed_factor_per_step must be finite and greater than one for the speed/affinity tradeoff"
     );
     ensure!(
-        program.affinity_cost_per_step.is_finite() && program.affinity_cost_per_step >= 1.0,
-        "genome.affinity_cost_per_step must be finite and at least one"
+        program.affinity_cost_per_step.is_finite()
+            && program.affinity_cost_per_step > program.speed_factor_per_step,
+        "genome.affinity_cost_per_step must be finite and greater than speed_factor_per_step for the speed/affinity tradeoff"
     );
 
     let founder = &scenario.founder;
@@ -628,13 +637,13 @@ pub fn validate_runtime(config: &MicroConfig) -> Result<()> {
     );
     ensure!(
         config.mutation.speed_factor_per_step.is_finite()
-            && config.mutation.speed_factor_per_step >= 1.0,
-        "runtime speed factor must be at least one"
+            && config.mutation.speed_factor_per_step > 1.0,
+        "runtime speed factor must be finite and greater than one for the speed/affinity tradeoff"
     );
     ensure!(
         config.mutation.affinity_cost_per_step.is_finite()
-            && config.mutation.affinity_cost_per_step >= 1.0,
-        "runtime affinity cost must be at least one"
+            && config.mutation.affinity_cost_per_step > config.mutation.speed_factor_per_step,
+        "runtime affinity cost must be finite and greater than the speed factor for the speed/affinity tradeoff"
     );
     ensure!(
         config.founder.count > 0 && config.founder.count <= config.max_cells,
@@ -645,6 +654,22 @@ pub fn validate_runtime(config: &MicroConfig) -> Result<()> {
         "runtime founder mass must be positive and energy non-negative"
     );
     validate_runtime_genome(config, &config.founder.genome)?;
+    for kinetics in [config.mutation.min_kinetics, config.mutation.max_kinetics] {
+        let genome = Genome {
+            kinetics,
+            ..config.founder.genome
+        };
+        let phenotype = decode_genome(config, &genome);
+        positive_finite(
+            "runtime decoded growth rate",
+            phenotype.max_growth_rate_per_second,
+        )?;
+        positive_finite("runtime decoded affinity Km", phenotype.affinity_km_amount)?;
+        positive_finite(
+            "runtime Q-folded affinity Km",
+            Q::from_f64(phenotype.affinity_km_amount).debug_f64(),
+        )?;
+    }
     ensure!(
         config.founder.mass < config.founder.genome.division_mass,
         "runtime founder starts at or above its division threshold"
@@ -805,6 +830,18 @@ fn derive_genome(
         "genome division energy",
         source.division_energy_j * energy_units_per_joule as f64,
     )?;
+    ensure!(
+        source.division_energy_j == 0.0 || division_energy > 0,
+        "positive genome division energy rounds to zero storage units"
+    );
+    let maintenance_energy = physical_to_int(
+        "genome maintenance energy",
+        source.maintenance_power_w * scenario.dt * energy_units_per_joule as f64,
+    )?;
+    ensure!(
+        source.maintenance_power_w == 0.0 || maintenance_energy > 0,
+        "positive genome maintenance energy rounds to zero storage units"
+    );
     let starvation_tolerance_ticks = (source.starvation_tolerance_s / scenario.dt).ceil();
     ensure!(
         starvation_tolerance_ticks.is_finite()
@@ -817,10 +854,7 @@ fn derive_genome(
         max_growth_rate_per_second: source.max_growth_rate_per_s,
         affinity_km_amount: uptake_km_amount,
         division_mass,
-        maintenance_energy_per_tick: physical_to_int(
-            "genome maintenance energy",
-            source.maintenance_power_w * scenario.dt * energy_units_per_joule as f64,
-        )?,
+        maintenance_energy_per_tick: maintenance_energy,
         capture_numerator: source.capture_numerator,
         capture_denominator: source.capture_denominator,
         division_energy_cost: division_energy,
@@ -982,6 +1016,76 @@ mod tests {
             config::parse(&text).is_err(),
             "micro format must not enter eco loader"
         );
+    }
+
+    #[test]
+    fn kinetics_program_requires_a_real_speed_affinity_tradeoff() {
+        let scenario = parse(CHAMBER).expect("shipped chamber parses");
+        let config = derive(&scenario, 42).expect("shipped chamber derives");
+        for (speed, affinity) in [(1.0, 1.8), (1.35, 1.0), (1.35, 1.2), (1.35, 1.35)] {
+            let mut invalid_scenario = scenario.clone();
+            invalid_scenario.genome.speed_factor_per_step = speed;
+            invalid_scenario.genome.affinity_cost_per_step = affinity;
+            let error = validate(&invalid_scenario)
+                .expect_err("unpriced faster growth must be rejected")
+                .to_string();
+            assert!(error.contains("tradeoff"), "{error}");
+
+            let mut invalid_runtime = config.clone();
+            invalid_runtime.mutation.speed_factor_per_step = speed;
+            invalid_runtime.mutation.affinity_cost_per_step = affinity;
+            let error = validate_runtime(&invalid_runtime)
+                .expect_err("runtime must retain the same tradeoff guard")
+                .to_string();
+            assert!(error.contains("tradeoff"), "{error}");
+        }
+    }
+
+    #[test]
+    fn positive_declared_energy_costs_cannot_round_to_free_upkeep_or_fission() {
+        let scenario = parse(CHAMBER).unwrap();
+        let mut invalid = scenario.clone();
+        invalid.founder.genome.maintenance_power_w = 1.0e-100;
+        let error = derive(&invalid, 42).unwrap_err().to_string();
+        assert!(
+            error.contains("maintenance energy rounds to zero"),
+            "{error}"
+        );
+
+        let mut invalid = scenario.clone();
+        invalid.founder.genome.division_energy_j = 1.0e-100;
+        let error = derive(&invalid, 42).unwrap_err().to_string();
+        assert!(error.contains("division energy rounds to zero"), "{error}");
+
+        let mut explicit_zero = scenario;
+        explicit_zero.founder.genome.maintenance_power_w = 0.0;
+        explicit_zero.founder.genome.division_energy_j = 0.0;
+        let config = derive(&explicit_zero, 42).unwrap();
+        assert_eq!(config.founder.genome.maintenance_energy_per_tick, 0);
+        assert_eq!(config.founder.genome.division_energy_cost, 0);
+    }
+
+    #[test]
+    fn all_mutable_endpoint_phenotypes_must_be_positive_and_representable() {
+        let scenario = parse(CHAMBER).unwrap();
+        let config = derive(&scenario, 42).unwrap();
+        for (speed, affinity, min, max) in [
+            (1.0e99, 1.0e100, -127, 4),
+            (1.0e99, 1.0e100, -4, 127),
+            (2.0, 1.0e10, -4, 4),
+            (2.0, 1.0e30, -4, 0),
+        ] {
+            let mut invalid = config.clone();
+            invalid.mutation.speed_factor_per_step = speed;
+            invalid.mutation.affinity_cost_per_step = affinity;
+            invalid.mutation.min_kinetics = min;
+            invalid.mutation.max_kinetics = max;
+            let error = validate_runtime(&invalid).unwrap_err().to_string();
+            assert!(
+                error.contains("decoded") || error.contains("Q-folded"),
+                "{error}"
+            );
+        }
     }
 
     #[test]
