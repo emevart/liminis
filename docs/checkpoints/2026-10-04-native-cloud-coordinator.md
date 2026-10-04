@@ -441,3 +441,42 @@ Independent actualFAILartifact review идёт отдельно отauthor.
 Следующийшаг: narrowQAfix+independentreview → freshfullCI/exactbrowser/artifacts,
 завершить readback/архивoriginalFAIL+acceptedZIP, guardedmerge приgreen,
 existingactualpublicsource/gzipbytes verification.
+
+### Complete network readback и fresh exact-head CI
+
+2026-10-04, 20:13 UTC. Fresh network fetch complete97 в отдельную Git object
+database завершён, без shared-object reuse. Closed inventory3919files,
+3909gzipchunks, size/SHA256 каждого файла и total2424602694bytes PASS.
+Public small report находится в candidate docs/experiments/dense-recording/
+million-2026-10-04/network-readback.json. Это сохранность Git bytes, не новый
+model/decode/browser/publicdeployment claim.
+
+Original97 browserFAIL archive опубликован отдельной evidence-only веткой
+`codex/dense-recording-browser-evidence`, commit
+`51323628a2e8cb0b2ab1ce29b8e4d070c7227c81`, tree
+`f808cbb7a2d603558628f9d792b5302b62031f4a`. Original16581557-byteZIP SHA
+`0fdff34b12e5304ad718980061e10ddeb9cffedc097cdc0add3176c0fc8f3b6a`.
+Fresh network archive readback size/SHA/ZIPCRC PASS. Independent actual
+report/trace/source review и5PNG viewed; initialoverallFAIL не меняется.
+Остальные10checks exactrun37228121227 завершилисьSUCCESS, включая Rust.
+
+Узкий QA fix author798f604 принят independent source reviewer0 после закрытия
+двух обнаруженных blockers: native rejection observer masking и отсутствующий
+post-cleanup aggregate. Actual signal/reason/bodyEOF/CDPidentity proof имеет
+18 synthetic metadata self-checks. Отдельная signal-only фаза сохраняет
+nativePromise/Reader semantics; real saved16-byte mid-body abort/preabort
+проверяются без orphan masking. Exact-identity synthetic native orphan control
+проверяет error-channel sensitivity, raw event сохранён, unknown/repeatedFAIL.
+Эти source/Node checks не являются actualChromiumPASS; данные immutable.
+
+Новый clean published PR19 candidate
+`e2451e3142def791eb44aba4fcb19ada1aa1ed78`, tree
+`27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a`. Mandatory fresh protected full CI
+run`37231067824` на exactHEAD IN_PROGRESS. Existingbranch normalpushSUCCESS,
+PR body обновлён, draft/main61d unchanged. На каждом новом head приёмка заново;
+accepted subchecks исходногоFAIL не переносятся.
+
+Следующий шаг: exact-head11checks и independent новых protected artifacts;
+durable bounded originals/readback, guardedmerge толькоgreen+review0,
+существующий public dense gate с catalog/module/index/manifest/gzip bytes.
+Сохранность архива подтверждена; publicdense acceptance покаpending.
