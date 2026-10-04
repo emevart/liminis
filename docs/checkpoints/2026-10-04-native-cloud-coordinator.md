@@ -395,3 +395,49 @@ guardedmerge затем existingpublicdeployment/rawgzipbytes/capacity verificat
 Документированные hostinglimits не заменяют actualdeployment. СтарыеURL/SHA,
 LAB24 и все historicalevidence сохраняются. Автопробуждение послеactiveCloudturn
 всё ещё не подтверждено.
+
+### Complete candidate PR19 и первый protected browser отказ
+
+2026-10-04, 19:33 UTC. Обе boundedpush завершилисьSUCCESS. Полный remote
+candidate `97aed6f1c0c0dba7886fb34d0febf4c189eedf29`, tree
+`f6feff861be3da22c6166264fcdde65e9c11c362`, PR19
+https://github.com/emevart/liminis/pull/19, base61d unchanged, draft.
+Independent final code/catalog/inventory/source review0blockers; all3919
+regular files/3909chunks/sharedmetadata/prefix/cap согласованы, nativehelper
+проверил SHA каждого файла. Снятие толькоdenseattachments восстанавливает
+все старые catalog fields exact. Complete-data109Node/RustfmtPASS.
+
+Exact run37228121227: site/fullinventory/Python29, numeric, all3hooks,
+frozen/world и live/physical/projection jobsSUCCESS; buildlint/test ещё работает.
+Existing WorkersBuild exact97 SUCCESS, version
+`6d08d119-d7ba-4e9d-9226-605a1c848394`, build68c766e4-c5b0-48a2-9dcc-52f5118e1ce9.
+Это фактическая existingintegration сборка полного candidate, не отдельная
+аттестация всех publicservedbytes. Новый hosting/секреты/расходы не созданы.
+Source/run подтверждают Actionscheckout завершается; nativefreshdownload
+скорость не переносится на runners, CI не ослабляем/не меняем без actualneed.
+
+Recorded архивная QA22checksPASS. Новый densebrowser завершил все11subchecks:
+101actualframes, corruptionSHA/CRC/truncation/multimember, exactfirst/largest
+chunkcontrols, nativebodyabort/stale/close, atomic255→256 originaldelayedbody,
+measured1×Δmodel1.540s/Δwall1.5404s, heldpixels/state/display30/60,
+4viewport и actual100k/1Mendpoints. Однако finaloverallFAIL:
+3 net::ERR_ABORTED отсутствуют в узкой intentional classification.
+Ни page/console/unhandled/cleanup errors не наблюдались. Все11subchecksPASS
+НЕ переносятся в общийbrowserPASS. Original denseFAIL ZIP сохранён native,
+16581557bytes/SHA256`0fdff34b12e5304ad718980061e10ddeb9cffedc097cdc0add3176c0fc8f3b6a`,
+artifact11312631748, включаетreport/trace/5PNG; bytes/ZIPCRCchecked.
+
+QAauthor и Astra разбирают exact per-request nativeAbortSignal/reason/order/
+bodydone correlation. Одна late signal.aborted недостаточна: getfinally abort
+может быть cleanup послеfailure, TimeoutError не intentional. Нельзя разрешить
+все site ERR_ABORTED URLpattern или снятьfinalgate; source/body/Responses
+не подменять. Нужен новый protectedrun исправленногоexactHEAD; nativebrowser
+в этой среде не запускается, миллионаmodelticks повторно не считать.
+Independent actualFAILartifact review идёт отдельно отauthor.
+
+Отдельная новая nativeGitobjectDB скачивает complete97 по сети, без restart;
+последний observed500MiB progress. Full3919size/SHAreadback ещёpending,
+не объявляется завершённым. Main неmerged; publicdense acceptance pending.
+Следующийшаг: narrowQAfix+independentreview → freshfullCI/exactbrowser/artifacts,
+завершить readback/архивoriginalFAIL+acceptedZIP, guardedmerge приgreen,
+existingactualpublicsource/gzipbytes verification.
