@@ -1,0 +1,36 @@
+{
+  "producer_head": "bd2a7f25e61abd713109171fc25b7c3de86003ab",
+  "producer_tree": "e957dfb8072f8d58989735e0ddfa611e6c7fd817",
+  "engine_ref": "b2024cef08f0aa910a711a41c6a37fbc7b2ba35a",
+  "legacy_recording_ref": "43f4a2df25c356ff387b71ac1961b516975f999b",
+  "build_command": "cargo build --locked --release -p liminis --example export_dense_cell_replay",
+  "build_elapsed_seconds": 15.77,
+  "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+  "binary_sha256": "455101bd41793dfdd76334c9e1f3205f785467563a545d1804b60114ff669c56",
+  "binary_bytes": 2767960,
+  "source_refusal_checks": [
+    {
+      "name": "wrong producer HEAD",
+      "exit_code": 1,
+      "stdout_bytes": 0,
+      "reason": "Error: producer-commit differs from HEAD"
+    },
+    {
+      "name": "wrong checkout root",
+      "exit_code": 1,
+      "stdout_bytes": 0,
+      "reason": "Error: run cargo from the producer checkout"
+    },
+    {
+      "name": "untracked source refuses before observation",
+      "exit_code": 1,
+      "stdout_bytes": 0,
+      "reason": "Error: producer checkout has tracked changes or untracked files"
+    }
+  ],
+  "actual_model_steps": 0,
+  "codec_author_fixture_tests": 14,
+  "build_attestation": "Coordinator observed clean-source compilation and binary hash; not a standalone runtime attestation",
+  "private_raw_report_sha256": "c81074a7856a9e8edc098bc2be3e1082c87485cc41d8471616576998ca0d6861",
+  "build_context": "Clean producer checkout, pinned Rust1.97.1, isolated CARGO_TARGET_DIR; public command paths normalized."
+}

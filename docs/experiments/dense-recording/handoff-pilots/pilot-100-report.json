@@ -1,0 +1,77 @@
+{
+  "status": "PASS",
+  "producer_head": "bd2a7f25e61abd713109171fc25b7c3de86003ab",
+  "binary_sha256": "455101bd41793dfdd76334c9e1f3205f785467563a545d1804b60114ff669c56",
+  "commands": {
+    "producer": [
+      "target/release/examples/export_dense_cell_replay",
+      "--producer-commit",
+      "bd2a7f25e61abd713109171fc25b7c3de86003ab",
+      "--steps",
+      "100"
+    ],
+    "packer": [
+      "python3",
+      "-B",
+      "scripts/dense-recording-pack.py",
+      "--output-dir",
+      "target/dense/pilot-100",
+      "--max-total-bytes",
+      "67108864"
+    ]
+  },
+  "steps": 100,
+  "frames": 101,
+  "chunks": 1,
+  "artifact_bytes": 61355,
+  "manifests": [
+    {
+      "path": "horizon-100.json",
+      "bytes": 6138,
+      "sha256": "e237a9f1f44e1838139caa4b5202151e63c2f6ee48c9ac1a99f2e8310e4d4373",
+      "first_tick": 0,
+      "last_tick": 100,
+      "frames": 101
+    }
+  ],
+  "index_bytes": 1610,
+  "index_sha256": "d3d102bcb4233900416ba0532c9cdd83b41b353963b15c47a9c66e4852b260aa",
+  "gzip_bytes": 53607,
+  "decoded_payload_bytes": 218302,
+  "max_gzip_chunk_bytes": 53607,
+  "max_decoded_chunk_bytes": 218302,
+  "export_pack_elapsed_seconds": 0.20167995700103347,
+  "full_decode_elapsed_seconds": 0.2233522250007809,
+  "sampled_producer_plus_packer_peak_rss_bytes": 16973824,
+  "waited_children_max_rss_bytes": 23621632,
+  "memory_limits": "Sampled RSS sum excludes grandchildren; waited max RSS is maximum for an individual waited child, not aggregate simultaneous RSS.",
+  "decoded_frames": 101,
+  "unique_archival_control_ticks": 3,
+  "archival_frame_comparisons": 5,
+  "used_genome_definition_checks": 7,
+  "legacy_sources": [
+    {
+      "filename": "cell-chamber-seed-42.json",
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+      "control_frames": 3
+    },
+    {
+      "filename": "cell-chamber-seed-42-100k.json",
+      "sha256": "b8db46c1dc83f8cd642ee2a3bd7913890e6868e265c61a8d390797399b37a4c9",
+      "control_frames": 1
+    },
+    {
+      "filename": "cell-chamber-seed-42-1m.json",
+      "sha256": "ee236189e9b6891599bc428aefb0e4b892c7397e712bcf045f7db14a5bc4061d",
+      "control_frames": 1
+    }
+  ],
+  "ledger": {
+    "checked_ticks": 100,
+    "matter_residual_max": "0",
+    "energy_residual_max": "0"
+  },
+  "provider_limits_verified": false,
+  "private_raw_report_sha256": "87a95381c4e416da6891794c1d7bcc253ce5efcad2d629ae890262fe2af44b41",
+  "command_paths": "Public paths normalized relative to the clean producer checkout; source parameters, values and measured results unchanged. Raw runtime path context stays in native workspace."
+}
