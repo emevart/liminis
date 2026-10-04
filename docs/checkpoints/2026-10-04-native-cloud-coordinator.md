@@ -171,3 +171,33 @@ source preparation не является acceptance и не меняет frozen 
 Следующий шаг: final public QA exacthead run/artifact acceptance и guarded merge;
 затем включить принятый QA main в LIVE2 и выполнить один final-head CI с
 protected physical browser. Исторические архивация/refs сохранены; old authors STOPPED.
+
+### Public QA принят; LIVE2 exact CI и everytick очередь
+
+PR16 guardedMERGED85974e3b7eb886ec7d8df70966d91db08778ba54 после exact09a2b5c/
+run37215665903/11checksSUCCESS и независимого actual bytes/trace/2PNG review0blockers.
+Qualification ровно одной Cloudflare HTML вставки и намеренного analyticsblock
+сохранена; application playback PASS, analytics execution NOT TESTED.
+Durable evidence-only branch codex/native-cloud-evidence-20261004 commit
+ ec28c71b4832ee5177cb7db0d9cebc704bea357e/tree95b81ca72954e62fc00f8e31ab0c0b28f9c9da27;
+3originalZIP,4592189bytes, publishedrefreadback size/SHA/CRC3/3PASS;
+manifestSHA33587c59d01ed19881cba04ed3558a8425a6b1c12ce5dd1093ffaab5427bc6f6.
+21textentries bounded patternnohits и обаPNG viewed, неfullsecretguarantee.
+
+LIVE2 freshmain finalcandidate f9197b8493672304dae99abe190cdae664774de0/
+treea5370d4d7177cf89adccf5a92a32f1616f32d17e, PR17draft,
+CI37217188695pending. Root mainintegration нормальным Gitmerge/push,
+solver unchanged относительноreviewed4a2; finaldelta/artifactsreview pending.
+Default и physical browser последовательно в existingprotectedjob,
+publicproductioncheck skipнаproductPR и выполняется наmainpush.
+
+Новое прямое поручение: пересобрать прежние publicrecordings с everytick на всём
+10k/100k/1M горизонте, сначала оценить хранение. Root+Astra независимо измерили
+existing201samples: currentJSON≈301MB/2.66GB/26.4GB; gzip≈40.4/348/3592MB,
+не adjacenttick measurement/upperbound. Sourcebacked расчёт сохранён в
+ docs/experiments/dense-recording/storage-preflight.json и README.
+Первыйbounded10k streamingcodec на архивной базеb202 готовит scopedauthor,
+безmodelsteps/Cargo у автора; rootbuild/run после coherentcommit/independentreview.
+Никаких новыхLAB24runs, переписыванияoldJSON/SHA, fakeworld30source или infra.
+LIVE3a rootdependentintegration подготовлен отдельно, его actualQA ещё в работе;
+после приёмки2D nextpriority REC2everytick; Three3D потомотдельнымstage.

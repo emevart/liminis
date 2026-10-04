@@ -1,0 +1,38 @@
+{
+  "method": "Current published samples compact JSON/gzip6 independent64-framechunks; dense extrapolation is not adjacent-tick measurement or upper bound",
+  "rows": [
+    {
+      "id": "cell-chamber-10k",
+      "old_bytes": 6047570,
+      "sample_frames": 201,
+      "cadence": 50,
+      "sample_living_mean": 108.2636815920398,
+      "compact_frame_mean_bytes": 30062.437810945274,
+      "full_tick_plain_extrapolation_bytes": 300654441,
+      "gzip64_sample_bytes": 812599,
+      "full_tick_gzip64_extrapolation_bytes": 40431854
+    },
+    {
+      "id": "cell-chamber-100k",
+      "old_bytes": 5356325,
+      "sample_frames": 201,
+      "cadence": 500,
+      "sample_living_mean": 95.06965174129353,
+      "compact_frame_mean_bytes": 26621.587064676616,
+      "full_tick_plain_extrapolation_bytes": 2662185328,
+      "gzip64_sample_bytes": 698907,
+      "full_tick_gzip64_extrapolation_bytes": 347718403
+    },
+    {
+      "id": "cell-chamber-1m",
+      "old_bytes": 5312311,
+      "sample_frames": 201,
+      "cadence": 5000,
+      "sample_living_mean": 92.7412935323383,
+      "compact_frame_mean_bytes": 26404.805970149253,
+      "full_tick_plain_extrapolation_bytes": 26404832375,
+      "gzip64_sample_bytes": 721892,
+      "full_tick_gzip64_extrapolation_bytes": 3591506079
+    }
+  ]
+}
