@@ -236,3 +236,96 @@ Root actual clean-source build и bounded10k measurement ещё pending.
 Каждый тик остаётся целью для всех трёх горизонтов; windows не подставляются.
 LIVE3 physical2D QA дополнен реальными keyboard событиями с independently
 ordered visible IDs и final post-cleanup error gates; final review/CI pending.
+
+
+### LIVE2/LIVE3 приняты; dense пилоты и разрешённый объём
+
+2026-10-04, 18:08 UTC. OWNERSHIP ACCEPTED сохраняется; единственный
+coordinator/integrator/release owner — native Cloud. Старые product authors
+STOPPED, архивные refs/VM не удаляются. Автопробуждение после окончания active
+turn инструментально не подтверждено.
+
+PR17 guardedMERGED `703085e76760924436396030dfd6f0a404daaadd` после exact
+`33272bc452aca6a7e8716483da5d66941213cebf`, tree
+`5d8dd0426d4970908c739bc7e902b6f9e07b8334`, run37219223184:
+все11checksPASS; независимые code/numerics/actual-artifact reviews0blockers.
+Полный CI f919 был FAIL и остаётся диагностикой, его browserPASS не переносился.
+Original9ZIP в evidence branch `codex/native-cloud-evidence-20261004`,
+commit`4d063a86ebcc397070cab03d9c2a37b4eb709c01`, 53,494,487bytes;
+manifestSHA`a872b6277af1966703fe360ad5974a58462a5bb95866bc21e6104623ecb883c3`.
+
+PR18 guardedMERGED `61d5c22edb3d1da13029c9faa6b506253d674f91` после exact
+`65d3a85dcc2050e6b01552abe3549c1ed4aad8eb`, tree
+`d9c69f71c50bc741f65e29dd72a050505faef550`, run37221244788:
+все11checksPASS; независимые final source/code/numerics/UX и actual artifacts0blockers.
+Это наблюдение сохранённых point centres вXY/XZ/YZ, равный SIscale/µm/slice,
+exactID/overlap inspector, atomic state+tick и mobile normal-flow controls.
+Protected pinned sandboxed Chromium: projection12checks/7PNG, independent
+20geometries/134markers max1.61e-13px,43keyboardevents, delayed originalhistory,
+actual divisiontick47. Остальные fresh reports15/16live и22browser/17HTTPrecorded.
+Все8 held/physicalPNG дополнительно просмотрены; held byte/RGBA equal.
+Нет claims collisions/spatialchemistry/nativebackground/achievedFPS/fullaccessibility.
+Recorded trace не сохранил JSresponsebodies: HTTPsourcebyte attestation не
+называется browserresponsebodyattestation.
+
+Original5ZIP включая mobileFAIL сохранены безперепаковки в
+`codex/native-physical-observer-evidence`, commit
+`8eb63a98f505b8bf9a2d7b10f43194d7cca264b1`, 59,674,823bytes;
+manifestSHA`df6b0507ae1c5cf7ec63ace700538135b80c23cc1fe0b9d2842dfd7f344658f8`.
+Отдельная НОВАЯ GitobjectDB скачала ref по сети: все5 размер/SHA256/ZIPCRC PASS.
+Archive manifest фиксирует более раннюю pending границу, этот checkpoint
+фиксирует окончательную приёмку. Сайт на новом main ещё нужно проверять:
+PRgreen не является productiondeploymentPASS.
+
+Пользователь подтвердил «Каждый тик на всём горизонте — сначала оценить объём
+хранения», затем «Объём около3ГБ допустим — проверить существующее размещение».
+Everytick вместо окон; прежние3JSON/URL/SHA неизменны; LAB24 не пересчитывается.
+Codec уже использует deltas/gzip, независимые keyframechunks≤256ticks,
+≤1MiBgzip/4MiBdecoded, максимум8192chunks. Числа не округляются, точные
+u64/i128 строки и f64bits/-0 сохраняются, cadence не снижается при capFAIL.
+Источник oldengine world30/chamber1/seed42/dt30 `b2024ce`, actual producer
+отдельно `bb70c9eb448b55ef3f50dfd6cd2a70213157bd8d`/
+tree`93975cb83da179e15c60e937772bf9b656e5279b`; 7frozenGitobjects
+совпадают со старым исходником. Runtime не является binary/kernelattestation.
+
+Реальные native замеры:
+| Horizon | Frames | Chunks | Total bytes | Export seconds | Full decode seconds |
+|---|---:|---:|---:|---:|---:|
+|100|101|1|61355|0.202|0.223|
+|10000|10001|41|28166588|35.708|17.767|
+|100000|100001|393|244639227|308.601|154.209|
+
+Everytick/закрытый учёт0/oldframebit equality и known genotype dictionary PASS.
+10k:225oldframe comparisons;100k:423. Full1M ожидает603comparisons/561uniqueoldticks.
+Pilot bytes опубликованы `codex/dense-recording-pilot-evidence`,
+commit`82d6dead4a518f70de340440e62623455e02e448`;
+442datasetfiles,244,720,653unique bytes, manifestSHA
+`4e2a1f448cb7220c1b4950c228cbf18706fca4335f4fb5d88227d0878ee7097c`.
+Fresh networkfetch в отдельнуюobjectDB проверил все442 original sizes/SHA PASS.
+Публичные команды имеют нормализованные cwdrelative paths; научные значения
+не изменены, original rawreportSHA записаны, исходныеchunks/index/manifests exact.
+
+Полный1M export + bounded independent validation запущен один раз с hardcap
+3,000,000,000bytes, без удаления тиков, без миллионаframes array/fullJSONLfile.
+Последний observed progress>350k ticks, процесс ещё работает; завершённым
+dataset/PASS или actual2.45GB его пока не называем. 100k даёт прогноз≈2.45GB.
+Caps: H≤10k64MiB;H≤100k512MiB;H>100k3e9; historic256MiBtarget не forecast.
+
+Official existing-hosting docs checked read-only: CloudflareWorkers staticassets
+25MiB/file,20k freefiles/100kpaid,staticrequests free/unlimited/noadditionalstoragecost;
+actualaccount/build/uploadcapacity ещё НЕ проверена. GitHub recommended
+Gitondisk10GB/directorywidth3000, enforcedpush2GB/file100MB.
+План без новой infra/secrets/spend: sharded immutable chunks
+`chunks/{ordinal//256:02d}/chunk-...jsonl.gz`, ≤32dirs/256files;
+compressbytes не меняются. Publication в два boundedGitpush≤1.5GBновыхchunks,
+branchpartial не используетсяmain/catalog. Index/manifests path-only rewrite,
+originals retained; allpublicationmetadata учитывается в3GB.
+Default publisher full bounded decode; explicit externally pinned coordinator
+full-validation receipt разрешает schema-pass reuse, но ВСЕchunkSHA/CRC/decodedSHA
+и prefix guards всё равно перечитываются. Receipt создаётся только AFTERfull1MPASS.
+
+Следующий этап: закончить единственный1Mexport/validator; принять независимыми
+code/numerics browserdecoder и publisher; затем подготовить sharded delivery,
+everytick async observer/clock безmilliontimestamps, existingprotected realbrowser,
+freshmain exactCI и actualproduction acceptance. Old201samples допускаются
+только как явно подписанный sparseoverview/archive, не denseplayback.
