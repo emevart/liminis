@@ -89,9 +89,16 @@ async function serve() {
   await bounded(new Promise((done, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", done); }), 5000, "loopback server start");
   origin = `http://127.0.0.1:${server.address().port}`; report.origin = origin;
 }
-function observePage() {
-  window.__denseQaErrors = { unhandled: [], errors: [], timer: { intervalMs: 10, samples: 0, maxGapMs: 0 } };
-  addEventListener("unhandledrejection", (event) => window.__denseQaErrors.unhandled.push(String(event.reason?.stack || event.reason)));
+function observePage({ observeBodies = true } = {}) {
+  window.__denseQaErrors = { unhandled: [], expectedControls: [], errors: [], timer: { intervalMs: 10, samples: 0, maxGapMs: 0 } };
+  addEventListener("unhandledrejection", (event) => {
+    const observed = window.__denseQaErrors, index = observed.unhandled.length; observed.unhandled.push(String(event.reason?.stack || event.reason));
+    // Suppress the browser's default error reporting only for the one armed
+    // sentinel object. The actual raw unhandled event remains in evidence.
+    if (window.__denseQaControlArmed === true && window.__denseQaExpectedUnhandled instanceof DOMException && event.reason === window.__denseQaExpectedUnhandled && observed.expectedControls.length === 0) {
+      observed.expectedControls.push({ index, label: "Synthetic native ReadableStream error-channel sensitivity control", name: event.reason.name, message: event.reason.message }); window.__denseQaControlArmed = false; event.preventDefault();
+    }
+  });
   addEventListener("error", (event) => window.__denseQaErrors.errors.push(event.message));
   let last = performance.now(); setInterval(() => { const now = performance.now(), sample = window.__denseQaErrors.timer; sample.samples++; sample.maxGapMs = Math.max(sample.maxGapMs, now - last); last = now; }, 10);
   // Observe the real native call/signals/read results. Forward the original
@@ -112,6 +119,9 @@ function observePage() {
     // stack: a signal cannot be borrowed from another same-URL invocation.
     const invoke = { [name](...forwarded) { return Reflect.apply(originalFetch, receiver, forwarded); } };
     const nativePromise = invoke[name](...args);
+    // This independent phase deliberately attaches NO observer handlers to
+    // native fetch/read promises; orphan rejections retain browser semantics.
+    if (!observeBodies) return nativePromise;
     void nativePromise.then((response) => {
       call.response = { status: response.status, epochMs: epoch(), contentLength: response.headers.get("content-length") };
       if (!response.body) return;
@@ -150,7 +160,8 @@ function classifyRequests(evidence, failures = report.requestFailures) {
     failed.correlation.failureEpochMs = failureEpochMs; failed.correlation.abort = abort;
     if (!call.hasSignal || call.initiallyAborted || !abort || abort.name !== "AbortError" || !Number.isFinite(failureEpochMs) || abort.epochMs > failureEpochMs + 1) { rejection("Missing preceding actual AbortError signal; deadline/late cleanup is not intent"); continue; }
     if ([call.fetchError, call.body.readError].some((error) => error && error.epochMs <= abort.epochMs)) { rejection("A native fetch/body failure preceded cancellation; cleanup cannot relabel it"); continue; }
-    const explicit = ["Dense recording request superseded or aborted", "Dense QA mid-body cancellation"].includes(abort.message);
+    const uninstrumentedControl = abort.message === "Dense QA uninstrumented mid-body cancellation" && evidence.proofMode === "signal-only; native promise rejection semantics uninstrumented" && evidence.native.calls.filter((item) => item.abort?.message === abort.message).length === 1;
+    const explicit = ["Dense recording request superseded or aborted", "Dense QA mid-body cancellation"].includes(abort.message) || uninstrumentedControl;
     const defaultAbort = abort.name === evidence.native.defaultAbort.name && abort.message === evidence.native.defaultAbort.message;
     const declared = call.response?.contentLength, complete = defaultAbort && !call.fetchError && call.response?.status === 200 && typeof declared === "string" && /^(0|[1-9][0-9]*)$/.test(declared) && Number(declared) <= 16 * 1024 * 1024 && call.body.bytes === Number(declared) && call.body.readError === null && call.body.doneEpochMs !== null && call.body.doneEpochMs <= abort.epochMs;
     failed.intentional = explicit || complete;
@@ -172,6 +183,9 @@ function classificationSelfCheck() {
     ["explicit cancellation", () => {}, true],
     ["verified EOF cleanup", (e) => { e.native.calls[0].abort.message = "platform default"; }, true],
     ["body rejection after explicit abort", (e) => { e.native.calls[0].body.readError = { epochMs: 1150 }; }, true],
+    ["single signal-only controlled cancellation", (e) => { e.proofMode = "signal-only; native promise rejection semantics uninstrumented"; e.native.calls[0].abort.message = "Dense QA uninstrumented mid-body cancellation"; }, true],
+    ["signal-only reason on wrong phase", (e) => { e.native.calls[0].abort.message = "Dense QA uninstrumented mid-body cancellation"; }, false],
+    ["multiple signal-only control cancellations", (e) => { e.proofMode = "signal-only; native promise rejection semantics uninstrumented"; e.native.calls[0].abort.message = "Dense QA uninstrumented mid-body cancellation"; e.native.calls.push({ ...e.native.calls[0], id: 2 }); }, false],
     ["timeout", (e) => { e.native.calls[0].abort.name = "TimeoutError"; }, false],
     ["late signal", (e) => { e.native.calls[0].abort.epochMs = 1300; }, false],
     ["fetch failure before explicit abort", (e) => { e.native.calls[0].fetchError = { epochMs: 1050 }; }, false],
@@ -198,9 +212,9 @@ async function finishRequestProof() {
   try { evidence.native = await evaluate(() => window.__denseQaFetch); classifyRequests(evidence); assert.deepEqual(evidence.native.errors, []); assert.deepEqual(evidence.errors, []); }
   finally { try { await bounded(session.detach(), timeouts.cdp, "request observation CDP detach"); } finally { pageProof = null; } }
 }
-async function fresh(viewport = { width: 1440, height: 900 }) {
+async function fresh(viewport = { width: 1440, height: 900 }, { observeBodies = true } = {}) {
   assert.equal(stopping, false); page = await bounded(context.newPage(), timeouts.operation, "page creation"); await page.setViewportSize(viewport);
-  const evidence = { pageId: report.requestObservations.length + 1, nodeRequests: [], network: [], errors: [] }, identities = new WeakMap(), nodeOccurrences = new Map(), networkOccurrences = new Map(), networkIds = new Map(); report.requestObservations.push(evidence);
+  const evidence = { pageId: report.requestObservations.length + 1, proofMode: observeBodies ? "native signal and complete-body metadata observations" : "signal-only; native promise rejection semantics uninstrumented", nodeRequests: [], network: [], errors: [] }, identities = new WeakMap(), nodeOccurrences = new Map(), networkOccurrences = new Map(), networkIds = new Map(); report.requestObservations.push(evidence);
   const error = (message) => { if (evidence.errors.length < 8) evidence.errors.push(message); }, occurrence = (map, key) => { const next = (map.get(key) || 0) + 1; map.set(key, next); return next; };
   const session = await bounded(context.newCDPSession(page), timeouts.cdp, "request observation CDP session"); pageProof = { evidence, session };
   session.on("Network.requestWillBeSent", (event) => { if (evidence.network.length >= 512 || networkIds.has(event.requestId)) { error("CDP request cap or duplicate/redirect identity"); return; } const row = { requestId: event.requestId, url: event.request.url, method: event.request.method, resourceType: event.type, occurrence: occurrence(networkOccurrences, `${event.request.method} ${event.request.url}`), timestamp: event.timestamp, wallEpochMs: event.wallTime * 1000, fetchIds: initiatorFetchIds(event.initiator?.stack) }; evidence.network.push(row); networkIds.set(event.requestId, row); });
@@ -211,10 +225,10 @@ async function fresh(viewport = { width: 1440, height: 900 }) {
   page.on("pageerror", (error) => report.pageErrors.push(error.stack || error.message));
   page.on("console", (message) => { if (message.type() === "error") report.consoleErrors.push({ text: message.text(), location: message.location() }); });
   page.on("requestfailed", (request) => { report.requestFailures.push({ ...(identities.get(request) || { pageId: evidence.pageId, url: request.url() }), error: request.failure()?.errorText, intentional: false, classification: "Pending actual request/signal correlation" }); });
-  await page.addInitScript(observePage); return page;
+  await page.addInitScript(observePage, { observeBodies }); return page;
 }
 async function evaluate(...args) { return bounded(page.evaluate(...args), timeouts.operation, "browser module operation"); }
-async function pageEnd() { await page.waitForLoadState("networkidle"); await sleep(50); const observed = await evaluate(() => window.__denseQaErrors); (report.pageMeasurements ||= []).push(observed); assert.deepEqual(observed.unhandled, []); assert.deepEqual(observed.errors, []); await finishRequestProof(); await page.close(); page = null; }
+async function pageEnd(expectedControls = 0) { await page.waitForLoadState("networkidle"); await sleep(50); const observed = await evaluate(() => window.__denseQaErrors); (report.pageMeasurements ||= []).push(observed); assert.equal(observed.unhandled.length, expectedControls); assert.equal(observed.expectedControls.length, expectedControls); if (expectedControls) assert.equal(observed.expectedControls[0].index, 0); assert.deepEqual(observed.errors, []); await finishRequestProof(); await page.close(); page = null; }
 async function screenshot(filename) { await bounded(page.screenshot({ path: join(output, filename), fullPage: true }), timeouts.operation, "screenshot"); const value = await readFile(join(output, filename)); report.screenshots.push({ filename, bytes: value.length, sha256: digest(value) }); }
 const shown = async (id) => Number((await page.locator(`#${id}`).textContent()).replaceAll(",", ""));
 async function waitTick(tick) { await page.waitForFunction((expected) => Number(document.getElementById("tick").textContent.replaceAll(",", "")) === expected && document.getElementById("workspace").getAttribute("aria-busy") === "false", tick); }
@@ -295,6 +309,38 @@ async function standalone() {
   report.decoder.status = "PASS"; await pageEnd();
 }
 
+async function uninstrumentedRejectionPhase() {
+  await fresh(undefined, { observeBodies: false }); await page.goto(`${origin}/__dense_qa__/harness.html`);
+  await evaluate(async (origin) => { window.__denseQaModule = await import(`${origin}/dense-recording.mjs`); }, origin);
+  await check("Uninstrumented native promises preserve caught pre-abort and real mid-body abort without orphan rejection", async () => {
+    const before = await evaluate(() => window.__denseQaFetch.calls.length), result = await evaluate(async (origin) => {
+      const controller = new AbortController(); controller.abort(new DOMException("Dense QA pre-aborted lifetime", "AbortError"));
+      try { await window.__denseQaModule.createDenseRecordingLoader({ indexUrl: `${origin}/__dense_qa__/stream/index.json`, indexSha256: "d3d102bcb4233900416ba0532c9cdd83b41b353963b15c47a9c66e4852b260aa", manifestPath: "horizon-100.json", baseUrl: origin, signal: controller.signal }); return "unexpected success"; } catch (error) { return error.name; }
+    }, origin);
+    assert.equal(result, "AbortError"); await sleep(30); assert.equal(await evaluate(() => window.__denseQaFetch.calls.length), before, "Pre-aborted real loader must not call native fetch");
+    const baseline = report.http.length;
+    await evaluate((origin) => { window.__denseQaUninstrumentedAbort = new AbortController(); window.__denseQaUninstrumentedPending = window.__denseQaModule.createDenseRecordingLoader({ indexUrl: `${origin}/__dense_qa__/stream/index.json`, indexSha256: "d3d102bcb4233900416ba0532c9cdd83b41b353963b15c47a9c66e4852b260aa", manifestPath: "horizon-100.json", baseUrl: origin, signal: window.__denseQaUninstrumentedAbort.signal }).then(() => "unexpected success", (error) => error.name); }, origin);
+    await eventually(() => report.http.slice(baseline).some((item) => item.path === "/__dense_qa__/stream/index.json" && item.delayed === "HELD" && item.bytesWritten === 16), "actual saved first 16 bytes held for uninstrumented abort"); await sleep(100);
+    const caught = await evaluate(async () => { window.__denseQaUninstrumentedAbort.abort(new DOMException("Dense QA uninstrumented mid-body cancellation", "AbortError")); return window.__denseQaUninstrumentedPending; });
+    assert.equal(caught, "AbortError"); await sleep(100); assert.deepEqual((await evaluate(() => window.__denseQaErrors)).unhandled, []);
+    report.decoder.uninstrumented = { status: "PASS", nativePromiseObservers: false, nativeReaderWrappers: false, preAbortedDataRequests: 0, caughtMidBody: caught, productionUnhandled: 0, responseBytes: "Actual first 16 original saved index bytes, unchanged" };
+  });
+  await check("Uninstrumented browser error-channel control detects one exact abandoned native stream rejection", async () => {
+    await evaluate(() => {
+      const sentinel = new DOMException("Dense QA expected native orphan sensitivity control", "AbortError"); window.__denseQaExpectedUnhandled = sentinel; window.__denseQaControlArmed = true;
+      let controller; const stream = new ReadableStream({ start(value) { controller = value; } }, { highWaterMark: 0 }), reader = stream.getReader();
+      // Deliberately no handler on this actual native read promise. This is an
+      // error-channel sensitivity control, never a recording/API frame.
+      reader.read(); controller.error(sentinel);
+    });
+    await eventually(() => evaluate(() => window.__denseQaErrors.expectedControls.length === 1), "exact native unhandled sentinel event"); await sleep(50);
+    const observed = await evaluate(() => { window.__denseQaExpectedUnhandled = null; window.__denseQaControlArmed = false; return window.__denseQaErrors; });
+    assert.equal(observed.unhandled.length, 1); assert.equal(observed.expectedControls.length, 1); assert.equal(observed.expectedControls[0].index, 0); assert.equal(observed.expectedControls[0].message, "Dense QA expected native orphan sensitivity control"); assert.deepEqual(observed.errors, []);
+    report.decoder.uninstrumented.sensitivityControl = { expectedEvents: 1, actualEvents: observed.unhandled.length, exactReasonIdentity: true, unexpectedEvents: 0, label: observed.expectedControls[0].label };
+  });
+  await pageEnd(1);
+}
+
 async function actualUi() {
   const catalogBytes = await source("site/data/catalog.json"), catalog = JSON.parse(catalogBytes);
   const entries = report.ui.requiredHorizons.map((horizon) => catalog.entries.find((entry) => entry.experiment.steps === horizon));
@@ -370,7 +416,7 @@ async function run() {
   });
   assert.equal(stopping, false); context = await bounded(browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 }), timeouts.operation, "browser context"); context.setDefaultTimeout(timeouts.operation); context.setDefaultNavigationTimeout(timeouts.operation);
   await context.route("**/*", async (route) => { const request = route.request(), url = new URL(request.url()); if (url.origin !== origin || request.method() !== "GET") { (report.prohibitedRequests ||= []).push({ url: request.url(), method: request.method() }); await route.abort(); return; } await route.continue(); });
-  await bounded(context.tracing.start({ screenshots: true, snapshots: true, sources: true }), timeouts.cdp, "trace start"); tracing = true; report.status = "RUNNING"; await standalone(); await actualUi();
+  await bounded(context.tracing.start({ screenshots: true, snapshots: true, sources: true }), timeouts.cdp, "trace start"); tracing = true; report.status = "RUNNING"; await standalone(); await uninstrumentedRejectionPhase(); await actualUi();
   assert.deepEqual(report.pageErrors, []); assert.deepEqual(report.consoleErrors, []); assert.deepEqual(report.unhandled, []); assert.deepEqual(report.prohibitedRequests || [], []); assert.ok(report.requestFailures.every((request) => request.intentional));
   assert.ok(report.http.every((request) => [200, 204].includes(request.status) && !request.error), "Every actual QA HTTP request must succeed or be an explicit body cancellation");
   assert.equal(git("rev-parse", "HEAD"), report.sourceHead); assert.equal(git("rev-parse", "HEAD^{tree}"), report.sourceTree); assert.equal(git("status", "--porcelain", "--untracked-files=no"), ""); report.servedBytes = servedBytes; assert.equal(stopping, false); report.status = "PASS";
@@ -388,7 +434,11 @@ finally {
   if (context) await cleanup("context cleanup", () => context.close()); if (browser) await cleanup("browser cleanup", () => browser.close());
   if (server) await cleanup("loopback server cleanup", () => new Promise((done, reject) => { server.close((error) => error ? reject(error) : done()); server.closeAllConnections(); }));
   await sleep(50);
+  try {
+    for (const evidence of report.requestObservations) { classifyRequests(evidence); assert.deepEqual(evidence.errors, []); assert.ok(evidence.native); assert.deepEqual(evidence.native.errors, []); assert.equal(evidence.failureBijection.status, "PASS"); }
+    report.finalRequestClassification = { status: "PASS", phase: "after bounded cleanup and settlement", pages: report.requestObservations.length };
+  } catch (error) { report.finalRequestClassification = { status: "FAIL", phase: "after bounded cleanup and settlement" }; fail(error, "final request/signal correlation"); }
   if (report.status === "PASS") try { assert.equal(git("rev-parse", "HEAD"), report.sourceHead); assert.equal(git("rev-parse", "HEAD^{tree}"), report.sourceTree); assert.equal(git("status", "--porcelain", "--untracked-files=no"), ""); } catch (error) { fail(error, "post-cleanup source guard"); }
-  if (report.status === "PASS" && (report.trace.status !== "PASS" || report.launchArgumentCheck.status !== "PASS" || report.decoder.status !== "PASS" || report.ui.status !== "PASS" || report.cleanupErrors.length || report.unhandled.length || report.pageErrors.length || report.consoleErrors.length || (report.prohibitedRequests || []).length || report.requestFailures.some((request) => !request.intentional) || report.http.some((request) => ![200, 204].includes(request.status) || request.error) || report.screenshots.length !== 5)) fail(new Error("Required final browser evidence is incomplete"), "final gate");
+  if (report.status === "PASS" && (report.trace.status !== "PASS" || report.launchArgumentCheck.status !== "PASS" || report.decoder.status !== "PASS" || report.decoder.uninstrumented?.status !== "PASS" || report.decoder.uninstrumented?.sensitivityControl?.actualEvents !== 1 || report.ui.status !== "PASS" || report.finalRequestClassification?.status !== "PASS" || report.requestObservations.some((evidence) => evidence.errors.length || evidence.native?.errors.length || evidence.failureBijection?.status !== "PASS") || report.cleanupErrors.length || report.unhandled.length || report.pageErrors.length || report.consoleErrors.length || (report.prohibitedRequests || []).length || report.requestFailures.some((request) => !request.intentional) || report.http.some((request) => ![200, 204].includes(request.status) || request.error) || report.screenshots.length !== 5)) fail(new Error("Required final browser evidence is incomplete"), "final gate");
   report.finishedAt = new Date().toISOString(); await writeFile(join(output, "report.json"), JSON.stringify(report, null, 2) + "\n"); console.log(JSON.stringify({ status: report.status, sourceHead: report.sourceHead, checks: report.checks.length, output })); if (report.status !== "PASS") process.exitCode = 1;
 }
