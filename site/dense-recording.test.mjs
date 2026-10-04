@@ -323,6 +323,82 @@ test("caller/lifetime abort clears in-flight state and corrupt active prefetch f
   const failed = await createDenseRecordingLoader(loaderOptions(bad.files)); await failed.seek(0); await until(() => failed.stats.failed); assert.equal(failed.current, null); await assert.rejects(() => failed.seek(1), /integrity/); failed.close();
 });
 
+test("paused real-frame loader immediately notifies a corrupt active prefetch without another seek", async () => {
+  const { files, chunks } = threeChunks(); let release, started = false;
+  const held = new Promise((done) => { release = done; });
+  const loader = await createDenseRecordingLoader(loaderOptions(files, async (url) => {
+    const path = new URL(url).pathname.split("/").at(-1);
+    if (path === chunks[1].descriptor.path) { started = true; await held; return response(Buffer.from(chunks[1].data).fill(0)); }
+    return response(files.get(path));
+  }));
+  const notifications = [], unsubscribe = loader.subscribeFailure((error) => notifications.push(error));
+  assert.throws(() => loader.subscribeFailure(() => {}), /only one/);
+  const validated = await loader.seek(0); assert.deepStrictEqual(validated, expected[0]); await until(() => started);
+  assert.equal(loader.current, validated); assert.deepStrictEqual(notifications, []);
+  release(); await until(() => notifications.length === 1);
+  const original = notifications[0]; assert.match(original.message, /gzip integrity/); assert.equal(loader.stats.failed, true); assert.equal(loader.current, null);
+  assert.deepStrictEqual(validated, expected[0], "the consumer's immutable last validated snapshot remains usable");
+  await assert.rejects(() => loader.seek(1), (error) => error === original); assert.equal(notifications.length, 1);
+  unsubscribe(); unsubscribe(); const late = [], removeLate = loader.subscribeFailure((error) => late.push(error));
+  assert.deepStrictEqual(late, [original], "late subscription receives retained failure immediately"); unsubscribe();
+  assert.throws(() => loader.subscribeFailure(() => {}), /only one/, "old cleanup cannot remove a later subscription");
+  removeLate(); loader.close(); assert.throws(() => loader.subscribeFailure(() => {}), /closed/);
+});
+
+test("failure subscription removal and close suppress pending prefetch callbacks", async () => {
+  for (const mode of ["unsubscribe", "close"]) {
+    const { files, chunks } = threeChunks(); const original = new Error(`${mode} original transport failure`); let release, started = false;
+    const held = new Promise((_, reject) => { release = () => reject(original); });
+    const loader = await createDenseRecordingLoader(loaderOptions(files, async (url) => {
+      const path = new URL(url).pathname.split("/").at(-1);
+      if (path === chunks[1].descriptor.path) { started = true; return held; }
+      return response(files.get(path));
+    }));
+    const notifications = [], unsubscribe = loader.subscribeFailure((error) => notifications.push(error));
+    await loader.seek(0); await until(() => started); mode === "close" ? loader.close() : unsubscribe();
+    release(); await new Promise((done) => setTimeout(done, 25)); assert.deepStrictEqual(notifications, []);
+    if (mode === "unsubscribe") {
+      assert.equal(loader.stats.failed, true); const late = []; loader.subscribeFailure((error) => late.push(error)); assert.deepStrictEqual(late, [original]);
+    } else { assert.equal(loader.stats.closed, true); assert.equal(loader.stats.failed, false); }
+    loader.close(); unsubscribe();
+  }
+});
+
+test("stale prefetch rejection and caller abort never notify fatal failure", async () => {
+  const { files, chunks } = threeChunks(); let rejectLate, started = false;
+  const held = new Promise((_, reject) => { rejectLate = reject; });
+  const loader = await createDenseRecordingLoader(loaderOptions(files, async (url) => {
+    const path = new URL(url).pathname.split("/").at(-1);
+    if (path === chunks[1].descriptor.path) { started = true; return held; }
+    return response(files.get(path));
+  }));
+  const notifications = []; loader.subscribeFailure((error) => notifications.push(error));
+  await loader.seek(0); await until(() => started); assert.deepStrictEqual(await loader.seek(100), expected[100]);
+  rejectLate(new Error("stale background error")); await new Promise((done) => setTimeout(done, 25));
+  assert.deepStrictEqual(notifications, []); assert.equal(loader.stats.failed, false); assert.equal(loader.current.frame.tick, 100); loader.close();
+  const caller = new AbortController(); let callerStarted = false;
+  const canceled = await createDenseRecordingLoader({ ...loaderOptions(files, async (url) => {
+    const path = new URL(url).pathname.split("/").at(-1); if (path === chunks[0].descriptor.path) { callerStarted = true; return new Promise(() => {}); } return response(files.get(path));
+  }), prefetch: false });
+  canceled.subscribeFailure((error) => notifications.push(error));
+  const pending = canceled.seek(0, { signal: caller.signal }); void pending.catch(() => {}); await until(() => callerStarted); caller.abort();
+  await assert.rejects(() => pending, /abort/i); assert.deepStrictEqual(notifications, []); assert.equal(canceled.stats.failed, false); canceled.close();
+});
+
+test("throwing or rejecting failure callbacks preserve the original transport error and create no detached rejection", async () => {
+  for (const asynchronous of [false, true]) {
+    const files = originalFiles(), original = new Error("original chunk transport failure"), consumer = new Error("consumer failure");
+    const loader = await createDenseRecordingLoader(loaderOptions(files, async (url) => {
+      const path = new URL(url).pathname.split("/").at(-1); if (path.endsWith(".gz")) throw original; return response(files.get(path));
+    }));
+    assert.throws(() => loader.subscribeFailure(null), /callback/); const notifications = [];
+    const unsubscribe = loader.subscribeFailure((error) => { notifications.push(error); if (asynchronous) return Promise.reject(consumer); throw consumer; });
+    await assert.rejects(() => loader.seek(0), (error) => error === original); await assert.rejects(() => loader.seek(1), (error) => error === original);
+    assert.deepStrictEqual(notifications, [original]); unsubscribe();
+    loader.subscribeFailure(() => Promise.reject(consumer)); await new Promise((done) => setTimeout(done, 25)); loader.close();
+  }
+});
+
 test("mid-body abort and synchronous fetch abort produce only caught errors, never unhandled rejections", () => {
   // Isolate process-level rejection observation from node:test's own listener.
   // Native Response/ReadableStream models a fetch body errored by AbortSignal.

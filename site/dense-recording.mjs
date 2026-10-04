@@ -325,8 +325,24 @@ export async function createDenseRecordingLoader({ indexUrl, indexSha256, manife
   const initialIndex = parseDenseJson(indexBytes); validateIndex(initialIndex); const manifestEntry = initialIndex.manifests.find((entry) => entry.path === manifestPath); requireThat(manifestEntry, "manifest must be index-allowlisted");
   const manifestBytes = await get(new URL(manifestEntry.path, url), DENSE_LIMITS.manifest, manifestEntry.bytes, lifetimeSignal);
   const admitted = await admitDenseRecording(indexBytes, manifestBytes, { indexSha256, manifestPath, cryptoProvider }); interrupted(lifetimeSignal);
-  const entries = new Map(); let serial = 0, activeSeek, closed = false, current = null, failure = null, maximumEntries = 0;
+  const entries = new Map(); let serial = 0, activeSeek, closed = false, current = null, failure = null, subscriber = null, maximumEntries = 0;
   const live = (entry) => !closed && entries.get(entry.index) === entry && !entry.controller.signal.aborted;
+  function notifyFailure() {
+    const selected = subscriber;
+    if (!failure || closed || !selected || selected.delivered) return;
+    selected.delivered = true;
+    // A consumer exception must not replace the original transport/admission
+    // failure or create a detached rejection on the background prefetch path.
+    try { void Promise.resolve(selected.callback(failure)).catch(() => {}); } catch {}
+  }
+  function subscribeFailure(callback) {
+    // One active consumer, once per subscription; a late subscriber receives
+    // the already retained failure synchronously. The returned cleanup is
+    // idempotent and cannot remove a later subscription.
+    requireThat(!closed, "loader is closed"); requireThat(typeof callback === "function", "failure callback is required"); requireThat(!subscriber, "only one failure subscriber is allowed");
+    const selected = { callback, delivered: false }; subscriber = selected; notifyFailure();
+    return () => { if (subscriber === selected) subscriber = null; };
+  }
   function evict(index) { const entry = entries.get(index); if (entry) { entries.delete(index); entry.controller.abort(abortError()); } }
   function obtain(index) {
     if (entries.has(index)) return entries.get(index);
@@ -337,10 +353,10 @@ export async function createDenseRecordingLoader({ indexUrl, indexSha256, manife
       const compressed = await get(new URL(chunk.path, url), DENSE_LIMITS.gzip, chunk.gzip_bytes, combined);
       const payload = await decodeDenseChunk(compressed, chunk, admitted.manifest.genomes, { cryptoProvider, signal: combined, chunkOrdinal: index });
       requireThat(live(entry), "stale chunk must not commit"); entry.payload = payload; return payload;
-    })().catch((error) => { entry.error = error; if (live(entry)) { failure = error; current = null; } throw error; });
+    })().catch((error) => { entry.error = error; if (live(entry) && !failure) { failure = error; current = null; notifyFailure(); } throw error; });
     void entry.promise.catch(() => {}); return entry;
   }
-  function close() { if (closed) return; closed = true; serial++; activeSeek?.abort(abortError()); for (const index of [...entries.keys()]) evict(index); current = null; lifetimeSignal?.removeEventListener("abort", close); }
+  function close() { if (closed) return; closed = true; subscriber = null; serial++; activeSeek?.abort(abortError()); for (const index of [...entries.keys()]) evict(index); current = null; lifetimeSignal?.removeEventListener("abort", close); }
   lifetimeSignal?.addEventListener("abort", close, { once: true });
   return Object.freeze({ index: admitted.index, manifest: admitted.manifest, indexSha256,
     get current() { return current; },
@@ -361,6 +377,6 @@ export async function createDenseRecordingLoader({ indexUrl, indexSha256, manife
         if (requested === serial) { current = null; if (combined.aborted) { evict(index); for (const old of [...entries.keys()]) evict(old); } }
         throw error;
       }
-    }, close,
+    }, subscribeFailure, close,
   });
 }
