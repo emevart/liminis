@@ -295,3 +295,49 @@ D0firstStep changedpositions0, Dpositive8; actual per-tick residuals exactzero.
 Final necessary CI/full review/default+physical protected browser acceptance ещё PENDING.
 Новый physical invocation добавлен последовательно в existing live-browser job;
 official runtime/sandbox/CDP guard прежние, artifacts разделены по format.
+
+## Native Cloud continuation: final candidate preparation
+
+Explicit ownership/write-go source:
+https://github.com/emevart/liminis/issues/11#issuecomment-5981221010 .
+Old Work Cloud authors STOPPED; sole coordinator is native Cloud.
+Main REC13/LAB14/LAB15 accepted in order. Latest main before QA integration:
+de2b52cd08dc3772800725a5eca64619f6bb33c6. Preserved LIVE2 WIP d536 remains
+ancestor; source runtime unchanged by the integration of immutable LAB data.
+
+Native tests actually completed sequentially, pinned Rust1.97.1:
+- micro44PASS/0FAIL/1ignored, including retested atomic refusal and absoluteSIoracle;
+- cells focused32PASS; full liminis host94PASS/0FAIL,786.29s;
+- Node49PASS; cargo fmt and workspace/all-targets clippy PASS.
+Fullhost log8436bytes SHA256c2c4c4e07d08b4aa210940c70945fd945f9ae587e089df2af77b9db183ecbe98.
+Independent code/numerics review0blockers. Old fixtureNOTRETESTED status is
+historical: the corrected valid-state refusal fixture now passes natively.
+Eco30 actual advance/save/secondresume/future passes with identity30 preserved.
+
+Root explicitly ran `cargo build --locked --release -p liminis` at source
+3489d1647e2cf1f27d382d3f6c61d24aec2e27a3,21.43s. The committed script
+`docs/experiments/live-transport/benchmark_release.py` does not build the host.
+Committed occupied seed42 benchmark raw:
+`docs/experiments/live-transport/occupied-seed42-release.json`,4739bytes,
+SHA2569bf8d946ade33724430909b2ac18e79d4edad125753ed8b7fa5f49c513b40ec1;
+actualbinary SHA256be14eca5dbcb44fc1c773f38cc145b59b0ceaaac5b768e0eee7c10129aac35ee.
+D0: actual1182ticks, sampled8–222living, HTTP41.51ms/Pause6.71ms,
+firstStep0coordinatechanges. Dpositive: actual2092ticks, sampled8–242living,
+HTTP226.71ms/Pause80.68ms, firstStep8coordinatechanges. Target1000 crossing
+overshoot is explicitly recorded. Both declared occupied HTTP/Pause<2s budgets,
+Pauseackhold, same-endtick save and exact zero residual passed. This is one
+native build/hardware and sampled occupancy, not integrated cell-work, controlled
+D0/Dpositive timing comparison, long-term stability or cross-platform evidence.
+
+ADR108 appended after acceptedREC107, with Astra approval and «Отвергнуто».
+Frozen SPEC/NORTH_STAR untouched. Operational schema/quantities/acceptance name
+partialADR099/015/022 exceptions and numeric limitations. Browser Saveack does
+not claim browserresume: actual disk tests cover restore/exactfuture.
+
+Protected final CI will run existing defaultchamber1 and explicit physical
+chamber2 invocations sequentially in the same official pinned sandbox browser
+job, with separate reports/PNG/traces. Browser/physics acceptance is still
+PENDING at this preservation boundary. Native test PASS does not replace
+actual Chromium artifact review. Shared public-QA PR16 is being accepted first,
+then the final LIVE2 head will include fresh accepted main and receive its own
+complete exact-head CI. No new scientific runs or historical LAB relabeling.

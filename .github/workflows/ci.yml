@@ -413,3 +413,21 @@ jobs:
           path: target/qa/recorded-browser/
           if-no-files-found: error
           retention-days: 7
+
+      # The initial QA-only PR uses unchanged deployed site bytes. Subsequent
+      # product PRs validate their own local candidate; deployment verification
+      # runs on main after the existing Cloudflare integration receives it.
+      - name: Verify actual public deployment and playback
+        if: github.event_name == 'push' || github.head_ref == 'codex/native-public-playback-acceptance'
+        env:
+          LIMINIS_PLAYWRIGHT_MODULE: ${{ runner.temp }}/liminis-recorded-browser/node_modules/playwright
+          LIMINIS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/check_public_recording_browser.mjs
+      - name: Attach public deployment browser evidence
+        if: always() && (github.event_name == 'push' || github.head_ref == 'codex/native-public-playback-acceptance')
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-playback-${{ github.event.pull_request.head.sha || github.sha }}
+          path: target/qa/public-playback/
+          if-no-files-found: warn
+          retention-days: 7
