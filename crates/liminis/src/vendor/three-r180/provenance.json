@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "package": "three",
+  "version": "0.180.0",
+  "tag": "r180",
+  "tag_object": "9e8635e2031c25859dc47ba07e72230dccb2682a",
+  "commit": "0af9729d0c143a86a1d725d6e2c3ad83301f3f34",
+  "repository": "https://github.com/mrdoob/three.js",
+  "license": "MIT",
+  "unmodified": true,
+  "import_map": {
+    "three": "/assets/vendor/three-r180/three.module.js"
+  },
+  "files": [
+    {
+      "path": "three.module.js",
+      "upstream_path": "build/three.module.js",
+      "git_blob": "477ca4dafa7af919a2b9818e01b5ae25198d4aa4",
+      "bytes": 603113,
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a",
+      "imports": [
+        "./three.core.js"
+      ]
+    },
+    {
+      "path": "three.core.js",
+      "upstream_path": "build/three.core.js",
+      "git_blob": "7dcd0fbcbc04b8d9a20ecb96c1ce344cb55150d5",
+      "bytes": 1403455,
+      "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20",
+      "imports": []
+    },
+    {
+      "path": "OrbitControls.js",
+      "upstream_path": "examples/jsm/controls/OrbitControls.js",
+      "git_blob": "eea26706dae735dade19367026185f6e68f5cf55",
+      "bytes": 38703,
+      "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c",
+      "imports": [
+        "three"
+      ]
+    },
+    {
+      "path": "LICENSE",
+      "upstream_path": "LICENSE",
+      "git_blob": "cf781430404b0ae0ba7d8dea3457a3515dd7c9b9",
+      "bytes": 1081,
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+      "imports": []
+    }
+  ]
+}

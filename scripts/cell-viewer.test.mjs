@@ -187,6 +187,22 @@ test('division removes a selected parent from the snapshot without claiming deat
   assert.equal(elements.get('cell-detail').textContent, `ID ${parent} is not present in the shown snapshot at tick 11.`);
 });
 
+test('3D inspector retains saved xyz and exact selection for layer, slice and camera visibility states', () => {
+  const id = '9007199254740993';
+  let status;
+  const view = { selected: id, mode: '3d', drawnTick: 8, projectionError: null, three: { visibility: () => status },
+    state: { chamber_format: 2, tick: 8, model: { dimensions_m: [40e-6, 20e-6, 10e-6] },
+      cells: [{ id, position_m: [10e-6, 5e-6, 2e-6], genome_key: 'genotype', generation: 1, birth_tick: 1 }] } };
+  const { elements, render } = inspector(view);
+  for (status of ['outside slice', 'centers layer hidden', 'outside current view']) {
+    render(); assert.equal(view.selected, id); assert.equal(elements.get('selection-state').textContent, status);
+    const list = elements.get('cell-detail').children.find(node => node.className === 'kv object-grid');
+    const pairs = new Map(); for (let index = 0; index < list.children.length; index += 2) pairs.set(list.children[index].textContent, list.children[index + 1].textContent);
+    assert.equal(pairs.get('id'), id); assert.equal(pairs.get('shown snapshot tick'), '8'); assert.equal(pairs.get('x center'), '10 µm');
+  }
+  view.state.cells = []; render(); assert.equal(view.selected, id); assert.equal(elements.get('selection-state').textContent, 'not present');
+});
+
 test('state, displayed tick, hit map and inspector commit before a delayed independent history request', async () => {
   const commitSource = script.match(/function commitState\(state\)\{[\s\S]*?\n      \}/)[0];
   const pollSource = script.match(/async function poll\(\)\{[\s\S]*?\n      \}/)[0];
@@ -198,6 +214,7 @@ test('state, displayed tick, hit map and inspector commit before a delayed indep
   const history = new Promise(resolve => { historyFinish = resolve; });
   let displayedTick, inspectedTick;
   const context = vm.createContext({ view, $: id => elements.get(id), json: async () => state,
+    invalidateGeometry: () => { view.hits=[]; view.candidates=[]; view.candidateTick=null; },
     retireLayout: () => {}, mergeHistory: () => {}, liveSample: value => value, configureProjection: () => {},
     renderState: () => { displayedTick = view.state.tick; order.push('readouts'); },
     drawChamber: () => { view.hits = view.state.cells; view.drawnTick = view.state.tick; order.push('canvas/hits'); },

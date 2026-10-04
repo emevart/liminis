@@ -42,6 +42,59 @@ fn request(shared: &Arc<Mutex<Sim>>, method: Method, path: &str, body: &str) -> 
 }
 
 #[test]
+fn three_display_routes_serve_exact_local_bytes_without_changing_state() {
+    let shared = Arc::new(Mutex::new(fixture()));
+    let before = state_json(&lock(&shared));
+    let assets: &[(&str, &str, &[u8])] = &[
+        (
+            "/assets/cell-viewer-3d.mjs",
+            "text/javascript; charset=utf-8",
+            include_bytes!("cell-viewer-3d.mjs"),
+        ),
+        (
+            "/assets/vendor/three-r180/three.module.js",
+            "text/javascript; charset=utf-8",
+            include_bytes!("vendor/three-r180/three.module.js"),
+        ),
+        (
+            "/assets/vendor/three-r180/three.core.js",
+            "text/javascript; charset=utf-8",
+            include_bytes!("vendor/three-r180/three.core.js"),
+        ),
+        (
+            "/assets/vendor/three-r180/OrbitControls.js",
+            "text/javascript; charset=utf-8",
+            include_bytes!("vendor/three-r180/OrbitControls.js"),
+        ),
+        (
+            "/assets/vendor/three-r180/LICENSE",
+            "text/plain; charset=utf-8",
+            include_bytes!("vendor/three-r180/LICENSE"),
+        ),
+        (
+            "/assets/vendor/three-r180/provenance.json",
+            "application/json",
+            include_bytes!("vendor/three-r180/provenance.json"),
+        ),
+    ];
+    for &(path, content_type, bytes) in assets {
+        let response = request(&shared, Method::Get, path, "");
+        assert_eq!(response.status, 200, "{path}");
+        assert_eq!(response.content_type, content_type, "{path}");
+        assert_eq!(response.body, bytes, "{path}");
+        assert_eq!(request(&shared, Method::Post, path, "{}").status, 405);
+    }
+    for path in [
+        "/assets/vendor/three-r180/../three.module.js",
+        "/assets/vendor/three-r180/three.module.js/",
+        "/assets/vendor/three-r180/src/Three.js",
+    ] {
+        assert_eq!(request(&shared, Method::Get, path, "").status, 404);
+    }
+    assert_eq!(state_json(&lock(&shared)), before);
+}
+
+#[test]
 fn cell_routes_are_separate_and_controls_publish_checked_ticks() {
     let shared = Arc::new(Mutex::new(fixture()));
     let response = request(&shared, Method::Get, "/api/state", "");
