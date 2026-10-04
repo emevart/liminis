@@ -44,6 +44,15 @@ Existing official pinned Chromium sandbox/CDP argv guard сохраняется;
 вызов последовательный в существующем job, отдельный evidence artifact.
 Actual browser/full CI на final HEAD пока pending; Node не browser PASS.
 
+Первый actual protected run37220117918 на581acd5 — FAIL: первые8 checks
+sourcecube/atomic state/planes/keyboard/boundaries/empty-slice PASS, но mobile390
+sticky readout перекрыл ID input и physical ruler. Ошибка не ослаблялась в QA.
+Astra одобрил physical-only ≤800px обычный поток stage → static readout →
+inspector; отдельная grid row для offline notice, hidden не занимает места.
+Scoped source fix3ebb9f/rootd7df82e добавляет только8CSSlines; chamber1 и desktop
+не затронуты. Author Node15PASS; narrow independent review и новый exact CI
+обязательны, первый FAIL сохранён как диагностическое evidence.
+
 ## Следующий шаг
 
 Fresh main LIVE2 интегрирован без force/reset. Следующий шаг — onefinalhead
