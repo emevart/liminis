@@ -47,15 +47,32 @@
       "source_head": "65d3a85dcc2050e6b01552abe3549c1ed4aad8eb",
       "workflow_run": 37221244788,
       "status": "Protected job SUCCESS; independent remaining artifact review/fullCI pending"
+    },
+    {
+      "filename": "public-main-61d5c22.zip",
+      "bytes": 3440989,
+      "sha256": "7f8f98e8d4ec0f067dfcd83583e6df97204d3d4afafa438f938dc02a3cb0a87f",
+      "artifact_id": 11310962652,
+      "source_head": "61d5c22edb3d1da13029c9faa6b506253d674f91",
+      "workflow_run": 37223230012,
+      "status": "Qualified public deployment/browser PASS4; desktop/mobile PNG viewed; source responses and known analytics exclusion verified"
     }
   ],
-  "total_bytes": 59674823,
+  "total_bytes": 63115812,
   "projection_source_tree": "d9c69f71c50bc741f65e29dd72a050505faef550",
   "privacy": {
     "text_entries_pattern_scanned": 221,
     "pattern_hits": 0,
     "projection_PNGs_independently_viewed": 7,
-    "qualification": "Bounded pattern scan and projection screenshot review; not a full secret guarantee."
+    "qualification": "Bounded pattern scan and projection screenshot review; not a full secret guarantee.",
+    "additional_public_text_entries_pattern_scanned": 3,
+    "additional_public_PNGs_viewed": 2
   },
-  "scope": "Actual protected Chromium/Linux 2D observer; no collision/spatial chemistry/achieved FPS/kernel isolation/full accessibility claim. The original 28.6MB artifact ZIP contains the full verified trace; this evidence file is not a deployed static site asset."
+  "scope": "Actual protected Chromium/Linux 2D observer; no collision/spatial chemistry/achieved FPS/kernel isolation/full accessibility claim. The original 28.6MB artifact ZIP contains the full verified trace; this evidence file is not a deployed static site asset.",
+  "acceptance_update": {
+    "projection_candidate_full_CI": "PASS all11 run37221244788, guarded PR18 merge61d5c22",
+    "remaining_candidate_artifacts": "Independent review0blockers; all8 remaining PNG viewed",
+    "main_push_full_CI": "PASS run37223230012; two PR-only guards skipped",
+    "public_scope": "Main61d5c22 existing sparse public playback, before dense delivery; no new physical public host or dense production claim"
+  }
 }
