@@ -202,6 +202,41 @@ test('camera and setting revisions synchronously retire old candidates on a held
   assert.equal(f.view.candidates.length, 0); assert.equal(f.view.hits.length, 0); assert.equal(f.view.candidateTick, null); assert.equal(f.view.candidateRevision, null);
 });
 
+test('persistence-disabled same-tick seed/config replacement retires candidates and an active tap before drawing new centers', () => {
+  for (const [key, replacement, enabledBefore = false] of [['seed', '2'], ['config_hash', 'b'.repeat(64)], ['world_format_version', 31], ['chamber_format', 1], ['persistence', { enabled: false }, true]]) {
+    const before = { ...state([cell('1'), cell('2')], 0), seed: '1', config_hash: 'a'.repeat(64), world_format_version: 30, persistence: enabledBefore ? { enabled: true, run_id: 'run', session_id: 'session' } : { enabled: false } };
+    const after = { ...before, [key]: replacement, cells: [cell('1', [0, 0, 0]), cell('2', dimensions)] }, tap = tapGesture();
+    const event = { button: 0, isPrimary: true, pointerId: 1, clientX: 100, clientY: 100 };
+    const view = { state: before, identity: enabledBefore ? 'run\nsession' : null, geometryRevision: 9, drawnRevision: 9, drawnTick: 0, pollSerial: 0, tap,
+      candidates: [cell('1'), cell('2')], candidateTick: 0, candidateRevision: 9, hits: [cell('1'), cell('2')], history: [], selected: '1', layout: new Map(), usedSlots: new Set(), slice: {} };
+    tap.down(event, 0, 9);
+    let draws = 0;
+    const context = vm.createContext({ view, $: () => ({ dataset: {} }), retireLayout() {}, mergeHistory() {}, liveSample: value => value, configureProjection() {}, renderState() {}, renderInspector() {}, renderCandidates() {},
+      drawChamber() { draws++; assert.equal(view.state, after); assert.equal(view.candidates.length, 0); assert.equal(view.hits.length, 0); assert.equal(view.geometryRevision, 10); view.drawnTick = after.tick; view.drawnRevision = view.geometryRevision; },
+    });
+    vm.runInContext(`${source('invalidateGeometry')}\n${source('commitState')};globalThis.commit=commitState`, context);
+    context.commit(after);
+    assert.equal(draws, 1); assert.equal(view.identity, null); assert.equal(view.candidateTick, null); assert.equal(view.candidateRevision, null); assert.equal(tap.up(event, 100, view.geometryRevision), false);
+    const candidates = [cell('1'), cell('2')]; view.candidates = candidates; view.hits = candidates; view.candidateTick = 0; view.candidateRevision = 10;
+    context.drawChamber = () => { assert.equal(view.candidates, candidates); };
+    context.commit({ ...after }); assert.equal(view.geometryRevision, 10); assert.equal(view.candidates, candidates, 'unchanged paused snapshot retains current candidates');
+  }
+});
+
+test('reset intent cancels current tap and candidates before a delayed control response, including same-seed reset', async () => {
+  const f = activationHarness(), tap = tapGesture(), event = { button: 0, isPrimary: true, pointerId: 1, clientX: 100, clientY: 100 };
+  Object.assign(f.view, { tap, candidates: [cell('1'), cell('2')], candidateTick: 0, candidateRevision: 0, hits: [cell('1'), cell('2')], selected: '1', history: [state([])] });
+  tap.down(event, 0, 0);
+  let finish, polls = 0;
+  f.context.control = (action, seed) => { assert.equal(action, 'reset'); assert.equal(seed, '1'); assert.equal(f.view.candidates.length, 0); return new Promise(resolve => { finish = resolve; }); };
+  f.context.poll = async () => { polls++; };
+  vm.runInContext(`${source('resetSimulation')};globalThis.reset=resetSimulation`, f.context);
+  const pending = f.context.reset('1');
+  assert.equal(f.view.candidateTick, null); assert.equal(f.view.candidateRevision, null); assert.equal(f.view.hits.length, 0); assert.equal(polls, 0); assert.equal(tap.up(event, 100, f.view.geometryRevision), false);
+  finish(); await pending; assert.equal(polls, 1); assert.equal(f.view.selected, null);
+  assert.ok(script.includes('void resetSimulation(seed)'));
+});
+
 test('synthetic persisted-page wiring reloads instead of reusing a disposed renderer', () => {
   let disposed = 0, reloads = 0;
   const view = { activationSerial: 2, three: { dispose() { disposed++; } } }, context = vm.createContext({ view, location: { reload() { reloads++; } } });
