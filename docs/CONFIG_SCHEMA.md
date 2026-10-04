@@ -2232,3 +2232,27 @@ ADR-063 пишут «вычёркивается».
 В нём задана положительная thermal diffusivity `1e-12` только для существующего
 валидатора шкал: пространственного теплового поля камеры нет, shim не исполняет
 диффузию. Температура камеры остаётся температурой идеальной ванны.
+
+## Opt-in пространственная клеточная камера (ADR-108)
+
+`chamber_format = 2` допускают только явные live entrypoints. Исторические
+`load/parse/validate/derive`, exporter и LAB остаются strict format 1.
+`configs/scenarios/cell-chamber-physical.toml` — прототип пассивного point
+transport; химические ресурсы остаются общими well-mixed пулами.
+
+| Ключ | Единица | Условие |
+|---|---|---|
+| `chamber.spatial.dimensions_m` | m, три длины | Все положительные finite; finite positive `2L`; объём `(Lx·Ly)·Lz` представим |
+| `chamber.spatial.viscosity_pa_s` | Pa·s | Положительная finite |
+| `founder.genome.spatial.radius_at_division_m` | m | Положительный finite hydrodynamic radius |
+| `founder.genome.spatial.mobility_scale` | безразмерная | finite `[0,1]`; ноль сохраняет coordinate bits |
+
+Format 2 требует обе spatial секции и запрещает отдельный `volume_m3`;
+format 1 требует прежний объём и запрещает spatial declarations. Параметры
+radius/mobility наследуются без новой мутации. Transport seed выводится из
+полного user seed; отдельного UI источника случайности нет.
+
+Finite/range/budget отказ во время transport атомарно отвергает весь tick.
+Coordinate allowance ADR-108 не является bound ошибки coefficient/libm или
+долгосрочного дрейфа. Проверки: `micro::config::spatial_tests` и
+`micro::transport::tests`; legacy canonical fixture остаётся побайтной.

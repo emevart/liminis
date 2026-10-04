@@ -774,11 +774,11 @@ fn legacy_cell_world_format() -> u32 {
 }
 
 fn supports_cell_version(version: u32) -> bool {
-    matches!(version, 29 | 30 | 31)
+    matches!(version, 29..=31)
 }
 
 pub(crate) fn supports_cell_identity(world: u32, chamber: u32) -> bool {
-    matches!((world, chamber), (29 | 30 | 31, 1) | (31, 2))
+    matches!((world, chamber), (29..=31, 1) | (31, 2))
 }
 
 fn validate_run_info(info: &RunInfo, run_id: &str) -> Result<()> {

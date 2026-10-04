@@ -50,14 +50,14 @@ fn transport_draw_anchors_full_ordered_le_tuple_and_strict_midpoint_domain() {
     ];
     let digest = blake3::derive_key("liminis/cells/transport/v1", &expected_tuple);
     let actual = draw(seed, id, tick, purpose, pair, attempt);
-    for axis in 0..2 {
+    for (axis, value) in actual.iter().enumerate() {
         let offset = axis * 8;
         let top = u64::from_le_bytes(digest[offset..offset + 8].try_into().unwrap()) >> 12;
         assert_eq!(
-            actual[axis].to_bits(),
+            value.to_bits(),
             ((top as f64 + 0.5) * 2.0f64.powi(-52)).to_bits()
         );
-        assert!(actual[axis] > 0.0 && actual[axis] < 1.0);
+        assert!(*value > 0.0 && *value < 1.0);
     }
     let baseline = draw(seed, id, tick, BROWNIAN, 0, 0);
     for changed in [

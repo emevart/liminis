@@ -1602,3 +1602,43 @@ writer, ограниченное сохранение поколений, гра
 настоящих process restart записаны в
 `docs/plans/2026-10-04-cell-chamber.md`. Невязка после восстановления остаётся
 неизвестной до первого реально проверенного тика.
+
+## Opt-in point transport клеточной камеры (ADR-108)
+
+Отдельный chamber2 добавляет persisted center positions в reflecting box,
+сохраняя well-mixed chemistry. Это узкое CPU/native-f64 исключение из
+ADR-015/022 и frozen SPEC §12.2–12.3, частичная отмена ADR-099 для opt-in;
+приёмка voxel S1′, collisions и cross-platform bit equality не заявляются.
+
+Причинные и численные gates:
+
+```text
+legacy_canonical_bytes_hash_and_absent_spatial_declarations_are_preserved
+spatial_requires_explicit_entry_points_and_preserves_biology_derivation
+chamber_declarations_are_complete_and_do_not_hide_a_second_volume_source
+transport_draw_anchors_full_ordered_le_tuple_and_strict_midpoint_domain
+stokes_einstein_absolute_si_oracle_and_parameter_proportionalities
+zero_mobility_preserves_coordinate_bits_at_walls_and_subnormal_exactly
+preexisting_mass_sets_radius_and_daughters_inherit_one_parent_endpoint
+unsupported_numeric_range_rejects_entire_tick_after_earlier_candidate_motion
+free_fixed_coefficient_multilag_msd_matches_six_dt_without_wall_filtering
+reflected_uniform_ensemble_preserves_box_distribution_at_small_and_multiple_wall_steps
+represented_reflection_fixtures_include_walls_multiwrap_and_negative_roundoff
+fma_preserves_cancellation_and_numeric_budget_refuses_unsupported_scales
+eco_world30_actual_disk_resume_keeps_identity_and_exact_future
+```
+
+Абсолютный SI oracle вычислен отдельно от production formula. Gaussian
+moments/tails и free MSD используют заранее заданный ensemble; `6Dt` относится
+к increments при фиксированном D до стен. Arithmetic allowance ограничивает
+represented endpoint/reflection; coefficient/libm/drift остаются отдельными
+ограничениями. Actual disk tests проверяют cells identity/positions и eco30
+advance→save→second resume без нового version tag.
+
+Native release benchmark именует D0/Dpositive scenario, seed, hardware,
+binary/config/source hashes, occupied observations, ticks, latency и Pause
+ack. Он не является универсальным throughput обещанием. Настоящий protected
+Playwright проверяет оба chamber formats последовательно, sandbox/CDP argv,
+actual API positions и Step, held state/display30/60, save/resume, desktop/mobile
+captions; inventory layout остаётся schematic. Final CI/head/review/evidence
+фиксируются в `docs/checkpoints/2026-10-04-live-physical-transport.md`.
