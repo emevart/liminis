@@ -228,9 +228,17 @@ PR #7 merged), while this isolated branch still starts from `d21fb41`; no open
 GitHub PR existed. Before publication, reconcile the branch with current main,
 preserve its new AGENTS instructions, rerun affected checks, then open a scoped
 PR and wait for CI/review. No push or merge has been performed at this boundary.
-Unrelated dirty files in the original `H:\liminis` checkout stay outside this
-publication scope. Source/config/tests/ADRs/plans can move through Git; live
+The dirty files in the original `H:\liminis` checkout are the earlier ADR-090
+reaction-name identity work, already incorporated and extended in this isolated
+branch; they must not be separately reapplied or discarded. The original
+checkout stays untouched. Source/config/tests/ADRs/plans can move through Git; live
 experiments require a separate explicit validated-checkpoint transfer.
+
+The publication follow-up is recorded in
+`docs/checkpoints/2026-10-04-publication.md`. Its numerical world-30 correction
+supersedes the world-29 eco compatibility described above; those earlier tests
+remain historical evidence, not permission to continue old eco dynamics with
+the corrected engine. Existing local eco executables/cultures are preserved.
 
 Cloud continuation should start from published source with the pinned Rust
 toolchain and Cargo.lock, Python 3, headless acceptance commands and these
