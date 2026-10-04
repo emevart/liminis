@@ -16,6 +16,13 @@ const siteRoot = resolve(repoRoot, "site");
 const evidenceDir = resolve(repoRoot, "target/qa/public-playback");
 const publicBase = new URL("https://liminis.dev/");
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
+// Reviewed production-only Cloudflare insertion, including its preceding LF.
+// Its digest is pinned before execution, never learned from a new response.
+const knownEdgeInsertion = {
+  sourceBytes: 6735, sourceSha256: "9670bd6ab110e363a01c060f885464dc3f8e03abaf73b5e416b86254275bdeba",
+  offset: 6719, bytes: 367, sha256: "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
+  scriptUrl: "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+};
 const controls = ["play", "previous", "next", "scrub", "speed", "speed-preset", "draw-fps"];
 const sourceNames = ["observe.html", "observer.js", "observer.css", "playback.mjs", "recording-loader.mjs", "recording.mjs", "catalog.mjs", "data/catalog.json"];
 const timeouts = { deployment: 180_000, retry: 5000, fetch: 15_000, operation: 15_000, viewport: 60_000, launch: 20_000, cdp: 5000, traceStop: 15_000, cleanup: 5000 };
@@ -26,7 +33,8 @@ const evidence = {
   runner: { os: process.env.RUNNER_OS || process.platform, arch: process.env.RUNNER_ARCH || process.arch, imageOS: process.env.ImageOS || null, imageVersion: process.env.ImageVersion || null },
   workflowRun: process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL || "https://github.com"}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : null,
   workflowAttempt: process.env.GITHUB_RUN_ATTEMPT || null,
-  timeouts, checks: [], screenshots: [], publicAssetAttempts: [], browserObservations: [], blockedRequests: [],
+  timeouts, checks: [], screenshots: [], publicAssetAttempts: [], browserObservations: [], blockedRequests: [], analyticsRequests: [],
+  hostingHtmlQualification: { knownEdgeInsertion, analytics_execution: "not_tested", policy: "Actual browser HTML is retained; only this exact pinned insertion may differ. Its analytics Script GET is intentionally blocked before transmission." },
   publicAssets: { status: "NOT_RUN", measurement: "Node HTTPS GET response bytes, size and SHA-256 against the clean local checkout" },
   launchArgumentCheck: { status: "NOT_RUN", method: "CDP Browser.getBrowserCommandLine" },
   trace: { status: "NOT_RUN", filename: "trace.zip", coverage: "Actual public browser actions, responses, snapshots and screenshots; Node fetch observations are in evidence.json." },
@@ -34,6 +42,7 @@ const evidence = {
   limits: ["Chromium/Linux and desktop plus 390px mobile viewport only.", "Input assignment plus dispatched change verifies adapter semantics; native typing/range/touch and full accessibility are not asserted.", "Native background scheduling, achieved FPS, native download transport and kernel isolation are not asserted.", "The 30/60 controls are draw targets; held sample pixels and physical playhead are checked, not achieved frame rate."],
 };
 let browser, context, tracing = false;
+const viewportFinalizers = [];
 
 async function bounded(operation, timeout, label) {
   let timer;
@@ -144,8 +153,43 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
   const page = await bounded(context.newPage(), timeouts.operation, "Public page creation");
   page.setDefaultTimeout(timeouts.operation); page.setDefaultNavigationTimeout(timeouts.operation);
   await bounded(page.setViewportSize(viewport), timeouts.operation, "Public viewport setup");
-  const observation = { name, viewport, status: "RUNNING", sourceResponses: [], requests: [], errors: [] };
+  const observation = { name, viewport, status: "RUNNING", sourceResponses: [], requests: [], errors: [], expectedErrors: [], analyticsRequests: [] };
   evidence.browserObservations.push(observation);
+  // Chromium's Playwright route handler skips redirected requests. Intercept
+  // every Request-stage hop directly, retaining actual public responses.
+  const networkSession = await bounded(context.newCDPSession(page), timeouts.cdp, "Public network guard session");
+  observation.requestGuard = { method: "CDP Fetch.requestPaused at Request stage", allowed: 0, blocked: 0, status: "RUNNING" };
+  const guardActions = new Set();
+  const documentUrl = evidence.publicAssets.verifiedResponses.find((item) => item.filename === "observe.html").finalUrl;
+  networkSession.on("Fetch.requestPaused", (event) => {
+    const action = (async () => {
+      const request = event.request, url = new URL(request.url);
+      if (request.method === "GET" && url.origin === publicBase.origin) {
+        observation.requestGuard.allowed++;
+        await bounded(networkSession.send("Fetch.continueRequest", { requestId: event.requestId }), timeouts.cdp, "Public GET guard acknowledgement");
+      } else if (request.method === "GET" && url.href === knownEdgeInsertion.scriptUrl && event.resourceType === "Script") {
+        const frameTree = await bounded(networkSession.send("Page.getFrameTree"), timeouts.cdp, "Analytics document attribution");
+        assert.equal(event.frameId, frameTree.frameTree.frame.id, "Analytics exception belongs only to the checked main document");
+        assert.equal(frameTree.frameTree.frame.url, documentUrl);
+        const blocked = { url: url.href, method: "GET", resourceType: event.resourceType, documentUrl, measurement: "CDP Request stage before transmission", status: "PENDING_ACK" };
+        evidence.analyticsRequests.push(blocked); observation.analyticsRequests.push(blocked);
+        await bounded(networkSession.send("Fetch.failRequest", { requestId: event.requestId, errorReason: "BlockedByClient" }), timeouts.cdp, "Intentional analytics block acknowledgement");
+        blocked.status = "BLOCKED_ACKNOWLEDGED";
+      } else {
+        observation.requestGuard.blocked++;
+        evidence.blockedRequests.push({ method: request.method, url: request.url, measurement: "CDP Request-stage before transmission" });
+        await bounded(networkSession.send("Fetch.failRequest", { requestId: event.requestId, errorReason: "BlockedByClient" }), timeouts.cdp, "Unexpected request block acknowledgement");
+      }
+    })().catch(async (error) => {
+      observation.errors.push(`Public request guard failed: ${error.message || String(error)}`);
+      observation.requestGuard.status = "FAIL";
+      await bounded(networkSession.send("Fetch.failRequest", { requestId: event.requestId, errorReason: "BlockedByClient" }), timeouts.cdp, "Failed guard refusal").catch(() => {});
+    });
+    guardActions.add(action);
+    action.finally(() => guardActions.delete(action));
+  });
+  await bounded(networkSession.send("Network.setCacheDisabled", { cacheDisabled: true }), timeouts.cdp, "Disable public browser cache");
+  await bounded(networkSession.send("Fetch.enable", { patterns: [{ urlPattern: "*", requestStage: "Request" }] }), timeouts.cdp, "Enable every-hop public request guard");
   const expected = new Map(assets.map((asset) => [new URL(asset.filename, publicBase).pathname, asset]));
   const attestedRedirects = new Map();
   for (const verified of evidence.publicAssets.verifiedResponses) {
@@ -158,9 +202,21 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
     }
   }
   const bodyReads = [];
+  let settledBodyReads = 0, pageClosed = false, actionsPassed = false;
+  const consoleErrors = [], failedRequests = [];
+  observation.consoleErrors = consoleErrors; observation.requestFailures = failedRequests;
   page.on("pageerror", (error) => observation.errors.push(error.message));
-  page.on("console", (message) => { if (message.type() === "error") observation.errors.push(message.text()); });
-  page.on("requestfailed", (request) => observation.errors.push(`Request failed: ${request.url()} (${request.failure()?.errorText})`));
+  page.on("console", (message) => {
+    if (message.type() !== "error") return;
+    const item = { text: message.text(), location: message.location() };
+    consoleErrors.push(item);
+    if (!(item.location.url === knownEdgeInsertion.scriptUrl && /^Failed to load resource: net::ERR_BLOCKED_BY_CLIENT(?:\.Inspector)?$/.test(item.text))) observation.errors.push(`Console error: ${item.text}`);
+  });
+  page.on("requestfailed", (request) => {
+    const item = { url: request.url(), method: request.method(), errorText: request.failure()?.errorText };
+    failedRequests.push(item);
+    if (!(item.url === knownEdgeInsertion.scriptUrl && item.method === "GET" && /^net::ERR_BLOCKED_BY_CLIENT(?:\.Inspector)?$/.test(item.errorText || ""))) observation.errors.push(`Request failed: ${item.url} (${item.errorText})`);
+  });
   page.on("request", (request) => observation.requests.push({ method: request.method(), url: request.url() }));
   page.on("response", (response) => {
     const url = new URL(response.url()), asset = url.origin === publicBase.origin ? expected.get(url.pathname) : null;
@@ -183,12 +239,76 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
     }
     const result = { filename: asset.filename, url: response.url(), httpStatus: response.status(), measurement: "Playwright response.body", expectedBytes: asset.bytes, expectedSha256: asset.sha256, status: "FAIL" };
     observation.sourceResponses.push(result);
-    bodyReads.push(bounded(response.body(), timeouts.operation, `Browser response body: ${asset.filename}`).then((bytes) => {
+    bodyReads.push(bounded(response.body(), timeouts.operation, `Browser response body: ${asset.filename}`).then(async (bytes) => {
       Object.assign(result, { bytes: bytes.byteLength, sha256: digest(bytes) });
-      assert.equal(response.status(), 200); assert.equal(result.bytes, asset.bytes); assert.equal(result.sha256, asset.sha256);
+      assert.equal(response.status(), 200);
+      if (asset.filename === "observe.html") {
+        result.rawHtmlMatchesSource = result.bytes === asset.bytes && result.sha256 === asset.sha256;
+        result.knownEdgeInjectionVerified = false;
+        let normalized = bytes;
+        if (!result.rawHtmlMatchesSource) {
+          assert.equal(asset.bytes, knownEdgeInsertion.sourceBytes);
+          assert.equal(asset.sha256, knownEdgeInsertion.sourceSha256);
+          assert.equal(bytes.byteLength, asset.bytes + knownEdgeInsertion.bytes);
+          const insertion = bytes.subarray(knownEdgeInsertion.offset, knownEdgeInsertion.offset + knownEdgeInsertion.bytes);
+          assert.equal(digest(insertion), knownEdgeInsertion.sha256, "Only the independently reviewed exact Cloudflare insertion is allowed");
+          normalized = Buffer.concat([bytes.subarray(0, knownEdgeInsertion.offset), bytes.subarray(knownEdgeInsertion.offset + knownEdgeInsertion.bytes)]);
+          result.knownEdgeInjectionVerified = true;
+        }
+        assert.equal(normalized.byteLength, asset.bytes); assert.equal(digest(normalized), asset.sha256);
+        result.afterExactInsertionRemovalMatchesSource = true;
+        result.normalizedBytes = normalized.byteLength; result.normalizedSha256 = digest(normalized);
+        result.rawHtmlFilename = `${name}-observe-raw.html`;
+        await writeFile(resolve(evidenceDir, result.rawHtmlFilename), bytes);
+        observation.html = result;
+      } else {
+        assert.equal(result.bytes, asset.bytes); assert.equal(result.sha256, asset.sha256);
+      }
       result.status = "PASS";
-    }).catch((error) => { result.error = error.message || String(error); }));
+    }).catch((error) => { result.error = error.message || String(error); }).finally(() => { settledBodyReads++; }));
   });
+  async function finalizeObservation() {
+    // Page closure stops new requests. Drain all already delivered guard/body
+    // callbacks before validating; repeat after context/browser cleanup below.
+    await bounded((async () => {
+      while (guardActions.size) await Promise.all([...guardActions]);
+      let drained = 0;
+      while (drained < bodyReads.length) {
+        const batch = bodyReads.slice(drained); drained += batch.length;
+        await Promise.all(batch);
+      }
+    })(), timeouts.operation, "Closed public page evidence drain");
+    assert.equal(pageClosed, true, "Public evidence verdict requires page closure");
+    assert.equal(guardActions.size, 0);
+    assert.equal(settledBodyReads, bodyReads.length);
+    assert.ok(actionsPassed, "All viewport controls must have completed");
+    for (const asset of assets) assert.ok(observation.sourceResponses.some((item) => item.filename === asset.filename && item.status === "PASS"), `Browser did not receive verified ${asset.filename}`);
+    assert.ok(observation.sourceResponses.every((item) => item.status === "PASS"), "Every final critical response must match the checkout");
+    assert.ok((observation.redirectResponses || []).every((item) => item.status === "PASS"), "Every final redirect must match the attested canonical chain");
+    assert.ok(observation.requestGuard.allowed > 0);
+    assert.equal(observation.requestGuard.blocked, 0);
+    assert.notEqual(observation.requestGuard.status, "FAIL");
+    const expectedAnalyticsCount = observation.html.knownEdgeInjectionVerified ? 1 : 0;
+    assert.equal(observation.analyticsRequests.length, expectedAnalyticsCount, "Only one pinned insertion's blocked analytics request is permitted");
+    assert.ok(observation.analyticsRequests.every((item) => item.status === "BLOCKED_ACKNOWLEDGED"));
+    assert.ok(observation.requests.every((item) => item.method === "GET" && (new URL(item.url).origin === publicBase.origin || (item.url === knownEdgeInsertion.scriptUrl && expectedAnalyticsCount === 1))), "Every final browser request must satisfy public read-only scope");
+    observation.expectedErrors = [];
+    for (const item of failedRequests) {
+      if (expectedAnalyticsCount === 1 && item.url === knownEdgeInsertion.scriptUrl && item.method === "GET" && /^net::ERR_BLOCKED_BY_CLIENT(?:\.Inspector)?$/.test(item.errorText || "")) observation.expectedErrors.push({ kind: "requestfailed", ...item });
+      else observation.errors.push(`Request failed: ${item.url} (${item.errorText})`);
+    }
+    for (const item of consoleErrors) {
+      if (expectedAnalyticsCount === 1 && item.location.url === knownEdgeInsertion.scriptUrl && /^Failed to load resource: net::ERR_BLOCKED_BY_CLIENT(?:\.Inspector)?$/.test(item.text)) observation.expectedErrors.push({ kind: "console", ...item });
+      else observation.errors.push(`Console error: ${item.text}`);
+    }
+    observation.playbackPageRequests = observation.requests.slice(observation.playbackRequestBaseline);
+    assert.deepEqual(observation.playbackPageRequests, [], "Controls must produce no requests, including late requests through page closure");
+    assert.deepEqual(observation.errors, []);
+    observation.requestGuard.status = "PASS";
+    observation.finalization = { pageClosed, pendingGuardActions: guardActions.size, settledBodyReads, totalBodyReads: bodyReads.length, expectedAnalyticsCount, finalAnalyticsCount: observation.analyticsRequests.length };
+  }
+  viewportFinalizers.push(finalizeObservation);
+  let failure;
   try {
     await page.goto(new URL("observe.html", publicBase).href);
     await page.waitForFunction(() => document.getElementById("workspace")?.getAttribute("aria-busy") === "false");
@@ -201,7 +321,7 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
     for (const asset of assets) assert.ok(observation.sourceResponses.some((item) => item.filename === asset.filename && item.status === "PASS"), `Browser did not receive verified ${asset.filename}`);
     assert.ok(observation.sourceResponses.every((item) => item.status === "PASS"), "Every observed critical browser response must match the checkout");
     assert.ok((observation.redirectResponses || []).every((item) => item.status === "PASS"), "Browser redirects must match the verified canonical chain");
-    assert.ok(observation.requests.every((item) => item.method === "GET" && new URL(item.url).origin === publicBase.origin), "Smoke must only observe read-only requests to liminis.dev");
+    assert.ok(observation.requests.every((item) => item.method === "GET" && (new URL(item.url).origin === publicBase.origin || (item.url === knownEdgeInsertion.scriptUrl && observation.html.knownEdgeInjectionVerified && observation.analyticsRequests.some((request) => request.status === "BLOCKED_ACKNOWLEDGED")))), "Only public same-origin GETs or the exact intentionally blocked analytics request may be observed");
 
     const first = data.frames[0], next = data.frames[1], horizon = data.frames.at(-1).sim_time - first.sim_time;
     assert.equal(Number(await page.locator("#speed").inputValue()), horizon / 120);
@@ -218,6 +338,7 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
 
     // Page request events are a limited browser observation, not server counters.
     const requestBaseline = observation.requests.length;
+    observation.playbackRequestBaseline = requestBaseline;
     await page.locator("#speed").evaluate((input) => { input.value = "1"; input.dispatchEvent(new Event("change", { bubbles: true })); });
     assert.equal(Number(await page.locator("#speed").inputValue()), 1);
     await page.locator("#play").evaluate((button) => { button.__publicSmokeClickTimes = []; button.addEventListener("click", () => button.__publicSmokeClickTimes.push(performance.now())); });
@@ -249,10 +370,16 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
     await page.locator("#previous").click(); assert.equal(await shownNumber(page, "playhead"), first.sim_time); assert.equal(await shownNumber(page, "time"), first.sim_time);
     observation.playbackPageRequests = observation.requests.slice(requestBaseline);
     assert.deepEqual(observation.playbackPageRequests, [], "Playback/draw controls must create no Page request events");
-    assert.deepEqual(observation.errors, []);
-    observation.status = "PASS";
-  } catch (error) { observation.status = "FAIL"; throw error; }
-  finally { await bounded(page.close(), timeouts.cleanup, "Public page cleanup"); }
+    actionsPassed = true;
+  } catch (error) { failure = error; }
+  finally {
+    try { await bounded(page.close(), timeouts.cleanup, "Public page cleanup"); pageClosed = true; }
+    catch (error) { failure ||= error; }
+    try { await finalizeObservation(); }
+    catch (error) { failure ||= error; }
+    observation.status = failure ? "FAIL" : "PASS";
+  }
+  if (failure) throw failure;
 }
 
 await mkdir(evidenceDir, { recursive: true });
@@ -302,14 +429,6 @@ try {
     } finally { await bounded(session.detach(), timeouts.cdp, "Public CDP cleanup"); }
   }));
   context = await bounded(browser.newContext({ acceptDownloads: false }), timeouts.operation, "Public context creation");
-  // Same-origin GETs continue unchanged. Any other request fails this smoke
-  // before transmission; this route also disables browser cache for fresh bytes.
-  await bounded(context.route("**/*", (route) => {
-    const request = route.request(), url = new URL(request.url());
-    if (request.method() === "GET" && url.origin === publicBase.origin) return route.continue();
-    evidence.blockedRequests.push({ method: request.method(), url: request.url() });
-    return route.abort("blockedbyclient");
-  }), timeouts.operation, "Read-only public request guard");
   await bounded(context.tracing.start({ screenshots: true, snapshots: true, sources: true }), timeouts.cdp, "Public trace start"); tracing = true;
   for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mobile", { width: 390, height: 844 }]]) {
     await check(`Public default observer ready, real canvas, physical 1× hold and sample stepping: ${name}`, () => bounded(viewportSmoke(name, viewport, assets, entry, data), timeouts.viewport, `${name} public smoke`));
@@ -331,7 +450,14 @@ finally {
   }
   if (context) await cleanup("public context", () => context.close());
   if (browser) await cleanup("public browser", () => browser.close());
-  if (evidence.status === "PASS" && (evidence.trace.status !== "PASS" || evidence.publicAssets.status !== "PASS" || evidence.launchArgumentCheck.status !== "PASS" || evidence.screenshots.length !== 2 || evidence.browserObservations.length !== 2 || evidence.browserObservations.some((item) => item.status !== "PASS") || evidence.blockedRequests.length)) { evidence.status = "FAIL"; evidence.blocker = "Required public smoke evidence is incomplete or a request violated read-only public scope."; }
+  // Revalidate the same final arrays after global cleanup. No verdict is based
+  // on an earlier request count or response-body snapshot.
+  for (const finalize of viewportFinalizers) await cleanup("public final evidence revalidation", finalize, timeouts.operation);
+  if (evidence.status === "PASS" && (evidence.trace.status !== "PASS" || evidence.publicAssets.status !== "PASS" || evidence.launchArgumentCheck.status !== "PASS" || evidence.screenshots.length !== 2 || evidence.browserObservations.length !== 2 || evidence.browserObservations.some((item) => item.status !== "PASS" || item.requestGuard?.status !== "PASS" || item.errors.length || item.analyticsRequests.some((request) => request.status !== "BLOCKED_ACKNOWLEDGED")) || evidence.blockedRequests.length)) { evidence.status = "FAIL"; evidence.blocker = "Required public smoke evidence is incomplete or a request violated read-only public scope."; }
+  evidence.browser_html_raw_matches_source = evidence.browserObservations.length === 2 && evidence.browserObservations.every((item) => item.html?.rawHtmlMatchesSource === true);
+  evidence.browser_html_known_edge_injection_verified = evidence.browserObservations.some((item) => item.html?.knownEdgeInjectionVerified === true);
+  evidence.browser_html_after_exact_insertion_removal_matches_source = evidence.browserObservations.length === 2 && evidence.browserObservations.every((item) => item.html?.afterExactInsertionRemovalMatchesSource === true);
+  evidence.application_playback = evidence.status;
   evidence.finishedAt = new Date().toISOString();
   await writeFile(resolve(evidenceDir, "evidence.json"), `${JSON.stringify(evidence, null, 2)}\n`);
   console.log(JSON.stringify({ scope: "public-recording-smoke", status: evidence.status, checks: evidence.checks.length, failed: evidence.checks.filter((item) => item.status === "FAIL").length, evidenceDir }));
