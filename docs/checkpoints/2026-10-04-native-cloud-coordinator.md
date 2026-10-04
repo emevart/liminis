@@ -90,3 +90,40 @@ LIVE-2 baseline d536234: native focused micro43PASS/0FAIL/1ignored, host31PASS/0
 
 Текущий следующий шаг: интеграция fresh main в существующую LAB-1 ветку без force overwrite,
 новый exact-head CI/review; затем LAB-2 retarget и 23 Python tests без пересчёта 24 runs.
+
+
+### LAB-1 принят; LAB-2 и public verification в работе
+
+LAB #14 guarded MERGED после independent integration review0blockers и
+всех11checks SUCCESS run37211688454 на head78e897bc77d5a9715bf6627af931e8cdf1b35701.
+Main5652dc344c0d2e5aed3f7b17b0a919434ca66822/tree02e313be851f6369d5608340d025f01861f5242c.
+Все4LAB1blobs и source21cbe907 сохранены. Новые recorded artifact bytes
+12,556,828/SHA256370c77443a24d793de17232eb12e39fa43f62b9975ecf0f3e1979b7cfc0ae79f
+скачаны штатным GitHubartifact→file_id→download_file path в native workspace,
+CRC/report source/tree/22browser+17HTTPchecks PASS. SignedURLs не являются durable refs.
+MainREC CI и existingCloudflarecheck SUCCESS; productionplayback по-прежнему
+отдельный gate. QA-only PR #16 head4839e5c43b9db2e93e0d9380a79f7e0220581231
+проверяет fixedpublicliminis.dev actualbytes+Chromium throughexistingprotectedActions.
+Independent code/CI review0blockers; actualrun/artifact review pending.
+
+LAB #15 retarget main, head4f8208afb2b164d0ef1d9119ae7c5bd2f7629f94,
+tree1b41aabb1ce3faccd948648b88fdeff6c16b1463; parentsaa5ecb24 +5652dc3.
+All9LAB2blobs unchanged. На этом head23PythonfunctionalPASS; actualstaticCLI
+24orderedrowsPASS; summary/comparisons byte-exact; rawSHA6fd944 неизменён.
+FreshCI37213082140/independent integration acceptance pending; no scientificrerun.
+
+LIVE2 продолжение опубликовано37ea4d39647f225eafed1912799fd904e39ed3f1.
+Preservedbaseline d536 и releasebenchmarksource3489 остаются ancestors.
+Micro44PASS/0FAIL/1ignored; cells_host/storage focused32PASS; fmt/clippyPASS.
+AbsoluteSIoracle и eco30secondsave/resume PASS; fullhostpackage ещё выполняется.
+ADR108Astraapproved append-only; independent numerics/code0blockers, browser
+Save/resume claim исправлен локально до finalhead. D0/Dpositive real releasebenchmark
+source/script/raw в Git, binarySHAbe14eca5dbcb44fc1c773f38cc145b59b0ceaaac5b768e0eee7c10129aac35ee;
+rawSHA9bf8d946ade33724430909b2ac18e79d4edad125753ed8b7fa5f49c513b40ec1.
+Finalfreshmain/default+physicalbrowser/fullCI/merge pending.
+
+Normal authenticated Git push проверен доступным без изменения сетевой политики;
+GitHub shell RESTAPI всё ещё Forbidden, connector остаётся штатным API path.
+Cargo в native workspace сериализуется; expensive suite уже запущена один раз.
+Следующий шаг: exacthead #15/#16 gates и guarded integration; затем freshmain
+LIVE2 candidate, protectedphysicalQA и durable evidence до releaseacceptance.
