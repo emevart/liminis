@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "kind": "liminis_lab1_evidence_only_handoff",
+  "repository": "emevart/liminis",
+  "archive_name": "lab-1-qa-evidence.zip",
+  "archive_bytes": 169880,
+  "archive_sha256": "e37d3364efcdc1c63fe6c026902c6554a80565652aa34c4e118824480d43db75",
+  "archive_git_blob_sha1": "be50e35b5ae854fec30cd14d52f59ecc5367b45a",
+  "parent_source_commit": "21cbe90732128edee61963544e414d29a7420577",
+  "parent_source_tree": "713751fb97b2f53206fc0a86c368e63c28d1da65",
+  "lab2_handoff_head_unchanged": "aa5ecb24c99546e3f0f6c05983961476139b8726",
+  "archive_metadata": "ZIP entry timestamps fixed for archive determinism; original filesystem mtimes are not claimed",
+  "requested_files": 5,
+  "original_bytes_preserved": 4,
+  "redacted_public_copies": 1,
+  "original_log_unsaved_to_git_gap": true,
+  "lab2_repeat_duplicate_included": false,
+  "simulation_or_product_checks_run": "NOT RUN: evidence archival only; no new acceptance/CI/numerical claims",
+  "checks": [
+    "five original sizes/SHA256 match handoff inventory",
+    "four JSON originals credential/private-context pattern scan clear",
+    "public log explicitly redacted only in absolute checkout path",
+    "all published decompressed text pattern scans clear",
+    "ZIP CRC and stored sizes/SHA256 verified"
+  ],
+  "files": [
+    {
+      "original_relative_path": "target/qa/lab-1/final-head-results.json",
+      "original_bytes": 462411,
+      "original_sha256": "47adeda64912b61e76e89f8ba61c286ce56cc1e71c78d3f8d6941377e09091a2",
+      "archive_path": "target/qa/lab-1/final-head-results.json",
+      "stored_bytes": 462411,
+      "stored_sha256": "47adeda64912b61e76e89f8ba61c286ce56cc1e71c78d3f8d6941377e09091a2",
+      "status": "original_bytes_preserved",
+      "publication_scan": "no matching credential/private-context patterns",
+      "note": null,
+      "source_commit": "21cbe90732128edee61963544e414d29a7420577",
+      "provenance": {
+        "build_attestation": false,
+        "build_requirement": "Use cargo run in this checkout. Runtime rustc and profile are observations, not proof of how a standalone binary was built.",
+        "host_arch": "x86_64",
+        "host_os": "linux",
+        "numerical_mode": "FLOAT/native f32 Q and f64 genome decoding; exact i128 ledgers",
+        "profile": "release",
+        "runner_version": "0.1.0",
+        "runtime_rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+        "source_verification": "git_head_and_clean_provenance_inputs"
+      },
+      "recorded_runs": [
+        {
+          "run_id": "repeat-a",
+          "condition": "baseline",
+          "status": "censored",
+          "stop_reason": "requested_horizon_reached"
+        },
+        {
+          "run_id": "repeat-b",
+          "condition": "baseline",
+          "status": "censored",
+          "stop_reason": "requested_horizon_reached"
+        },
+        {
+          "run_id": "no-mutation",
+          "condition": "mutation_off",
+          "status": "censored",
+          "stop_reason": "requested_horizon_reached"
+        },
+        {
+          "run_id": "no-food",
+          "condition": "starvation",
+          "status": "extinct",
+          "stop_reason": "extinction"
+        },
+        {
+          "run_id": "capacity",
+          "condition": "resource_guard",
+          "status": "censored",
+          "stop_reason": "cell_capacity_limit"
+        },
+        {
+          "run_id": "bad-temperature",
+          "condition": "invalid_scenario",
+          "status": "refused",
+          "stop_reason": "input_or_admission_refused"
+        }
+      ]
+    },
+    {
+      "original_relative_path": "target/qa/lab-1/old-reservation-negative-control.log",
+      "original_bytes": 1244,
+      "original_sha256": "e10b330f0e14806f4f43d1164f40cc19cfa280bb85de19eb2e6369e1e0174ead",
+      "archive_path": "target/qa/lab-1/old-reservation-negative-control.public-redacted.log",
+      "stored_bytes": 1212,
+      "stored_sha256": "bbff30d7d9bbf515332a152530b588e14e8b8c276fdaad3cd53f003cbe6a700c",
+      "status": "public_redacted_copy_original_retained_locally",
+      "publication_scan": "no matching credential/private-context patterns",
+      "note": "Only the absolute VM checkout path in the cargo compile line is replaced by <source-checkout>/crates/liminis. Original bytes are not published; original SHA256 remains an audit anchor.",
+      "source_commit": null,
+      "evidence_status": "EXPECTED FAIL: historical temporary removal of registry byte reservation; source restored before acceptance; temporary source not committed or independently attested; NOT RERUN during archival"
+    },
+    {
+      "original_relative_path": "target/qa/lab-1/smoke-manifest.json",
+      "original_bytes": 20814,
+      "original_sha256": "f8331b83e0b9cafbe14d92de2597263fcbe822176992e0d6cc3bc8a36011f380",
+      "archive_path": "target/qa/lab-1/smoke-manifest.json",
+      "stored_bytes": 20814,
+      "stored_sha256": "f8331b83e0b9cafbe14d92de2597263fcbe822176992e0d6cc3bc8a36011f380",
+      "status": "original_bytes_preserved",
+      "publication_scan": "no matching credential/private-context patterns",
+      "note": null,
+      "evidence_status": "Original input declaration; NOT RERUN during archival"
+    },
+    {
+      "original_relative_path": "target/qa/lab-1/smoke-repeat.json",
+      "original_bytes": 462411,
+      "original_sha256": "525fac91b7608b4e7ce2420082a665ae67d91ba0c43fbee8eb63980f3d6e622a",
+      "archive_path": "target/qa/lab-1/smoke-repeat.json",
+      "stored_bytes": 462411,
+      "stored_sha256": "525fac91b7608b4e7ce2420082a665ae67d91ba0c43fbee8eb63980f3d6e622a",
+      "status": "original_bytes_preserved",
+      "publication_scan": "no matching credential/private-context patterns",
+      "note": null,
+      "source_commit": "dd0ce4df1c00b51a2412952c9cd37f68591309c6",
+      "provenance": {
+        "build_attestation": false,
+        "build_requirement": "Use cargo run in this checkout. Runtime rustc and profile are observations, not proof of how a standalone binary was built.",
+        "host_arch": "x86_64",
+        "host_os": "linux",
+        "numerical_mode": "FLOAT/native f32 Q and f64 genome decoding; exact i128 ledgers",
+        "profile": "release",
+        "runner_version": "0.1.0",
+        "runtime_rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+        "source_verification": "git_head_and_clean_provenance_inputs"
+      },
+      "recorded_runs": [
+        {
+          "run_id": "repeat-a",
+          "condition": "baseline",
+          "status": "censored",
+          "stop_reason": "requested_horizon_reached"
+        },
+        {
+          "run_id": "repeat-b",
+          "condition": "baseline",
+          "status": "censored",
+          "stop_reason": "requested_horizon_reached"
+        },
+        {
+          "run_id": "no-mutation",
+          "condition": "mutation_off",
+          "status": "censored",
+          "stop_reason": "requested_horizon_reached"
+        },
+        {
+          "run_id": "no-food",
+          "condition": "starvation",
+          "status": "extinct",
+          "stop_reason": "extinction"
+        },
+        {
+          "run_id": "capacity",
+          "condition": "resource_guard",
+          "status": "censored",
+          "stop_reason": "cell_capacity_limit"
+        },
+        {
+          "run_id": "bad-temperature",
+          "condition": "invalid_scenario",
+          "status": "refused",
+          "stop_reason": "input_or_admission_refused"
+        }
+      ]
+    },
+    {
+      "original_relative_path": "target/qa/lab-1/smoke-results.json",
+      "original_bytes": 462411,
+      "original_sha256": "525fac91b7608b4e7ce2420082a665ae67d91ba0c43fbee8eb63980f3d6e622a",
+      "archive_path": "target/qa/lab-1/smoke-results.json",
+      "stored_bytes": 462411,
+      "stored_sha256": "525fac91b7608b4e7ce2420082a665ae67d91ba0c43fbee8eb63980f3d6e622a",
+      "status": "original_bytes_preserved",
+      "publication_scan": "no matching credential/private-context patterns",
+      "note": null,
+      "source_commit": "dd0ce4df1c00b51a2412952c9cd37f68591309c6",
+      "provenance": {
+        "build_attestation": false,
+        "build_requirement": "Use cargo run in this checkout. Runtime rustc and profile are observations, not proof of how a standalone binary was built.",
+        "host_arch": "x86_64",
+        "host_os": "linux",
+        "numerical_mode": "FLOAT/native f32 Q and f64 genome decoding; exact i128 ledgers",
+        "profile": "release",
+        "runner_version": "0.1.0",
+        "runtime_rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+        "source_verification": "git_head_and_clean_provenance_inputs"
+      },
+      "recorded_runs": [
+        {
+          "run_id": "repeat-a",
+          "condition": "baseline",
+          "status": "censored",
+          "stop_reason": "requested_horizon_reached"
+        },
+        {
+          "run_id": "repeat-b",
+          "condition": "baseline",
+          "status": "censored",
+          "stop_reason": "requested_horizon_reached"
+        },
+        {
+          "run_id": "no-mutation",
+          "condition": "mutation_off",
+          "status": "censored",
+          "stop_reason": "requested_horizon_reached"
+        },
+        {
+          "run_id": "no-food",
+          "condition": "starvation",
+          "status": "extinct",
+          "stop_reason": "extinction"
+        },
+        {
+          "run_id": "capacity",
+          "condition": "resource_guard",
+          "status": "censored",
+          "stop_reason": "cell_capacity_limit"
+        },
+        {
+          "run_id": "bad-temperature",
+          "condition": "invalid_scenario",
+          "status": "refused",
+          "stop_reason": "input_or_admission_refused"
+        }
+      ]
+    }
+  ]
+}
