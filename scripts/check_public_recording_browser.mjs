@@ -434,6 +434,34 @@ try {
       evidence.denseAdmission = { indexSha256: entry.dense.index_sha256, manifest: entry.dense.manifest, actualStates: control.states, sourceValidation: "Local publication was independently validated before merge; expected states decoded by reviewed source module", browserScope: "Deployed initial and prefetched chunks plus exact every-tick Step; whole-horizon rendering is not claimed", publicationRuntimeVerification: false };
     } finally { loader.close(); }
   }
+  // Bounded production delivery evidence for every published horizon. Only
+  // metadata and each final chunk are fetched: this is neither a whole-data
+  // public download nor browser rendering of the nondefault endpoints.
+  evidence.publicDenseEndpointPins = [];
+  for (const candidate of catalog.entries.filter((item) => item.dense)) {
+    const indexUrl = new URL(candidate.dense.index, publicBase);
+    const loader = await createDenseRecordingLoader({
+      indexUrl: indexUrl.href, indexSha256: candidate.dense.index_sha256,
+      manifestPath: candidate.dense.manifest, baseUrl: publicBase.href,
+      fetcher: async (url) => {
+        const target = new URL(url, publicBase);
+        assert.equal(target.origin, publicBase.origin);
+        assert.ok(target.pathname.startsWith("/data/dense-cell-chamber/") && !target.search && !target.hash);
+        return new Response(await readFile(resolve(siteRoot, `.${target.pathname}`)));
+      }, cryptoProvider: webcrypto, prefetch: false,
+    });
+    try {
+      assert.equal(loader.manifest.experiment.steps, candidate.experiment.steps);
+      const finalChunk = loader.manifest.chunks.at(-1);
+      const filenames = [indexUrl.pathname.slice(1), new URL(candidate.dense.manifest, indexUrl).pathname.slice(1), new URL(finalChunk.path, indexUrl).pathname.slice(1)];
+      for (const filename of filenames) {
+        if (assets.some((asset) => asset.filename === filename)) continue;
+        const bytes = await readFile(resolve(siteRoot, filename));
+        assets.push({ filename, bytes: bytes.length, sha256: digest(bytes) });
+      }
+      evidence.publicDenseEndpointPins.push({ id: candidate.id, horizon: candidate.experiment.steps, filenames, scope: "Node HTTPS metadata and final-chunk byte pins; no public endpoint rendering or whole-dataset download" });
+    } finally { loader.close(); }
+  }
   evidence.sourceFiles = assets; evidence.selectedRecording = { id: entry.id, filename: entry.recording, bytes: entry.bytes, sha256: entry.sha256 };
   evidence.status = "RUNNING";
   assert.ok(await check("Public critical assets and one allowlisted recording match checkout bytes", () => waitForPublicAssets(assets)));

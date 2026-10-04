@@ -1714,6 +1714,10 @@ manifest/module/gzip SHA, реальные browser response bytes и dense Next0
 1×/held state. Известная фиксированная Cloudflare analytics insertion проверяется
 по отдельному source pin и блокируется; analytics execution PASS не заявляется.
 Документированные hosting limits не заменяют actual upload/deployment verdict.
+Следующее расширение existing main-only public gate отдельно закрепляет Node
+HTTPS byte pins metadata и final chunk каждого dense horizon. Это bounded
+transport проверка, не public100k/1M endpoint rendering/full dataset download;
+browser smoke по-прежнему проверяет default10k.
 Evidence и pending boundaries:
 `docs/checkpoints/2026-10-04-dense-recorded-observer.md`.
 

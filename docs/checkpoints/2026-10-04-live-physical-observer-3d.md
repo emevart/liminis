@@ -40,3 +40,15 @@
 - Следующий шаг: получить clean scoped source/QA commits, serial focused
   Cargo/Node checks, integrate на fresh main и принять independent source
   review перед первым mandatory protected browser/fullCI run.
+
+## Bounded public delivery follow-up, 21:19 UTC
+
+Root-owned existing `scripts/check_public_recording_browser.mjs` дополнен
+Node HTTPS metadata/final-chunk byte pins всех3dense horizons. Default10k
+browser scope сохранён; никаких новых model runs/full publicGBdownload.
+Native syntax/local metadata+finalgzipSHA проверка PASS:7uniquefiles,
+2357392bytes, final gzip10k288747/100k275423/1M414483bytes. Это локальные
+сохранённые bytes, не network/browser PASS. Existing main-only protected
+gate выполнит новые чтения после green3Dmerge; independent source review
+pending вместе с3D integration. Полный REC-2 accepted scope не расширяется
+задним числом; предыдущие qualifiers и evidence остаются неизменны.
