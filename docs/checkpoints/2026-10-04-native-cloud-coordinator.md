@@ -569,3 +569,59 @@ Astra. Root создаёт отдельные branches/worktrees и append-only 
 Protected WebGL2 availability проверяется actual gate; native Node не
 объявляется WebGL/browser PASS. Никаких новых infra/secrets/spend или
 ослабления sandbox. Cargo сериализует root; shared ADR/CI/checkpoints — root.
+
+### LIVE-3b: source и exact CI зелёные; доставка original3D evidence
+
+2026-10-04, 22:26 UTC. OWNERSHIP ACCEPTED сохраняется: native coordinator
+продолжает разрешённую очередь, old Work Cloud authors не возобновлялись.
+Main остаётся `239ec8bde3d2f15e2aa5b50e9294e65eab5c0926`.
+Draft [PR20](https://github.com/emevart/liminis/pull/20): exact candidate
+`9d9f70903939b93905beed9e0ad2be5c3f4d18ff`, tree
+`7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d`; run
+`37238281987`: все11checks SUCCESS, включая Rust build/lint/test/exporter,
+оба protected browser jobs, все4LIVE сценария и existing Workers Build.
+Новые real3D проверки используют unchanged official Playwright1.61.1,
+chromiumSandbox:true и observedargv guard. Stock software SwiftShader
+сохранён; hardwareFPS/kernel sandbox attestation не заявляются.
+
+Scoped source/QA authors завершены, опубликованы и clean. Independent
+source/numerics review0blockers, native30Node/32hostchecks PASS. First09
+overallFAIL (caption regression,3DNOTRUN) сохранён; one-line accepted2D
+caption fix не меняет geometry/vendor/biology/QA. Старый FAIL не переименован
+в PASS. Shared append-only ADR111, ACCEPTANCE и phase checkpoint опубликованы
+в candidate. Frozen docs, old recordings/LAB24/source identities сохранены.
+
+Original diagnostic4.25MB и exact independent reviews опубликованы в
+evidence-only `codex/native-3d-observer-evidence-20261004`, commit
+`471993728dd81d5eb77e7d9d743122f7808611ba`, tree
+`210001fcb40ca902e2724d830bf71e29589b09db`. Initial exact1f38 archive
+fresh independent Git database readback:14files/1originalCRC PASS; новое
+closed17file diagnostic471 readback выполняется. Группа пока4.34MB<64MiB.
+
+Пять original9d regression ZIP уже скачаны через existing GitHub connector:
+legacyREC12704737, dense16422044, LIVE5011027, physical6876222,
+projection30501374bytes. Размер/SHA256 совпали с official artifact digest,
+каждыйZIP CRC PASS. Actual79reportchecks independent acceptance в работе.
+Это проверка bytes/reports, не повторная симуляция или million decode.
+
+Реальный оставшийся blocker: original3D artifact`11316208815`,44944288bytes,
+SHA256 `e417e0a26e61a28315d080e0ea4b42153bd033d090449e9c52958b9301097e98`.
+Connector managed download успешен, но native download_file ограничен32MiB;
+выданный managed read URL через inherited proxy/TLS заблокирован. Network
+policy/proxy/CA/security не менялись; credentials и signed URL не публикуются.
+
+Реальный Astra одобрил bounded official Actions companion read-job:
+отдельная evidence-only push ветка, без PR/checkout/model/browser; только
+стандартный actions:read token, fixed same-repo artifact/run/head/size/SHA.
+Original ZIP делится без перепаковки на3raw parts16777216/16777216/11389856,
+каждая в отдельном small companion artifact с receipt. Native соединит
+части и повторно проверит originalSHA/size/CRC. Productcandidate9d и его
+gates не меняются. Root-owned helper подготовлен в
+`codex/evidence-transport-3d-20261004`; publication после independent review.
+Новая infrastructure/hosting/secrets/spend не создаются.
+
+Следующий шаг: доставить original3D bytes, independent screenshots/trace/
+API geometry/resource/argv acceptance, bounded originalZIP archive с новым
+Git network readback; только затем guarded PR20 merge и existing public
+delivery follow-up. LAB-3a scope Astra выбран read-only, coding пока не открыт.
+Никакой вечный auto-resume после завершения active turn не обещан.
