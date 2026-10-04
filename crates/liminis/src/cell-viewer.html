@@ -39,6 +39,8 @@
       .stage-head { position:absolute; z-index:2; top:15px; left:17px; pointer-events:none; }
       .stage-head h1 { margin:1px 0 0; font-size:22px; font-weight:550; }
       .stage-head strong { color:var(--mint); font-size:28px; font-weight:600; }
+      .stage[data-physical="true"] .stage-head { right:17px; }
+      .stage-range { margin:4px 0 0; color:var(--muted); overflow-wrap:anywhere; }
       .stage-caption { position:absolute; z-index:2; top:82px; left:17px; right:17px; max-width:54ch; color:var(--muted); font-size:11px; pointer-events:none; }
       .stage-caption p { margin:0 0 5px; }
       [hidden] { display:none !important; }
@@ -139,7 +141,7 @@
       <main class="workspace">
         <section class="stage" id="cell-stage" aria-label="Cell culture inventory schematic">
           <canvas id="chamber" tabindex="0" aria-label="Schematic inventory of living cells, not physical coordinates. Select a cell to inspect it."></canvas>
-          <div class="stage-head"><span class="micro" id="stage-title">Culture inventory</span><h1><strong id="cell-count">0</strong> <span id="population-label">living cells</span></h1></div>
+          <div class="stage-head"><span class="micro" id="stage-title">Culture inventory</span><h1><strong id="cell-count">0</strong> <span id="population-label">living cells</span></h1><p class="stage-range num" id="projection-range" hidden></p></div>
           <div class="stage-caption"><p id="schematic-caption">Culture inventory schematic. Icon placement does not represent physical coordinates.</p><p id="physical-state-note" hidden>Physical centers from saved coordinates. Marker size is visual, not cell body radius. Chemical resources remain shared and well mixed.</p></div>
           <div class="projection-controls" id="projection-controls" hidden>
             <label for="projection-plane">Plane <select id="projection-plane"><option value="xy">XY</option><option value="xz">XZ</option><option value="yz">YZ</option></select></label>
@@ -232,17 +234,22 @@
         const width=dimensions[axes[0]]*scale,height=dimensions[axes[1]]*scale;
         return {axes,scale,width,height,left:viewport.left+(viewport.width-width)/2,top:viewport.top+(viewport.height-height)/2};
       }
-      function sliceIncludes(position,axis,slice){
-        if(!slice?.enabled)return true;
-        if(!Number.isFinite(slice.center)||!Number.isFinite(slice.thickness)||slice.thickness<0)throw new Error("Invalid physical slice");
-        return position[axis]>=slice.center-slice.thickness/2&&position[axis]<=slice.center+slice.thickness/2;
+      function sliceInterval(length,slice){
+        if(typeof length!=="number"||!Number.isFinite(length)||length<=0)throw new Error("Invalid physical slice dimension");
+        if(!slice?.enabled)return [0,length];
+        if(!Number.isFinite(slice.center)||slice.center<0||slice.center>length||!Number.isFinite(slice.thickness)||slice.thickness<0)throw new Error("Invalid physical slice");
+        return [Math.max(0,slice.center-slice.thickness/2),Math.min(length,slice.center+slice.thickness/2)];
+      }
+      function sliceIncludes(position,axis,slice,length){
+        const [lower,upper]=sliceInterval(length,slice);
+        return position[axis]>=lower&&position[axis]<=upper;
       }
       function projectPhysicalCells(cells,dimensions,plane,viewport,slice=null){
         const frame=projectionFrame(dimensions,plane,viewport), markers=[];
         for(const cell of cells){
           if(typeof cell.id!=="string"||!/^\d+$/.test(cell.id))throw new Error("Invalid exact cell ID");
           validatePosition(cell.position_m,dimensions);
-          if(sliceIncludes(cell.position_m,frame.axes[2],slice))markers.push({id:cell.id,genome_key:cell.genome_key,x:frame.left+cell.position_m[frame.axes[0]]*frame.scale,y:frame.top+frame.height-cell.position_m[frame.axes[1]]*frame.scale,r:8});
+          if(sliceIncludes(cell.position_m,frame.axes[2],slice,dimensions[frame.axes[2]]))markers.push({id:cell.id,genome_key:cell.genome_key,x:frame.left+cell.position_m[frame.axes[0]]*frame.scale,y:frame.top+frame.height-cell.position_m[frame.axes[1]]*frame.scale,r:8});
         }
         return {frame,markers};
       }
@@ -260,15 +267,15 @@
       }
       // END PHYSICAL HELPERS
 
-      function micrometers(value){
+      function micrometers(value,digits=6){
         if(typeof value!=="number"||!Number.isFinite(value)||!Number.isFinite(value*1e6))throw new Error("Unsupported coordinate in µm");
-        return (value*1e6).toLocaleString("en-US",{maximumSignificantDigits:6});
+        return (value*1e6).toLocaleString("en-US",{maximumSignificantDigits:digits});
       }
       function configureProjection(reset=false){
         const s=view.state,physical=s?.chamber_format===2;$("projection-controls").hidden=!physical;$("schematic-caption").hidden=physical;$("physical-state-note").hidden=!physical;
         $("stage-title").textContent=physical?"Physical centers":"Culture inventory";$("population-label").textContent=physical?"visible / total":"living cells";
-        $("cell-stage").dataset.physical=String(physical);$("cell-stage").setAttribute("aria-label",physical?"Physical cell centers in an orthographic projection":"Cell culture inventory schematic");
-        if(!physical)return;
+        $("cell-stage").dataset.physical=String(physical);$("cell-stage").setAttribute("aria-label",physical?"Physical cell centers in an orthographic projection":"Cell culture inventory schematic");$("projection-range").hidden=!physical;
+        if(!physical){document.querySelector(".stage-caption").style.top="";return;}
         const axes=projectionAxes(view.plane),names=["x","y","z"],dimension=s.model?.dimensions_m?.[axes[2]];
         $("projection-axes").textContent=`${names[axes[0]]} → · ${names[axes[1]]} ↑`;$("slice-axis").textContent=names[axes[2]];
         if(Number.isFinite(dimension)&&dimension>0&&(reset||view.sliceAxis!==axes[2])){view.slice.center=dimension/2;view.slice.thickness=dimension/10;view.sliceAxis=axes[2];$("slice-center").value=String(view.slice.center*1e6);$("slice-thickness").value=String(view.slice.thickness*1e6);$("slice-error").hidden=true;}
@@ -276,10 +283,13 @@
         $("slice-center").max=Number.isFinite(dimension)?String(dimension*1e6):"";
       }
       function drawPhysical(ctx,w,h,cells){
-        const controls=$("projection-controls"),caption=document.querySelector(".stage-caption"),meta=document.querySelector(".stage-meta");controls.style.top=`${Math.max(139,caption.offsetTop+caption.offsetHeight+12)}px`;
+        const dimensions=view.state.model?.dimensions_m,axes=projectionAxes(view.plane),names=["x","y","z"];validateDimensions(dimensions);
+        const [lower,upper]=sliceInterval(dimensions[axes[2]],view.slice),mode=!view.slice.enabled?"full projection":view.slice.thickness===0?"exact center plane":"inclusive center slice";
+        $("projection-range").textContent=`${names[axes[2]]} ∈ [${micrometers(lower,17)}, ${micrometers(upper,17)}] µm · ${mode}`;
+        const controls=$("projection-controls"),head=document.querySelector(".stage-head"),caption=document.querySelector(".stage-caption"),meta=document.querySelector(".stage-meta");caption.style.top=`${Math.max(82,head.offsetTop+head.offsetHeight+12)}px`;controls.style.top=`${Math.max(139,caption.offsetTop+caption.offsetHeight+12)}px`;
         const top=controls.offsetTop+controls.offsetHeight+30,bottom=meta.offsetHeight+66;
         const {frame,markers}=projectPhysicalCells(cells,view.state.model?.dimensions_m,view.plane,{left:54,top,width:Math.max(1,w-84),height:Math.max(1,h-top-bottom)},view.slice);
-        const {left,top:y,width,height,scale,axes}=frame,names=["x","y","z"],dimensions=view.state.model.dimensions_m;
+        const {left,top:y,width,height,scale}=frame;
         ctx.strokeStyle="#26382e";ctx.lineWidth=1;
         for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(left+width*i/4,y);ctx.lineTo(left+width*i/4,y+height);ctx.moveTo(left,y+height*i/4);ctx.lineTo(left+width,y+height*i/4);ctx.stroke();}
         ctx.strokeStyle="#77978a";ctx.strokeRect(left,y,width,height);ctx.fillStyle="#b6c9bd";ctx.font="11px ui-monospace,monospace";
@@ -302,7 +312,7 @@
         const cells=view.state?.cells||[], pad=34, head=document.querySelector(".stage-head"), meta=document.querySelector(".stage-meta");
         view.hits=[];view.projectionError=null;
         if(view.state?.chamber_format===2){
-          try{drawPhysical(ctx,w,h,cells);}catch(error){view.hits=[];view.projectionError=error.message;$("cell-count").textContent=`0 / ${cells.length}`;$("chamber").setAttribute("aria-label",`Physical projection unavailable at shown snapshot tick ${view.state.tick}: ${error.message}`);}
+          try{drawPhysical(ctx,w,h,cells);}catch(error){view.hits=[];view.projectionError=error.message;$("cell-count").textContent=`0 / ${cells.length}`;$("projection-range").textContent="Slice interval unavailable";$("chamber").setAttribute("aria-label",`Physical projection unavailable at shown snapshot tick ${view.state.tick}: ${error.message}`);}
           $("projection-error").hidden=!view.projectionError;$("projection-error").textContent=view.projectionError?`Cannot show physical centers: ${view.projectionError}`:"";
           view.visibleIds=view.hits.map(hit=>hit.id);view.drawnTick=view.state.tick;return;
         }
@@ -344,7 +354,7 @@
       function renderInspector(){
         const cell=(view.state?.cells||[]).find((item)=>item.id===view.selected), host=$("cell-detail");host.replaceChildren();
         const tick=view.drawnTick??"—",physical=view.state?.chamber_format===2,outside=physical&&!view.visibleIds.includes(view.selected);
-        if(!cell){host.className="empty";host.textContent=view.selected?`Cell ${view.selected} is no longer living at shown snapshot tick ${tick}.`:`Select a living cell or enter its exact ID. Shown snapshot tick ${tick}.`;$("selection-state").textContent=view.selected?"no longer living":"none selected";return;}
+        if(!cell){host.className="empty";host.textContent=view.selected?`ID ${view.selected} is not present in the shown snapshot at tick ${tick}.`:`Select a living cell or enter its exact ID. Shown snapshot tick ${tick}.`;$("selection-state").textContent=view.selected?"not present":"none selected";return;}
         host.className="";$("selection-state").textContent=view.projectionError?"position unavailable":outside?"outside slice":`generation ${cell.generation}`;
         const code=document.createElement("div");code.className="selected-code";const dot=document.createElement("span");dot.className="swatch";dot.style.background=color(cell.genome_key);const name=document.createElement("b");name.textContent=cell.genome_key;code.append(dot,name);host.append(code);
         if(view.projectionError||outside){const note=document.createElement("p");note.className="selection-note";note.textContent=view.projectionError?"The physical projection is unavailable; coordinates are not replaced.":"Selected cell is outside the current slice; its saved center is shown below.";host.append(note);}

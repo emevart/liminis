@@ -14,8 +14,19 @@ const physicalSource = script.match(/\/\/ BEGIN PHYSICAL HELPERS[^\n]*\n([\s\S]*
 
 function physical() {
   const context = vm.createContext({});
-  vm.runInContext(`${physicalSource};globalThis.geometry={projectionAxes,projectionFrame,projectPhysicalCells,sliceIncludes,hitCandidates,navigateVisibleIds}`, context);
+  vm.runInContext(`${physicalSource};globalThis.geometry={projectionAxes,projectionFrame,projectPhysicalCells,sliceInterval,sliceIncludes,hitCandidates,navigateVisibleIds}`, context);
   return context.geometry;
+}
+
+function inspector(view) {
+  const inspectorSource = script.match(/function renderInspector\(\)\{[\s\S]*?\n      \}/)[0];
+  const pairSource = script.match(/function addPair\(list,key,value\)\{[^\n]+\}/)[0];
+  const micrometerSource = script.match(/function micrometers\(value,digits=6\)\{[\s\S]*?\n      \}/)[0];
+  const element = () => ({ children: [], style: {}, textContent: '', append(...nodes) { this.children.push(...nodes); }, replaceChildren() { this.children = []; this.textContent = ''; } });
+  const elements = new Map(['cell-detail', 'selection-state'].map(id => [id, element()]));
+  const context = vm.createContext({ view, $: key => elements.get(key), document: { createElement: element }, color: () => '#86dfb7', format: String, objectPairs: () => {} });
+  vm.runInContext(`${physicalSource}\n${pairSource}\n${micrometerSource}\n${inspectorSource};globalThis.inspect=renderInspector`, context);
+  return { elements, render: context.inspect };
 }
 
 function close(actual, expected) {
@@ -71,9 +82,24 @@ test('slices include both center bounds on each hidden axis and full projection 
     assert.deepEqual(Array.from(sliced.markers, marker => marker.id), ['1', '2']);
     assert.equal(geometry.projectPhysicalCells(cells, dimensions, plane, viewport).markers.length, 4);
     const atCenter = dimensions.map(length => length / 2);
-    assert.equal(geometry.sliceIncludes(atCenter, hidden, { enabled: true, center, thickness: 0 }), true);
+    assert.equal(geometry.sliceIncludes(atCenter, hidden, { enabled: true, center, thickness: 0 }, dimensions[hidden]), true);
     assert.throws(() => geometry.projectPhysicalCells(cells, dimensions, plane, viewport, { enabled: true, center, thickness: -1 }), /slice/);
   }
+});
+
+test('slice interval intersects the box and zero thickness filters the exact represented center plane', () => {
+  const geometry = physical(), length = 20e-6;
+  assert.deepEqual(Array.from(geometry.sliceInterval(length, { enabled: false })), [0, length]);
+  const lowClipped = geometry.sliceInterval(length, { enabled: true, center: 2e-6, thickness: 10e-6 });
+  assert.equal(lowClipped[0], 0); assert.ok(Math.abs(lowClipped[1] - 7e-6) < 1e-20);
+  const highClipped = geometry.sliceInterval(length, { enabled: true, center: 18e-6, thickness: 10e-6 });
+  assert.ok(Math.abs(highClipped[0] - 13e-6) < 1e-20); assert.equal(highClipped[1], length);
+  const center = 7.123456789e-6, plane = { enabled: true, center, thickness: 0 };
+  assert.deepEqual(Array.from(geometry.sliceInterval(length, plane)), [center, center]);
+  assert.equal(geometry.sliceIncludes([0, center, 0], 1, plane, length), true);
+  assert.equal(geometry.sliceIncludes([0, center - 1e-20, 0], 1, plane, length), false);
+  assert.equal(geometry.sliceIncludes([0, center + 1e-20, 0], 1, plane, length), false);
+  assert.throws(() => geometry.sliceInterval(length, { enabled: true, center: length * 2, thickness: 0 }), /slice/);
 });
 
 test('invalid positions in any axis are rejected instead of being drawn at a fallback zero', () => {
@@ -108,25 +134,19 @@ test('keyboard navigation uses visible exact IDs and handles a retained absent s
   const geometry = physical();
   const visible = ['18446744073709551615', '9007199254740993', '9007199254740992'];
   assert.equal(geometry.navigateVisibleIds(visible, 'outside-slice', 1), '9007199254740992');
-  assert.equal(geometry.navigateVisibleIds(visible, 'no-longer-living', -1), '18446744073709551615');
+  assert.equal(geometry.navigateVisibleIds(visible, 'not-present', -1), '18446744073709551615');
   assert.equal(geometry.navigateVisibleIds(visible, '9007199254740992', 1), '9007199254740993');
   assert.equal(geometry.navigateVisibleIds(visible, '18446744073709551615', 1), '9007199254740992');
   assert.equal(geometry.navigateVisibleIds([], 'selected', 1), null);
 });
 
-test('inspector retains exact selection outside a slice and after death, with saved xyz and shown tick', () => {
-  const inspectorSource = script.match(/function renderInspector\(\)\{[\s\S]*?\n      \}/)[0];
-  const pairSource = script.match(/function addPair\(list,key,value\)\{[^\n]+\}/)[0];
-  const micrometerSource = script.match(/function micrometers\(value\)\{[\s\S]*?\n      \}/)[0];
-  const element = () => ({ children: [], style: {}, textContent: '', append(...nodes) { this.children.push(...nodes); }, replaceChildren() { this.children = []; this.textContent = ''; } });
-  const elements = new Map(['cell-detail', 'selection-state'].map(id => [id, element()]));
+test('inspector retains exact selection outside a slice and after disappearance, with saved xyz and shown tick', () => {
   const id = '18446744073709551615';
   const view = { selected: id, drawnTick: 42, visibleIds: [], projectionError: null,
     state: { chamber_format: 2, tick: 42, model: { dimensions_m: [40e-6, 20e-6, 10e-6] },
       cells: [{ id, position_m: [10e-6, 5e-6, 2e-6], genome_key: 'genotype', generation: 1, birth_tick: 10 }] } };
-  const context = vm.createContext({ view, $: key => elements.get(key), document: { createElement: element }, color: () => '#86dfb7', format: String, objectPairs: () => {} });
-  vm.runInContext(`${physicalSource}\n${pairSource}\n${micrometerSource}\n${inspectorSource};globalThis.inspect=renderInspector`, context);
-  context.inspect();
+  const { elements, render } = inspector(view);
+  render();
   assert.equal(elements.get('selection-state').textContent, 'outside slice');
   const list = elements.get('cell-detail').children.find(node => node.className === 'kv object-grid');
   const pairs = new Map();
@@ -134,10 +154,37 @@ test('inspector retains exact selection outside a slice and after death, with sa
   assert.equal(pairs.get('id'), id); assert.equal(pairs.get('shown snapshot tick'), '42');
   assert.equal(pairs.get('x center'), '10 µm'); assert.equal(pairs.get('y center'), '5 µm'); assert.equal(pairs.get('z center'), '2 µm');
   view.state.cells = []; view.state.tick = 43; view.drawnTick = 43;
-  context.inspect();
+  render();
   assert.equal(view.selected, id);
-  assert.equal(elements.get('selection-state').textContent, 'no longer living');
-  assert.equal(elements.get('cell-detail').textContent, `Cell ${id} is no longer living at shown snapshot tick 43.`);
+  assert.equal(elements.get('selection-state').textContent, 'not present');
+  assert.equal(elements.get('cell-detail').textContent, `ID ${id} is not present in the shown snapshot at tick 43.`);
+});
+
+test('unknown exact ID is not present without inferring that it was ever born or died', () => {
+  const id = '18446744073709551615';
+  const view = { selected: id, drawnTick: 9, visibleIds: ['9007199254740993'], projectionError: null,
+    state: { chamber_format: 2, tick: 9, cells: [{ id: '9007199254740993' }] } };
+  const { elements, render } = inspector(view);
+  render();
+  assert.equal(view.selected, id);
+  assert.equal(elements.get('selection-state').textContent, 'not present');
+  assert.equal(elements.get('cell-detail').textContent, `ID ${id} is not present in the shown snapshot at tick 9.`);
+});
+
+test('division removes a selected parent from the snapshot without claiming death or selecting a daughter', () => {
+  const parent = '9007199254740993', daughters = ['9007199254740994', '9007199254740995'];
+  const view = { selected: parent, drawnTick: 10, visibleIds: [parent], projectionError: null,
+    state: { chamber_format: 1, tick: 10, cells: [{ id: parent, genome_key: 'genotype', generation: 1, birth_tick: 2 }] } };
+  const { elements, render } = inspector(view);
+  render();
+  assert.equal(elements.get('selection-state').textContent, 'generation 1');
+  view.state = { chamber_format: 1, tick: 11, cells: daughters.map(id => ({ id, parent_id: parent })),
+    events: [{ kind: 'division', tick: 11, parent_id: parent, children: daughters }] };
+  view.drawnTick = 11; view.visibleIds = daughters;
+  render();
+  assert.equal(view.selected, parent);
+  assert.equal(elements.get('selection-state').textContent, 'not present');
+  assert.equal(elements.get('cell-detail').textContent, `ID ${parent} is not present in the shown snapshot at tick 11.`);
 });
 
 test('state, displayed tick, hit map and inspector commit before a delayed independent history request', async () => {
