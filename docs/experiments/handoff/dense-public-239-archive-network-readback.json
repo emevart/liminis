@@ -1,0 +1,81 @@
+{
+  "status": "PASS",
+  "branch": "codex/dense-recording-regression-evidence",
+  "head": "3b433f5d68ad024a6e0ff8a0c03c8d7f71387ccc",
+  "tree": "9782bf77495adb302264d3e7d6f32dbac7e47457",
+  "method": "incremental_network_fetch_new_public_original_and_reviews_into_previously_fresh_independent_git_database_all_archive_files_size_sha256_and_original_zip_crc",
+  "previous_verified_head": "0541137966aed15f350422ba9cc25a06e7324ddb",
+  "zip_bytes": 45622306,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2351,
+      "sha256": "2ebb220981bd6afbd2ec18be05fb01294633941a71534c38968b8e801821e347"
+    },
+    {
+      "path": "archive-manifest.json",
+      "bytes": 4452,
+      "sha256": "59f5c3776bc3965c8e622c96ae8f593230c288b8a260c00c78a9b5f72146ae35"
+    },
+    {
+      "path": "e245-numerics-review.json",
+      "bytes": 10255,
+      "sha256": "903c3d24fd9f7a67b8d75e21698b4952156907d32075a758f6515311ff729a2e"
+    },
+    {
+      "path": "live-e2451e3-success-original.zip",
+      "bytes": 5754066,
+      "sha256": "9680e4d465cfeda3a9ea663a9a7758a6eb16d42b6b6574033b4fc373d9d8c7e8",
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "physical-e2451e3-success-original.zip",
+      "bytes": 6131253,
+      "sha256": "d4fa7a2d245ce61bf37693bab561574fd6efb70b858a91f8bf4b9ead1f8821d8",
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "privacy-review.json",
+      "bytes": 1332,
+      "sha256": "4ceee16f6294a0b5c2e027feae04daa4157cf534fb0640c540a4de81d90270c7"
+    },
+    {
+      "path": "projection-e2451e3-success-original.zip",
+      "bytes": 28135546,
+      "sha256": "cfcc711726956c51e61e634a556a893e0602cde8a85ccfacf7306a8a2fdd14da",
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "public-239-byte-validation.json",
+      "bytes": 977,
+      "sha256": "c985fd31127b57126a18ac447f8ee54587b777a82dc595ccfacf370b05ac2387"
+    },
+    {
+      "path": "public-239-contract-validation.json",
+      "bytes": 3299,
+      "sha256": "d157b3f27f254b19b3eeadbd54787b518e76d20d1dd04242e0daf327dc45d043"
+    },
+    {
+      "path": "public-239-independent-review.json",
+      "bytes": 12709,
+      "sha256": "84ab34b0e417df8e5c3bbfade31ce53905e6a05e11014538287c0bf7e5ef13c5"
+    },
+    {
+      "path": "public-239-independent-review.md",
+      "bytes": 4940,
+      "sha256": "6e48a85057af69071dbfbd4d103f47187a8057cd369023f2a12a33ac358dd979"
+    },
+    {
+      "path": "public-239-privacy-validation.json",
+      "bytes": 453,
+      "sha256": "9c6cbce067b422f13d6dcbabb485737f14e2d209f3cf888ca9128a34cb8bd810"
+    },
+    {
+      "path": "public-239ec8b-dense-original.zip",
+      "bytes": 5601441,
+      "sha256": "688833bc16b805f6433ecd5fb296a3b8e0ec10c6e3481f423b785ae4e9889b48",
+      "zip_crc": "PASS"
+    }
+  ],
+  "qualification": "Saved original/review bytes only; protected browser acceptance separate; no full public dataset or new model/browser run claim."
+}

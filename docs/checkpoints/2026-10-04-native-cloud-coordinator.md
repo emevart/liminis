@@ -531,3 +531,41 @@ Files/ADR111/code/preflight пока не начаты. Protected WebGL2 availab
 Следующий шаг: принять existing public main artifact/source/rawgzip bytes,
 сохранить оригинал+readback, затем открыть scoped LIVE-3b и append-only ADR111
 на fresh main. Автопробуждение после активного cloud turn не подтверждено.
+
+### REC-2: существующий публичный сайт принят
+
+2026-10-04, 21:00 UTC. Main239ec8b/tree27c506c, push run37232682967:
+все выполняемые mandatory jobs SUCCESS, включая Rust и public browser;
+world/frozen jobs штатно skipped на push, их exact PR gates ранее SUCCESS.
+Existing Workers Build SUCCESS. Source tree не изменился после принятого PR19.
+
+Actual public artifact11313789667: original5601441bytes/SHA256
+`688833bc16b805f6433ecd5fb296a3b8e0ec10c6e3481f423b785ae4e9889b48`.
+Independent **QUALIFIED APPLICATION PASS,0 blockers**:4checks/2PNG viewed,
+14Node HTTPS source/metadata/gzip pins и28browser response pins, Next0→1,
+measured1×/held state, cleanup и sandbox argv. Первый stale/404 attempt и
+один5s deployment retry сохранены. Известная367byte Cloudflare insertion
+строго закреплена; analytics Script GET2 заблокированы до отправки с ACK,
+analytics execution не принят. Scope: default10k initial/prefetched chunks;
+full2.42GB public readback и public100k/1M endpoints не заявляются. Полный
+dataset проверен отдельно в Git и accepted existing provider build.
+
+Original и5exact ownreview/validation files опубликованы в evidence-only
+`codex/dense-recording-regression-evidence`, commit
+`3b433f5d68ad024a6e0ff8a0c03c8d7f71387ccc`, tree
+`9782bf77495adb302264d3e7d6f32dbac7e47457`. Группа4ZIP/45622306bytes<64MiB.
+Incremental network fetch нового original/reviews в ранее свежую отдельную
+Git database: все13archive files size/SHA и4original ZIP CRC PASS. Из-за
+shallow ancestry использован новый verification ref, опубликованный remote
+не менялся. Small readback report:
+`docs/experiments/handoff/dense-public-239-archive-network-readback.json`.
+Предыдущая группа dense/legacy/oldFAIL на4a4ee92 остаётся сохранённой.
+
+REC-2 source/CI/numerics/actual artifacts/storage/public application gates
+закрыты в описанном scope; старые записи, LAB24 и frozen identity сохранены.
+Следующий разрешённый bounded этап OPEN: LIVE-3b по уже принятому решению
+Astra. Root создаёт отдельные branches/worktrees и append-only ADR111,
+автор renderer/host assets отделён от browser QA и независимых reviewers.
+Protected WebGL2 availability проверяется actual gate; native Node не
+объявляется WebGL/browser PASS. Никаких новых infra/secrets/spend или
+ослабления sandbox. Cargo сериализует root; shared ADR/CI/checkpoints — root.
