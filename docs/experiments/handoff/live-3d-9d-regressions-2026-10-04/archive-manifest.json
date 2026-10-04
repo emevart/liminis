@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "kind": "live_3d_regression_original_evidence_archive",
+  "candidate_commit": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+  "candidate_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "workflow_run": 37238281987,
+  "status": "QUALIFIED_REGRESSION_PASS_NOT_3D_ACCEPTANCE",
+  "artifacts": [
+    {
+      "id": 11316533025,
+      "name": "physical-projection-browser-9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "bytes": 30501374,
+      "sha256": "cb29064636bd50c5ae5b5ec74539f2c4538ea0271ca8f684572b1a511e025bb4",
+      "crc": "PASS",
+      "members": 15
+    },
+    {
+      "id": 11316383477,
+      "name": "live-physical-browser-9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "bytes": 6876222,
+      "sha256": "334fa733315c5dcdcb13a52cce5fc8c9dd4e34c9d363fd5098141b518cf222b2",
+      "crc": "PASS",
+      "members": 9
+    },
+    {
+      "id": 11316383473,
+      "name": "live-cells-browser-9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "bytes": 5011027,
+      "sha256": "badcb7b7ef963940f90ceebc510a2bed5715efbe1b2963ffd74e3667dfafed1f",
+      "crc": "PASS",
+      "members": 9
+    }
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2097,
+      "sha256": "bc591fc7a7eef28fc15af3911938da5824d4c00dc0478f6d5893d5f4d7f5abd8",
+      "scope": "coordinator qualification"
+    },
+    {
+      "path": "independent-review/integrity.json",
+      "bytes": 11407,
+      "sha256": "d9d437b42327cb582737ce17c016db71c6f3a6c86e2938729c78e01ede610381",
+      "scope": "byte-exact independent review"
+    },
+    {
+      "path": "independent-review/review.json",
+      "bytes": 6031,
+      "sha256": "1b891a29cb5041f4fd155f174f927c2db4830193bf46840b81017f925f91440a",
+      "scope": "byte-exact independent review"
+    },
+    {
+      "path": "independent-review/review.md",
+      "bytes": 3867,
+      "sha256": "5b74fcfa01c59c2f31195369f63bacc9dc711455a6e3c1f61b795ff208842ac5",
+      "scope": "byte-exact independent review"
+    },
+    {
+      "path": "live-cells-browser-9d9f70903939b93905beed9e0ad2be5c3f4d18ff-original.zip",
+      "bytes": 5011027,
+      "sha256": "badcb7b7ef963940f90ceebc510a2bed5715efbe1b2963ffd74e3667dfafed1f",
+      "scope": "original GitHub artifact ZIP; no repacking"
+    },
+    {
+      "path": "live-physical-browser-9d9f70903939b93905beed9e0ad2be5c3f4d18ff-original.zip",
+      "bytes": 6876222,
+      "sha256": "334fa733315c5dcdcb13a52cce5fc8c9dd4e34c9d363fd5098141b518cf222b2",
+      "scope": "original GitHub artifact ZIP; no repacking"
+    },
+    {
+      "path": "original-report-11316383473.json",
+      "bytes": 4344,
+      "sha256": "65ddf97a423015894a16400287fdd4470502e6222cb43cbe60efefde0b201ce4",
+      "scope": "byte-exact original report"
+    },
+    {
+      "path": "original-report-11316383477.json",
+      "bytes": 4823,
+      "sha256": "0f2c6df2ff883a2c3c2238ef893d9173f1faffb4df0a4b49af1dba88027325a0",
+      "scope": "byte-exact original report"
+    },
+    {
+      "path": "original-report-11316533025.json",
+      "bytes": 92746,
+      "sha256": "106b451a6d461b16290201b482b548be86b24d299a41208d26972b1b0e3b8603",
+      "scope": "byte-exact original report"
+    },
+    {
+      "path": "physical-projection-browser-9d9f70903939b93905beed9e0ad2be5c3f4d18ff-original.zip",
+      "bytes": 30501374,
+      "sha256": "cb29064636bd50c5ae5b5ec74539f2c4538ea0271ca8f684572b1a511e025bb4",
+      "scope": "original GitHub artifact ZIP; no repacking"
+    }
+  ],
+  "unique_bytes": 42513938,
+  "archive_group_cap_bytes": 67108864,
+  "original_zip_count": 3,
+  "qualifications": [
+    "Independent review covers79checks across five originals/two separate groups; this inventory archives only the selected originals",
+    "No actual3D acceptance transferred from old regressions",
+    "No new model/browser/Cargo/million decode",
+    "Bounded UTF8/header/privacy scope only; no full binary secret guarantee",
+    "Published unique-byte cap is not a combined expanded trace cap"
+  ]
+}
