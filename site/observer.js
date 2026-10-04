@@ -1,6 +1,6 @@
-import { validateRecording } from "./recording.mjs";
+import { loadRecording } from "./recording-loader.mjs?v=105";
+import { playbackIndex, validFrameRate } from "./playback.mjs?v=105";
 
-const DATA_URL = "./data/cell-chamber-seed-42.json";
 const $ = (id) => document.getElementById(id);
 const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 const palette = ["#67c99c", "#65c7d1", "#ee8177", "#d98ec0", "#dfbd64", "#82a9e8", "#a8cd6c", "#ce8f72"];
@@ -9,7 +9,7 @@ const icons = {
   pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg>',
   replay: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
 };
-const view = { data: null, index: 0, playing: false, selected: null, hits: [], layout: new Map(), anchorWall: 0, anchorIndex: 0, raf: 0 };
+const view = { data: null, ready: false, index: 0, frameRate: 1, playing: false, selected: null, hits: [], layout: new Map(), anchorWall: 0, anchorIndex: 0, raf: 0 };
 
 function hash(text) { let value = 2166136261; for (const char of String(text)) { value ^= char.charCodeAt(0); value = Math.imul(value, 16777619); } return value >>> 0; }
 function color(key) { return palette[hash(key) % palette.length]; }
@@ -83,19 +83,21 @@ function renderFrequencies() { const cells = frame().cells, counts = new Map(); 
 function renderResources() { const resources = frame().resources, host = $("resources"), max = Math.max(...resources.map((item) => finite(item.concentration)), 1e-30); host.replaceChildren(); resources.forEach((resource) => { const row = document.createElement("div"); row.className = "resource"; const label = document.createElement("span"); label.textContent = resource.id; const value = document.createElement("span"); value.className = "mono"; value.textContent = `${numberText(resource.concentration)} mol/m³`; const track = document.createElement("div"); track.className = "track"; const fill = document.createElement("div"); fill.className = "fill"; fill.style.background = color(resource.id); fill.style.width = `${Math.max(0, Math.min(100, finite(resource.concentration) / max * 100))}%`; track.append(fill); row.append(label, value, track); host.append(row); }); }
 function renderFacts() { const data = view.data, identity = data.identity, model = data.model, experiment = data.experiment, list = $("experiment-facts"); list.replaceChildren(); addPair(list, "scenario", identity.scenario); addPair(list, "environment", model.environment); addPair(list, "volume", `${numberText(model.volume_m3)} m³`); addPair(list, "temperature", `${numberText(model.temperature_k)} K`); addPair(list, "frames", data.frames.length.toLocaleString("en-US")); addPair(list, "sample interval", `${experiment.sample_every} ticks`); addPair(list, "time step", `${numberText(experiment.dt_seconds)} s`); addPair(list, "matter residual max", experiment.matter_residual_max); addPair(list, "energy residual max", experiment.energy_residual_max); addPair(list, "canonical config", typeof data.canonical_config === "string" ? "included in dataset" : "unavailable"); const term = document.createElement("dt"), detail = document.createElement("dd"), link = document.createElement("a"); term.textContent = "source commit"; link.href = `https://github.com/emevart/liminis/commit/${encodeURIComponent(identity.source_commit)}`; link.textContent = identity.source_commit; detail.append(link); list.append(term, detail); (data.limitations || []).forEach((limitation, index) => addPair(list, `limitation ${index + 1}`, limitation)); $("checks").textContent = `${experiment.checked_ticks} checked ticks`; }
 
-function updatePlayButton() { const button = $("play"), ended = view.index === view.data.frames.length - 1; button.innerHTML = view.playing ? icons.pause : ended ? icons.replay : icons.play; button.setAttribute("aria-label", view.playing ? "Pause recording" : ended ? "Replay recording" : "Play recording"); button.title = view.playing ? "Pause" : ended ? "Replay" : "Play"; }
+function updatePlayButton() { const button = $("play"), ended = view.index === view.data.frames.length - 1; button.innerHTML = view.playing ? icons.pause : ended ? icons.replay : icons.play; button.setAttribute("aria-label", view.playing ? "Pause recording" : ended ? "Replay recording" : "Play recording"); button.title = view.playing ? "Pause" : ended ? "Replay" : "Play"; button.disabled = !view.ready; $("previous").disabled = !view.ready || view.index === 0; $("next").disabled = !view.ready || ended; }
 function renderFrame() {
   const sample = frame(), summary = sample.summary, previous = view.index ? view.data.frames[view.index - 1].summary : null; $("living").textContent = summary.living_cells.toLocaleString("en-US"); $("births").textContent = summary.births.toLocaleString("en-US"); $("deaths").textContent = summary.deaths.toLocaleString("en-US"); $("divisions").textContent = summary.divisions.toLocaleString("en-US"); $("generation").textContent = summary.generation_max; $("ledger").textContent = sample.residual ? `M ${sample.residual.matter} · E ${sample.residual.energy}` : "not checked"; $("tick").textContent = sample.tick.toLocaleString("en-US"); $("time").textContent = numberText(sample.sim_time); $("frame-label").textContent = `recorded frame ${view.index + 1} of ${view.data.frames.length}`; $("frame-count").textContent = `${view.index + 1} / ${view.data.frames.length}`; $("scrub").value = String(view.index);
   $("frame-change").textContent = previous ? `+${summary.births - previous.births} births · +${summary.deaths - previous.deaths} deaths since prior frame` : "initial recorded frame"; drawChamber(); renderInspector(); renderFrequencies(); renderResources(); renderCharts(); updatePlayButton();
 }
 function pause() { view.playing = false; cancelAnimationFrame(view.raf); updatePlayButton(); }
 function start() { if (view.index === view.data.frames.length - 1) view.index = 0; view.playing = true; view.anchorWall = performance.now(); view.anchorIndex = view.index; renderFrame(); view.raf = requestAnimationFrame(advance); }
-function advance(now) { if (!view.playing) return; const frames = view.data.frames, elapsedFrames = Math.floor((now - view.anchorWall) / 180 * finite($("speed").value, 1)), next = Math.min(frames.length - 1, view.anchorIndex + elapsedFrames); if (next !== view.index) { view.index = next; renderFrame(); } if (view.index === frames.length - 1) { pause(); return; } view.raf = requestAnimationFrame(advance); }
+function advance(now) { if (!view.playing) return; const next = playbackIndex(view.anchorIndex, now - view.anchorWall, view.frameRate, view.data.frames.length); if (next !== view.index) { view.index = next; renderFrame(); } if (view.index === view.data.frames.length - 1) { pause(); return; } view.raf = requestAnimationFrame(advance); }
 
 function bind() {
   $("play").addEventListener("click", () => view.playing ? pause() : start());
+  $("previous").addEventListener("click", () => { pause(); view.index = Math.max(0, view.index - 1); renderFrame(); });
+  $("next").addEventListener("click", () => { pause(); view.index = Math.min(view.data.frames.length - 1, view.index + 1); renderFrame(); });
   $("scrub").addEventListener("input", (event) => { pause(); view.index = Math.max(0, Math.min(view.data.frames.length - 1, finite(event.target.value))); renderFrame(); });
-  $("speed").addEventListener("change", () => { if (view.playing) { view.anchorWall = performance.now(); view.anchorIndex = view.index; } });
+  $("speed").addEventListener("change", () => { if (!validFrameRate($("speed").value)) { $("speed").value = String(view.frameRate); return; } view.frameRate = Number($("speed").value); if (view.playing) { view.anchorWall = performance.now(); view.anchorIndex = view.index; } });
   $("chamber").addEventListener("pointerdown", (event) => { const rect = event.currentTarget.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top, hit = [...view.hits].reverse().find((item) => Math.hypot(x - item.x, y - item.y) <= item.radius); view.selected = hit?.id ?? null; drawChamber(); renderInspector(); });
   $("chamber").addEventListener("keydown", (event) => { if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return; const cells = frame().cells; if (!cells.length) return; event.preventDefault(); const current = Math.max(0, cells.findIndex((cell) => cell.id === view.selected)), offset = event.key === "ArrowRight" ? 1 : -1; view.selected = cells[(current + offset + cells.length) % cells.length].id; drawChamber(); renderInspector(); });
   addEventListener("resize", () => { drawChamber(); renderCharts(); });
@@ -103,9 +105,12 @@ function bind() {
 
 async function load() {
   try {
-    const response = await fetch(DATA_URL); if (!response.ok) throw new Error(`Dataset request failed (${response.status})`); const data = await response.json();
-    validateRecording(data);
-    view.data = data; buildLayout(data); $("seed").textContent = data.identity.seed; $("config").textContent = data.identity.config_hash; $("world").textContent = data.identity.world_format_version; $("scrub").max = String(data.frames.length - 1); $("scrub").disabled = false; $("speed").disabled = false; $("play").disabled = false; $("loading").hidden = true; $("workspace").setAttribute("aria-busy", "false"); renderFacts(); renderFrame(); bind();
-  } catch (error) { $("loading").hidden = true; $("error").hidden = false; $("error").textContent = error instanceof Error ? error.message : String(error); $("workspace").setAttribute("aria-busy", "false"); }
+    const { entry, data } = await loadRecording(location.search);
+    view.data = data; buildLayout(data); $("seed").textContent = data.identity.seed; $("config").textContent = data.identity.config_hash; $("world").textContent = data.identity.world_format_version; $("scrub").max = String(data.frames.length - 1);
+    document.title = `Liminis · ${entry.title}`;
+    renderFacts(); renderFrame(); bind();
+    const download = document.querySelector(".download"); download.href = entry.recording; download.hidden = false;
+    view.ready = true; $("scrub").disabled = false; $("speed").disabled = false; updatePlayButton(); $("loading").hidden = true; $("workspace").setAttribute("aria-busy", "false");
+  } catch (error) { const download = document.querySelector(".download"); download.removeAttribute("href"); download.hidden = true; ["play", "previous", "next", "scrub", "speed"].forEach((id) => $(id).disabled = true); $("loading").hidden = true; $("error").hidden = false; $("error").textContent = error instanceof Error ? error.message : String(error); $("workspace").setAttribute("aria-busy", "false"); }
 }
 load();

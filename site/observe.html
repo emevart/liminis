@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Observe a recorded Liminis well-mixed cell experiment." />
+    <link rel="canonical" href="https://liminis.dev/observe.html" />
+    <link rel="stylesheet" href="./observer.css?v=105" />
+    <title>Liminis · Recorded experiment</title>
+  </head>
+  <body>
+    <div class="app">
+      <header class="masthead">
+        <a class="brand" href="./" aria-label="Liminis home">Liminis</a>
+        <span class="recorded"><span class="recorded-dot"></span>Recorded experiment</span>
+        <div class="identity mono" aria-label="Experiment identity"><span>seed <b id="seed">—</b></span><span>config <b id="config">—</b></span><span>world <b id="world">—</b></span></div>
+        <nav aria-label="Project links"><a href="https://github.com/emevart/liminis">GitHub</a><a href="https://github.com/emevart/liminis/blob/main/LICENSE">Apache-2.0</a></nav>
+      </header>
+      <div class="error" id="error" hidden role="alert"></div>
+      <main class="workspace" aria-busy="true" id="workspace">
+        <section class="viewer" aria-label="Recorded well-mixed chamber">
+          <div class="stage">
+            <canvas id="chamber" tabindex="0" aria-label="Recorded living cells. Select a cell to inspect it."></canvas>
+            <div class="stage-title"><span class="eyebrow">Well-mixed chamber</span><strong><span id="living">—</span> living cells</strong></div>
+            <div class="stage-stats mono"><span><b id="births">—</b> births</span><span><b id="deaths">—</b> deaths</span><span><b id="divisions">—</b> divisions</span><span>generation <b id="generation">—</b></span><span>ledger <b id="ledger">—</b></span></div>
+            <div class="frame-stamp mono"><span id="frame-label">loading dataset</span><span id="frame-change"></span></div>
+            <div class="loading" id="loading">Loading recorded experiment…</div>
+          </div>
+          <div class="transport" aria-label="Playback controls">
+            <button class="icon-button" id="play" type="button" aria-label="Play recording" title="Play" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></button>
+            <button class="icon-button" id="previous" type="button" aria-label="Previous recorded frame" title="Previous recorded frame" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+            <button class="icon-button" id="next" type="button" aria-label="Next recorded frame" title="Next recorded frame" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+            <label class="sr-only" for="scrub">Recorded frame</label><input id="scrub" type="range" min="0" max="0" value="0" disabled />
+            <span class="transport-time mono"><b id="tick">—</b> tick · <b id="time">—</b> s</span>
+            <label class="frame-rate" for="speed"><span>Frames / s</span><input id="speed" type="number" min="0.05" max="60" step="0.05" value="1" inputmode="decimal" aria-label="Recorded frames per second" disabled /></label>
+            <span class="frame-count mono" id="frame-count">0 / 0</span>
+          </div>
+        </section>
+        <aside class="inspector" aria-label="Observation details">
+          <section class="panel cell-panel"><div class="panel-head"><h2>Cell inspector</h2><span class="eyebrow" id="selection-label">none selected</span></div><div id="cell-detail" class="empty">Select a living cell in the chamber.</div></section>
+          <section class="panel"><div class="panel-head"><h2>Population history</h2><span class="eyebrow">each / recorded max</span></div><canvas class="chart" id="population-chart" aria-label="Living cell count and biomass history"></canvas><div class="legend"><span style="--key:#489c75">living cells</span><span style="--key:#5c6861">biomass</span></div></section>
+          <section class="panel"><div class="panel-head"><h2>Genome frequencies</h2><span class="eyebrow" id="genome-total">—</span></div><canvas class="chart compact" id="genome-chart" aria-label="Genome frequency history"></canvas><div class="frequency-list" id="frequencies"></div></section>
+          <section class="panel"><div class="panel-head"><h2>Environment</h2><span class="eyebrow">each / recorded max</span></div><canvas class="chart compact" id="resource-chart" aria-label="Resource concentration history"></canvas><div class="resource-list" id="resources"></div></section>
+          <section class="panel facts"><div class="panel-head"><h2>Experiment</h2><span class="eyebrow" id="checks">—</span></div><dl class="kv" id="experiment-facts"></dl><a class="download" id="download" download hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Download observation dataset</a></section>
+        </aside>
+      </main>
+    </div>
+    <script type="module" src="./observer.js?v=105"></script>
+  </body>
+</html>

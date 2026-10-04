@@ -1,0 +1,3744 @@
+{
+  "schema_version": 1,
+  "kind": "recorded_experiment_catalog",
+  "default_experiment": "cell-chamber-10k",
+  "featured_experiment": "cell-chamber-1m",
+  "interpretation": "Same scenario and seed, different horizons of one deterministic trajectory. These are not independent biological replicates.",
+  "entries": [
+    {
+      "id": "cell-chamber-10k",
+      "title": "10,000 ticks",
+      "description": "Well-mixed cell chamber. Seed 42; the same trajectory over a longer horizon.",
+      "recording": "./data/cell-chamber-seed-42.json",
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+      "bytes": 6047570,
+      "identity": {
+        "chamber_format": 1,
+        "config_hash": "blake3:1802c0f129855749",
+        "scenario": "cell-chamber",
+        "seed": "42",
+        "source_commit": "43f4a2df25c356ff387b71ac1961b516975f999b",
+        "world_format_version": 30
+      },
+      "experiment": {
+        "checked_ticks": 10000,
+        "dt_seconds": 30,
+        "energy_residual_max": "0",
+        "matter_residual_max": "0",
+        "sample_every": 50,
+        "steps": 10000
+      },
+      "sample_count": 201,
+      "initial_summary": {
+        "births": 0,
+        "deaths": 0,
+        "divisions": 0,
+        "generation_max": 0,
+        "living_cells": 8,
+        "total_biomass_mol": 2.3999986026312925e-13,
+        "total_cell_energy_j": 4.0000000002798214e-11
+      },
+      "final_summary": {
+        "births": 1044,
+        "deaths": 436,
+        "divisions": 522,
+        "generation_max": 9,
+        "living_cells": 94,
+        "total_biomass_mol": 1.1004781396047048e-11,
+        "total_cell_energy_j": 7.847457696142333e-12
+      },
+      "preview": {
+        "tick": 1350,
+        "sim_time": 40500,
+        "living_cells": 248,
+        "selection": "maximum_sampled_genotype_count_then_living_count",
+        "cells": [
+          {
+            "id": "240",
+            "genome_key": "K0",
+            "mass_mol": 4.026455818068042e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "241",
+            "genome_key": "K0",
+            "mass_mol": 4.023680260506479e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "242",
+            "genome_key": "K0",
+            "mass_mol": 4.0819669692993e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "243",
+            "genome_key": "K0",
+            "mass_mol": 4.020904702944916e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "244",
+            "genome_key": "K0",
+            "mass_mol": 4.028179699522294e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "245",
+            "genome_key": "K0",
+            "mass_mol": 4.0170883112977673e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "246",
+            "genome_key": "K0",
+            "mass_mol": 4.0562822198331183e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "247",
+            "genome_key": "K0",
+            "mass_mol": 4.064619734539532e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "248",
+            "genome_key": "K0",
+            "mass_mol": 4.0576808406356246e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "249",
+            "genome_key": "K0",
+            "mass_mol": 4.0882119738128164e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "250",
+            "genome_key": "K0",
+            "mass_mol": 4.007373859832297e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "251",
+            "genome_key": "K0",
+            "mass_mol": 4.0295783203248003e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "252",
+            "genome_key": "K0",
+            "mass_mol": 4.034175337536139e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "253",
+            "genome_key": "K0",
+            "mass_mol": 4.0202975497283244e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "254",
+            "genome_key": "K0",
+            "mass_mol": 4.1072830900268364e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "255",
+            "genome_key": "K0",
+            "mass_mol": 4.040680550571052e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "256",
+            "genome_key": "K0",
+            "mass_mol": 4.0279303330226224e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "257",
+            "genome_key": "K0",
+            "mass_mol": 4.069563696446066e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "258",
+            "genome_key": "K0",
+            "mass_mol": 4.079625092606731e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "259",
+            "genome_key": "K0",
+            "mass_mol": 4.037991729183288e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "260",
+            "genome_key": "K0",
+            "mass_mol": 4.0452775677823904e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "261",
+            "genome_key": "K0",
+            "mass_mol": 4.0397264526592647e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "262",
+            "genome_key": "K0",
+            "mass_mol": 4.0626139605204337e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "263",
+            "genome_key": "K0",
+            "mass_mol": 4.0654003601037214e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "264",
+            "genome_key": "K0",
+            "mass_mol": 4.0490939594295394e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "265",
+            "genome_key": "K0",
+            "mass_mol": 4.013011711129222e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "266",
+            "genome_key": "K0",
+            "mass_mol": 3.963398619716285e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "267",
+            "genome_key": "K0",
+            "mass_mol": 4.063318691932549e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "268",
+            "genome_key": "K0",
+            "mass_mol": 4.0507419467317174e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "269",
+            "genome_key": "K0",
+            "mass_mol": 4.0451908316085916e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "270",
+            "genome_key": "K0",
+            "mass_mol": 4.026108873372847e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "271",
+            "genome_key": "K0",
+            "mass_mol": 4.017782200688158e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "272",
+            "genome_key": "K0",
+            "mass_mol": 4.060803342892383e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "273",
+            "genome_key": "K0",
+            "mass_mol": 4.035823324838317e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "274",
+            "genome_key": "K0",
+            "mass_mol": 4.0386856185736786e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "275",
+            "genome_key": "K0",
+            "mass_mol": 4.058114521504619e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "276",
+            "genome_key": "K0",
+            "mass_mol": 4.005812608703918e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "277",
+            "genome_key": "K0",
+            "mass_mol": 4.028017069196421e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "278",
+            "genome_key": "K0",
+            "mass_mol": 4.077109743566565e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "279",
+            "genome_key": "K0",
+            "mass_mol": 4.077109743566565e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "280",
+            "genome_key": "K0",
+            "mass_mol": 4.005801766682193e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "281",
+            "genome_key": "K0",
+            "mass_mol": 4.0724259901814275e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "282",
+            "genome_key": "K1",
+            "mass_mol": 3.829824912066071e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "283",
+            "genome_key": "K1",
+            "mass_mol": 3.785415991081065e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "284",
+            "genome_key": "K0",
+            "mass_mol": 4.0018227447091714e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "285",
+            "genome_key": "K0",
+            "mass_mol": 4.0045983022707343e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "286",
+            "genome_key": "K0",
+            "mass_mol": 4.0409299170707236e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "287",
+            "genome_key": "K0",
+            "mass_mol": 4.021511856161508e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "288",
+            "genome_key": "K0",
+            "mass_mol": 3.9729395988341576e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "289",
+            "genome_key": "K0",
+            "mass_mol": 4.031226307626978e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "290",
+            "genome_key": "K0",
+            "mass_mol": 4.0327875587553574e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "291",
+            "genome_key": "K0",
+            "mass_mol": 4.0300120011937945e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "292",
+            "genome_key": "K0",
+            "mass_mol": 4.023680260506479e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "293",
+            "genome_key": "K0",
+            "mass_mol": 4.0653136239299226e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "294",
+            "genome_key": "K0",
+            "mass_mol": 4.023940469027876e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "295",
+            "genome_key": "K0",
+            "mass_mol": 3.9767559904813066e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "296",
+            "genome_key": "K0",
+            "mass_mol": 4.0523031978600965e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "297",
+            "genome_key": "K0",
+            "mass_mol": 4.09393656128354e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "298",
+            "genome_key": "K0",
+            "mass_mol": 4.043965683153683e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "299",
+            "genome_key": "K0",
+            "mass_mol": 4.038425410052282e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "300",
+            "genome_key": "K1",
+            "mass_mol": 3.7909562641824657e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "301",
+            "genome_key": "K1",
+            "mass_mol": 3.7881915486426276e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "302",
+            "genome_key": "K0",
+            "mass_mol": 4.061930913151768e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "303",
+            "genome_key": "K1",
+            "mass_mol": 3.778824041872353e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "304",
+            "genome_key": "K0",
+            "mass_mol": 4.033134503450553e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "305",
+            "genome_key": "K0",
+            "mass_mol": 4.008154485396487e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "306",
+            "genome_key": "K0",
+            "mass_mol": 4.0528236149028896e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "307",
+            "genome_key": "K0",
+            "mass_mol": 4.063925845149141e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "308",
+            "genome_key": "K0",
+            "mass_mol": 4.0447571507395974e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "309",
+            "genome_key": "K0",
+            "mass_mol": 3.983694884385214e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "310",
+            "genome_key": "K0",
+            "mass_mol": 4.001725166513648e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "311",
+            "genome_key": "K0",
+            "mass_mol": 4.03781825683569e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "312",
+            "genome_key": "K0",
+            "mass_mol": 4.040593814397253e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "313",
+            "genome_key": "K0",
+            "mass_mol": 4.015613796343187e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "314",
+            "genome_key": "K0",
+            "mass_mol": 3.9606122201329974e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "315",
+            "genome_key": "K0",
+            "mass_mol": 3.971725292400974e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "316",
+            "genome_key": "K0",
+            "mass_mol": 4.021772064682905e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "317",
+            "genome_key": "K0",
+            "mass_mol": 4.0495276402985336e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "318",
+            "genome_key": "K0",
+            "mass_mol": 3.9947971146314654e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "319",
+            "genome_key": "K0",
+            "mass_mol": 4.036430478054909e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "320",
+            "genome_key": "K0",
+            "mass_mol": 4.0087616386130787e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "321",
+            "genome_key": "K0",
+            "mass_mol": 3.978230505435887e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "322",
+            "genome_key": "K0",
+            "mass_mol": 4.035649852490719e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "323",
+            "genome_key": "K0",
+            "mass_mol": 4.032874294929156e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "324",
+            "genome_key": "K0",
+            "mass_mol": 4.022552690247094e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "325",
+            "genome_key": "K0",
+            "mass_mol": 4.0142260175624056e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "326",
+            "genome_key": "K0",
+            "mass_mol": 4.003037051142355e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "327",
+            "genome_key": "K0",
+            "mass_mol": 4.011363723827044e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "328",
+            "genome_key": "K1",
+            "mass_mol": 3.763027216219239e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "329",
+            "genome_key": "K1",
+            "mass_mol": 3.763038058240964e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "330",
+            "genome_key": "K0",
+            "mass_mol": 4.012838238781624e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "331",
+            "genome_key": "K0",
+            "mass_mol": 4.015613796343187e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "332",
+            "genome_key": "K0",
+            "mass_mol": 3.921244839250049e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "333",
+            "genome_key": "K0",
+            "mass_mol": 4.040593814397253e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "334",
+            "genome_key": "K0",
+            "mass_mol": 3.991587876200908e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "335",
+            "genome_key": "K0",
+            "mass_mol": 3.9888123186393454e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "336",
+            "genome_key": "K0",
+            "mass_mol": 3.978317241609686e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "337",
+            "genome_key": "K0",
+            "mass_mol": 3.945010550870931e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "338",
+            "genome_key": "K1",
+            "mass_mol": 3.791314050899386e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "339",
+            "genome_key": "K1",
+            "mass_mol": 3.78576293577626e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "340",
+            "genome_key": "K0",
+            "mass_mol": 3.9996543403642004e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "341",
+            "genome_key": "K0",
+            "mass_mol": 4.030185473541392e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "342",
+            "genome_key": "K0",
+            "mass_mol": 4.016307685733578e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "343",
+            "genome_key": "K0",
+            "mass_mol": 3.9746743223101344e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "344",
+            "genome_key": "K0",
+            "mass_mol": 4.007373859832297e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "345",
+            "genome_key": "K0",
+            "mass_mol": 4.037904993009489e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "346",
+            "genome_key": "K0",
+            "mass_mol": 4.015180115474193e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "347",
+            "genome_key": "K0",
+            "mass_mol": 4.0262823457204444e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "348",
+            "genome_key": "K0",
+            "mass_mol": 3.9822203694306335e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "349",
+            "genome_key": "K0",
+            "mass_mol": 4.04605819334658e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "350",
+            "genome_key": "K0",
+            "mass_mol": 4.0213275417921857e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "351",
+            "genome_key": "K0",
+            "mass_mol": 3.9991339233214074e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "352",
+            "genome_key": "K0",
+            "mass_mol": 4.054645074552665e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "353",
+            "genome_key": "K0",
+            "mass_mol": 3.990807250636719e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "354",
+            "genome_key": "K0",
+            "mass_mol": 3.9892459995083396e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "355",
+            "genome_key": "K0",
+            "mass_mol": 3.9698170965773993e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "356",
+            "genome_key": "K0",
+            "mass_mol": 4.003037051142355e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "357",
+            "genome_key": "K0",
+            "mass_mol": 4.0196903965117325e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "358",
+            "genome_key": "K0",
+            "mass_mol": 3.996184893412247e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "359",
+            "genome_key": "K0",
+            "mass_mol": 3.971204875358181e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "360",
+            "genome_key": "K0",
+            "mass_mol": 3.937453661728707e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "361",
+            "genome_key": "K0",
+            "mass_mol": 3.954117849119809e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "362",
+            "genome_key": "K0",
+            "mass_mol": 3.9698170965773993e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "363",
+            "genome_key": "K0",
+            "mass_mol": 3.975368211700525e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "364",
+            "genome_key": "K0",
+            "mass_mol": 3.975368211700525e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "365",
+            "genome_key": "K0",
+            "mass_mol": 3.9365104058386446e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "366",
+            "genome_key": "K0",
+            "mass_mol": 4.009629000351067e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "367",
+            "genome_key": "K0",
+            "mass_mol": 4.004077885227941e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "368",
+            "genome_key": "K0",
+            "mass_mol": 4.020471022075922e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "369",
+            "genome_key": "K0",
+            "mass_mol": 3.95108208303685e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "370",
+            "genome_key": "K0",
+            "mass_mol": 3.950561665994057e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "371",
+            "genome_key": "K0",
+            "mass_mol": 3.950561665994057e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "372",
+            "genome_key": "K0",
+            "mass_mol": 3.958628130157349e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "373",
+            "genome_key": "K0",
+            "mass_mol": 3.9697303604036005e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "374",
+            "genome_key": "K0",
+            "mass_mol": 3.996184893412247e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "375",
+            "genome_key": "K0",
+            "mass_mol": 3.9573270875503663e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "376",
+            "genome_key": "K0",
+            "mass_mol": 3.945010550870931e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "377",
+            "genome_key": "K0",
+            "mass_mol": 3.9588883386787455e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "378",
+            "genome_key": "K0",
+            "mass_mol": 3.907367051442234e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "379",
+            "genome_key": "K0",
+            "mass_mol": 3.993409335850684e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "380",
+            "genome_key": "K0",
+            "mass_mol": 3.9469079046727806e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "381",
+            "genome_key": "K0",
+            "mass_mol": 3.9191631710788766e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "382",
+            "genome_key": "K0",
+            "mass_mol": 3.965046607018463e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "383",
+            "genome_key": "K0",
+            "mass_mol": 3.92341324359502e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "384",
+            "genome_key": "K0",
+            "mass_mol": 3.9323470694963e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "385",
+            "genome_key": "K0",
+            "mass_mol": 3.896264821195983e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "386",
+            "genome_key": "K0",
+            "mass_mol": 3.937898184619426e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "387",
+            "genome_key": "K0",
+            "mass_mol": 3.915693724126923e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "388",
+            "genome_key": "K0",
+            "mass_mol": 3.94058700600719e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "389",
+            "genome_key": "K0",
+            "mass_mol": 3.9072803152684354e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "390",
+            "genome_key": "K0",
+            "mass_mol": 3.917862128471894e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "391",
+            "genome_key": "K0",
+            "mass_mol": 3.976148837264715e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "392",
+            "genome_key": "K0",
+            "mass_mol": 3.9051119109234644e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "393",
+            "genome_key": "K0",
+            "mass_mol": 3.91066302604659e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "394",
+            "genome_key": "K0",
+            "mass_mol": 3.960276117459527e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "395",
+            "genome_key": "K0",
+            "mass_mol": 3.9158671964745206e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "396",
+            "genome_key": "K0",
+            "mass_mol": 3.8650397986284e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "397",
+            "genome_key": "K0",
+            "mass_mol": 3.9038976044902807e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "398",
+            "genome_key": "K0",
+            "mass_mol": 3.8490803426494136e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "399",
+            "genome_key": "K0",
+            "mass_mol": 3.9045914938806714e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "400",
+            "genome_key": "K0",
+            "mass_mol": 3.888458565554087e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "401",
+            "genome_key": "K0",
+            "mass_mol": 3.921765256292842e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "402",
+            "genome_key": "K0",
+            "mass_mol": 3.885151748928006e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "403",
+            "genome_key": "K0",
+            "mass_mol": 3.9267959543731745e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "404",
+            "genome_key": "K0",
+            "mass_mol": 3.9012087831025166e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "405",
+            "genome_key": "K0",
+            "mass_mol": 3.865126534802199e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "406",
+            "genome_key": "K0",
+            "mass_mol": 3.913427741586428e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "407",
+            "genome_key": "K0",
+            "mass_mol": 3.9328674865390933e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "408",
+            "genome_key": "K0",
+            "mass_mol": 3.880305365216996e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "409",
+            "genome_key": "K0",
+            "mass_mol": 3.852549789601367e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "410",
+            "genome_key": "K0",
+            "mass_mol": 3.908743988201291e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "411",
+            "genome_key": "K0",
+            "mass_mol": 3.897652599976764e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "412",
+            "genome_key": "K0",
+            "mass_mol": 3.8768359182650425e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "413",
+            "genome_key": "K0",
+            "mass_mol": 3.8796114758266054e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "414",
+            "genome_key": "K0",
+            "mass_mol": 3.904244549185476e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "415",
+            "genome_key": "K0",
+            "mass_mol": 3.884815646254536e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "416",
+            "genome_key": "K0",
+            "mass_mol": 3.910142609003797e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "417",
+            "genome_key": "K0",
+            "mass_mol": 3.882387033388168e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "418",
+            "genome_key": "K0",
+            "mass_mol": 3.862340135218911e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "419",
+            "genome_key": "K0",
+            "mass_mol": 3.809615383570941e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "420",
+            "genome_key": "K0",
+            "mass_mol": 3.7155066349991994e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "421",
+            "genome_key": "K0",
+            "mass_mol": 3.779344458915146e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "422",
+            "genome_key": "K0",
+            "mass_mol": 3.570050071538544e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "423",
+            "genome_key": "K0",
+            "mass_mol": 3.631112337892928e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "424",
+            "genome_key": "K0",
+            "mass_mol": 3.256498803255736e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "425",
+            "genome_key": "K0",
+            "mass_mol": 3.2537232456941734e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "426",
+            "genome_key": "K-1",
+            "mass_mol": 3.2641966386803833e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "427",
+            "genome_key": "K-1",
+            "mass_mol": 3.244778577771168e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "428",
+            "genome_key": "K-1",
+            "mass_mol": 3.3113919592486774e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "429",
+            "genome_key": "K-1",
+            "mass_mol": 3.3030652865639887e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "430",
+            "genome_key": "K-1",
+            "mass_mol": 3.2732280427771876e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "431",
+            "genome_key": "K-1",
+            "mass_mol": 3.2760036003387505e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "432",
+            "genome_key": "K-1",
+            "mass_mol": 3.3009727763710917e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "433",
+            "genome_key": "K-1",
+            "mass_mol": 3.312085848639068e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "434",
+            "genome_key": "K0",
+            "mass_mol": 3.130644615073619e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "435",
+            "genome_key": "K0",
+            "mass_mol": 3.1112157121426787e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "436",
+            "genome_key": "K0",
+            "mass_mol": 3.081367626334153e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "437",
+            "genome_key": "K0",
+            "mass_mol": 3.092480698602129e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "438",
+            "genome_key": "K0",
+            "mass_mol": 3.080771315139286e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "439",
+            "genome_key": "K0",
+            "mass_mol": 3.07522020001616e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "440",
+            "genome_key": "K1",
+            "mass_mol": 3.0537096289140475e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "441",
+            "genome_key": "K0",
+            "mass_mol": 3.059260744037173e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "442",
+            "genome_key": "K0",
+            "mass_mol": 3.050153445788295e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "443",
+            "genome_key": "K0",
+            "mass_mol": 3.0890112516501755e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "444",
+            "genome_key": "K0",
+            "mass_mol": 3.03444335630898e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "445",
+            "genome_key": "K0",
+            "mass_mol": 3.053883101261645e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "446",
+            "genome_key": "K0",
+            "mass_mol": 3.081638676877274e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "447",
+            "genome_key": "K0",
+            "mass_mol": 3.0760875617541483e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "448",
+            "genome_key": "K0",
+            "mass_mol": 3.072357906280798e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "449",
+            "genome_key": "K0",
+            "mass_mol": 3.072357906280798e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "450",
+            "genome_key": "K0",
+            "mass_mol": 3.078863119315711e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "451",
+            "genome_key": "K0",
+            "mass_mol": 3.0677608890694597e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "452",
+            "genome_key": "K0",
+            "mass_mol": 3.042086981625003e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "453",
+            "genome_key": "K0",
+            "mass_mol": 3.0781692299253205e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "454",
+            "genome_key": "K0",
+            "mass_mol": 3.050153445788295e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "455",
+            "genome_key": "K-1",
+            "mass_mol": 3.1112157121426787e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "456",
+            "genome_key": "K0",
+            "mass_mol": 3.05874032699438e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "457",
+            "genome_key": "K0",
+            "mass_mol": 3.0504136543096916e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "458",
+            "genome_key": "K0",
+            "mass_mol": 3.033760308940314e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "459",
+            "genome_key": "K0",
+            "mass_mol": 3.0559647694328174e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "460",
+            "genome_key": "K0",
+            "mass_mol": 3.0537096289140475e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "461",
+            "genome_key": "K0",
+            "mass_mol": 3.045382956229359e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "462",
+            "genome_key": "K0",
+            "mass_mol": 3.047453782378806e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "463",
+            "genome_key": "K-1",
+            "mass_mol": 3.077995757577723e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "464",
+            "genome_key": "K0",
+            "mass_mol": 3.047638096748129e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "465",
+            "genome_key": "K0",
+            "mass_mol": 3.05874032699438e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "466",
+            "genome_key": "K0",
+            "mass_mol": 3.064378178291305e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "467",
+            "genome_key": "K0",
+            "mass_mol": 3.03107148755255e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "468",
+            "genome_key": "K0",
+            "mass_mol": 3.037316492066067e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "469",
+            "genome_key": "K0",
+            "mass_mol": 3.0428676071891925e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "470",
+            "genome_key": "K0",
+            "mass_mol": 3.031754534921216e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "471",
+            "genome_key": "K0",
+            "mass_mol": 3.0400920496276296e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "472",
+            "genome_key": "K0",
+            "mass_mol": 3.023091759563057e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "473",
+            "genome_key": "K0",
+            "mass_mol": 3.0369695473708713e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "474",
+            "genome_key": "K0",
+            "mass_mol": 3.0505003904834904e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "475",
+            "genome_key": "K0",
+            "mass_mol": 3.036622602675676e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "476",
+            "genome_key": "K0",
+            "mass_mol": 3.0390512155420435e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "477",
+            "genome_key": "K0",
+            "mass_mol": 3.033500100418918e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "478",
+            "genome_key": "K0",
+            "mass_mol": 3.022484606346465e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "479",
+            "genome_key": "K0",
+            "mass_mol": 3.028035721469591e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "480",
+            "genome_key": "K0",
+            "mass_mol": 3.020402938175293e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "481",
+            "genome_key": "K0",
+            "mass_mol": 3.0259540532984186e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "482",
+            "genome_key": "K0",
+            "mass_mol": 3.030724542857355e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "483",
+            "genome_key": "K0",
+            "mass_mol": 3.019622312611103e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "484",
+            "genome_key": "K0",
+            "mass_mol": 3.0259540532984186e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "485",
+            "genome_key": "K0",
+            "mass_mol": 3.023178495736856e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "486",
+            "genome_key": "K0",
+            "mass_mol": 3.0086068185386505e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "487",
+            "genome_key": "K0",
+            "mass_mol": 3.0086068185386505e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          }
+        ]
+      }
+    },
+    {
+      "id": "cell-chamber-100k",
+      "title": "100,000 ticks",
+      "description": "Well-mixed cell chamber. Seed 42; the same trajectory over a longer horizon.",
+      "recording": "./data/cell-chamber-seed-42-100k.json",
+      "sha256": "b8db46c1dc83f8cd642ee2a3bd7913890e6868e265c61a8d390797399b37a4c9",
+      "bytes": 5356325,
+      "identity": {
+        "chamber_format": 1,
+        "config_hash": "blake3:1802c0f129855749",
+        "scenario": "cell-chamber",
+        "seed": "42",
+        "source_commit": "b2024cef08f0aa910a711a41c6a37fbc7b2ba35a",
+        "world_format_version": 30
+      },
+      "experiment": {
+        "checked_ticks": 100000,
+        "dt_seconds": 30,
+        "energy_residual_max": "0",
+        "matter_residual_max": "0",
+        "sample_every": 500,
+        "steps": 100000
+      },
+      "sample_count": 201,
+      "initial_summary": {
+        "births": 0,
+        "deaths": 0,
+        "divisions": 0,
+        "generation_max": 0,
+        "living_cells": 8,
+        "total_biomass_mol": 2.3999986026312925e-13,
+        "total_cell_energy_j": 4.0000000002798214e-11
+      },
+      "final_summary": {
+        "births": 8960,
+        "deaths": 4389,
+        "divisions": 4480,
+        "generation_max": 51,
+        "living_cells": 99,
+        "total_biomass_mol": 7.335884178762131e-12,
+        "total_cell_energy_j": 8.910574440302611e-13
+      },
+      "preview": {
+        "tick": 1500,
+        "sim_time": 45000,
+        "living_cells": 248,
+        "selection": "maximum_sampled_genotype_count_then_living_count",
+        "cells": [
+          {
+            "id": "240",
+            "genome_key": "K0",
+            "mass_mol": 4.262378210800888e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "241",
+            "genome_key": "K0",
+            "mass_mol": 4.251275980554636e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "242",
+            "genome_key": "K0",
+            "mass_mol": 4.337318264963086e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "243",
+            "genome_key": "K0",
+            "mass_mol": 4.2429493078699476e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "244",
+            "genome_key": "K0",
+            "mass_mol": 4.2446731893241996e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "245",
+            "genome_key": "K0",
+            "mass_mol": 4.233581801099673e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "246",
+            "genome_key": "K0",
+            "mass_mol": 4.322735745743156e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "247",
+            "genome_key": "K0",
+            "mass_mol": 4.294991012149252e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "248",
+            "genome_key": "K0",
+            "mass_mol": 4.282501003122219e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "249",
+            "genome_key": "K0",
+            "mass_mol": 4.324134366545662e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "250",
+            "genome_key": "K0",
+            "mass_mol": 4.2516229252498317e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "251",
+            "genome_key": "K0",
+            "mass_mol": 4.2599495979345203e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "252",
+            "genome_key": "K0",
+            "mass_mol": 4.2451177122149186e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "253",
+            "genome_key": "K0",
+            "mass_mol": 4.234015481968667e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "254",
+            "genome_key": "K0",
+            "mass_mol": 4.323776579828742e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "255",
+            "genome_key": "K0",
+            "mass_mol": 4.2793785008654606e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "256",
+            "genome_key": "K0",
+            "mass_mol": 4.241648265262965e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "257",
+            "genome_key": "K0",
+            "mass_mol": 4.3027105316173486e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "258",
+            "genome_key": "K0",
+            "mass_mol": 4.309996370216451e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "259",
+            "genome_key": "K0",
+            "mass_mol": 4.246158546300505e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "260",
+            "genome_key": "K0",
+            "mass_mol": 4.25621994246117e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "261",
+            "genome_key": "K0",
+            "mass_mol": 4.2728732878305475e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "262",
+            "genome_key": "K0",
+            "mass_mol": 4.281883007883902e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "263",
+            "genome_key": "K0",
+            "mass_mol": 4.326302770890633e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "264",
+            "genome_key": "K0",
+            "mass_mol": 4.312771927778014e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "265",
+            "genome_key": "K0",
+            "mass_mol": 4.243382988738942e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "266",
+            "genome_key": "K0",
+            "mass_mol": 4.2076476851338196e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "267",
+            "genome_key": "K0",
+            "mass_mol": 4.2881388544191434e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "268",
+            "genome_key": "K0",
+            "mass_mol": 4.261684321410497e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "269",
+            "genome_key": "K0",
+            "mass_mol": 4.283888781903e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "270",
+            "genome_key": "K0",
+            "mass_mol": 4.2148467875591233e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "271",
+            "genome_key": "K0",
+            "mass_mol": 4.231500132928501e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "272",
+            "genome_key": "K0",
+            "mass_mol": 4.282847947817414e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "273",
+            "genome_key": "K0",
+            "mass_mol": 4.2967257356252286e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "274",
+            "genome_key": "K0",
+            "mass_mol": 4.28015912642965e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "275",
+            "genome_key": "K0",
+            "mass_mol": 4.277383568868087e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "276",
+            "genome_key": "K0",
+            "mass_mol": 4.233408328752075e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "277",
+            "genome_key": "K0",
+            "mass_mol": 4.269490577052393e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "278",
+            "genome_key": "K0",
+            "mass_mol": 4.3158076938609735e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "279",
+            "genome_key": "K0",
+            "mass_mol": 4.310256578737848e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "280",
+            "genome_key": "K0",
+            "mass_mol": 4.2278463716072245e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "281",
+            "genome_key": "K0",
+            "mass_mol": 4.341655073653028e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "282",
+            "genome_key": "K1",
+            "mass_mol": 3.882560505735766e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "283",
+            "genome_key": "K1",
+            "mass_mol": 3.832600469627634e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "284",
+            "genome_key": "K0",
+            "mass_mol": 4.2321940223188914e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "285",
+            "genome_key": "K0",
+            "mass_mol": 4.243296252565143e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "286",
+            "genome_key": "K0",
+            "mass_mol": 4.2685256371188807e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "287",
+            "genome_key": "K0",
+            "mass_mol": 4.2407809035249766e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "288",
+            "genome_key": "K0",
+            "mass_mol": 4.1811064159513744e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "289",
+            "genome_key": "K0",
+            "mass_mol": 4.250495354990447e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "290",
+            "genome_key": "K0",
+            "mass_mol": 4.271485509049766e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "291",
+            "genome_key": "K0",
+            "mass_mol": 4.252056606118826e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "292",
+            "genome_key": "K0",
+            "mass_mol": 4.2457248654315105e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "293",
+            "genome_key": "K0",
+            "mass_mol": 4.2734804410471394e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "294",
+            "genome_key": "K0",
+            "mass_mol": 4.24876063151447e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "295",
+            "genome_key": "K0",
+            "mass_mol": 4.215453940775715e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "296",
+            "genome_key": "K0",
+            "mass_mol": 4.263245572538876e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "297",
+            "genome_key": "K0",
+            "mass_mol": 4.3437367418242e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "298",
+            "genome_key": "K0",
+            "mass_mol": 4.2604591729555885e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "299",
+            "genome_key": "K0",
+            "mass_mol": 4.274347802785128e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "300",
+            "genome_key": "K1",
+            "mass_mol": 3.8492429729752864e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "301",
+            "genome_key": "K1",
+            "mass_mol": 3.882560505735766e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "302",
+            "genome_key": "K0",
+            "mass_mol": 4.3034044210077393e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "303",
+            "genome_key": "K1",
+            "mass_mol": 3.8426618657882994e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "304",
+            "genome_key": "K0",
+            "mass_mol": 4.2496279932524583e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "305",
+            "genome_key": "K0",
+            "mass_mol": 4.26073022349871e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "306",
+            "genome_key": "K0",
+            "mass_mol": 4.3081749105666756e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "307",
+            "genome_key": "K0",
+            "mass_mol": 4.291521565197298e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "308",
+            "genome_key": "K0",
+            "mass_mol": 4.266801755664629e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "309",
+            "genome_key": "K0",
+            "mass_mol": 4.2223928346796225e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "310",
+            "genome_key": "K0",
+            "mass_mol": 4.218218656315553e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "311",
+            "genome_key": "K0",
+            "mass_mol": 4.2598628617607215e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "312",
+            "genome_key": "K0",
+            "mass_mol": 4.270965092006973e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "313",
+            "genome_key": "K0",
+            "mass_mol": 4.240433958829781e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "314",
+            "genome_key": "K0",
+            "mass_mol": 4.1909834977427174e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "315",
+            "genome_key": "K0",
+            "mass_mol": 4.204872127572257e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "316",
+            "genome_key": "K0",
+            "mass_mol": 4.249367784731062e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "317",
+            "genome_key": "K0",
+            "mass_mol": 4.2798989179082536e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "318",
+            "genome_key": "K0",
+            "mass_mol": 4.211290604433371e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "319",
+            "genome_key": "K0",
+            "mass_mol": 4.25847508297994e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "320",
+            "genome_key": "K0",
+            "mass_mol": 4.228030685976547e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "321",
+            "genome_key": "K0",
+            "mass_mol": 4.225255128414984e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "322",
+            "genome_key": "K0",
+            "mass_mol": 4.271572245223565e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "323",
+            "genome_key": "K0",
+            "mass_mol": 4.296552263277631e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "324",
+            "genome_key": "K0",
+            "mass_mol": 4.214066161994934e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "325",
+            "genome_key": "K0",
+            "mass_mol": 4.2751284283493174e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "326",
+            "genome_key": "K0",
+            "mass_mol": 4.236183886313638e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "327",
+            "genome_key": "K0",
+            "mass_mol": 4.2528372316830154e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "328",
+            "genome_key": "K1",
+            "mass_mol": 3.840742827943e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "329",
+            "genome_key": "K1",
+            "mass_mol": 3.840753669964725e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "330",
+            "genome_key": "K0",
+            "mass_mol": 4.254311746637596e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "331",
+            "genome_key": "K0",
+            "mass_mol": 4.240433958829781e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "332",
+            "genome_key": "K0",
+            "mass_mol": 4.090553850505385e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "333",
+            "genome_key": "K0",
+            "mass_mol": 4.279291764691662e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "334",
+            "genome_key": "K0",
+            "mass_mol": 4.196979135756562e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "335",
+            "genome_key": "K0",
+            "mass_mol": 4.2191835962490654e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "336",
+            "genome_key": "K0",
+            "mass_mol": 4.2114640767809686e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "337",
+            "genome_key": "K0",
+            "mass_mol": 4.1615040406728365e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "338",
+            "genome_key": "K1",
+            "mass_mol": 3.8551518748153324e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "339",
+            "genome_key": "K1",
+            "mass_mol": 3.866254105061584e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "340",
+            "genome_key": "K0",
+            "mass_mol": 4.2272500604123575e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "341",
+            "genome_key": "K0",
+            "mass_mol": 4.29663899945143e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "342",
+            "genome_key": "K0",
+            "mass_mol": 4.2550056360279864e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "343",
+            "genome_key": "K0",
+            "mass_mol": 4.188392254550477e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "344",
+            "genome_key": "K0",
+            "mass_mol": 4.237745137442017e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "345",
+            "genome_key": "K0",
+            "mass_mol": 4.246071810126706e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "346",
+            "genome_key": "K0",
+            "mass_mol": 4.248326950645476e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "347",
+            "genome_key": "K0",
+            "mass_mol": 4.2511025082070386e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "348",
+            "genome_key": "K0",
+            "mass_mol": 4.198713859232539e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "349",
+            "genome_key": "K0",
+            "mass_mol": 4.301409489010366e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "350",
+            "genome_key": "K0",
+            "mass_mol": 4.268352164771283e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "351",
+            "genome_key": "K0",
+            "mass_mol": 4.218402970684876e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "352",
+            "genome_key": "K0",
+            "mass_mol": 4.315547485339577e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "353",
+            "genome_key": "K0",
+            "mass_mol": 4.235056316054253e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "354",
+            "genome_key": "K0",
+            "mass_mol": 4.1946372590639935e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "355",
+            "genome_key": "K0",
+            "mass_mol": 4.183535028817742e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "356",
+            "genome_key": "K0",
+            "mass_mol": 4.2278572136289494e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "357",
+            "genome_key": "K0",
+            "mass_mol": 4.236183886313638e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "358",
+            "genome_key": "K0",
+            "mass_mol": 4.2071272680910266e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "359",
+            "genome_key": "K0",
+            "mass_mol": 4.201576152967901e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "360",
+            "genome_key": "K0",
+            "mass_mol": 4.1345182485996723e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "361",
+            "genome_key": "K0",
+            "mass_mol": 4.165060223798589e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "362",
+            "genome_key": "K0",
+            "mass_mol": 4.214066161994934e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "363",
+            "genome_key": "K0",
+            "mass_mol": 4.15300389564055e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "364",
+            "genome_key": "K0",
+            "mass_mol": 4.189086143940868e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "365",
+            "genome_key": "K0",
+            "mass_mol": 4.136350550271173e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "366",
+            "genome_key": "K0",
+            "mass_mol": 4.220571375029847e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "367",
+            "genome_key": "K0",
+            "mass_mol": 4.2039180296604695e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "368",
+            "genome_key": "K0",
+            "mass_mol": 4.250842299685642e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "369",
+            "genome_key": "K0",
+            "mass_mol": 4.131493324538438e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "370",
+            "genome_key": "K0",
+            "mass_mol": 4.153177367988148e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "371",
+            "genome_key": "K0",
+            "mass_mol": 4.142075137741896e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "372",
+            "genome_key": "K0",
+            "mass_mol": 4.1723460623976916e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "373",
+            "genome_key": "K0",
+            "mass_mol": 4.164019389713003e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "374",
+            "genome_key": "K0",
+            "mass_mol": 4.2071272680910266e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "375",
+            "genome_key": "K0",
+            "mass_mol": 4.137738329051954e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "376",
+            "genome_key": "K0",
+            "mass_mol": 4.1615040406728365e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "377",
+            "genome_key": "K0",
+            "mass_mol": 4.1587284831112736e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "378",
+            "genome_key": "K0",
+            "mass_mol": 4.093329408066948e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "379",
+            "genome_key": "K0",
+            "mass_mol": 4.2293317285835297e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "380",
+            "genome_key": "K0",
+            "mass_mol": 4.1522991642284346e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "381",
+            "genome_key": "K0",
+            "mass_mol": 4.107901085265153e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "382",
+            "genome_key": "K0",
+            "mass_mol": 4.170437866574117e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "383",
+            "genome_key": "K0",
+            "mass_mol": 4.1371311758353624e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "384",
+            "genome_key": "K0",
+            "mass_mol": 4.165493904667583e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "385",
+            "genome_key": "K0",
+            "mass_mol": 4.062798274889756e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "386",
+            "genome_key": "K0",
+            "mass_mol": 4.173820577352272e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "387",
+            "genome_key": "K0",
+            "mass_mol": 4.112758310997888e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "388",
+            "genome_key": "K0",
+            "mass_mol": 4.176509398740036e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "389",
+            "genome_key": "K0",
+            "mass_mol": 4.1126715748240894e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "390",
+            "genome_key": "K0",
+            "mass_mol": 4.095497812411919e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "391",
+            "genome_key": "K0",
+            "mass_mol": 4.1870912119434944e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "392",
+            "genome_key": "K0",
+            "mass_mol": 4.118829843163807e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "393",
+            "genome_key": "K0",
+            "mass_mol": 4.1049520553559926e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "394",
+            "genome_key": "K0",
+            "mass_mol": 4.1517895892073664e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "395",
+            "genome_key": "K0",
+            "mass_mol": 4.1240340135917375e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "396",
+            "genome_key": "K0",
+            "mass_mol": 4.078757730868743e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "397",
+            "genome_key": "K0",
+            "mass_mol": 4.120391094292186e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "398",
+            "genome_key": "K0",
+            "mass_mol": 4.0267160265894386e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "399",
+            "genome_key": "K0",
+            "mass_mol": 4.0850027353822593e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "400",
+            "genome_key": "K0",
+            "mass_mol": 4.066094249494112e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "401",
+            "genome_key": "K0",
+            "mass_mol": 4.12160540072537e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "402",
+            "genome_key": "K0",
+            "mass_mol": 4.093318566045223e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "403",
+            "genome_key": "K0",
+            "mass_mol": 4.1321872139288285e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "404",
+            "genome_key": "K0",
+            "mass_mol": 4.103824485096608e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "405",
+            "genome_key": "K0",
+            "mass_mol": 4.0538644489884756e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "406",
+            "genome_key": "K0",
+            "mass_mol": 4.1354723465114596e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "407",
+            "genome_key": "K0",
+            "mass_mol": 4.14103430365631e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "408",
+            "genome_key": "K0",
+            "mass_mol": 4.0718188369648356e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "409",
+            "genome_key": "K0",
+            "mass_mol": 4.0523899340338954e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "410",
+            "genome_key": "K0",
+            "mass_mol": 4.128013035564759e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "411",
+            "genome_key": "K0",
+            "mass_mol": 4.13357499270961e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "412",
+            "genome_key": "K0",
+            "mass_mol": 4.0850027353822593e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "413",
+            "genome_key": "K0",
+            "mass_mol": 4.0516960446435046e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "414",
+            "genome_key": "K0",
+            "mass_mol": 4.081880233125501e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "415",
+            "genome_key": "K0",
+            "mass_mol": 4.0680024453176866e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "416",
+            "genome_key": "K0",
+            "mass_mol": 4.126636098805703e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "417",
+            "genome_key": "K0",
+            "mass_mol": 4.090553850505385e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "418",
+            "genome_key": "K0",
+            "mass_mol": 4.0594047220898766e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "419",
+            "genome_key": "K0",
+            "mass_mol": 3.9844755099494034e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "420",
+            "genome_key": "K0",
+            "mass_mol": 3.8709378584467213e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "421",
+            "genome_key": "K0",
+            "mass_mol": 3.962531257978297e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "422",
+            "genome_key": "K0",
+            "mass_mol": 3.706052392055126e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "423",
+            "genome_key": "K0",
+            "mass_mol": 3.753236870601695e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "424",
+            "genome_key": "K0",
+            "mass_mol": 3.3480922027873117e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "425",
+            "genome_key": "K0",
+            "mass_mol": 3.3286632998563714e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "426",
+            "genome_key": "K-1",
+            "mass_mol": 3.5195479343441693e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "427",
+            "genome_key": "K-1",
+            "mass_mol": 3.444618722203696e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "428",
+            "genome_key": "K-1",
+            "mass_mol": 3.5639676973509005e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "429",
+            "genome_key": "K-1",
+            "mass_mol": 3.5584165822277747e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "430",
+            "genome_key": "K-1",
+            "mass_mol": 3.498048205263782e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "431",
+            "genome_key": "K-1",
+            "mass_mol": 3.4786193023328416e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "432",
+            "genome_key": "K-1",
+            "mass_mol": 3.5313440539808116e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "433",
+            "genome_key": "K-1",
+            "mass_mol": 3.564661586741291e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "434",
+            "genome_key": "K0",
+            "mass_mol": 3.200033554112691e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "435",
+            "genome_key": "K0",
+            "mass_mol": 3.1889313238664396e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "436",
+            "genome_key": "K0",
+            "mass_mol": 3.159083238057914e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "437",
+            "genome_key": "K0",
+            "mass_mol": 3.1590940800796385e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "438",
+            "genome_key": "K0",
+            "mass_mol": 3.1584869268630467e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "439",
+            "genome_key": "K0",
+            "mass_mol": 3.152935811739921e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "440",
+            "genome_key": "K1",
+            "mass_mol": 3.0786896469681135e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "441",
+            "genome_key": "K0",
+            "mass_mol": 3.1314252406378085e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "442",
+            "genome_key": "K0",
+            "mass_mol": 3.136195730196745e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "443",
+            "genome_key": "K0",
+            "mass_mol": 3.158400190689248e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "444",
+            "genome_key": "K0",
+            "mass_mol": 3.1010567377864895e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "445",
+            "genome_key": "K0",
+            "mass_mol": 3.112169810054466e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "446",
+            "genome_key": "K0",
+            "mass_mol": 3.159354288601035e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "447",
+            "genome_key": "K0",
+            "mass_mol": 3.139925385670095e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "448",
+            "genome_key": "K0",
+            "mass_mol": 3.133420172635182e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "449",
+            "genome_key": "K0",
+            "mass_mol": 3.1389712877583076e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "450",
+            "genome_key": "K0",
+            "mass_mol": 3.1482520583547835e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "451",
+            "genome_key": "K0",
+            "mass_mol": 3.1454765007932206e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "452",
+            "genome_key": "K0",
+            "mass_mol": 3.114251478225638e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "453",
+            "genome_key": "K0",
+            "mass_mol": 3.139231496279704e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "454",
+            "genome_key": "K0",
+            "mass_mol": 3.1167668272658045e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "455",
+            "genome_key": "K-1",
+            "mass_mol": 3.2971780687673924e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "456",
+            "genome_key": "K0",
+            "mass_mol": 3.1309048235950154e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "457",
+            "genome_key": "K0",
+            "mass_mol": 3.1281292660334525e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "458",
+            "genome_key": "K0",
+            "mass_mol": 3.111475920664075e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "459",
+            "genome_key": "K0",
+            "mass_mol": 3.1253537084718896e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "460",
+            "genome_key": "K0",
+            "mass_mol": 3.14252747088406e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "461",
+            "genome_key": "K0",
+            "mass_mol": 3.1342007981993714e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "462",
+            "genome_key": "K0",
+            "mass_mol": 3.094638260925375e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "463",
+            "genome_key": "K-1",
+            "mass_mol": 3.2417536537099334e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "464",
+            "genome_key": "K0",
+            "mass_mol": 3.1281292660334525e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "465",
+            "genome_key": "K0",
+            "mass_mol": 3.142007053841267e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "466",
+            "genome_key": "K0",
+            "mass_mol": 3.161522692946006e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "467",
+            "genome_key": "K0",
+            "mass_mol": 3.106011541714748e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "468",
+            "genome_key": "K0",
+            "mass_mol": 3.1205832189129534e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "469",
+            "genome_key": "K0",
+            "mass_mol": 3.1233587764745163e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "470",
+            "genome_key": "K0",
+            "mass_mol": 3.0983679163987254e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "471",
+            "genome_key": "K0",
+            "mass_mol": 3.137236564282331e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "472",
+            "genome_key": "K0",
+            "mass_mol": 3.0591740078633745e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "473",
+            "genome_key": "K0",
+            "mass_mol": 3.125787389340884e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "474",
+            "genome_key": "K0",
+            "mass_mol": 3.108787099276311e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "475",
+            "genome_key": "K0",
+            "mass_mol": 3.0976848690300596e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "476",
+            "genome_key": "K0",
+            "mass_mol": 3.10288903945799e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "477",
+            "genome_key": "K0",
+            "mass_mol": 3.136195730196745e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "478",
+            "genome_key": "K0",
+            "mass_mol": 3.077995757577723e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "479",
+            "genome_key": "K0",
+            "mass_mol": 3.119629121001166e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "480",
+            "genome_key": "K0",
+            "mass_mol": 3.0759140894065506e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "481",
+            "genome_key": "K0",
+            "mass_mol": 3.0842407620912393e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "482",
+            "genome_key": "K0",
+            "mass_mol": 3.127869057512056e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "483",
+            "genome_key": "K0",
+            "mass_mol": 3.0945623667733013e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "484",
+            "genome_key": "K0",
+            "mass_mol": 3.1036696650221796e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "485",
+            "genome_key": "K0",
+            "mass_mol": 3.1036696650221796e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "486",
+            "genome_key": "K0",
+            "mass_mol": 3.0835468727008486e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "487",
+            "genome_key": "K0",
+            "mass_mol": 3.0946491029471e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          }
+        ]
+      }
+    },
+    {
+      "id": "cell-chamber-1m",
+      "title": "1,000,000 ticks",
+      "description": "Well-mixed cell chamber. Seed 42; the same trajectory over a longer horizon.",
+      "recording": "./data/cell-chamber-seed-42-1m.json",
+      "sha256": "ee236189e9b6891599bc428aefb0e4b892c7397e712bcf045f7db14a5bc4061d",
+      "bytes": 5312311,
+      "identity": {
+        "chamber_format": 1,
+        "config_hash": "blake3:1802c0f129855749",
+        "scenario": "cell-chamber",
+        "seed": "42",
+        "source_commit": "b2024cef08f0aa910a711a41c6a37fbc7b2ba35a",
+        "world_format_version": 30
+      },
+      "experiment": {
+        "checked_ticks": 1000000,
+        "dt_seconds": 30,
+        "energy_residual_max": "0",
+        "matter_residual_max": "0",
+        "sample_every": 5000,
+        "steps": 1000000
+      },
+      "sample_count": 201,
+      "initial_summary": {
+        "births": 0,
+        "deaths": 0,
+        "divisions": 0,
+        "generation_max": 0,
+        "living_cells": 8,
+        "total_biomass_mol": 2.3999986026312925e-13,
+        "total_cell_energy_j": 4.0000000002798214e-11
+      },
+      "final_summary": {
+        "births": 89646,
+        "deaths": 44743,
+        "divisions": 44823,
+        "generation_max": 493,
+        "living_cells": 88,
+        "total_biomass_mol": 9.781467302794056e-12,
+        "total_cell_energy_j": 1.4087716853261514e-11
+      },
+      "preview": {
+        "tick": 330000,
+        "sim_time": 9900000,
+        "living_cells": 101,
+        "selection": "maximum_sampled_genotype_count_then_living_count",
+        "cells": [
+          {
+            "id": "29235",
+            "genome_key": "K0",
+            "mass_mol": 7.470662543446194e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29236",
+            "genome_key": "K0",
+            "mass_mol": 7.50046726116782e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29237",
+            "genome_key": "K0",
+            "mass_mol": 7.50046726116782e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29240",
+            "genome_key": "K0",
+            "mass_mol": 7.454974138010328e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29242",
+            "genome_key": "K0",
+            "mass_mol": 7.45482234970618e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29244",
+            "genome_key": "K0",
+            "mass_mol": 7.409307542505239e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29245",
+            "genome_key": "K0",
+            "mass_mol": 7.406531984943676e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29246",
+            "genome_key": "K0",
+            "mass_mol": 7.42123376640258e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29247",
+            "genome_key": "K0",
+            "mass_mol": 7.418458208841017e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29248",
+            "genome_key": "K0",
+            "mass_mol": 7.421667447271574e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29249",
+            "genome_key": "K0",
+            "mass_mol": 7.418902731731736e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29250",
+            "genome_key": "K0",
+            "mass_mol": 7.351476198624862e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29251",
+            "genome_key": "K0",
+            "mass_mol": 7.337609252838773e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29252",
+            "genome_key": "K0",
+            "mass_mol": 7.315892683323888e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29253",
+            "genome_key": "K0",
+            "mass_mol": 7.313117125762325e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29254",
+            "genome_key": "K0",
+            "mass_mol": 7.372119407988986e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29255",
+            "genome_key": "K0",
+            "mass_mol": 7.374905807572274e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29256",
+            "genome_key": "K0",
+            "mass_mol": 7.341046173725552e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29257",
+            "genome_key": "K0",
+            "mass_mol": 7.341057015747277e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29258",
+            "genome_key": "K0",
+            "mass_mol": 7.361841171393824e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29259",
+            "genome_key": "K0",
+            "mass_mol": 7.359076455853986e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29260",
+            "genome_key": "K0",
+            "mass_mol": 7.40401663590351e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29261",
+            "genome_key": "K0",
+            "mass_mol": 7.401251920363672e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29262",
+            "genome_key": "K0",
+            "mass_mol": 7.374005919769111e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29263",
+            "genome_key": "K0",
+            "mass_mol": 7.374016761790836e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29264",
+            "genome_key": "K0",
+            "mass_mol": 7.341046173725552e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29265",
+            "genome_key": "K0",
+            "mass_mol": 7.338281458185714e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29266",
+            "genome_key": "K0",
+            "mass_mol": 7.363814419347747e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29267",
+            "genome_key": "K0",
+            "mass_mol": 7.361049703807909e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29268",
+            "genome_key": "K0",
+            "mass_mol": 7.293861695178983e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29269",
+            "genome_key": "K0",
+            "mass_mol": 7.293872537200707e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29270",
+            "genome_key": "K0",
+            "mass_mol": 7.322701472967097e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29271",
+            "genome_key": "K0",
+            "mass_mol": 7.322712314988822e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29272",
+            "genome_key": "K0",
+            "mass_mol": 7.266127803606803e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29273",
+            "genome_key": "K0",
+            "mass_mol": 7.274465318313217e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29274",
+            "genome_key": "K0",
+            "mass_mol": 7.245983327242023e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29275",
+            "genome_key": "K0",
+            "mass_mol": 7.245994169263748e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29276",
+            "genome_key": "K0",
+            "mass_mol": 7.351844827363507e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29277",
+            "genome_key": "K0",
+            "mass_mol": 7.335202324015855e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29278",
+            "genome_key": "K0",
+            "mass_mol": 7.29629030804535e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29279",
+            "genome_key": "K-1",
+            "mass_mol": 7.332383398367393e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29280",
+            "genome_key": "K0",
+            "mass_mol": 7.238046967339429e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29281",
+            "genome_key": "K0",
+            "mass_mol": 7.232506694238028e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29282",
+            "genome_key": "K0",
+            "mass_mol": 7.29108613761742e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29283",
+            "genome_key": "K0",
+            "mass_mol": 7.29108613761742e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29284",
+            "genome_key": "K0",
+            "mass_mol": 7.29481579309077e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29285",
+            "genome_key": "K0",
+            "mass_mol": 7.292051077550932e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29286",
+            "genome_key": "K0",
+            "mass_mol": 7.247241001762106e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29287",
+            "genome_key": "K0",
+            "mass_mol": 7.244476286222268e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29288",
+            "genome_key": "K0",
+            "mass_mol": 7.306351704206016e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29289",
+            "genome_key": "K0",
+            "mass_mol": 7.311913661350866e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29290",
+            "genome_key": "K0",
+            "mass_mol": 7.338834401293681e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29291",
+            "genome_key": "K0",
+            "mass_mol": 7.347171916000095e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29292",
+            "genome_key": "K0",
+            "mass_mol": 7.331158249912484e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29293",
+            "genome_key": "K0",
+            "mass_mol": 7.328393534372646e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29294",
+            "genome_key": "K0",
+            "mass_mol": 7.255524306359895e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29295",
+            "genome_key": "K0",
+            "mass_mol": 7.252748748798332e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29296",
+            "genome_key": "K0",
+            "mass_mol": 7.218075963322246e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29297",
+            "genome_key": "K0",
+            "mass_mol": 7.223637920467096e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29298",
+            "genome_key": "K0",
+            "mass_mol": 7.278639496677286e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29299",
+            "genome_key": "K0",
+            "mass_mol": 7.278650338699011e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29300",
+            "genome_key": "K0",
+            "mass_mol": 7.27981043502357e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29301",
+            "genome_key": "K0",
+            "mass_mol": 7.282596834606858e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29302",
+            "genome_key": "K0",
+            "mass_mol": 7.326864809309441e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29303",
+            "genome_key": "K0",
+            "mass_mol": 7.329651208892729e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29304",
+            "genome_key": "K0",
+            "mass_mol": 7.252250015798989e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29305",
+            "genome_key": "K0",
+            "mass_mol": 7.255036415382277e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29306",
+            "genome_key": "K0",
+            "mass_mol": 7.230977969174823e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29307",
+            "genome_key": "K0",
+            "mass_mol": 7.228213253634985e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29308",
+            "genome_key": "K0",
+            "mass_mol": 7.173862198728287e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29309",
+            "genome_key": "K1",
+            "mass_mol": 7.154444137819072e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29310",
+            "genome_key": "K0",
+            "mass_mol": 7.224819700835106e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29311",
+            "genome_key": "K0",
+            "mass_mol": 7.22483054285683e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29312",
+            "genome_key": "K0",
+            "mass_mol": 7.207158047445317e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29313",
+            "genome_key": "K0",
+            "mass_mol": 7.207158047445317e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29314",
+            "genome_key": "K0",
+            "mass_mol": 7.147841346588635e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29315",
+            "genome_key": "K0",
+            "mass_mol": 7.14785218861036e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29316",
+            "genome_key": "K0",
+            "mass_mol": 7.16618604734709e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29317",
+            "genome_key": "K0",
+            "mass_mol": 7.160634932223964e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29318",
+            "genome_key": "K0",
+            "mass_mol": 7.124942996705741e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29319",
+            "genome_key": "K0",
+            "mass_mol": 7.122178281165903e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29320",
+            "genome_key": "K1",
+            "mass_mol": 7.136175331212691e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29321",
+            "genome_key": "K0",
+            "mass_mol": 7.136186173234416e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29322",
+            "genome_key": "K0",
+            "mass_mol": 7.151657738235784e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29323",
+            "genome_key": "K0",
+            "mass_mol": 7.151668580257509e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29324",
+            "genome_key": "K0",
+            "mass_mol": 7.111216997202074e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29325",
+            "genome_key": "K0",
+            "mass_mol": 7.111227839223799e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29326",
+            "genome_key": "K0",
+            "mass_mol": 7.112583091939406e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29327",
+            "genome_key": "K0",
+            "mass_mol": 7.112583091939406e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29328",
+            "genome_key": "K0",
+            "mass_mol": 7.143797272485264e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29329",
+            "genome_key": "K0",
+            "mass_mol": 7.143808114506989e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29330",
+            "genome_key": "K1",
+            "mass_mol": 7.078452407549563e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29331",
+            "genome_key": "K0",
+            "mass_mol": 7.078452407549563e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29332",
+            "genome_key": "K-1",
+            "mass_mol": 7.112084358940063e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29333",
+            "genome_key": "K0",
+            "mass_mol": 7.103768528277099e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29334",
+            "genome_key": "K0",
+            "mass_mol": 7.094043234789904e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29335",
+            "genome_key": "K0",
+            "mass_mol": 7.094054076811629e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29336",
+            "genome_key": "K0",
+            "mass_mol": 7.111889202549015e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29337",
+            "genome_key": "K0",
+            "mass_mol": 7.111889202549015e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29338",
+            "genome_key": "K0",
+            "mass_mol": 7.098184887088799e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          },
+          {
+            "id": "29339",
+            "genome_key": "K0",
+            "mass_mol": 7.098184887088799e-14,
+            "division_mass_mol": 5.999996506578231e-14
+          }
+        ]
+      }
+    }
+  ]
+}
