@@ -127,3 +127,47 @@ GitHub shell RESTAPI всё ещё Forbidden, connector остаётся шта�
 Cargo в native workspace сериализуется; expensive suite уже запущена один раз.
 Следующий шаг: exacthead #15/#16 gates и guarded integration; затем freshmain
 LIVE2 candidate, protectedphysicalQA и durable evidence до releaseacceptance.
+
+### LAB-2 принят; LIVE2 native gates завершены
+
+LAB #15 guarded MERGED: exact head4f8208afb2b164d0ef1d9119ae7c5bd2f7629f94,
+все11checks SUCCESS run37213082140; independent fresh-integration/code/numerics
+review0blockers, 1160 direct paired arithmetic checks. Main теперь
+ de2b52cd08dc3772800725a5eca64619f6bb33c6/tree1b41aabb1ce3faccd948648b88fdeff6c16b1463.
+Все9LAB2blobs и source21cbe907/world30/chamber1 сохранены; rawSHA6fd944 unchanged.
+23Pythonfunctional tests PASS, static24row CLI и derived byte-exact checks PASS.
+Это интеграция ранее выполненных24runs, не новый эксперимент или science rerun.
+
+LIVE2 native local candidate a72f3f05a1861b4be026f1a24068af70e8a09df1 включает
+принятый LAB2 main, solver/runtime unchanged относительно independently reviewed4a2daca.
+Native micro44PASS/0FAIL/1ignored; cells focused32PASS; fullhost94PASS/0FAIL
+за786.29s; Node49PASS; fmt/clippyPASS. Fullhost log8436bytes,
+SHA256c2c4c4e07d08b4aa210940c70945fd945f9ae587e089df2af77b9db183ecbe98.
+Final CI, protected default/physical browsers, actual artifact review и merge pending.
+API positions не выдаются за spatial visualization: current glyph layout schematic.
+
+Public QA-only PR #16: реальные production Node GET всех9assets PASS,
+но первые browser gates FAIL сохранены как диагностические результаты.
+Официальный CDN делает same-origin307 /observe.html→/observe и добавляет
+известный367-byte CloudflareAnalytics script с precedingLF в HTML.
+Actual observedHTML7102bytes/SHA394a8119a40734203a494f1b206d735d10969412d4dff947340e9004e4da2345;
+source6735bytes/SHA9670bd6ab110e363a01c060f885464dc3f8e03abaf73b5e416b86254275bdeba.
+После удаления ровно pinned insertion offset6719/length367/
+SHAbbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a
+получаются source bytes. Astra согласовал только эту точную квалификацию,
+не произвольное stripping HTML: raw browser HTML сохраняется, criticalresources
+и recording byte-exact, аналитика не исполняется и не проверяется.
+CDP Fetch Request-stage guard проверяет каждый redirect hop и блокирует
+этот точный внешний Script GET до передачи с подтверждённым ACK; всё остальное
+вне same-originGET — FAIL. Independent final lifecycle review pending;
+PASS ещё не объявлен. Native production network policy не обходится.
+
+Следующий bounded LIVE3a автором подготовлен отдельно: realXY/XZ/YZ projection
+с µm/равным scale, slice, exactID inspector/overlap selection, atomic state+tick.
+Commitd975bf224140f48728a3946e60e71517546d4390; только viewer и Node tests.
+Dependent independent review/ADR/finalbrowser acceptance pending после LIVE2;
+source preparation не является acceptance и не меняет frozen SPEC или science.
+
+Следующий шаг: final public QA exacthead run/artifact acceptance и guarded merge;
+затем включить принятый QA main в LIVE2 и выполнить один final-head CI с
+protected physical browser. Исторические архивация/refs сохранены; old authors STOPPED.
