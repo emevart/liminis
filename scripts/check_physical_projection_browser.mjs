@@ -188,6 +188,24 @@ async function inspectCell(cell, tick) {
   }
 }
 async function search(id) { await page.locator("#cell-id").fill(id); await page.locator("#cell-search button[type=submit]").click(); }
+async function keyboardCycle(snapshot, cells, missingId, label) {
+  const ordered = [...cells].sort((left, right) => BigInt(left.id) < BigInt(right.id) ? -1 : BigInt(left.id) > BigInt(right.id) ? 1 : 0);
+  assert.ok(ordered.length && !ordered.some((cell) => cell.id === missingId));
+  await search(missingId);
+  await page.locator("#chamber").focus();
+  assert.equal(await page.locator("#chamber").evaluate((canvas) => document.activeElement === canvas), true);
+  const visited = [];
+  for (let index = 0; index <= ordered.length; index++) {
+    await page.keyboard.press("ArrowRight");
+    const expected = ordered[index % ordered.length];
+    await inspectCell(expected, snapshot.tick); visited.push(expected.id);
+  }
+  await page.keyboard.press("ArrowLeft"); await inspectCell(ordered.at(-1), snapshot.tick);
+  await search(missingId); await page.locator("#chamber").focus();
+  await page.keyboard.press("ArrowLeft"); await inspectCell(ordered.at(-1), snapshot.tick);
+  await page.keyboard.press("ArrowRight"); await inspectCell(ordered[0], snapshot.tick);
+  (report.keyboard ||= []).push({ label, tick: snapshot.tick, missingId, orderedIds: ordered.map((cell) => cell.id), rightVisitedIds: visited, leftFromMissingId: ordered.at(-1).id });
+}
 function projected(state, plane, rect, cells = state.cells) {
   const [horizontal, vertical] = axes[plane], lengths = state.model.dimensions_m;
   return cells.map((cell) => ({ id: cell.id, cell, x: rect[0] + rect[2] * (cell.position_m[horizontal] / lengths[horizontal]), y: rect[1] + rect[3] * (1 - cell.position_m[vertical] / lengths[vertical]) }));
@@ -381,6 +399,14 @@ async function run() {
     assert.match(await page.locator("#selection-state").textContent(), /not present/i);
     const text = await page.locator("#cell-detail").textContent(); assert.ok(text.includes(unknown)); assert.match(text, /not present/i); assert.doesNotMatch(text, /\bdead\b|\bdied\b|no longer living/i);
   });
+  await check("Actual focused arrow keys navigate exact visible IDs and wrap independently in every plane", async () => {
+    const unknown = "18446744073709551615";
+    for (const plane of Object.keys(axes)) {
+      await page.locator("#projection-plane").selectOption(plane);
+      await geometry(snapshot, plane);
+      await keyboardCycle(snapshot, snapshot.cells, unknown, `full-${plane}`);
+    }
+  });
   let slicePlane;
   await check("Inclusive upper/lower boundaries, zero-width center slices and retained outside-slice selection", async () => {
     const edge = snapshot.cells.flatMap((cell) => cell.position_m.map((value, axis) => ({ cell, value, axis }))).find(({ value, axis }) => value > 0 && value < snapshot.model.dimensions_m[axis] / 2 && (value * 1e6) / 1e6 === value && (2 * value * 1e6) / 1e6 === 2 * value);
@@ -394,6 +420,24 @@ async function run() {
     const outside = snapshot.cells.find((cell) => cell.position_m[edge.axis] !== edge.value); assert.ok(outside); await search(outside.id); await inspectCell(outside, snapshot.tick);
     assert.equal(await page.locator("#selection-state").textContent(), "outside slice"); assert.match(await page.locator("#cell-detail").textContent(), /outside the current slice/);
     report.sliceBoundary = { plane: slicePlane, axis: names[edge.axis], exactCenterMeters: edge.value, boundaryId: edge.cell.id, outsideSelectedId: outside.id };
+  });
+  await check("Actual arrow keys recover outside-slice selection and retain exact selection in an empty slice", async () => {
+    const selectedId = report.sliceBoundary.outsideSelectedId, selected = snapshot.cells.find((cell) => cell.id === selectedId);
+    const settings = await slice(report.sliceBoundary.exactCenterMeters, 0), visible = slicedCells(snapshot, slicePlane, settings);
+    await keyboardCycle(snapshot, visible, selectedId, "outside-zero-width-slice");
+    const hidden = axes[slicePlane][2], length = snapshot.model.dimensions_m[hidden];
+    const emptyCenter = [0, length / 2, length].find((value) => !snapshot.cells.some((cell) => cell.position_m[hidden] === (value * 1e6) / 1e6));
+    assert.notEqual(emptyCenter, undefined, "Actual fixture must offer an empty exact center plane");
+    const emptySettings = await slice(emptyCenter, 0), empty = slicedCells(snapshot, slicePlane, emptySettings);
+    assert.equal(empty.length, 0); await geometry(snapshot, slicePlane, empty, "empty-keyboard-slice");
+    await search(selectedId); await inspectCell(selected, snapshot.tick); assert.equal(await page.locator("#selection-state").textContent(), "outside slice");
+    await page.locator("#chamber").focus();
+    for (const key of ["ArrowRight", "ArrowLeft"]) {
+      await page.keyboard.press(key); await inspectCell(selected, snapshot.tick);
+      assert.equal(await page.locator("#selection-state").textContent(), "outside slice");
+    }
+    report.keyboard.push({ label: "empty-slice-retains-selection", tick: snapshot.tick, orderedIds: [], selectedId, centerMeters: emptySettings.center });
+    await slice(report.sliceBoundary.exactCenterMeters, 0); await search(selectedId); await inspectCell(selected, snapshot.tick);
   });
   await check("Desktop, short desktop and 390/320px layouts expose controls without geometry overlays", () => responsive(snapshot, slicePlane));
   await page.locator("#slice-enabled").uncheck(); await page.locator("#projection-plane").selectOption("xy");
@@ -478,7 +522,7 @@ finally {
   if (browser) await cleanup("browser cleanup", () => browser.close());
   await cleanup("real host cleanup", stopHost, 7000);
   if (temporary) await cleanup("temporary fixture/data cleanup", () => rm(temporary, { recursive: true, force: true }));
-  if (report.status === "PASS" && (report.trace.status !== "PASS" || report.launchArgumentCheck.status !== "PASS" || report.cleanupErrors.length || !report.division || report.screenshots.length !== 7)) fail(new Error("Required final physical projection evidence is incomplete"), "final gate");
+  if (report.status === "PASS" && (stopRequested || report.trace.status !== "PASS" || report.launchArgumentCheck.status !== "PASS" || report.cleanupErrors.length || report.pageErrors.length || report.consoleErrors.length || report.failures?.length || report.checks.some((item) => item.status !== "PASS") || !report.division || report.screenshots.length !== 7 || report.keyboard?.length !== 5)) fail(new Error("Required final physical projection evidence is incomplete or has errors"), "final gate");
   report.finishedAt = new Date().toISOString();
   await writeFile(join(output, "host.log"), hostLog); await writeFile(join(output, "report.json"), JSON.stringify(report, null, 2) + "\n");
   console.log(JSON.stringify({ status: report.status, sourceHead: report.sourceHead, checks: report.checks.length, output }));

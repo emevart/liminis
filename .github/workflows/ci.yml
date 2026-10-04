@@ -55,6 +55,11 @@ jobs:
           LIMINIS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
           LIMINIS_LIVE_BROWSER_CONFIG: configs/scenarios/cell-chamber-physical.toml
         run: node scripts/check_live_cells_browser.mjs
+      - name: Real physical projections, slice, selection and atomic snapshot acceptance
+        env:
+          LIMINIS_PLAYWRIGHT_MODULE: ${{ runner.temp }}/liminis-browser/node_modules/playwright
+          LIMINIS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/check_physical_projection_browser.mjs
       - name: Attach screenshots and exact-head browser evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -70,6 +75,15 @@ jobs:
         with:
           name: live-physical-browser-${{ github.event.pull_request.head.sha || github.sha }}
           path: target/qa/live-browser-physical/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Attach exact-head physical projection browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: physical-projection-browser-${{ github.event.pull_request.head.sha || github.sha }}
+          path: target/qa/physical-projection-browser/
           if-no-files-found: warn
           retention-days: 7
 
