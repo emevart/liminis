@@ -1,0 +1,78 @@
+{
+  "id": 11317418838,
+  "bytes": 5634585,
+  "sha256": "7686895bf55e00810d676aeaf2ebd948bc68678481c238eebe26fb1b82cc7d1f",
+  "crc": "PASS",
+  "members": [
+    "desktop-default.png",
+    "desktop-observe-raw.html",
+    "evidence.json",
+    "mobile-default.png",
+    "mobile-observe-raw.html",
+    "trace.zip"
+  ],
+  "report_path": "/workspace/liminis-evidence/live-3d-main-5bea/11317418838/evidence.json",
+  "status": "PASS",
+  "source_head": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+  "checks": [
+    {
+      "name": "Public critical assets and one allowlisted recording match checkout bytes",
+      "status": "PASS",
+      "elapsedMs": 372
+    },
+    {
+      "name": "Observed browser arguments retain protected sandbox process model",
+      "status": "PASS",
+      "elapsedMs": 6
+    },
+    {
+      "name": "Public default observer ready, real canvas, physical 1\u00d7 hold and every-tick stepping: desktop",
+      "status": "PASS",
+      "elapsedMs": 5144
+    },
+    {
+      "name": "Public default observer ready, real canvas, physical 1\u00d7 hold and every-tick stepping: mobile",
+      "status": "PASS",
+      "elapsedMs": 5094
+    }
+  ],
+  "keys": [
+    "scope",
+    "publicBase",
+    "status",
+    "startedAt",
+    "nodeVersion",
+    "runner",
+    "workflowRun",
+    "workflowAttempt",
+    "timeouts",
+    "checks",
+    "screenshots",
+    "publicAssetAttempts",
+    "browserObservations",
+    "blockedRequests",
+    "analyticsRequests",
+    "hostingHtmlQualification",
+    "publicAssets",
+    "launchArgumentCheck",
+    "trace",
+    "httpCoverage",
+    "limits",
+    "sourceCommit",
+    "sourceTree",
+    "trackedWorkingTreeStatus",
+    "scriptSha256",
+    "denseAdmission",
+    "browserSourceFiles",
+    "publicDenseEndpointPins",
+    "sourceFiles",
+    "selectedRecording",
+    "playwrightVersion",
+    "browser",
+    "browser_html_raw_matches_source",
+    "browser_html_known_edge_injection_verified",
+    "browser_html_after_exact_insertion_removal_matches_source",
+    "application_playback",
+    "finishedAt"
+  ]
+}

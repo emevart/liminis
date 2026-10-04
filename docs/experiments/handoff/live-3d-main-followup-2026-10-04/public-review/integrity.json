@@ -1,0 +1,75 @@
+{
+  "status": "PASS",
+  "source_head": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+  "source_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "original_zip": {
+    "bytes": 5634585,
+    "sha256": "7686895bf55e00810d676aeaf2ebd948bc68678481c238eebe26fb1b82cc7d1f",
+    "members": 6,
+    "expanded_bytes": 5763188,
+    "crc": "PASS",
+    "unique_safe_paths": true
+  },
+  "report_sha256": "7e3a0387a66464accab4a1330650ebd970cf6a4c70276aadd543f7047e457b91",
+  "script_sha256": "aa56ce8ab6b5e4573fdc3b3125fb7c4046e8eb2f093120db82f0beb9a458c7fe",
+  "mandatory_checks": 4,
+  "node_https_pinned_responses": 19,
+  "local_source_hash_checks": 19,
+  "public_horizons": [
+    10000,
+    100000,
+    1000000
+  ],
+  "browser_horizon": 10000,
+  "browser_actual_states": 10001,
+  "browser_source_response_bodies": 28,
+  "independent_trace_body_hash_checks": 16,
+  "trace": {
+    "bytes": 5397189,
+    "sha256": "b56720f13cf00e8a83784e6bdd4d10efa08634c08a67344c586710261e989176",
+    "members": 146,
+    "expanded_bytes": 11766402,
+    "crc": "PASS",
+    "unique_safe_paths": true
+  },
+  "browser_screenshots": 2,
+  "clock": [
+    {
+      "layout": "desktop",
+      "draw_target": 30,
+      "model_seconds": 1.1496,
+      "wall_seconds": 1.1496999999999535,
+      "error_seconds": 9.999999995358166e-05
+    },
+    {
+      "layout": "desktop",
+      "draw_target": 60,
+      "model_seconds": 1.1551,
+      "wall_seconds": 1.155100000000093,
+      "error_seconds": 9.303668946358812e-14
+    },
+    {
+      "layout": "mobile",
+      "draw_target": 30,
+      "model_seconds": 1.1522,
+      "wall_seconds": 1.1520999999999768,
+      "error_seconds": 0.00010000000002308163
+    },
+    {
+      "layout": "mobile",
+      "draw_target": 60,
+      "model_seconds": 1.1365,
+      "wall_seconds": 1.1366999999999534,
+      "error_seconds": 0.0001999999999533486
+    }
+  ],
+  "known_exact_html_insertion_bytes": 367,
+  "analytics_gets_blocked_before_transmission": 2,
+  "privacy_scan": {
+    "utf8_members": 13,
+    "utf8_bytes": 6976819,
+    "credential_token": 0,
+    "private_context": 0
+  },
+  "scope": "All3 HTTPS metadata/final-gzip delivery pins; default10k desktop/mobile browser initial/prefetched chunks and exact Step only. No full2.4GB download or public100k/1M rendering claim."
+}

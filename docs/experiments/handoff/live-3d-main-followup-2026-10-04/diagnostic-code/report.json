@@ -1,0 +1,4851 @@
+{
+  "status": "FAIL",
+  "startedAt": "2026-10-04T22:54:04.893Z",
+  "limits": {
+    "run": 300000,
+    "operation": 15000,
+    "api": 5000,
+    "launch": 20000,
+    "cdp": 5000,
+    "division": 90000,
+    "history": 20000,
+    "cleanup": 5000,
+    "trace": 15000
+  },
+  "checks": [
+    {
+      "name": "Observed official Chromium argv preserves sandbox; exact stock launch adds only enable-automation",
+      "status": "PASS",
+      "elapsedMs": 8
+    },
+    {
+      "name": "Actual source cube defaults to 2D; WebGL2 and independent SI centers/box match compositor pixels",
+      "status": "PASS",
+      "elapsedMs": 1061
+    },
+    {
+      "name": "A real Step commits current 2D/3D geometry and inspector before held original history; lazy activation uses latest snapshot",
+      "status": "PASS",
+      "elapsedMs": 941
+    },
+    {
+      "name": "Real orbit, zoom, pan and reset preserve paused SI data and project actual centers with equal scale",
+      "status": "PASS",
+      "elapsedMs": 2422
+    },
+    {
+      "name": "Exact ID, arrows and peak-movement/cancel gestures use current camera revision without selecting on drag",
+      "status": "PASS",
+      "elapsedMs": 1021
+    },
+    {
+      "name": "Opacity and center/box/slice layers change actual pixels; hidden centers have no pointer targets",
+      "status": "PASS",
+      "elapsedMs": 3464
+    },
+    {
+      "name": "All slice axes use inclusive real centers and exact zero-width inputs; outside selection stays inspectable",
+      "status": "PASS",
+      "elapsedMs": 2680
+    },
+    {
+      "name": "Paused target30/60 draws hold exact canvas/API state and preserve normal single-flight polling",
+      "status": "FAIL",
+      "elapsedMs": 3503,
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ '5f44fcead95e186ff56bf12a12a865bb39ef8e18b51e5945b184ad7d75323f2e'\n- '50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6'\n\n    at file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:195:311\n    at async check (file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:27:100)\n    at async run (file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:193:3)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:26:72)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:220:24"
+    }
+  ],
+  "sources": [
+    {
+      "filename": "scripts/check_physical_3d_browser.mjs",
+      "bytes": 61791,
+      "sha256": "c3a6642f73c2a00fdfaea6c4b321e93a58e6c031dab2d220c3f044fe0c86de01"
+    },
+    {
+      "filename": "crates/liminis/src/cell-viewer.html",
+      "bytes": 62466,
+      "sha256": "c8d325cd575ea12b4ec9e6be88e9db4720da510b90044e7d2d480d95aa93bb5b"
+    },
+    {
+      "filename": "crates/liminis/src/cell-viewer-3d.mjs",
+      "bytes": 15849,
+      "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+    },
+    {
+      "filename": "configs/scenarios/cell-chamber-physical.toml",
+      "bytes": 3538,
+      "sha256": "867b52c37b6160bb6a9076f13cac9378fc49e226ae96753596d0c5d01fe90245"
+    },
+    {
+      "filename": "crates/liminis/src/cell-viewer-3d.mjs",
+      "bytes": 15849,
+      "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+    },
+    {
+      "filename": "crates/liminis/src/vendor/three-r180/three.module.js",
+      "bytes": 603113,
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a"
+    },
+    {
+      "filename": "crates/liminis/src/vendor/three-r180/three.core.js",
+      "bytes": 1403455,
+      "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20"
+    },
+    {
+      "filename": "crates/liminis/src/vendor/three-r180/OrbitControls.js",
+      "bytes": 38703,
+      "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c"
+    },
+    {
+      "filename": "crates/liminis/src/vendor/three-r180/LICENSE",
+      "bytes": 1081,
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+    },
+    {
+      "filename": "crates/liminis/src/vendor/three-r180/provenance.json",
+      "bytes": 1576,
+      "sha256": "1d507127da6b37d10a9c7c2941b2d2d7f39e1ee54a0655519706008bbed3584a"
+    }
+  ],
+  "hosts": [
+    {
+      "label": "source-cube",
+      "args": [
+        "cells",
+        "--seed",
+        "42",
+        "--port",
+        "40699",
+        "--data-dir",
+        "/tmp/liminis-3d-browser-euXcOx/source-cube",
+        "--config",
+        "/home/runner/work/liminis/liminis/configs/scenarios/cell-chamber-physical.toml"
+      ],
+      "origin": "http://127.0.0.1:40699",
+      "viewerSha256": "c8d325cd575ea12b4ec9e6be88e9db4720da510b90044e7d2d480d95aa93bb5b",
+      "initialTick": 0,
+      "model": {
+        "boundaries": "reflecting",
+        "dimensions_m": [
+          0.0001,
+          0.0001,
+          0.0001
+        ],
+        "environment": "well_mixed",
+        "excluded_volume": false,
+        "spatial_positions": true,
+        "temperature_k": 298.15,
+        "transport": "passive_dilute_brownian",
+        "viscosity_pa_s": 0.001,
+        "volume_m3": 1e-12
+      },
+      "worldFormat": 31
+    },
+    {
+      "label": "nonsquare",
+      "args": [
+        "cells",
+        "--seed",
+        "42",
+        "--port",
+        "40417",
+        "--data-dir",
+        "/tmp/liminis-3d-browser-euXcOx/nonsquare",
+        "--config",
+        "/tmp/liminis-3d-browser-euXcOx/physical-nonsquare.toml"
+      ],
+      "origin": "http://127.0.0.1:40417",
+      "viewerSha256": "c8d325cd575ea12b4ec9e6be88e9db4720da510b90044e7d2d480d95aa93bb5b",
+      "initialTick": 0,
+      "model": {
+        "boundaries": "reflecting",
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "environment": "well_mixed",
+        "excluded_volume": false,
+        "spatial_positions": true,
+        "temperature_k": 298.15,
+        "transport": "passive_dilute_brownian",
+        "viscosity_pa_s": 0.001,
+        "volume_m3": 1e-12
+      },
+      "worldFormat": 31
+    }
+  ],
+  "geometry": [
+    {
+      "label": "source-cube",
+      "tick": 0,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 6,
+        "drawnRevision": 6,
+        "drawnTick": 0,
+        "dimensions_m": [
+          0.0001,
+          0.0001,
+          0.0001
+        ],
+        "sceneScale": 10000,
+        "camera": {
+          "position": [
+            3.0773502691896257,
+            3.077350269189626,
+            3.077350269189626
+          ],
+          "target": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.27984814233312133,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -2.808450432773153,
+          "right": 2.808450432773153,
+          "top": 1.0825317547305482,
+          "bottom": -1.0825317547305482,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 1,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.00005,
+        "thickness": 0.00001,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 598.6627611129486,
+          "y": 494.246642239004,
+          "depth": 4.347512487504254,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 483.20255890455746,
+          "y": 571.9646635105426,
+          "depth": 4.718515840047901,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 489.61720286486576,
+          "y": 408.8388230693364,
+          "depth": 4.438162283544134,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 625.0943487820251,
+          "y": 523.1233652057914,
+          "depth": 4.723546440482509,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 642.3701134482418,
+          "y": 455.4832858492391,
+          "depth": 4.0822185797938815,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 634.5733551782942,
+          "y": 554.7909205944263,
+          "depth": 4.370070673083262,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 638.722484668356,
+          "y": 432.9716582658597,
+          "depth": 4.234354941231287,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 653.5268450650923,
+          "y": 511.17520980357364,
+          "depth": 4.82170832209763,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "76b2cb5c501744fda70e65e43f1cb4173d9886f15e2944b18cf18b1d1f7182fd",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "atomic-after-lazy-import-before-history",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 7,
+        "drawnRevision": 7,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 1,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "5f44fcead95e186ff56bf12a12a865bb39ef8e18b51e5945b184ad7d75323f2e",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "nonsquare-reset",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 9,
+        "drawnRevision": 9,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 1,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "48c776210a37c298ee5018fcce7043f8210de853262ccc3ce942cc9180e4ea5e",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "actual-pointer-orbit",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 17,
+        "drawnRevision": 17,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            0.8241910849290743,
+            2.89504426668123,
+            2.0566357479362156
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.4483891577832107,
+            0.07416445952942284,
+            0.03736581656054781,
+            0.8899722421951907
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 1,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 620.1407114452735,
+          "y": 505.695120335861,
+          "depth": 3.257967068105984,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 478.9083596294519,
+          "y": 538.0009379831805,
+          "depth": 3.4866461002524933,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 443.73281883464915,
+          "y": 451.314891870257,
+          "depth": 3.208907157778812,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 600.7594978668391,
+          "y": 511.43255470662007,
+          "depth": 3.427437109132599,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 687.9802524622868,
+          "y": 468.07271434662823,
+          "depth": 3.1083118469389652,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 695.4615352862069,
+          "y": 534.7544326304389,
+          "depth": 3.350956718093289,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 641.7505082516988,
+          "y": 447.5353789265937,
+          "depth": 3.13374106989723,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 614.983232649181,
+          "y": 496.91012590747187,
+          "depth": 3.4532298569548674,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "ac4abeda446e8d9c2d5591a5277066ab79a83c4a0657cbbf85f0146d496ade4d",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "actual-wheel-zoom",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 18,
+        "drawnRevision": 18,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            0.8241910849290743,
+            2.89504426668123,
+            2.0566357479362156
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.4483891577832107,
+            0.07416445952942284,
+            0.03736581656054781,
+            0.8899722421951907
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1.063485746650459
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 1,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 623.6413606822142,
+          "y": 506.4038669796421,
+          "depth": 3.257967068105984,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 473.4427675601649,
+          "y": 540.7606435814553,
+          "depth": 3.4866461002524933,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 436.03408129417033,
+          "y": 448.57126910687657,
+          "depth": 3.208907157778812,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 603.0297162887608,
+          "y": 512.5055466552867,
+          "depth": 3.427437109132599,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 695.7877456131171,
+          "y": 466.39297445539614,
+          "depth": 3.1083118469389652,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 703.7439832630168,
+          "y": 537.3080314123902,
+          "depth": 3.350956718093289,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 646.6230715738601,
+          "y": 444.55181096200977,
+          "depth": 3.13374106989723,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 618.1564554939179,
+          "y": 497.06115062064646,
+          "depth": 3.4532298569548674,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "0bd6ff09d53bb6a689ac933bf2361196965254cb6ca2abed437cabff9afc5737",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "actual-right-pointer-pan",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 26,
+        "drawnRevision": 26,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            0.7289078847174146,
+            2.912116855899431,
+            2.049249370772654
+          ],
+          "target": [
+            0.4047167997883402,
+            0.2670725892182015,
+            0.11761362283643828
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.4483891577832107,
+            0.07416445952942288,
+            0.03736581656054783,
+            0.8899722421951907
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1.063485746650459
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 1,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 652.3670243990283,
+          "y": 515.2893529982839,
+          "depth": 3.257967068105984,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 502.1684312769791,
+          "y": 549.6461296000969,
+          "depth": 3.4866461002524933,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 464.75974501098455,
+          "y": 457.45675512551827,
+          "depth": 3.208907157778812,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 631.755380005575,
+          "y": 521.3910326739284,
+          "depth": 3.4274371091325984,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 724.5134093299312,
+          "y": 475.2784604740379,
+          "depth": 3.108311846938965,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 732.469646979831,
+          "y": 546.1935174310319,
+          "depth": 3.350956718093288,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 675.3487352906743,
+          "y": 453.43729698065147,
+          "depth": 3.13374106989723,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 646.882119210732,
+          "y": 505.94663663928816,
+          "depth": 3.453229856954867,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "3f3428422fc09f7036374108cc356e30fb837b056c86bb12d9ff3ed6af0ddab0",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "actual-reset",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 29,
+        "drawnRevision": 29,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 1,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "0c2d6fa1f1639654fb033101f3e29565af57a9771498ec3bba58a7d06d56a39b",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "pan-outside-current-view",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 37,
+        "drawnRevision": 37,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            0.387847827434169,
+            2.150225924721921,
+            4.037604022009672
+          ],
+          "target": [
+            -1.512378097287752,
+            0.24999999999999992,
+            2.1373780972877507
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.27984814233312133,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 0,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 1430.1795000568366,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150365,
+          "inside": false
+        },
+        {
+          "id": "1",
+          "x": 1323.0942594555052,
+          "y": 524.6476948069818,
+          "depth": 3.570825427726538,
+          "inside": false
+        },
+        {
+          "id": "2",
+          "x": 1306.941357138937,
+          "y": 407.54263056863516,
+          "depth": 3.4460754591639278,
+          "inside": false
+        },
+        {
+          "id": "3",
+          "x": 1428.7645324250811,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": false
+        },
+        {
+          "id": "4",
+          "x": 1487.9216559390554,
+          "y": 492.82504397666685,
+          "depth": 2.9512340410398137,
+          "inside": false
+        },
+        {
+          "id": "5",
+          "x": 1487.3203584931184,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767303,
+          "inside": false
+        },
+        {
+          "id": "6",
+          "x": 1462.4081046160184,
+          "y": 462.3838490255055,
+          "depth": 3.0617646272109624,
+          "inside": false
+        },
+        {
+          "id": "7",
+          "x": 1449.7152041193551,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": false
+        }
+      ],
+      "compositorSha256": "4fa70f50a70f089b44f802f62bbc38202078963ff6390712e4a8703309bc91b6",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "keyboard-camera",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 40,
+        "drawnRevision": 40,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "c9240cf7229833c310f0e1b7be11a5af684596d1611fba834b86857a7a27fa42",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "centers-only-full-opacity",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 59,
+        "drawnRevision": 59,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "9daedb18a9b8c0abc6b8de85bb20a7224be3944b89e1b44d4b5bc8fc915a3b74",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "centers-only-zoom-fixed-glyph",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 60,
+        "drawnRevision": 60,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1.063485746650459
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 603.6559765902498,
+          "y": 520.5497322005276,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 489.77234953409874,
+          "y": 526.5596597920105,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 472.5939681533913,
+          "y": 402.02009311394227,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 602.1511786819059,
+          "y": 538.6693568964051,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 665.0639363518584,
+          "y": 492.71672421333597,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 664.4244650886071,
+          "y": 584.9214536585479,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 637.9306381733734,
+          "y": 460.34294727176814,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 624.4319194115197,
+          "y": 533.4037887358725,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "07cf725c5959830461e98488841f2b996e148201c725f339791f5e578ef5e63e",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "centers-opacity-020",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 63,
+        "drawnRevision": 63,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 0.2
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "729f0a25789c2ccf4a73113768dd14760a06306f13903b57bc805dbe4638a880",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "zero-opacity",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 64,
+        "drawnRevision": 64,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 0,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 0
+      },
+      "visibleIds": [],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "2ee3d92a65cb212121894cc1b20de4029b5e7b6e75ff1cb73e7179fb4673780c",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "centers-layer-off",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 66,
+        "drawnRevision": 66,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 0,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": false,
+        "opacity": 1
+      },
+      "visibleIds": [],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "d6f06c6561f65403cfa24f84163f8a20e9d67afd53e4601510affa3c51f6e02e",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "box-layer-on",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 68,
+        "drawnRevision": 68,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "dea9cb404e07213cbfff692eff0b7d3e14d19813d2835af33c52fc8ad4b8d5c2",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "box-layer-off",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 69,
+        "drawnRevision": 69,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 5,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "9daedb18a9b8c0abc6b8de85bb20a7224be3944b89e1b44d4b5bc8fc915a3b74",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "slice-boundaries-on",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 72,
+        "drawnRevision": 72,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 4,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 7,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": true,
+        "center": 0.000025,
+        "thickness": 0.000016666666666666667,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "2",
+        "4",
+        "5"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "a22c9daa0e55e0c670514981411f853ed7922cfee257eb42ab6b9fab583c80a4",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "slice-boundaries-off",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 73,
+        "drawnRevision": 73,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 4,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 7,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": true,
+        "center": 0.000025,
+        "thickness": 0.000016666666666666667,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "2",
+        "4",
+        "5"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "749b7dacce54ebb3047acfb40201913d13502d949cd6b55825581a7ea0651f12",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "full-inclusive-xy",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 81,
+        "drawnRevision": 81,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 7,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": true,
+        "center": 0.000025,
+        "thickness": 0.00005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "f6619d0afd01e4ecfa44b9b4fc6bda36e26b529da4d561e9d38aa301b606b3fe",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "full-inclusive-xz",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 84,
+        "drawnRevision": 84,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 1,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 7,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xz",
+        "enabled": true,
+        "center": 0.00005,
+        "thickness": 0.0001,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "bd9720b75a017e0af1e986b64b5266163e2ae24d86027c030fd901cfeae5e0fd",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "full-inclusive-yz",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 87,
+        "drawnRevision": 87,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 1,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 7,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "yz",
+        "enabled": true,
+        "center": 0.0001,
+        "thickness": 0.0002,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "9993ab736dba55e7a09c1df68a468a408b8c9c456460ac94fb21b8dc9820adf2",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "inclusive-upper",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 90,
+        "drawnRevision": 90,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 2,
+          "selectionSprites": 1,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 7,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "yz",
+        "enabled": true,
+        "center": 0,
+        "thickness": 0.00008363150078189773,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "1",
+        "2"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "619da7d7f21909de653c851124c29c1ff83fcb84d8ce51499585d6078800feff",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "inclusive-lower",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 92,
+        "drawnRevision": 92,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 2,
+          "selectionSprites": 1,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 7,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "yz",
+        "enabled": true,
+        "center": 0.00008363150078189773,
+        "thickness": 0.00008363150078189773,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "1",
+        "3"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "7ee4f6eb0f2a7d7aaf2c6622704e028d7aab0d9e43b9e53617331d8e71fff2bf",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "exact-zero-width",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 94,
+        "drawnRevision": 94,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 1,
+          "selectionSprites": 1,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 7,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "yz",
+        "enabled": true,
+        "center": 0.00004181575039094887,
+        "thickness": 0,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "1"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "7894b8e0cd5ee3b9bda1e2f19aeeedad2c3ed54f04e63d44a4ea49a3f75c7f01",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "outside-slice-selected",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 94,
+        "drawnRevision": 94,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 1,
+          "selectionSprites": 0,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 7,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "yz",
+        "enabled": true,
+        "center": 0.00004181575039094887,
+        "thickness": 0,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "1"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "8b4016e0cd974f72273f69f309a858c6b948e4ec57d01d310ae3d935b60c97f4",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    },
+    {
+      "label": "paused-before-display-controls",
+      "tick": 1,
+      "audit": {
+        "mode": "3d",
+        "requestedMode": "3d",
+        "revision": 96,
+        "drawnRevision": 96,
+        "drawnTick": 1,
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "sceneScale": 5000,
+        "camera": {
+          "position": [
+            2.400225924721921,
+            2.150225924721921,
+            2.025225924721921
+          ],
+          "target": [
+            0.5,
+            0.25,
+            0.125
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "quaternion": [
+            -0.2798481423331213,
+            0.3647051996310008,
+            0.11591689595929511,
+            0.8804762392171493
+          ],
+          "left": -1.8576153536423716,
+          "right": 1.8576153536423716,
+          "top": 0.71602745233685,
+          "bottom": -0.71602745233685,
+          "near": 0.01,
+          "far": 100,
+          "zoom": 1
+        },
+        "viewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        },
+        "resources": {
+          "sprites": 8,
+          "visibleSprites": 8,
+          "selectionSprites": 1,
+          "paletteMaterials": 8,
+          "materials": 15,
+          "textures": 2,
+          "geometries": 7,
+          "rendererGeometries": 7,
+          "rendererTextures": 2,
+          "disposed": false,
+          "lost": false,
+          "contextCreations": 1
+        },
+        "backend": {
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+        }
+      },
+      "slice": {
+        "plane": "xy",
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "centers": true,
+        "opacity": 1
+      },
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "independentlyProjected": [
+        {
+          "id": "0",
+          "x": 601.3483729913637,
+          "y": 518.996535296465,
+          "depth": 3.1656161993150356,
+          "inside": true
+        },
+        {
+          "id": "1",
+          "x": 494.26313239003224,
+          "y": 524.6476948069819,
+          "depth": 3.570825427726538,
+          "inside": true
+        },
+        {
+          "id": "2",
+          "x": 478.1102300734641,
+          "y": 407.5426305686351,
+          "depth": 3.4460754591639278,
+          "inside": true
+        },
+        {
+          "id": "3",
+          "x": 599.9334053596081,
+          "y": 536.0344925544225,
+          "depth": 3.339083075326955,
+          "inside": true
+        },
+        {
+          "id": "4",
+          "x": 659.0905288735825,
+          "y": 492.8250439766668,
+          "depth": 2.951234041039814,
+          "inside": true
+        },
+        {
+          "id": "5",
+          "x": 658.4892314276456,
+          "y": 579.5255284313187,
+          "depth": 3.1039770494767307,
+          "inside": true
+        },
+        {
+          "id": "6",
+          "x": 633.5769775505453,
+          "y": 462.3838490255056,
+          "depth": 3.061764627210962,
+          "inside": true
+        },
+        {
+          "id": "7",
+          "x": 620.8840770538823,
+          "y": 531.0832572631955,
+          "depth": 3.34763012148498,
+          "inside": true
+        }
+      ],
+      "compositorSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+      "pixelScale": [
+        1,
+        1.0012482316717983
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "source-cube.png",
+      "bytes": 101092,
+      "sha256": "084d073aae0524096be498b2d349284fdfa81eb3a10d0182f4a00e3b76fbcc30"
+    },
+    {
+      "filename": "failure.png",
+      "bytes": 122378,
+      "sha256": "9a0a4bbf45a32e00e5613b31b02b617146c733ad6dbf2dba97762e5fe29aa1be"
+    }
+  ],
+  "pages": [
+    {
+      "origin": "http://127.0.0.1:40699",
+      "stateStarts": [
+        1791154445475,
+        1791154446173
+      ],
+      "activeState": 0,
+      "maxState": 1,
+      "posts": [],
+      "failures": [],
+      "external": [],
+      "resources": [
+        {
+          "url": "http://127.0.0.1:40699/",
+          "method": "GET",
+          "type": "document"
+        },
+        {
+          "url": "http://127.0.0.1:40699/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40699/api/history",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40699/assets/cell-viewer-3d.mjs",
+          "method": "GET",
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:40699/assets/vendor/three-r180/three.module.js",
+          "method": "GET",
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:40699/assets/vendor/three-r180/OrbitControls.js",
+          "method": "GET",
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:40699/assets/vendor/three-r180/three.core.js",
+          "method": "GET",
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:40699/api/state",
+          "method": "GET",
+          "type": "fetch"
+        }
+      ],
+      "unhandled": [],
+      "nativeGL": {
+        "creations": 1,
+        "calls": [
+          {
+            "canvasId": "chamber-3d",
+            "type": "webgl2",
+            "success": true
+          }
+        ],
+        "backend": {
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+        }
+      },
+      "closed": true
+    },
+    {
+      "origin": "http://127.0.0.1:40417",
+      "stateStarts": [
+        1791154446463,
+        1791154446927,
+        1791154447117,
+        1791154447760,
+        1791154448409,
+        1791154449066,
+        1791154449719,
+        1791154450366,
+        1791154451019,
+        1791154451660,
+        1791154452311,
+        1791154452963,
+        1791154453620,
+        1791154454274,
+        1791154454923,
+        1791154455578,
+        1791154456230,
+        1791154456861,
+        1791154457509,
+        1791154458165,
+        1791154458816,
+        1791154459465,
+        1791154460118,
+        1791154460768,
+        1791154461446
+      ],
+      "activeState": 0,
+      "maxState": 1,
+      "posts": [
+        "{\"action\":\"step\"}"
+      ],
+      "failures": [],
+      "external": [],
+      "resources": [
+        {
+          "url": "http://127.0.0.1:40417/",
+          "method": "GET",
+          "type": "document"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/history",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/assets/cell-viewer-3d.mjs",
+          "method": "GET",
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:40417/assets/vendor/three-r180/three.module.js",
+          "method": "GET",
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:40417/assets/vendor/three-r180/OrbitControls.js",
+          "method": "GET",
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:40417/assets/vendor/three-r180/three.core.js",
+          "method": "GET",
+          "type": "script"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/control",
+          "method": "POST",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/history",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/history",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/history",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        },
+        {
+          "url": "http://127.0.0.1:40417/api/state",
+          "method": "GET",
+          "type": "fetch"
+        }
+      ]
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "unhandled": [],
+  "cleanupErrors": [],
+  "oracle": {
+    "status": "PASS",
+    "kind": "Synthetic arithmetic unit oracle, not API/model/browser states",
+    "cases": 6
+  },
+  "trace": {
+    "status": "PASS",
+    "bytes": 18195274,
+    "sha256": "03f4ef396dda340d5df50eaec858c60181505c9090ddc67a28527451ebe61857"
+  },
+  "sandbox": {
+    "status": "PASS",
+    "arguments": [
+      "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+      "--disable-field-trial-config",
+      "--disable-background-networking",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-back-forward-cache",
+      "--disable-breakpad",
+      "--disable-client-side-phishing-detection",
+      "--disable-component-extensions-with-background-pages",
+      "--disable-component-update",
+      "--no-default-browser-check",
+      "--disable-default-apps",
+      "--disable-dev-shm-usage",
+      "--disable-edgeupdater",
+      "--disable-extensions",
+      "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+      "--enable-features=CDPScreenshotNewSurface",
+      "--allow-pre-commit-input",
+      "--disable-hang-monitor",
+      "--disable-ipc-flooding-protection",
+      "--disable-popup-blocking",
+      "--disable-prompt-on-repost",
+      "--disable-renderer-backgrounding",
+      "--force-color-profile=srgb",
+      "--metrics-recording-only",
+      "--no-first-run",
+      "--password-store=basic",
+      "--use-mock-keychain",
+      "--no-service-autorun",
+      "--export-tagged-pdf",
+      "--disable-search-engine-choice-screen",
+      "--unsafely-disable-devtools-self-xss-warnings",
+      "--edge-skip-compat-layer-relaunch",
+      "--disable-infobars",
+      "--disable-search-engine-choice-screen",
+      "--disable-sync",
+      "--enable-unsafe-swiftshader",
+      "--headless",
+      "--hide-scrollbars",
+      "--mute-audio",
+      "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+      "--enable-automation",
+      "--user-data-dir=/tmp/playwright_chromiumdev_profile-OkVYaa",
+      "--remote-debugging-pipe",
+      "--no-startup-window",
+      "--use-gl=angle",
+      "--use-angle=swiftshader-webgl",
+      "--ozone-platform=headless",
+      "--allow-pre-commit-input"
+    ],
+    "launchSettings": {
+      "headless": true,
+      "chromiumSandbox": true,
+      "args": [
+        "--enable-automation"
+      ]
+    },
+    "stockGPUFlags": [
+      "--enable-unsafe-swiftshader",
+      "--use-gl=angle",
+      "--use-angle=swiftshader-webgl"
+    ],
+    "qualification": "Pinned official Playwright defaults may include enable-unsafe-swiftshader. No extra GPU switches supplied; actual backend is reported, hardware GPU is unasserted. Same accepted sandbox process model."
+  },
+  "qualifications": [
+    "Actual release host and saved current API centers only; no fabricated cells, interpolated motion or model helper/hit-map geometry proof.",
+    "Independent orthographic math uses copied actual camera facts and actual compositor PNG pixels, not Three projection functions.",
+    "Center Sprite display pixels are not bodies, hydrodynamic radii, morphology or collisions; shared well-mixed chemistry is unchanged.",
+    "Four Chromium viewport sizes; no achieved FPS, full accessibility, native background, cross-platform float or new science claim.",
+    "WebGL loss/unavailable controls are explicitly negative renderer/input controls, not model states. Full existing 2D/chamber1 acceptance remains a separate protected regression gate."
+  ],
+  "workflowRun": "https://github.com/emevart/liminis/actions/runs/37241483046",
+  "runner": {
+    "node": "v24.21.0",
+    "os": "Linux",
+    "image": "ubuntu22"
+  },
+  "sourceHead": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+  "sourceTree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "binary": {
+    "bytes": 7390448,
+    "sha256": "e40d2e9be40939e40d73d8e5a93bded40a1c91a8efb1087d9d2dcaf0087469a5",
+    "provenance": "Existing protected CI release build, not cryptographic standalone source attestation"
+  },
+  "configs": {
+    "sourceSha256": "867b52c37b6160bb6a9076f13cac9378fc49e226ae96753596d0c5d01fe90245",
+    "fixtureSha256": "3da686962b4c14e54d82b11559805a96d4abba4da84532dbbb291850096630f7",
+    "onlyChange": "dimensions [2e-4,1e-4,5e-5]; same mathematical product, binary volume recorded separately"
+  },
+  "browser": {
+    "version": "149.0.7827.55",
+    "playwright": "1.61.1",
+    "chromiumSandbox": true
+  },
+  "assets": [
+    {
+      "url": "/assets/cell-viewer-3d.mjs",
+      "filename": "crates/liminis/src/cell-viewer-3d.mjs",
+      "bytes": 15849,
+      "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "/assets/vendor/three-r180/three.module.js",
+      "filename": "crates/liminis/src/vendor/three-r180/three.module.js",
+      "bytes": 603113,
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "/assets/vendor/three-r180/three.core.js",
+      "filename": "crates/liminis/src/vendor/three-r180/three.core.js",
+      "bytes": 1403455,
+      "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "/assets/vendor/three-r180/OrbitControls.js",
+      "filename": "crates/liminis/src/vendor/three-r180/OrbitControls.js",
+      "bytes": 38703,
+      "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "/assets/vendor/three-r180/LICENSE",
+      "filename": "crates/liminis/src/vendor/three-r180/LICENSE",
+      "bytes": 1081,
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "url": "/assets/vendor/three-r180/provenance.json",
+      "filename": "crates/liminis/src/vendor/three-r180/provenance.json",
+      "bytes": 1576,
+      "sha256": "1d507127da6b37d10a9c7c2941b2d2d7f39e1ee54a0655519706008bbed3584a",
+      "contentType": "application/json"
+    }
+  ],
+  "vendor": {
+    "version": "0.180.0",
+    "commit": "0af9729d0c143a86a1d725d6e2c3ad83301f3f34",
+    "provenanceSha256": "1d507127da6b37d10a9c7c2941b2d2d7f39e1ee54a0655519706008bbed3584a"
+  },
+  "boxPixels": {
+    "label": "box-layer-on",
+    "edgeCount": 12,
+    "labels": [
+      {
+        "text": "x · 200 µm",
+        "left": 698.708,
+        "top": 582.565,
+        "hidden": false
+      },
+      {
+        "text": "y · 100 µm",
+        "left": 492.775,
+        "top": 344.774,
+        "hidden": false
+      },
+      {
+        "text": "z · 50 µm",
+        "left": 441.292,
+        "top": 493.393,
+        "hidden": false
+      }
+    ],
+    "independentlyProjectedEdges": [
+      {
+        "axis": 0,
+        "a": {
+          "x": 487.7750309277218,
+          "y": 479.6692977726534,
+          "depth": 3.7964693330188424,
+          "inside": true
+        },
+        "b": {
+          "x": 693.7082817871297,
+          "y": 598.5649155914273,
+          "depth": 3.2191190638292166,
+          "inside": true
+        }
+      },
+      {
+        "axis": 1,
+        "a": {
+          "x": 487.7750309277218,
+          "y": 479.6692977726534,
+          "depth": 3.7964693330188424,
+          "inside": true
+        },
+        "b": {
+          "x": 487.7750309277218,
+          "y": 360.7736799538795,
+          "depth": 3.5077941984240297,
+          "inside": true
+        }
+      },
+      {
+        "axis": 2,
+        "a": {
+          "x": 487.7750309277218,
+          "y": 479.6692977726534,
+          "depth": 3.7964693330188424,
+          "inside": true
+        },
+        "b": {
+          "x": 436.29171821286985,
+          "y": 509.3932022273468,
+          "depth": 3.652131765721436,
+          "inside": true
+        }
+      },
+      {
+        "axis": 1,
+        "a": {
+          "x": 693.7082817871297,
+          "y": 598.5649155914273,
+          "depth": 3.2191190638292166,
+          "inside": true
+        },
+        "b": {
+          "x": 693.7082817871297,
+          "y": 479.6692977726533,
+          "depth": 2.930443929234404,
+          "inside": true
+        }
+      },
+      {
+        "axis": 2,
+        "a": {
+          "x": 693.7082817871297,
+          "y": 598.5649155914273,
+          "depth": 3.2191190638292166,
+          "inside": true
+        },
+        "b": {
+          "x": 642.2249690722778,
+          "y": 628.2888200461207,
+          "depth": 3.07478149653181,
+          "inside": true
+        }
+      },
+      {
+        "axis": 0,
+        "a": {
+          "x": 487.7750309277218,
+          "y": 360.7736799538795,
+          "depth": 3.5077941984240297,
+          "inside": true
+        },
+        "b": {
+          "x": 693.7082817871297,
+          "y": 479.6692977726533,
+          "depth": 2.930443929234404,
+          "inside": true
+        }
+      },
+      {
+        "axis": 2,
+        "a": {
+          "x": 487.7750309277218,
+          "y": 360.7736799538795,
+          "depth": 3.5077941984240297,
+          "inside": true
+        },
+        "b": {
+          "x": 436.29171821286985,
+          "y": 390.49758440857295,
+          "depth": 3.363456631126623,
+          "inside": true
+        }
+      },
+      {
+        "axis": 2,
+        "a": {
+          "x": 693.7082817871297,
+          "y": 479.6692977726533,
+          "depth": 2.930443929234404,
+          "inside": true
+        },
+        "b": {
+          "x": 642.2249690722778,
+          "y": 509.3932022273468,
+          "depth": 2.7861063619369975,
+          "inside": true
+        }
+      },
+      {
+        "axis": 0,
+        "a": {
+          "x": 436.29171821286985,
+          "y": 509.3932022273468,
+          "depth": 3.652131765721436,
+          "inside": true
+        },
+        "b": {
+          "x": 642.2249690722778,
+          "y": 628.2888200461207,
+          "depth": 3.07478149653181,
+          "inside": true
+        }
+      },
+      {
+        "axis": 1,
+        "a": {
+          "x": 436.29171821286985,
+          "y": 509.3932022273468,
+          "depth": 3.652131765721436,
+          "inside": true
+        },
+        "b": {
+          "x": 436.29171821286985,
+          "y": 390.49758440857295,
+          "depth": 3.363456631126623,
+          "inside": true
+        }
+      },
+      {
+        "axis": 1,
+        "a": {
+          "x": 642.2249690722778,
+          "y": 628.2888200461207,
+          "depth": 3.07478149653181,
+          "inside": true
+        },
+        "b": {
+          "x": 642.2249690722778,
+          "y": 509.3932022273468,
+          "depth": 2.7861063619369975,
+          "inside": true
+        }
+      },
+      {
+        "axis": 0,
+        "a": {
+          "x": 436.29171821286985,
+          "y": 390.49758440857295,
+          "depth": 3.363456631126623,
+          "inside": true
+        },
+        "b": {
+          "x": 642.2249690722778,
+          "y": 509.3932022273468,
+          "depth": 2.7861063619369975,
+          "inside": true
+        }
+      }
+    ]
+  },
+  "sourceVolume": 1e-12,
+  "backend": {
+    "vendor": "Google Inc. (Google)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "nonsquareVolume": 1e-12,
+  "delayedHistory": {
+    "status": "RELEASED",
+    "path": "/api/history",
+    "bytes": 130,
+    "sha256": "2bf7a9322b1d8a22ace60d63980f8d0ddd92bf37963946e809c3d06659c35a9d",
+    "originalStatus": 200,
+    "originalHeaders": {
+      "content-type": "application/json",
+      "content-length": "130",
+      "cache-control": "no-store",
+      "connection": "close"
+    },
+    "qualification": "Delayed route.fetch original response; only exact original bytes are fulfilled"
+  },
+  "delayedModule": {
+    "status": "RELEASED",
+    "path": "/assets/cell-viewer-3d.mjs",
+    "bytes": 15849,
+    "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac",
+    "originalStatus": 200,
+    "originalHeaders": {
+      "content-type": "text/javascript; charset=utf-8",
+      "content-length": "15849",
+      "cache-control": "no-store",
+      "connection": "close"
+    },
+    "qualification": "Delayed route.fetch original response; only exact original bytes are fulfilled"
+  },
+  "atomicStep": {
+    "fromTick": 0,
+    "toTick": 1,
+    "selectedId": "0",
+    "historyReleasedAtAssertion": false,
+    "lazyActivationTick": 1
+  },
+  "camera": {
+    "actualRotate": true,
+    "actualPan": true,
+    "actualZoom": true,
+    "actualReset": true,
+    "outsideViewId": "0",
+    "pausedTick": 1
+  },
+  "gestures": {
+    "arrowIds": [
+      "0",
+      "7"
+    ],
+    "cameraUnchangedByArrow": true,
+    "dragReturnPeakCSSpx": 30,
+    "cancel": "Actual CDP touch input cancellation; input negative control, no fabricated cells"
+  },
+  "layers": {
+    "fullContrast": 212,
+    "opacity020Contrast": 42,
+    "opacityZeroContrast": 0,
+    "actualPixelChanges": true,
+    "noHiddenPointerTargets": true,
+    "glyph": {
+      "widthCSS": 8,
+      "heightCSS": 8.988779920212766,
+      "nominalCSS": 7,
+      "rasterToleranceCSS": 2
+    },
+    "zoomGlyph": {
+      "widthCSS": 8,
+      "heightCSS": 7.9900265957446805,
+      "nominalCSS": 7,
+      "rasterToleranceCSS": 2
+    }
+  },
+  "sliceBoundary": {
+    "axis": 0,
+    "plane": "yz",
+    "actualInputCenter_m": 0.00004181575039094887,
+    "boundaryId": "1",
+    "outsideId": "0",
+    "zeroWidthMembershipFromActualInputs": true
+  },
+  "failures": [
+    {
+      "stage": "run",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ '5f44fcead95e186ff56bf12a12a865bb39ef8e18b51e5945b184ad7d75323f2e'\n- '50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6'\n\n    at file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:195:311\n    at async check (file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:27:100)\n    at async run (file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:193:3)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:26:72)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:220:24"
+    }
+  ],
+  "finishedAt": "2026-10-04T22:54:22.062Z"
+}

@@ -1,0 +1,105 @@
+{
+  "id": 11317433841,
+  "bytes": 18078055,
+  "sha256": "71ab3e8085e7c13e49920b4b505e118c0df882d3ee89678c66b528a2e8e874ab",
+  "crc": "PASS",
+  "members": [
+    "failure.png",
+    "held-module.mjs",
+    "held-history.json",
+    "host.log",
+    "nonsquare-state.json",
+    "report.json",
+    "physical-nonsquare.toml",
+    "source-cube-state.json",
+    "source-cube.png",
+    "trace.zip"
+  ],
+  "report_path": "/workspace/liminis-evidence/live-3d-main-5bea/11317433841/report.json",
+  "status": "FAIL",
+  "source_head": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+  "checks": [
+    {
+      "name": "Observed official Chromium argv preserves sandbox; exact stock launch adds only enable-automation",
+      "status": "PASS",
+      "elapsedMs": 8
+    },
+    {
+      "name": "Actual source cube defaults to 2D; WebGL2 and independent SI centers/box match compositor pixels",
+      "status": "PASS",
+      "elapsedMs": 1061
+    },
+    {
+      "name": "A real Step commits current 2D/3D geometry and inspector before held original history; lazy activation uses latest snapshot",
+      "status": "PASS",
+      "elapsedMs": 941
+    },
+    {
+      "name": "Real orbit, zoom, pan and reset preserve paused SI data and project actual centers with equal scale",
+      "status": "PASS",
+      "elapsedMs": 2422
+    },
+    {
+      "name": "Exact ID, arrows and peak-movement/cancel gestures use current camera revision without selecting on drag",
+      "status": "PASS",
+      "elapsedMs": 1021
+    },
+    {
+      "name": "Opacity and center/box/slice layers change actual pixels; hidden centers have no pointer targets",
+      "status": "PASS",
+      "elapsedMs": 3464
+    },
+    {
+      "name": "All slice axes use inclusive real centers and exact zero-width inputs; outside selection stays inspectable",
+      "status": "PASS",
+      "elapsedMs": 2680
+    },
+    {
+      "name": "Paused target30/60 draws hold exact canvas/API state and preserve normal single-flight polling",
+      "status": "FAIL",
+      "elapsedMs": 3503,
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ '5f44fcead95e186ff56bf12a12a865bb39ef8e18b51e5945b184ad7d75323f2e'\n- '50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6'\n\n    at file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:195:311\n    at async check (file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:27:100)\n    at async run (file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:193:3)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:26:72)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_physical_3d_browser.mjs:220:24"
+    }
+  ],
+  "keys": [
+    "status",
+    "startedAt",
+    "limits",
+    "checks",
+    "sources",
+    "hosts",
+    "geometry",
+    "screenshots",
+    "pages",
+    "pageErrors",
+    "consoleErrors",
+    "unhandled",
+    "cleanupErrors",
+    "oracle",
+    "trace",
+    "sandbox",
+    "qualifications",
+    "workflowRun",
+    "runner",
+    "sourceHead",
+    "sourceTree",
+    "binary",
+    "configs",
+    "browser",
+    "assets",
+    "vendor",
+    "boxPixels",
+    "sourceVolume",
+    "backend",
+    "nonsquareVolume",
+    "delayedHistory",
+    "delayedModule",
+    "atomicStep",
+    "camera",
+    "gestures",
+    "layers",
+    "sliceBoundary",
+    "failures",
+    "finishedAt"
+  ]
+}

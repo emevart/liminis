@@ -1,0 +1,1707 @@
+{
+  "scope": "Read-only deployed recording smoke; does not replace local recorded-browser acceptance.",
+  "publicBase": "https://liminis.dev/",
+  "status": "PASS",
+  "startedAt": "2026-10-04T22:53:43.106Z",
+  "nodeVersion": "v24.21.0",
+  "runner": {
+    "os": "Linux",
+    "arch": "X64",
+    "imageOS": "ubuntu22",
+    "imageVersion": "20260927.309.1"
+  },
+  "workflowRun": "https://github.com/emevart/liminis/actions/runs/37241483046",
+  "workflowAttempt": "1",
+  "timeouts": {
+    "deployment": 180000,
+    "retry": 5000,
+    "fetch": 15000,
+    "operation": 15000,
+    "viewport": 60000,
+    "launch": 20000,
+    "cdp": 5000,
+    "traceStop": 15000,
+    "cleanup": 5000
+  },
+  "checks": [
+    {
+      "name": "Public critical assets and one allowlisted recording match checkout bytes",
+      "status": "PASS",
+      "elapsedMs": 372
+    },
+    {
+      "name": "Observed browser arguments retain protected sandbox process model",
+      "status": "PASS",
+      "elapsedMs": 6
+    },
+    {
+      "name": "Public default observer ready, real canvas, physical 1× hold and every-tick stepping: desktop",
+      "status": "PASS",
+      "elapsedMs": 5144
+    },
+    {
+      "name": "Public default observer ready, real canvas, physical 1× hold and every-tick stepping: mobile",
+      "status": "PASS",
+      "elapsedMs": 5094
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "desktop-default.png",
+      "sha256": "598fcb148c7dc84a1498ea44cdc4377f9e4d81aa492f5e8e5e709b027e9e710b"
+    },
+    {
+      "filename": "mobile-default.png",
+      "sha256": "643fda0bf37625d3446271550e667306060ccab90b8ee9d7be48065df2428954"
+    }
+  ],
+  "publicAssetAttempts": [
+    {
+      "startedAt": "2026-10-04T22:53:43.641Z",
+      "finishedAt": "2026-10-04T22:53:44.013Z",
+      "observations": [
+        {
+          "filename": "observe.html",
+          "url": "https://liminis.dev/observe.html",
+          "expectedBytes": 6894,
+          "expectedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+          "status": "PASS",
+          "redirects": [
+            {
+              "from": "https://liminis.dev/observe.html",
+              "status": 307,
+              "to": "https://liminis.dev/observe"
+            }
+          ],
+          "finalUrl": "https://liminis.dev/observe",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": null,
+          "lastModified": null,
+          "bytes": 6894,
+          "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d"
+        },
+        {
+          "filename": "observer.js",
+          "url": "https://liminis.dev/observer.js",
+          "expectedBytes": 30075,
+          "expectedSha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/observer.js",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"59b0b60dd5223742cf17378d1b3d302b\"",
+          "lastModified": null,
+          "bytes": 30075,
+          "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+        },
+        {
+          "filename": "observer.css",
+          "url": "https://liminis.dev/observer.css",
+          "expectedBytes": 7408,
+          "expectedSha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/observer.css",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"e0a819c8d100c06bf7fe567e9ea85b43\"",
+          "lastModified": null,
+          "bytes": 7408,
+          "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+        },
+        {
+          "filename": "playback.mjs",
+          "url": "https://liminis.dev/playback.mjs",
+          "expectedBytes": 10351,
+          "expectedSha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/playback.mjs",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"2850aa20d2ca44dc599be29b4834d822\"",
+          "lastModified": null,
+          "bytes": 10351,
+          "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+        },
+        {
+          "filename": "recording-loader.mjs",
+          "url": "https://liminis.dev/recording-loader.mjs",
+          "expectedBytes": 3190,
+          "expectedSha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/recording-loader.mjs",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"1facb6aa6e68ce11e20205e269f59088\"",
+          "lastModified": null,
+          "bytes": 3190,
+          "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+        },
+        {
+          "filename": "recording.mjs",
+          "url": "https://liminis.dev/recording.mjs",
+          "expectedBytes": 5021,
+          "expectedSha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/recording.mjs",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"bebaf2833dc0239118df6dc57bd66f3b\"",
+          "lastModified": null,
+          "bytes": 5021,
+          "sha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334"
+        },
+        {
+          "filename": "dense-recording.mjs",
+          "url": "https://liminis.dev/dense-recording.mjs",
+          "expectedBytes": 41209,
+          "expectedSha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/dense-recording.mjs",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"cdefe196c00d29a928b3c1d14c9b9c69\"",
+          "lastModified": null,
+          "bytes": 41209,
+          "sha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f"
+        },
+        {
+          "filename": "catalog.mjs",
+          "url": "https://liminis.dev/catalog.mjs",
+          "expectedBytes": 4345,
+          "expectedSha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/catalog.mjs",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"f4ee9cfaf807cee2d46215f04e9a97a9\"",
+          "lastModified": null,
+          "bytes": 4345,
+          "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+        },
+        {
+          "filename": "data/catalog.json",
+          "url": "https://liminis.dev/data/catalog.json",
+          "expectedBytes": 116490,
+          "expectedSha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/data/catalog.json",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"a186177c71c6165bb76650a26d1cd132\"",
+          "lastModified": null,
+          "bytes": 116490,
+          "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+        },
+        {
+          "filename": "data/cell-chamber-seed-42.json",
+          "url": "https://liminis.dev/data/cell-chamber-seed-42.json",
+          "expectedBytes": 6047570,
+          "expectedSha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/data/cell-chamber-seed-42.json",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"854e45daa5f075832543f362250b2ded\"",
+          "lastModified": null,
+          "bytes": 6047570,
+          "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+        },
+        {
+          "filename": "data/dense-cell-chamber/index.json",
+          "url": "https://liminis.dev/data/dense-cell-chamber/index.json",
+          "expectedBytes": 1977,
+          "expectedSha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/data/dense-cell-chamber/index.json",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"7f23a9ecda316c6f8239bf8a02da3cdf\"",
+          "lastModified": null,
+          "bytes": 1977,
+          "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+        },
+        {
+          "filename": "data/dense-cell-chamber/horizon-10000.json",
+          "url": "https://liminis.dev/data/dense-cell-chamber/horizon-10000.json",
+          "expectedBytes": 18860,
+          "expectedSha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/data/dense-cell-chamber/horizon-10000.json",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"e2511c3573ca5b5b1b6edefbd64d86b3\"",
+          "lastModified": null,
+          "bytes": 18860,
+          "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+        },
+        {
+          "filename": "data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+          "expectedBytes": 312818,
+          "expectedSha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+          "httpStatus": 200,
+          "contentLength": "312818",
+          "etag": "\"a783982649bd5756e0b22af47d6b5e10\"",
+          "lastModified": null,
+          "bytes": 312818,
+          "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+        },
+        {
+          "filename": "data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+          "expectedBytes": 917524,
+          "expectedSha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+          "httpStatus": 200,
+          "contentLength": "917524",
+          "etag": "\"287c1ad97f0b66c1a8038a88ca513f5c\"",
+          "lastModified": null,
+          "bytes": 917524,
+          "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+        },
+        {
+          "filename": "data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz",
+          "expectedBytes": 288747,
+          "expectedSha256": "5d4ecd6006dec3d74816cbc95da9d9ca036e8761094d1aef944e79531e43108e",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz",
+          "httpStatus": 200,
+          "contentLength": "288747",
+          "etag": "\"819fd6e48813a13e0df583dfa8a5d175\"",
+          "lastModified": null,
+          "bytes": 288747,
+          "sha256": "5d4ecd6006dec3d74816cbc95da9d9ca036e8761094d1aef944e79531e43108e"
+        },
+        {
+          "filename": "data/dense-cell-chamber/horizon-100000.json",
+          "url": "https://liminis.dev/data/dense-cell-chamber/horizon-100000.json",
+          "expectedBytes": 128695,
+          "expectedSha256": "10813cdd0fb88921fd62d4db7701d068e00135ae01dcc8213dff3f0d6d627858",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/data/dense-cell-chamber/horizon-100000.json",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"58c0fe2f84f6b184503d77484f507f68\"",
+          "lastModified": null,
+          "bytes": 128695,
+          "sha256": "10813cdd0fb88921fd62d4db7701d068e00135ae01dcc8213dff3f0d6d627858"
+        },
+        {
+          "filename": "data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz",
+          "expectedBytes": 275423,
+          "expectedSha256": "906f92d9637b83e5b8cd2893c1ba7520049581618b2922abf1011f985d3e3e43",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz",
+          "httpStatus": 200,
+          "contentLength": "275423",
+          "etag": "\"ba6cbd48a7c1850cca7131a2f6b615b0\"",
+          "lastModified": null,
+          "bytes": 275423,
+          "sha256": "906f92d9637b83e5b8cd2893c1ba7520049581618b2922abf1011f985d3e3e43"
+        },
+        {
+          "filename": "data/dense-cell-chamber/horizon-1000000.json",
+          "url": "https://liminis.dev/data/dense-cell-chamber/horizon-1000000.json",
+          "expectedBytes": 1229207,
+          "expectedSha256": "ab3849199d73f8d535fdc48dba299000efb64b3433491ff3e260a51fd729ea74",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/data/dense-cell-chamber/horizon-1000000.json",
+          "httpStatus": 200,
+          "contentLength": null,
+          "etag": "W/\"59afea41eab0ebb066b5c5488c2935ff\"",
+          "lastModified": null,
+          "bytes": 1229207,
+          "sha256": "ab3849199d73f8d535fdc48dba299000efb64b3433491ff3e260a51fd729ea74"
+        },
+        {
+          "filename": "data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz",
+          "expectedBytes": 414483,
+          "expectedSha256": "fb31b92d9e8590a69655fb76f2de6ffa82018e973ef3c6aca8af8ffbf1be455b",
+          "status": "PASS",
+          "redirects": [],
+          "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz",
+          "httpStatus": 200,
+          "contentLength": "414483",
+          "etag": "\"bf1fed819b2402dd5c3ab2be09b6c256\"",
+          "lastModified": null,
+          "bytes": 414483,
+          "sha256": "fb31b92d9e8590a69655fb76f2de6ffa82018e973ef3c6aca8af8ffbf1be455b"
+        }
+      ]
+    }
+  ],
+  "browserObservations": [
+    {
+      "name": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "status": "PASS",
+      "sourceResponses": [
+        {
+          "filename": "observe.html",
+          "url": "https://liminis.dev/observe",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 6894,
+          "expectedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+          "status": "PASS",
+          "bytes": 7261,
+          "sha256": "47d1c84479b19c2025ddb8d273bf85d824c8aaf28f46a9043e475e015dea396a",
+          "rawHtmlMatchesSource": false,
+          "knownEdgeInjectionVerified": true,
+          "afterExactInsertionRemovalMatchesSource": true,
+          "normalizedBytes": 6894,
+          "normalizedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+          "rawHtmlFilename": "desktop-observe-raw.html"
+        },
+        {
+          "filename": "observer.js",
+          "url": "https://liminis.dev/observer.js?v=dense-recording-1",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 30075,
+          "expectedSha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422",
+          "status": "PASS",
+          "bytes": 30075,
+          "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+        },
+        {
+          "filename": "observer.css",
+          "url": "https://liminis.dev/observer.css?v=physical-clock-1",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 7408,
+          "expectedSha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347",
+          "status": "PASS",
+          "bytes": 7408,
+          "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+        },
+        {
+          "filename": "playback.mjs",
+          "url": "https://liminis.dev/playback.mjs?v=dense-2",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 10351,
+          "expectedSha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37",
+          "status": "PASS",
+          "bytes": 10351,
+          "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+        },
+        {
+          "filename": "recording-loader.mjs",
+          "url": "https://liminis.dev/recording-loader.mjs?v=dense-2",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 3190,
+          "expectedSha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241",
+          "status": "PASS",
+          "bytes": 3190,
+          "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+        },
+        {
+          "filename": "catalog.mjs",
+          "url": "https://liminis.dev/catalog.mjs",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 4345,
+          "expectedSha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602",
+          "status": "PASS",
+          "bytes": 4345,
+          "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+        },
+        {
+          "filename": "recording.mjs",
+          "url": "https://liminis.dev/recording.mjs",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 5021,
+          "expectedSha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334",
+          "status": "PASS",
+          "bytes": 5021,
+          "sha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334"
+        },
+        {
+          "filename": "dense-recording.mjs",
+          "url": "https://liminis.dev/dense-recording.mjs",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 41209,
+          "expectedSha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f",
+          "status": "PASS",
+          "bytes": 41209,
+          "sha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f"
+        },
+        {
+          "filename": "data/catalog.json",
+          "url": "https://liminis.dev/data/catalog.json",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 116490,
+          "expectedSha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3",
+          "status": "PASS",
+          "bytes": 116490,
+          "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+        },
+        {
+          "filename": "data/cell-chamber-seed-42.json",
+          "url": "https://liminis.dev/data/cell-chamber-seed-42.json",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 6047570,
+          "expectedSha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+          "status": "PASS",
+          "bytes": 6047570,
+          "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+        },
+        {
+          "filename": "data/dense-cell-chamber/index.json",
+          "url": "https://liminis.dev/data/dense-cell-chamber/index.json",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 1977,
+          "expectedSha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+          "status": "PASS",
+          "bytes": 1977,
+          "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+        },
+        {
+          "filename": "data/dense-cell-chamber/horizon-10000.json",
+          "url": "https://liminis.dev/data/dense-cell-chamber/horizon-10000.json",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 18860,
+          "expectedSha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb",
+          "status": "PASS",
+          "bytes": 18860,
+          "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+        },
+        {
+          "filename": "data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 312818,
+          "expectedSha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968",
+          "status": "PASS",
+          "bytes": 312818,
+          "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+        },
+        {
+          "filename": "data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 917524,
+          "expectedSha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1",
+          "status": "PASS",
+          "bytes": 917524,
+          "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/observe.html"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/observe"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/observer.css?v=physical-clock-1"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/observer.js?v=dense-recording-1"
+        },
+        {
+          "method": "GET",
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/recording-loader.mjs?v=dense-2"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/playback.mjs?v=dense-2"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/catalog.mjs"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/recording.mjs"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/dense-recording.mjs"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/data/cell-chamber-seed-42.json"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/data/dense-cell-chamber/index.json"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/data/dense-cell-chamber/horizon-10000.json"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz"
+        }
+      ],
+      "errors": [],
+      "expectedErrors": [
+        {
+          "kind": "requestfailed",
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+          "method": "GET",
+          "errorText": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "kind": "console",
+          "text": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "location": {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+            "line": 0,
+            "column": 0,
+            "lineNumber": 0,
+            "columnNumber": 0
+          }
+        }
+      ],
+      "analyticsRequests": [
+        {
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+          "method": "GET",
+          "resourceType": "Script",
+          "documentUrl": "https://liminis.dev/observe",
+          "measurement": "CDP Request stage before transmission",
+          "status": "BLOCKED_ACKNOWLEDGED"
+        }
+      ],
+      "requestGuard": {
+        "method": "CDP Fetch.requestPaused at Request stage",
+        "allowed": 15,
+        "blocked": 0,
+        "status": "PASS"
+      },
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "location": {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+            "line": 0,
+            "column": 0,
+            "lineNumber": 0,
+            "columnNumber": 0
+          }
+        }
+      ],
+      "requestFailures": [
+        {
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+          "method": "GET",
+          "errorText": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        }
+      ],
+      "redirectResponses": [
+        {
+          "url": "https://liminis.dev/observe.html",
+          "httpStatus": 307,
+          "status": "PASS",
+          "measurement": "Browser canonical redirect headers; no asset byte claim",
+          "target": "https://liminis.dev/observe"
+        }
+      ],
+      "html": {
+        "filename": "observe.html",
+        "url": "https://liminis.dev/observe",
+        "httpStatus": 200,
+        "measurement": "Playwright response.body",
+        "expectedBytes": 6894,
+        "expectedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+        "status": "PASS",
+        "bytes": 7261,
+        "sha256": "47d1c84479b19c2025ddb8d273bf85d824c8aaf28f46a9043e475e015dea396a",
+        "rawHtmlMatchesSource": false,
+        "knownEdgeInjectionVerified": true,
+        "afterExactInsertionRemovalMatchesSource": true,
+        "normalizedBytes": 6894,
+        "normalizedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+        "rawHtmlFilename": "desktop-observe-raw.html"
+      },
+      "initialCanvas": {
+        "paintedPixels": 3809,
+        "sha256": "7b2d91e129b3caae433ffc012d46ed579d4ab0ec89e8ee04ef50b3942b5bb2ca"
+      },
+      "playbackRequestBaseline": 16,
+      "heldSamples": [
+        {
+          "drawTarget": 30,
+          "playhead": 1.1496,
+          "modelSecondsAdvanced": 1.1496,
+          "wallSeconds": 1.1496999999999535,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "7b2d91e129b3caae433ffc012d46ed579d4ab0ec89e8ee04ef50b3942b5bb2ca",
+          "durationAt1x": "3.47 d"
+        },
+        {
+          "drawTarget": 60,
+          "playhead": 2.3047,
+          "modelSecondsAdvanced": 1.1551,
+          "wallSeconds": 1.155100000000093,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "7b2d91e129b3caae433ffc012d46ed579d4ab0ec89e8ee04ef50b3942b5bb2ca",
+          "durationAt1x": "3.47 d"
+        }
+      ],
+      "nextSample": {
+        "time": 30,
+        "tick": 1,
+        "livingCells": 8
+      },
+      "playbackPageRequests": [],
+      "finalization": {
+        "pageClosed": true,
+        "pendingGuardActions": 0,
+        "settledBodyReads": 14,
+        "totalBodyReads": 14,
+        "expectedAnalyticsCount": 1,
+        "finalAnalyticsCount": 1
+      }
+    },
+    {
+      "name": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": "PASS",
+      "sourceResponses": [
+        {
+          "filename": "observe.html",
+          "url": "https://liminis.dev/observe",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 6894,
+          "expectedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+          "status": "PASS",
+          "bytes": 7261,
+          "sha256": "47d1c84479b19c2025ddb8d273bf85d824c8aaf28f46a9043e475e015dea396a",
+          "rawHtmlMatchesSource": false,
+          "knownEdgeInjectionVerified": true,
+          "afterExactInsertionRemovalMatchesSource": true,
+          "normalizedBytes": 6894,
+          "normalizedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+          "rawHtmlFilename": "mobile-observe-raw.html"
+        },
+        {
+          "filename": "observer.css",
+          "url": "https://liminis.dev/observer.css?v=physical-clock-1",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 7408,
+          "expectedSha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347",
+          "status": "PASS",
+          "bytes": 7408,
+          "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+        },
+        {
+          "filename": "observer.js",
+          "url": "https://liminis.dev/observer.js?v=dense-recording-1",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 30075,
+          "expectedSha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422",
+          "status": "PASS",
+          "bytes": 30075,
+          "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+        },
+        {
+          "filename": "playback.mjs",
+          "url": "https://liminis.dev/playback.mjs?v=dense-2",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 10351,
+          "expectedSha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37",
+          "status": "PASS",
+          "bytes": 10351,
+          "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+        },
+        {
+          "filename": "recording-loader.mjs",
+          "url": "https://liminis.dev/recording-loader.mjs?v=dense-2",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 3190,
+          "expectedSha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241",
+          "status": "PASS",
+          "bytes": 3190,
+          "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+        },
+        {
+          "filename": "catalog.mjs",
+          "url": "https://liminis.dev/catalog.mjs",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 4345,
+          "expectedSha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602",
+          "status": "PASS",
+          "bytes": 4345,
+          "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+        },
+        {
+          "filename": "dense-recording.mjs",
+          "url": "https://liminis.dev/dense-recording.mjs",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 41209,
+          "expectedSha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f",
+          "status": "PASS",
+          "bytes": 41209,
+          "sha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f"
+        },
+        {
+          "filename": "recording.mjs",
+          "url": "https://liminis.dev/recording.mjs",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 5021,
+          "expectedSha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334",
+          "status": "PASS",
+          "bytes": 5021,
+          "sha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334"
+        },
+        {
+          "filename": "data/catalog.json",
+          "url": "https://liminis.dev/data/catalog.json",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 116490,
+          "expectedSha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3",
+          "status": "PASS",
+          "bytes": 116490,
+          "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+        },
+        {
+          "filename": "data/cell-chamber-seed-42.json",
+          "url": "https://liminis.dev/data/cell-chamber-seed-42.json",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 6047570,
+          "expectedSha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+          "status": "PASS",
+          "bytes": 6047570,
+          "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+        },
+        {
+          "filename": "data/dense-cell-chamber/index.json",
+          "url": "https://liminis.dev/data/dense-cell-chamber/index.json",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 1977,
+          "expectedSha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+          "status": "PASS",
+          "bytes": 1977,
+          "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+        },
+        {
+          "filename": "data/dense-cell-chamber/horizon-10000.json",
+          "url": "https://liminis.dev/data/dense-cell-chamber/horizon-10000.json",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 18860,
+          "expectedSha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb",
+          "status": "PASS",
+          "bytes": 18860,
+          "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+        },
+        {
+          "filename": "data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 312818,
+          "expectedSha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968",
+          "status": "PASS",
+          "bytes": 312818,
+          "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+        },
+        {
+          "filename": "data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+          "httpStatus": 200,
+          "measurement": "Playwright response.body",
+          "expectedBytes": 917524,
+          "expectedSha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1",
+          "status": "PASS",
+          "bytes": 917524,
+          "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+        }
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/observe.html"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/observe"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/observer.css?v=physical-clock-1"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/observer.js?v=dense-recording-1"
+        },
+        {
+          "method": "GET",
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/recording-loader.mjs?v=dense-2"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/playback.mjs?v=dense-2"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/catalog.mjs"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/recording.mjs"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/dense-recording.mjs"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/data/cell-chamber-seed-42.json"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/data/dense-cell-chamber/index.json"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/data/dense-cell-chamber/horizon-10000.json"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz"
+        },
+        {
+          "method": "GET",
+          "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz"
+        }
+      ],
+      "errors": [],
+      "expectedErrors": [
+        {
+          "kind": "requestfailed",
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+          "method": "GET",
+          "errorText": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        },
+        {
+          "kind": "console",
+          "text": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "location": {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+            "line": 0,
+            "column": 0,
+            "lineNumber": 0,
+            "columnNumber": 0
+          }
+        }
+      ],
+      "analyticsRequests": [
+        {
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+          "method": "GET",
+          "resourceType": "Script",
+          "documentUrl": "https://liminis.dev/observe",
+          "measurement": "CDP Request stage before transmission",
+          "status": "BLOCKED_ACKNOWLEDGED"
+        }
+      ],
+      "requestGuard": {
+        "method": "CDP Fetch.requestPaused at Request stage",
+        "allowed": 15,
+        "blocked": 0,
+        "status": "PASS"
+      },
+      "consoleErrors": [
+        {
+          "text": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+          "location": {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+            "line": 0,
+            "column": 0,
+            "lineNumber": 0,
+            "columnNumber": 0
+          }
+        }
+      ],
+      "requestFailures": [
+        {
+          "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+          "method": "GET",
+          "errorText": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+        }
+      ],
+      "redirectResponses": [
+        {
+          "url": "https://liminis.dev/observe.html",
+          "httpStatus": 307,
+          "status": "PASS",
+          "measurement": "Browser canonical redirect headers; no asset byte claim",
+          "target": "https://liminis.dev/observe"
+        }
+      ],
+      "html": {
+        "filename": "observe.html",
+        "url": "https://liminis.dev/observe",
+        "httpStatus": 200,
+        "measurement": "Playwright response.body",
+        "expectedBytes": 6894,
+        "expectedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+        "status": "PASS",
+        "bytes": 7261,
+        "sha256": "47d1c84479b19c2025ddb8d273bf85d824c8aaf28f46a9043e475e015dea396a",
+        "rawHtmlMatchesSource": false,
+        "knownEdgeInjectionVerified": true,
+        "afterExactInsertionRemovalMatchesSource": true,
+        "normalizedBytes": 6894,
+        "normalizedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+        "rawHtmlFilename": "mobile-observe-raw.html"
+      },
+      "initialCanvas": {
+        "paintedPixels": 3679,
+        "sha256": "7f3d5033497cdc8f8fe734536ef1f1537c3185bbe9bdab54dac1483d6f0f3f01"
+      },
+      "playbackRequestBaseline": 16,
+      "heldSamples": [
+        {
+          "drawTarget": 30,
+          "playhead": 1.1522,
+          "modelSecondsAdvanced": 1.1522,
+          "wallSeconds": 1.1520999999999768,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "7f3d5033497cdc8f8fe734536ef1f1537c3185bbe9bdab54dac1483d6f0f3f01",
+          "durationAt1x": "3.47 d"
+        },
+        {
+          "drawTarget": 60,
+          "playhead": 2.2887,
+          "modelSecondsAdvanced": 1.1365,
+          "wallSeconds": 1.1366999999999534,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "7f3d5033497cdc8f8fe734536ef1f1537c3185bbe9bdab54dac1483d6f0f3f01",
+          "durationAt1x": "3.47 d"
+        }
+      ],
+      "nextSample": {
+        "time": 30,
+        "tick": 1,
+        "livingCells": 8
+      },
+      "playbackPageRequests": [],
+      "finalization": {
+        "pageClosed": true,
+        "pendingGuardActions": 0,
+        "settledBodyReads": 14,
+        "totalBodyReads": 14,
+        "expectedAnalyticsCount": 1,
+        "finalAnalyticsCount": 1
+      }
+    }
+  ],
+  "blockedRequests": [],
+  "analyticsRequests": [
+    {
+      "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+      "method": "GET",
+      "resourceType": "Script",
+      "documentUrl": "https://liminis.dev/observe",
+      "measurement": "CDP Request stage before transmission",
+      "status": "BLOCKED_ACKNOWLEDGED"
+    },
+    {
+      "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+      "method": "GET",
+      "resourceType": "Script",
+      "documentUrl": "https://liminis.dev/observe",
+      "measurement": "CDP Request stage before transmission",
+      "status": "BLOCKED_ACKNOWLEDGED"
+    }
+  ],
+  "hostingHtmlQualification": {
+    "knownEdgeInsertion": {
+      "sourceBytes": 6894,
+      "sourceSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+      "offset": 6878,
+      "bytes": 367,
+      "sha256": "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
+      "scriptUrl": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495"
+    },
+    "analytics_execution": "not_tested",
+    "policy": "Actual browser HTML is retained; only this exact pinned insertion may differ. Its analytics Script GET is intentionally blocked before transmission."
+  },
+  "publicAssets": {
+    "status": "PASS",
+    "measurement": "Node HTTPS GET response bytes, size and SHA-256 against the clean local checkout",
+    "verifiedResponses": [
+      {
+        "filename": "observe.html",
+        "url": "https://liminis.dev/observe.html",
+        "expectedBytes": 6894,
+        "expectedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+        "status": "PASS",
+        "redirects": [
+          {
+            "from": "https://liminis.dev/observe.html",
+            "status": 307,
+            "to": "https://liminis.dev/observe"
+          }
+        ],
+        "finalUrl": "https://liminis.dev/observe",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": null,
+        "lastModified": null,
+        "bytes": 6894,
+        "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d"
+      },
+      {
+        "filename": "observer.js",
+        "url": "https://liminis.dev/observer.js",
+        "expectedBytes": 30075,
+        "expectedSha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/observer.js",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"59b0b60dd5223742cf17378d1b3d302b\"",
+        "lastModified": null,
+        "bytes": 30075,
+        "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+      },
+      {
+        "filename": "observer.css",
+        "url": "https://liminis.dev/observer.css",
+        "expectedBytes": 7408,
+        "expectedSha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/observer.css",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"e0a819c8d100c06bf7fe567e9ea85b43\"",
+        "lastModified": null,
+        "bytes": 7408,
+        "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+      },
+      {
+        "filename": "playback.mjs",
+        "url": "https://liminis.dev/playback.mjs",
+        "expectedBytes": 10351,
+        "expectedSha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/playback.mjs",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"2850aa20d2ca44dc599be29b4834d822\"",
+        "lastModified": null,
+        "bytes": 10351,
+        "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+      },
+      {
+        "filename": "recording-loader.mjs",
+        "url": "https://liminis.dev/recording-loader.mjs",
+        "expectedBytes": 3190,
+        "expectedSha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/recording-loader.mjs",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"1facb6aa6e68ce11e20205e269f59088\"",
+        "lastModified": null,
+        "bytes": 3190,
+        "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+      },
+      {
+        "filename": "recording.mjs",
+        "url": "https://liminis.dev/recording.mjs",
+        "expectedBytes": 5021,
+        "expectedSha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/recording.mjs",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"bebaf2833dc0239118df6dc57bd66f3b\"",
+        "lastModified": null,
+        "bytes": 5021,
+        "sha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334"
+      },
+      {
+        "filename": "dense-recording.mjs",
+        "url": "https://liminis.dev/dense-recording.mjs",
+        "expectedBytes": 41209,
+        "expectedSha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/dense-recording.mjs",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"cdefe196c00d29a928b3c1d14c9b9c69\"",
+        "lastModified": null,
+        "bytes": 41209,
+        "sha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f"
+      },
+      {
+        "filename": "catalog.mjs",
+        "url": "https://liminis.dev/catalog.mjs",
+        "expectedBytes": 4345,
+        "expectedSha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/catalog.mjs",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"f4ee9cfaf807cee2d46215f04e9a97a9\"",
+        "lastModified": null,
+        "bytes": 4345,
+        "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+      },
+      {
+        "filename": "data/catalog.json",
+        "url": "https://liminis.dev/data/catalog.json",
+        "expectedBytes": 116490,
+        "expectedSha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/catalog.json",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"a186177c71c6165bb76650a26d1cd132\"",
+        "lastModified": null,
+        "bytes": 116490,
+        "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+      },
+      {
+        "filename": "data/cell-chamber-seed-42.json",
+        "url": "https://liminis.dev/data/cell-chamber-seed-42.json",
+        "expectedBytes": 6047570,
+        "expectedSha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/cell-chamber-seed-42.json",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"854e45daa5f075832543f362250b2ded\"",
+        "lastModified": null,
+        "bytes": 6047570,
+        "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+      },
+      {
+        "filename": "data/dense-cell-chamber/index.json",
+        "url": "https://liminis.dev/data/dense-cell-chamber/index.json",
+        "expectedBytes": 1977,
+        "expectedSha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/index.json",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"7f23a9ecda316c6f8239bf8a02da3cdf\"",
+        "lastModified": null,
+        "bytes": 1977,
+        "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+      },
+      {
+        "filename": "data/dense-cell-chamber/horizon-10000.json",
+        "url": "https://liminis.dev/data/dense-cell-chamber/horizon-10000.json",
+        "expectedBytes": 18860,
+        "expectedSha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/horizon-10000.json",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"e2511c3573ca5b5b1b6edefbd64d86b3\"",
+        "lastModified": null,
+        "bytes": 18860,
+        "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+      },
+      {
+        "filename": "data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+        "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+        "expectedBytes": 312818,
+        "expectedSha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+        "httpStatus": 200,
+        "contentLength": "312818",
+        "etag": "\"a783982649bd5756e0b22af47d6b5e10\"",
+        "lastModified": null,
+        "bytes": 312818,
+        "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+      },
+      {
+        "filename": "data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+        "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+        "expectedBytes": 917524,
+        "expectedSha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+        "httpStatus": 200,
+        "contentLength": "917524",
+        "etag": "\"287c1ad97f0b66c1a8038a88ca513f5c\"",
+        "lastModified": null,
+        "bytes": 917524,
+        "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+      },
+      {
+        "filename": "data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz",
+        "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz",
+        "expectedBytes": 288747,
+        "expectedSha256": "5d4ecd6006dec3d74816cbc95da9d9ca036e8761094d1aef944e79531e43108e",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz",
+        "httpStatus": 200,
+        "contentLength": "288747",
+        "etag": "\"819fd6e48813a13e0df583dfa8a5d175\"",
+        "lastModified": null,
+        "bytes": 288747,
+        "sha256": "5d4ecd6006dec3d74816cbc95da9d9ca036e8761094d1aef944e79531e43108e"
+      },
+      {
+        "filename": "data/dense-cell-chamber/horizon-100000.json",
+        "url": "https://liminis.dev/data/dense-cell-chamber/horizon-100000.json",
+        "expectedBytes": 128695,
+        "expectedSha256": "10813cdd0fb88921fd62d4db7701d068e00135ae01dcc8213dff3f0d6d627858",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/horizon-100000.json",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"58c0fe2f84f6b184503d77484f507f68\"",
+        "lastModified": null,
+        "bytes": 128695,
+        "sha256": "10813cdd0fb88921fd62d4db7701d068e00135ae01dcc8213dff3f0d6d627858"
+      },
+      {
+        "filename": "data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz",
+        "url": "https://liminis.dev/data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz",
+        "expectedBytes": 275423,
+        "expectedSha256": "906f92d9637b83e5b8cd2893c1ba7520049581618b2922abf1011f985d3e3e43",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz",
+        "httpStatus": 200,
+        "contentLength": "275423",
+        "etag": "\"ba6cbd48a7c1850cca7131a2f6b615b0\"",
+        "lastModified": null,
+        "bytes": 275423,
+        "sha256": "906f92d9637b83e5b8cd2893c1ba7520049581618b2922abf1011f985d3e3e43"
+      },
+      {
+        "filename": "data/dense-cell-chamber/horizon-1000000.json",
+        "url": "https://liminis.dev/data/dense-cell-chamber/horizon-1000000.json",
+        "expectedBytes": 1229207,
+        "expectedSha256": "ab3849199d73f8d535fdc48dba299000efb64b3433491ff3e260a51fd729ea74",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/horizon-1000000.json",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"59afea41eab0ebb066b5c5488c2935ff\"",
+        "lastModified": null,
+        "bytes": 1229207,
+        "sha256": "ab3849199d73f8d535fdc48dba299000efb64b3433491ff3e260a51fd729ea74"
+      },
+      {
+        "filename": "data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz",
+        "url": "https://liminis.dev/data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz",
+        "expectedBytes": 414483,
+        "expectedSha256": "fb31b92d9e8590a69655fb76f2de6ffa82018e973ef3c6aca8af8ffbf1be455b",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz",
+        "httpStatus": 200,
+        "contentLength": "414483",
+        "etag": "\"bf1fed819b2402dd5c3ab2be09b6c256\"",
+        "lastModified": null,
+        "bytes": 414483,
+        "sha256": "fb31b92d9e8590a69655fb76f2de6ffa82018e973ef3c6aca8af8ffbf1be455b"
+      }
+    ]
+  },
+  "launchArgumentCheck": {
+    "status": "PASS",
+    "method": "CDP Browser.getBrowserCommandLine",
+    "arguments": [
+      "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+      "--disable-field-trial-config",
+      "--disable-background-networking",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-back-forward-cache",
+      "--disable-breakpad",
+      "--disable-client-side-phishing-detection",
+      "--disable-component-extensions-with-background-pages",
+      "--disable-component-update",
+      "--no-default-browser-check",
+      "--disable-default-apps",
+      "--disable-dev-shm-usage",
+      "--disable-edgeupdater",
+      "--disable-extensions",
+      "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+      "--enable-features=CDPScreenshotNewSurface",
+      "--allow-pre-commit-input",
+      "--disable-hang-monitor",
+      "--disable-ipc-flooding-protection",
+      "--disable-popup-blocking",
+      "--disable-prompt-on-repost",
+      "--disable-renderer-backgrounding",
+      "--force-color-profile=srgb",
+      "--metrics-recording-only",
+      "--no-first-run",
+      "--password-store=basic",
+      "--use-mock-keychain",
+      "--no-service-autorun",
+      "--export-tagged-pdf",
+      "--disable-search-engine-choice-screen",
+      "--unsafely-disable-devtools-self-xss-warnings",
+      "--edge-skip-compat-layer-relaunch",
+      "--disable-infobars",
+      "--disable-search-engine-choice-screen",
+      "--disable-sync",
+      "--enable-unsafe-swiftshader",
+      "--headless",
+      "--hide-scrollbars",
+      "--mute-audio",
+      "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+      "--enable-automation",
+      "--user-data-dir=/tmp/playwright_chromiumdev_profile-NrMe5u",
+      "--remote-debugging-pipe",
+      "--no-startup-window",
+      "--use-gl=angle",
+      "--use-angle=swiftshader-webgl",
+      "--ozone-platform=headless",
+      "--allow-pre-commit-input"
+    ],
+    "forbiddenSwitches": []
+  },
+  "trace": {
+    "status": "PASS",
+    "filename": "trace.zip",
+    "coverage": "Actual public browser actions, responses, snapshots and screenshots; Node fetch observations are in evidence.json.",
+    "bytes": 5397189,
+    "sha256": "b56720f13cf00e8a83784e6bdd4d10efa08634c08a67344c586710261e989176"
+  },
+  "httpCoverage": {
+    "publicAssetBytes": "Node HTTPS responses and actual Playwright response bodies are verified separately.",
+    "playbackRequests": "Playwright Page.request events only; no public-server request counter is available.",
+    "fullLocalHttpAcceptance": "NOT_ASSERTED: remains the separate site/playback.browser.mjs gate."
+  },
+  "limits": [
+    "Chromium/Linux and desktop plus 390px mobile viewport only.",
+    "Input assignment plus dispatched change verifies adapter semantics; native typing/range/touch and full accessibility are not asserted.",
+    "Native background scheduling, achieved FPS, native download transport and kernel isolation are not asserted.",
+    "The 30/60 controls are draw targets; held sample pixels and physical playhead are checked, not achieved frame rate."
+  ],
+  "sourceCommit": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+  "sourceTree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "trackedWorkingTreeStatus": "",
+  "scriptSha256": "aa56ce8ab6b5e4573fdc3b3125fb7c4046e8eb2f093120db82f0beb9a458c7fe",
+  "denseAdmission": {
+    "indexSha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+    "manifest": "horizon-10000.json",
+    "actualStates": 10001,
+    "sourceValidation": "Local publication was independently validated before merge; expected states decoded by reviewed source module",
+    "browserScope": "Deployed initial and prefetched chunks plus exact every-tick Step; whole-horizon rendering is not claimed",
+    "publicationRuntimeVerification": false
+  },
+  "browserSourceFiles": [
+    {
+      "filename": "observe.html",
+      "bytes": 6894,
+      "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d"
+    },
+    {
+      "filename": "observer.js",
+      "bytes": 30075,
+      "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+    },
+    {
+      "filename": "observer.css",
+      "bytes": 7408,
+      "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+    },
+    {
+      "filename": "playback.mjs",
+      "bytes": 10351,
+      "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+    },
+    {
+      "filename": "recording-loader.mjs",
+      "bytes": 3190,
+      "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+    },
+    {
+      "filename": "recording.mjs",
+      "bytes": 5021,
+      "sha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334"
+    },
+    {
+      "filename": "dense-recording.mjs",
+      "bytes": 41209,
+      "sha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f"
+    },
+    {
+      "filename": "catalog.mjs",
+      "bytes": 4345,
+      "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+    },
+    {
+      "filename": "data/catalog.json",
+      "bytes": 116490,
+      "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+    },
+    {
+      "filename": "data/cell-chamber-seed-42.json",
+      "bytes": 6047570,
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+    },
+    {
+      "filename": "data/dense-cell-chamber/index.json",
+      "bytes": 1977,
+      "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+    },
+    {
+      "filename": "data/dense-cell-chamber/horizon-10000.json",
+      "bytes": 18860,
+      "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+      "bytes": 312818,
+      "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+      "bytes": 917524,
+      "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+    }
+  ],
+  "publicDenseEndpointPins": [
+    {
+      "id": "cell-chamber-10k",
+      "horizon": 10000,
+      "filenames": [
+        "data/dense-cell-chamber/index.json",
+        "data/dense-cell-chamber/horizon-10000.json",
+        "data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz"
+      ],
+      "scope": "Node HTTPS metadata and final-chunk byte pins; no public endpoint rendering or whole-dataset download"
+    },
+    {
+      "id": "cell-chamber-100k",
+      "horizon": 100000,
+      "filenames": [
+        "data/dense-cell-chamber/index.json",
+        "data/dense-cell-chamber/horizon-100000.json",
+        "data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz"
+      ],
+      "scope": "Node HTTPS metadata and final-chunk byte pins; no public endpoint rendering or whole-dataset download"
+    },
+    {
+      "id": "cell-chamber-1m",
+      "horizon": 1000000,
+      "filenames": [
+        "data/dense-cell-chamber/index.json",
+        "data/dense-cell-chamber/horizon-1000000.json",
+        "data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz"
+      ],
+      "scope": "Node HTTPS metadata and final-chunk byte pins; no public endpoint rendering or whole-dataset download"
+    }
+  ],
+  "sourceFiles": [
+    {
+      "filename": "observe.html",
+      "bytes": 6894,
+      "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d"
+    },
+    {
+      "filename": "observer.js",
+      "bytes": 30075,
+      "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+    },
+    {
+      "filename": "observer.css",
+      "bytes": 7408,
+      "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+    },
+    {
+      "filename": "playback.mjs",
+      "bytes": 10351,
+      "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+    },
+    {
+      "filename": "recording-loader.mjs",
+      "bytes": 3190,
+      "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+    },
+    {
+      "filename": "recording.mjs",
+      "bytes": 5021,
+      "sha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334"
+    },
+    {
+      "filename": "dense-recording.mjs",
+      "bytes": 41209,
+      "sha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f"
+    },
+    {
+      "filename": "catalog.mjs",
+      "bytes": 4345,
+      "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+    },
+    {
+      "filename": "data/catalog.json",
+      "bytes": 116490,
+      "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+    },
+    {
+      "filename": "data/cell-chamber-seed-42.json",
+      "bytes": 6047570,
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+    },
+    {
+      "filename": "data/dense-cell-chamber/index.json",
+      "bytes": 1977,
+      "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+    },
+    {
+      "filename": "data/dense-cell-chamber/horizon-10000.json",
+      "bytes": 18860,
+      "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+      "bytes": 312818,
+      "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+      "bytes": 917524,
+      "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz",
+      "bytes": 288747,
+      "sha256": "5d4ecd6006dec3d74816cbc95da9d9ca036e8761094d1aef944e79531e43108e"
+    },
+    {
+      "filename": "data/dense-cell-chamber/horizon-100000.json",
+      "bytes": 128695,
+      "sha256": "10813cdd0fb88921fd62d4db7701d068e00135ae01dcc8213dff3f0d6d627858"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz",
+      "bytes": 275423,
+      "sha256": "906f92d9637b83e5b8cd2893c1ba7520049581618b2922abf1011f985d3e3e43"
+    },
+    {
+      "filename": "data/dense-cell-chamber/horizon-1000000.json",
+      "bytes": 1229207,
+      "sha256": "ab3849199d73f8d535fdc48dba299000efb64b3433491ff3e260a51fd729ea74"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz",
+      "bytes": 414483,
+      "sha256": "fb31b92d9e8590a69655fb76f2de6ffa82018e973ef3c6aca8af8ffbf1be455b"
+    }
+  ],
+  "selectedRecording": {
+    "id": "cell-chamber-10k",
+    "filename": "./data/cell-chamber-seed-42.json",
+    "bytes": 6047570,
+    "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+  },
+  "playwrightVersion": "1.61.1",
+  "browser": {
+    "engine": "Chromium",
+    "version": "149.0.7827.55",
+    "chromiumSandbox": true
+  },
+  "browser_html_raw_matches_source": false,
+  "browser_html_known_edge_injection_verified": true,
+  "browser_html_after_exact_insertion_removal_matches_source": true,
+  "application_playback": "PASS",
+  "finishedAt": "2026-10-04T22:53:54.981Z"
+}

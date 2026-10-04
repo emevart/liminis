@@ -1,0 +1,113 @@
+{
+  "verdict": "FAIL_PRESERVED_CAUSE_UNRESOLVED",
+  "reviewScope": "Independent read-only diagnosis of the original main LIVE-3b hold failure. No model, browser, native build, or source change.",
+  "sourceHead": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+  "sourceTree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "workflowRun": "37241483046",
+  "artifactId": "11317433841",
+  "originalZip": {
+    "bytes": 18078055,
+    "sha256": "71ab3e8085e7c13e49920b4b505e118c0df882d3ee89678c66b528a2e8e874ab",
+    "crc": "PASS",
+    "members": 10,
+    "expandedBytes": 18583779
+  },
+  "trace": {
+    "bytes": 18195274,
+    "sha256": "03f4ef396dda340d5df50eaec858c60181505c9090ddc67a28527451ebe61857",
+    "crc": "PASS",
+    "members": 482,
+    "expandedBytes": 21908919
+  },
+  "sourceByteGuards": {
+    "reportSources": 10,
+    "exactGitBlobSizesAndSHA256": "PASS",
+    "treeMatchesPreviouslyAcceptedCandidate": true
+  },
+  "actualGate": {
+    "status": "FAIL",
+    "passedChecks": 7,
+    "failedCheck": 8,
+    "thirtyWindowHash": "matched baseline",
+    "sixtyWindowHash": "mismatched baseline",
+    "baselineEncodedPngSHA256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+    "sixtyEncodedPngSHA256": "5f44fcead95e186ff56bf12a12a865bb39ef8e18b51e5945b184ad7d75323f2e",
+    "failureSource": "scripts/check_physical_3d_browser.mjs:195",
+    "pageErrors": 0,
+    "consoleErrors": 0,
+    "unhandled": 0,
+    "cleanupErrors": 0
+  },
+  "observations": {
+    "fullPagePNGViewed": [
+      "source-cube.png",
+      "failure.png"
+    ],
+    "fullPageVisualFinding": "Both readable, correctly labelled; failed page shows eight centers, selected exact ID 0, shown tick 1 and SI inspector. No visible scene corruption.",
+    "traceFramesReviewed": 123,
+    "sameDecodedCanvasCropFrames": 121,
+    "sameDecodedCanvasCropImageDimensions": [
+      800,
+      500
+    ],
+    "canvasCrop": [
+      0,
+      30,
+      628,
+      447
+    ],
+    "decodedCropSHA256": "228f0a22495cbbd417eb6ed79371ad02bbed9a486d8caf34c2e1e307fa0f2ad3",
+    "otherFrames": [
+      {
+        "timestampMs": 12320.145,
+        "imageDimensions": [
+          751,
+          469
+        ]
+      },
+      {
+        "timestampMs": 12518.513,
+        "imageDimensions": [
+          751,
+          469
+        ]
+      }
+    ],
+    "representativeComparison": {
+      "firstTimestampMs": 12398.198,
+      "lastTimestampMs": 15539.701,
+      "canvasChangedDecodedRGBPixels": 0,
+      "sidebarChangedDecodedRGBPixels": 0,
+      "footerPixelsDeltaOver10": 38,
+      "visibleFooterDifference": "FPS 30 to 60"
+    },
+    "cameraBaselineVersusEarlyAtomic": "Exact camera/frustum/viewport equality in saved audits, shown tick 1 and selected marker unchanged. Revision 7 to 96 and compiled geometry count 5 to 7 reflect earlier interactions, not post-window proof.",
+    "independentNumericsReview": "Separate reviewer reports all 22 saved nonsquare tick-1 API responses preserve every cell field/type/order/f64 bits; paused dt/time/ledger/control count unchanged.",
+    "sourceCadenceHandler": "Screen-FPS change updates screenFps and frameAt only; it does not update camera or model state."
+  },
+  "evidenceLimits": [
+    "Baseline, 30-window and 60-window original canvas PNG buffers were discarded and cannot be recovered from trace.",
+    "No post-FPS camera/resource audit was saved.",
+    "Low-resolution JPEG equality cannot establish exact full-resolution RGBA equality or exclude one-pixel/subpixel raster differences.",
+    "PNG encoding-only, capture timing, and genuine raster causes remain unresolved.",
+    "No achieved FPS, hardware GPU, arbitrary-camera, or overall CI PASS is asserted."
+  ],
+  "requiredNarrowDiagnostic": [
+    "Retain all three original compositor PNGs before any equality assertion, including IHDR dimensions, encoded SHA and strict decoded RGBA SHA.",
+    "Read and retain actual model/camera/viewport/layer/resource evidence after each hold before asserting, including on mismatch.",
+    "Keep the failed original immutable; do not classify the failure as flaky or allow pixel tolerances/masks/retries.",
+    "Any gate contract change to strict decoded RGBA plus dimensions requires an explicit reviewed pixel-identity qualification and fresh exact-head protected artifact."
+  ],
+  "privacy": {
+    "scope": "Bounded UTF-8 inspection of original outer and nested trace plus two actual PNG views; not a guarantee of absence of every secret.",
+    "utf8Files": 21,
+    "utf8Bytes": 2152746,
+    "binaryOrNonUtf8Members": 470,
+    "candidateCounts": {
+      "credentialValue": 0,
+      "authorizationHeaderValue": 0,
+      "nonemptyCookieHeader": 0,
+      "privateOldContext": 0
+    }
+  }
+}

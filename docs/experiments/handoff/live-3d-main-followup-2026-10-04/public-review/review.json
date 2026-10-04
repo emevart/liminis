@@ -1,0 +1,63 @@
+{
+  "status": "PASS_WITH_SCOPE",
+  "blockers": 0,
+  "other_findings": 0,
+  "source_head": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+  "source_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "workflow_run": "https://github.com/emevart/liminis/actions/runs/37241483046",
+  "scope": "Independent numerical/source/protocol review of the saved public playback smoke. The separate main3D paused-image failure remains unresolved by this public result.",
+  "details": "integrity.json",
+  "original_zip_bytes": 5634585,
+  "original_zip_sha256": "7686895bf55e00810d676aeaf2ebd948bc68678481c238eebe26fb1b82cc7d1f",
+  "raw_report_sha256": "7e3a0387a66464accab4a1330650ebd970cf6a4c70276aadd543f7047e457b91",
+  "mandatory_checks": 4,
+  "source_binding": "Exact main5bea tree equals accepted9d tree.19 clean-checkout source/data hashes and19 actual same-origin HTTPS GET response pins agree.16 persisted public trace response bodies independently match expected bytes or the exact admitted HTML insertion. Browser observations separately record14 verified source responses per layout.",
+  "public_delivery": {
+    "horizons": [10000,100000,1000000],
+    "method": "Node actual HTTPS metadata and each horizon's final original gzip size/SHA, against reviewed local index/manifests/data.",
+    "frames": [10001,100001,1000001],
+    "dt_seconds": 30,
+    "archived_identity": {"engine_source":"b2024cef08f0aa910a711a41c6a37fbc7b2ba35a","world_format":30,"chamber_format":1},
+    "qualification": "Metadata and final-gzip delivery pins do not assert public100k/1M rendering, decoding every frame, full2.4GB download, or runtime publication/receipt attestation."
+  },
+  "public_browser": {
+    "selected_horizon":10000,
+    "actual_states":10001,
+    "layouts":["desktop1440x900","mobile390x844"],
+    "initial_prefetched_chunks_and_exact_next": "Verified current default dense attachment; Next shows tick1/time30s/8living cells. The two initial/prefetched original chunks and retained archived sparse overview remain distinct sources.",
+    "model_clock": "Four1x hold windows at draw30/60 advance1.1496/1.1551/1.1522/1.1365 model seconds against1.1497/1.1551/1.1521/1.1367 wall seconds. Maximum error0.0002s is below0.1s tolerance. Shown real tick0 pixels are held; no interpolation or additional playback page requests occurs.",
+    "duration": "10,000ticks×30s=300,000model seconds, displayed3.47days at1x. Target draw FPS does not change nominal duration.",
+    "screenshots":2,
+    "screenshots_viewed":2,
+    "qualification":"This is bounded default10k desktop/mobile rendering and stepping. Native typing/touch/download, native background scheduling, complete accessibility and achieved FPS are not asserted. Page-request observations do not prove public-server counters."
+  },
+  "hosting_and_request_protocol": {
+    "node_html_raw_matches_source":true,
+    "browser_html_raw_matches_source":false,
+    "known_exact_insertion_bytes":367,
+    "known_exact_insertion_sha256":"bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
+    "independent_exact_insertion_removal": "Both retained raw browser HTML responses match their recorded SHA. Removing only the pre-pinned367-byte insertion at the fixed offset yields the exact6894-byte checkout HTML. No arbitrary HTML normalization is admitted.",
+    "analytics_gets_blocked_at_request_stage":2,
+    "unexpected_blocked_requests":0,
+    "unexpected_browser_errors":0,
+    "qualification":"The two expected blocked analytics GETs and their exact error events are identified. Analytics execution is not tested; this guarded browser result does not assert an ordinary unguarded browser never sends analytics. Both page guards settle and close with no pending actions."
+  },
+  "integrity_privacy": {
+    "outer_members":6,
+    "nested_trace_members":146,
+    "outer_nested_crc_and_unique_relative_paths":"PASS",
+    "utf8_members_scanned":13,
+    "utf8_bytes_scanned":6976819,
+    "obvious_credential_matches":0,
+    "private_old_context_matches":0,
+    "nonempty_sensitive_request_response_headers":0,
+    "qualification":"Bounded UTF8 obvious-secret/private-context and structured-header scan; no comprehensive binary/PNG secret guarantee. Two original PNGs were viewed."
+  },
+  "qualifications": [
+    "Pinned official Playwright1.61.1 Chromium/Linux actual argv has no listed sandbox opt-out switches. Stock SwiftShader/software-GPU and kernel/container sandbox limits remain explicit; hardware GPU/FPS are unasserted.",
+    "Archived world30/chamber1 observations and producer provenance remain unchanged. Public playback adds no biology, spatial coordinates or model steps.",
+    "The initial/prefetched default10k browser gate and all3 final-gzip Node HTTPS pins have different scopes. Neither replaces full saved-recording validation or the independent local/protected browser regressions.",
+    "The main5bea3D test reports7 passes followed by a paused30/60 image failure. This public PASS does not close that separate failure or establish an overall green workflow.",
+    "Review used saved artifacts only; no live HTTP, model, Cargo or browser rerun occurred."
+  ]
+}

@@ -1,0 +1,373 @@
+{
+  "alive": true,
+  "cells": [
+    {
+      "age_s": 0,
+      "birth_tick": 0,
+      "division_mass_mol": 5.999996506578231e-14,
+      "energy_j": 5.000000000349777e-12,
+      "generation": 0,
+      "genome": {
+        "base_growth_per_s": 0.0005,
+        "base_km_mol_m3": 0.04999993474807951,
+        "capture_fraction": 0.001,
+        "division_cost_j": 1.0000000027804608e-12,
+        "division_mass_mol": 5.999996506578231e-14,
+        "kinetics": 0,
+        "maintenance_w": 4.999999347569718e-16,
+        "spatial": {
+          "mobility_scale": 1,
+          "radius_at_division_m": 0.000001
+        },
+        "starvation_tolerance_s": 3600
+      },
+      "genome_key": "K+0",
+      "id": "0",
+      "mass_mol": 2.9999982532891156e-14,
+      "parent_id": null,
+      "phenotype": {
+        "growth_per_s": 0.0005,
+        "km_mol_m3": 0.04999993474807951
+      },
+      "position_m": [
+        0.00013805541719493565,
+        0.00005685191066651384,
+        0.000022157105001577
+      ],
+      "starvation_s": 0
+    },
+    {
+      "age_s": 0,
+      "birth_tick": 0,
+      "division_mass_mol": 5.999996506578231e-14,
+      "energy_j": 5.000000000349777e-12,
+      "generation": 0,
+      "genome": {
+        "base_growth_per_s": 0.0005,
+        "base_km_mol_m3": 0.04999993474807951,
+        "capture_fraction": 0.001,
+        "division_cost_j": 1.0000000027804608e-12,
+        "division_mass_mol": 5.999996506578231e-14,
+        "kinetics": 0,
+        "maintenance_w": 4.999999347569718e-16,
+        "spatial": {
+          "mobility_scale": 1,
+          "radius_at_division_m": 0.000001
+        },
+        "starvation_tolerance_s": 3600
+      },
+      "genome_key": "K+0",
+      "id": "1",
+      "mass_mol": 2.9999982532891156e-14,
+      "parent_id": null,
+      "phenotype": {
+        "growth_per_s": 0.0005,
+        "km_mol_m3": 0.04999993474807951
+      },
+      "position_m": [
+        0.00004339226192610324,
+        0.000002490352789342343,
+        0.00004087383993817161
+      ],
+      "starvation_s": 0
+    },
+    {
+      "age_s": 0,
+      "birth_tick": 0,
+      "division_mass_mol": 5.999996506578231e-14,
+      "energy_j": 5.000000000349777e-12,
+      "generation": 0,
+      "genome": {
+        "base_growth_per_s": 0.0005,
+        "base_km_mol_m3": 0.04999993474807951,
+        "capture_fraction": 0.001,
+        "division_cost_j": 1.0000000027804608e-12,
+        "division_mass_mol": 5.999996506578231e-14,
+        "kinetics": 0,
+        "maintenance_w": 4.999999347569718e-16,
+        "spatial": {
+          "mobility_scale": 1,
+          "radius_at_division_m": 0.000001
+        },
+        "starvation_tolerance_s": 3600
+      },
+      "genome_key": "K+0",
+      "id": "2",
+      "mass_mol": 2.9999982532891156e-14,
+      "parent_id": null,
+      "phenotype": {
+        "growth_per_s": 0.0005,
+        "km_mol_m3": 0.04999993474807951
+      },
+      "position_m": [
+        0.000011331262554575373,
+        0.00008781932008874377,
+        0.000030503936328710718
+      ],
+      "starvation_s": 0
+    },
+    {
+      "age_s": 0,
+      "birth_tick": 0,
+      "division_mass_mol": 5.999996506578231e-14,
+      "energy_j": 5.000000000349777e-12,
+      "generation": 0,
+      "genome": {
+        "base_growth_per_s": 0.0005,
+        "base_km_mol_m3": 0.04999993474807951,
+        "capture_fraction": 0.001,
+        "division_cost_j": 1.0000000027804608e-12,
+        "division_mass_mol": 5.999996506578231e-14,
+        "kinetics": 0,
+        "maintenance_w": 4.999999347569718e-16,
+        "spatial": {
+          "mobility_scale": 1,
+          "radius_at_division_m": 0.000001
+        },
+        "starvation_tolerance_s": 3600
+      },
+      "genome_key": "K+0",
+      "id": "3",
+      "mass_mol": 2.9999982532891156e-14,
+      "parent_id": null,
+      "phenotype": {
+        "growth_per_s": 0.0005,
+        "km_mol_m3": 0.04999993474807951
+      },
+      "position_m": [
+        0.00012627922099949854,
+        0.000022901852033737282,
+        0.000009510687770359323
+      ],
+      "starvation_s": 0
+    },
+    {
+      "age_s": 0,
+      "birth_tick": 0,
+      "division_mass_mol": 5.999996506578231e-14,
+      "energy_j": 5.000000000349777e-12,
+      "generation": 0,
+      "genome": {
+        "base_growth_per_s": 0.0005,
+        "base_km_mol_m3": 0.04999993474807951,
+        "capture_fraction": 0.001,
+        "division_cost_j": 1.0000000027804608e-12,
+        "division_mass_mol": 5.999996506578231e-14,
+        "kinetics": 0,
+        "maintenance_w": 4.999999347569718e-16,
+        "spatial": {
+          "mobility_scale": 1,
+          "radius_at_division_m": 0.000001
+        },
+        "starvation_tolerance_s": 3600
+      },
+      "genome_key": "K+0",
+      "id": "4",
+      "mass_mol": 2.9999982532891156e-14,
+      "parent_id": null,
+      "phenotype": {
+        "growth_per_s": 0.0005,
+        "km_mol_m3": 0.04999993474807951
+      },
+      "position_m": [
+        0.00018434635850359966,
+        0.00008859895209246439,
+        0.00001768597531607837
+      ],
+      "starvation_s": 0
+    },
+    {
+      "age_s": 0,
+      "birth_tick": 0,
+      "division_mass_mol": 5.999996506578231e-14,
+      "energy_j": 5.000000000349777e-12,
+      "generation": 0,
+      "genome": {
+        "base_growth_per_s": 0.0005,
+        "base_km_mol_m3": 0.04999993474807951,
+        "capture_fraction": 0.001,
+        "division_cost_j": 1.0000000027804608e-12,
+        "division_mass_mol": 5.999996506578231e-14,
+        "kinetics": 0,
+        "maintenance_w": 4.999999347569718e-16,
+        "spatial": {
+          "mobility_scale": 1,
+          "radius_at_division_m": 0.000001
+        },
+        "starvation_tolerance_s": 3600
+      },
+      "genome_key": "K+0",
+      "id": "5",
+      "mass_mol": 2.9999982532891156e-14,
+      "parent_id": null,
+      "phenotype": {
+        "growth_per_s": 0.0005,
+        "km_mol_m3": 0.04999993474807951
+      },
+      "position_m": [
+        0.0001874767488897666,
+        0.000029887130606046164,
+        0.000021330565930632524
+      ],
+      "starvation_s": 0
+    },
+    {
+      "age_s": 0,
+      "birth_tick": 0,
+      "division_mass_mol": 5.999996506578231e-14,
+      "energy_j": 5.000000000349777e-12,
+      "generation": 0,
+      "genome": {
+        "base_growth_per_s": 0.0005,
+        "base_km_mol_m3": 0.04999993474807951,
+        "capture_fraction": 0.001,
+        "division_cost_j": 1.0000000027804608e-12,
+        "division_mass_mol": 5.999996506578231e-14,
+        "kinetics": 0,
+        "maintenance_w": 4.999999347569718e-16,
+        "spatial": {
+          "mobility_scale": 1,
+          "radius_at_division_m": 0.000001
+        },
+        "starvation_tolerance_s": 3600
+      },
+      "genome_key": "K+0",
+      "id": "6",
+      "mass_mol": 2.9999982532891156e-14,
+      "parent_id": null,
+      "phenotype": {
+        "growth_per_s": 0.0005,
+        "km_mol_m3": 0.04999993474807951
+      },
+      "position_m": [
+        0.0001545594498903498,
+        0.00008935716516188225,
+        0.000011578200550269464
+      ],
+      "starvation_s": 0
+    },
+    {
+      "age_s": 0,
+      "birth_tick": 0,
+      "division_mass_mol": 5.999996506578231e-14,
+      "energy_j": 5.000000000349777e-12,
+      "generation": 0,
+      "genome": {
+        "base_growth_per_s": 0.0005,
+        "base_km_mol_m3": 0.04999993474807951,
+        "capture_fraction": 0.001,
+        "division_cost_j": 1.0000000027804608e-12,
+        "division_mass_mol": 5.999996506578231e-14,
+        "kinetics": 0,
+        "maintenance_w": 4.999999347569718e-16,
+        "spatial": {
+          "mobility_scale": 1,
+          "radius_at_division_m": 0.000001
+        },
+        "starvation_tolerance_s": 3600
+      },
+      "genome_key": "K+0",
+      "id": "7",
+      "mass_mol": 2.9999982532891156e-14,
+      "parent_id": null,
+      "phenotype": {
+        "growth_per_s": 0.0005,
+        "km_mol_m3": 0.04999993474807951
+      },
+      "position_m": [
+        0.0001307538037486705,
+        0.000022298835037032907,
+        1.924822652210667e-7
+      ],
+      "starvation_s": 0
+    }
+  ],
+  "chamber_format": 2,
+  "config_hash": "blake3:d574aca2423617d8",
+  "dt_seconds": 30,
+  "error": null,
+  "events": [],
+  "kind": "cells",
+  "measured_multiplier": 0,
+  "measured_tps": 0,
+  "model": {
+    "boundaries": "reflecting",
+    "dimensions_m": [
+      0.0002,
+      0.0001,
+      0.00005
+    ],
+    "environment": "well_mixed",
+    "excluded_volume": false,
+    "spatial_positions": true,
+    "temperature_k": 298.15,
+    "transport": "passive_dilute_brownian",
+    "viscosity_pa_s": 0.001,
+    "volume_m3": 1e-12
+  },
+  "pacing": {
+    "mode": "manual",
+    "multiplier": 90
+  },
+  "persistence": {
+    "autosave_seconds": 60,
+    "capture_bytes": 4588,
+    "capture_ms": 0.009407,
+    "enabled": true,
+    "error": null,
+    "history_samples": 0,
+    "kind": "cells",
+    "retained_checkpoints": 3,
+    "run_id": "run-1791154446376-4671-0",
+    "saved_at": 1791154446383,
+    "saved_tick": 0,
+    "saving": true,
+    "session_id": "session-1791154446376-4671-0",
+    "skipped_observations": 0
+  },
+  "residual": null,
+  "resources": [
+    {
+      "amount_mol": 9.999813477268304e-15,
+      "concentration": 0.009999813477268304,
+      "id": "CO2"
+    },
+    {
+      "amount_mol": 0,
+      "concentration": 0,
+      "id": "DET"
+    },
+    {
+      "amount_mol": 9.999999960041972e-12,
+      "concentration": 9.999999960041972,
+      "id": "FOOD"
+    },
+    {
+      "amount_mol": 1.9999999920083944e-12,
+      "concentration": 1.9999999920083944,
+      "id": "O2"
+    },
+    {
+      "amount_mol": 5.5500000012420614e-8,
+      "concentration": 55500.00001242061,
+      "id": "WATER"
+    }
+  ],
+  "running": false,
+  "save_pending": false,
+  "scenario": "cell-chamber-physical",
+  "seed": "42",
+  "sim_time": 0,
+  "summary": {
+    "births": 0,
+    "deaths": 0,
+    "divisions": 0,
+    "generation_max": 0,
+    "living_cells": 8,
+    "total_biomass_mol": 2.3999986026312925e-13,
+    "total_cell_energy_j": 4.0000000002798214e-11
+  },
+  "target_tps": 3,
+  "tick": 0,
+  "world_format_version": 31
+}
