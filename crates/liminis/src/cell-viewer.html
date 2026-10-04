@@ -34,12 +34,29 @@
       .offline[data-open="1"] { display:block; }
       .workspace { min-width:0; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) 310px; }
       .stage { position:relative; min-width:0; min-height:500px; overflow:hidden; background:#080d0b; }
+      .stage[data-physical="true"] { min-height:560px; }
       #chamber { display:block; width:100%; height:100%; touch-action:none; }
       .stage-head { position:absolute; z-index:2; top:15px; left:17px; pointer-events:none; }
       .stage-head h1 { margin:1px 0 0; font-size:22px; font-weight:550; }
       .stage-head strong { color:var(--mint); font-size:28px; font-weight:600; }
+      .stage[data-physical="true"] .stage-head { right:17px; }
+      .stage-range { margin:4px 0 0; color:var(--muted); overflow-wrap:anywhere; }
       .stage-caption { position:absolute; z-index:2; top:82px; left:17px; right:17px; max-width:54ch; color:var(--muted); font-size:11px; pointer-events:none; }
       .stage-caption p { margin:0 0 5px; }
+      [hidden] { display:none !important; }
+      .projection-controls { position:absolute; z-index:3; top:139px; left:17px; right:17px; display:flex; align-items:center; gap:7px 12px; flex-wrap:wrap; font-size:11px; }
+      .projection-controls label { display:flex; align-items:center; gap:5px; }
+      .projection-controls input[type="number"] { width:76px; min-width:0; }
+      .projection-controls select, .projection-controls input[type="number"], .id-search input { padding:4px 6px; border:1px solid var(--rule); background:#141b17; }
+      .projection-controls .slice-fields { display:flex; gap:8px; flex-wrap:wrap; }
+      .projection-error { flex-basis:100%; margin:0; color:var(--coral); }
+      .id-search { display:flex; gap:6px; margin-bottom:10px; }
+      .id-search input { flex:1; min-width:0; width:100%; }
+      .id-search button { padding:4px 8px; }
+      .hit-candidates { margin:9px 0; }
+      .hit-candidates label { display:block; margin-bottom:4px; }
+      .hit-candidates select { width:100%; padding:4px; border:1px solid var(--rule); background:#141b17; }
+      .selection-note { color:var(--coral); margin:8px 0; }
       .stage-meta { position:absolute; z-index:2; left:17px; right:17px; bottom:13px; display:flex; gap:5px 14px; flex-wrap:wrap; color:var(--muted); pointer-events:none; }
       .event-mark { position:absolute; z-index:2; top:18px; right:18px; color:#b9c8c0; text-align:right; pointer-events:none; }
       .side { min-height:0; overflow:auto; border-left:1px solid var(--rule); background:var(--surface); }
@@ -97,6 +114,14 @@
         .section { min-width:0; }
         .readout { position:sticky; bottom:0; z-index:8; flex-wrap:wrap; }
         .controls { width:100%; margin:0; flex-wrap:wrap; }
+        /* Отдельная строка offline не занимает места, пока уведомление скрыто. */
+        .shell:has(.stage[data-physical="true"]) { grid-template-columns:minmax(0,1fr); grid-template-rows:repeat(5,auto); align-content:start; }
+        .shell:has(.stage[data-physical="true"]) > .masthead { grid-row:1; }
+        .shell:has(.stage[data-physical="true"]) > .offline { grid-row:2; }
+        .shell:has(.stage[data-physical="true"]) > .workspace { display:contents; }
+        .shell:has(.stage[data-physical="true"]) .stage { grid-row:3; }
+        .shell:has(.stage[data-physical="true"]) > .readout { grid-row:4; position:static; }
+        .shell:has(.stage[data-physical="true"]) .side { grid-row:5; }
       }
       @media (max-width:520px) {
         .masthead { padding:8px 10px; }
@@ -122,15 +147,23 @@
       </header>
       <div class="offline" id="offline" data-open="0">No cell host answering on this port.</div>
       <main class="workspace">
-        <section class="stage" aria-label="Cell culture inventory schematic">
+        <section class="stage" id="cell-stage" aria-label="Cell culture inventory schematic">
           <canvas id="chamber" tabindex="0" aria-label="Schematic inventory of living cells, not physical coordinates. Select a cell to inspect it."></canvas>
-          <div class="stage-head"><span class="micro">Culture inventory</span><h1><strong id="cell-count">0</strong> living cells</h1></div>
-          <div class="stage-caption"><p>Culture inventory schematic. Icon placement does not represent physical coordinates.</p><p id="physical-state-note" hidden>Physical positions are saved; chemical resources remain shared and well mixed.</p></div>
+          <div class="stage-head"><span class="micro" id="stage-title">Culture inventory</span><h1><strong id="cell-count">0</strong> <span id="population-label">living cells</span></h1><p class="stage-range num" id="projection-range" hidden></p></div>
+          <div class="stage-caption"><p id="schematic-caption">Culture inventory schematic. Icon placement does not represent physical coordinates.</p><p id="physical-state-note" hidden>Physical centers from saved coordinates. Marker size is visual, not cell body radius. Chemical resources remain shared and well mixed.</p></div>
+          <div class="projection-controls" id="projection-controls" hidden>
+            <label for="projection-plane">Plane <select id="projection-plane"><option value="xy">XY</option><option value="xz">XZ</option><option value="yz">YZ</option></select></label>
+            <span class="num" id="projection-axes">x → · y ↑</span>
+            <label><input type="checkbox" id="slice-enabled"/>Slice <span id="slice-axis">z</span></label>
+            <div class="slice-fields" id="slice-fields" hidden><label>Center µm <input type="number" id="slice-center" min="0" step="any" required/></label><label>Thickness µm <input type="number" id="slice-thickness" min="0" step="any" required/></label></div>
+            <p class="projection-error" id="slice-error" role="alert" hidden></p>
+            <p class="projection-error" id="projection-error" role="alert" hidden></p>
+          </div>
           <div class="event-mark num" id="event-mark">—</div>
           <div class="stage-meta num"><span id="volume">— m³</span><span id="temperature">— K</span><span id="sim-time">model time — s</span><span id="dt">dt — s</span><span id="event-totals">—</span></div>
         </section>
         <aside class="side">
-          <section class="section" aria-labelledby="cell-title"><div class="section-head"><h2 id="cell-title">Cell inspector</h2><span class="micro" id="selection-state">none selected</span></div><div id="cell-detail" class="empty">Select a living cell.</div></section>
+          <section class="section" aria-labelledby="cell-title"><div class="section-head"><h2 id="cell-title">Cell inspector</h2><span class="micro" id="selection-state">none selected</span></div><form class="id-search" id="cell-search"><input class="num" id="cell-id" type="text" inputmode="numeric" placeholder="Exact cell ID" aria-label="Exact cell ID" autocomplete="off"/><button type="submit">Find</button></form><div class="hit-candidates" id="hit-candidates" hidden><label class="micro" id="hit-label" for="candidate-list">Overlapping centers</label><select class="num" id="candidate-list" aria-label="Cells hit at the shown snapshot"></select></div><div id="cell-detail" class="empty">Select a living cell.</div></section>
           <section class="section"><div class="section-head"><h2>Population</h2><span class="micro" id="history-state">history · loading</span></div><div class="chart"><canvas id="population-chart"></canvas></div><div class="chart-legend"><span style="--legend:#86dfb7">cells</span><span style="--legend:#e8f1ec">biomass</span></div></section>
           <section class="section"><div class="section-head"><h2>Genomes</h2><span class="micro" id="genome-count">0 variants</span></div><div class="chart"><canvas id="genome-chart"></canvas></div></section>
           <section class="section"><div class="section-head"><h2>Environment</h2><span class="micro">actual concentration</span></div><div class="resources" id="resources"></div></section>
@@ -159,7 +192,7 @@
     <script type="module">
       const $ = (id) => document.getElementById(id);
       const finite = (value, fallback=0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
-      const view = { state:null, history:[], identity:null, historyAt:0, historyBusy:false, historyStatus:"loading", selected:null, hits:[], layout:new Map(), usedSlots:new Set(), pollBusy:false, pollSerial:0, saveRequest:null, saveError:null, screenFps:30, frameAt:null };
+      const view = { state:null, drawnTick:null, visibleIds:[], candidates:[], candidateTick:null, projectionError:null, plane:"xy", slice:{enabled:false,center:0,thickness:0}, sliceAxis:null, history:[], identity:null, historyAt:0, historyBusy:false, historyStatus:"loading", selected:null, hits:[], layout:new Map(), usedSlots:new Set(), pollBusy:false, pollSerial:0, saveRequest:null, saveError:null, screenFps:30, frameAt:null };
       const palette = ["#86dfb7","#72d5df","#ff8f83","#e69fce","#e7c66f","#94b9ff","#b9df78","#d99b78"];
 
       async function json(url) {
@@ -189,6 +222,94 @@
       }
       function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
 
+      // BEGIN PHYSICAL HELPERS: pure geometry over the confirmed snapshot.
+      function projectionAxes(plane){
+        const axes={xy:[0,1,2],xz:[0,2,1],yz:[1,2,0]}[plane];
+        if(!axes)throw new Error("Unknown projection plane");
+        return axes;
+      }
+      function validateDimensions(dimensions){
+        if(!Array.isArray(dimensions)||dimensions.length!==3||!dimensions.every(length=>typeof length==="number"&&Number.isFinite(length)&&length>0))throw new Error("Invalid physical box dimensions");
+      }
+      function validatePosition(position,dimensions){
+        if(!Array.isArray(position)||position.length!==3||!position.every((value,axis)=>typeof value==="number"&&Number.isFinite(value)&&value>=0&&value<=dimensions[axis]))throw new Error("Invalid physical position");
+      }
+      function projectionFrame(dimensions,plane,viewport){
+        validateDimensions(dimensions);
+        if(![viewport.left,viewport.top,viewport.width,viewport.height].every(value=>typeof value==="number"&&Number.isFinite(value))||viewport.width<=0||viewport.height<=0)throw new Error("Invalid projection viewport");
+        const axes=projectionAxes(plane), scale=Math.min(viewport.width/dimensions[axes[0]],viewport.height/dimensions[axes[1]]);
+        if(!Number.isFinite(scale)||scale<=0)throw new Error("Unsupported projection scale");
+        const width=dimensions[axes[0]]*scale,height=dimensions[axes[1]]*scale;
+        return {axes,scale,width,height,left:viewport.left+(viewport.width-width)/2,top:viewport.top+(viewport.height-height)/2};
+      }
+      function sliceInterval(length,slice){
+        if(typeof length!=="number"||!Number.isFinite(length)||length<=0)throw new Error("Invalid physical slice dimension");
+        if(!slice?.enabled)return [0,length];
+        if(!Number.isFinite(slice.center)||slice.center<0||slice.center>length||!Number.isFinite(slice.thickness)||slice.thickness<0)throw new Error("Invalid physical slice");
+        return [Math.max(0,slice.center-slice.thickness/2),Math.min(length,slice.center+slice.thickness/2)];
+      }
+      function sliceIncludes(position,axis,slice,length){
+        const [lower,upper]=sliceInterval(length,slice);
+        return position[axis]>=lower&&position[axis]<=upper;
+      }
+      function projectPhysicalCells(cells,dimensions,plane,viewport,slice=null){
+        const frame=projectionFrame(dimensions,plane,viewport), markers=[];
+        for(const cell of cells){
+          if(typeof cell.id!=="string"||!/^\d+$/.test(cell.id))throw new Error("Invalid exact cell ID");
+          validatePosition(cell.position_m,dimensions);
+          if(sliceIncludes(cell.position_m,frame.axes[2],slice,dimensions[frame.axes[2]]))markers.push({id:cell.id,genome_key:cell.genome_key,x:frame.left+cell.position_m[frame.axes[0]]*frame.scale,y:frame.top+frame.height-cell.position_m[frame.axes[1]]*frame.scale,r:8});
+        }
+        return {frame,markers};
+      }
+      function compareCellIds(a,b){
+        const left=BigInt(a),right=BigInt(b);
+        return left<right?-1:left>right?1:a<b?-1:a>b?1:0;
+      }
+      function hitCandidates(hits,x,y){
+        return hits.map(hit=>({...hit,distance:Math.hypot(x-hit.x,y-hit.y)})).filter(hit=>hit.distance<=hit.r).sort((a,b)=>a.distance-b.distance||compareCellIds(a.id,b.id));
+      }
+      function navigateVisibleIds(ids,selected,direction){
+        const ordered=[...ids].sort(compareCellIds);if(!ordered.length)return null;
+        const index=ordered.indexOf(selected);if(index<0)return direction>0?ordered[0]:ordered.at(-1);
+        return ordered[(index+direction+ordered.length)%ordered.length];
+      }
+      // END PHYSICAL HELPERS
+
+      function micrometers(value,digits=6){
+        if(typeof value!=="number"||!Number.isFinite(value)||!Number.isFinite(value*1e6))throw new Error("Unsupported coordinate in µm");
+        return (value*1e6).toLocaleString("en-US",{maximumSignificantDigits:digits});
+      }
+      function configureProjection(reset=false){
+        const s=view.state,physical=s?.chamber_format===2;$("projection-controls").hidden=!physical;$("schematic-caption").hidden=physical;$("physical-state-note").hidden=!physical;
+        $("stage-title").textContent=physical?"Physical centers":"Culture inventory";$("population-label").textContent=physical?"visible / total":"living cells";
+        $("cell-stage").dataset.physical=String(physical);$("cell-stage").setAttribute("aria-label",physical?"Physical cell centers in an orthographic projection":"Cell culture inventory schematic");$("projection-range").hidden=!physical;
+        if(!physical){document.querySelector(".stage-caption").style.top="";return;}
+        const axes=projectionAxes(view.plane),names=["x","y","z"],dimension=s.model?.dimensions_m?.[axes[2]];
+        $("projection-axes").textContent=`${names[axes[0]]} → · ${names[axes[1]]} ↑`;$("slice-axis").textContent=names[axes[2]];
+        if(Number.isFinite(dimension)&&dimension>0&&(reset||view.sliceAxis!==axes[2])){view.slice.center=dimension/2;view.slice.thickness=dimension/10;view.sliceAxis=axes[2];$("slice-center").value=String(view.slice.center*1e6);$("slice-thickness").value=String(view.slice.thickness*1e6);$("slice-error").hidden=true;}
+        $("slice-enabled").checked=view.slice.enabled;$("slice-fields").hidden=!view.slice.enabled;
+        $("slice-center").max=Number.isFinite(dimension)?String(dimension*1e6):"";
+      }
+      function drawPhysical(ctx,w,h,cells){
+        const dimensions=view.state.model?.dimensions_m,axes=projectionAxes(view.plane),names=["x","y","z"];validateDimensions(dimensions);
+        const [lower,upper]=sliceInterval(dimensions[axes[2]],view.slice),mode=!view.slice.enabled?"full projection":view.slice.thickness===0?"exact center plane":"inclusive center slice";
+        $("projection-range").textContent=`${names[axes[2]]} ∈ [${micrometers(lower,17)}, ${micrometers(upper,17)}] µm · ${mode}`;
+        const controls=$("projection-controls"),head=document.querySelector(".stage-head"),caption=document.querySelector(".stage-caption"),meta=document.querySelector(".stage-meta");caption.style.top=`${Math.max(82,head.offsetTop+head.offsetHeight+12)}px`;controls.style.top=`${Math.max(139,caption.offsetTop+caption.offsetHeight+12)}px`;
+        const top=controls.offsetTop+controls.offsetHeight+30,bottom=meta.offsetHeight+66;
+        const {frame,markers}=projectPhysicalCells(cells,view.state.model?.dimensions_m,view.plane,{left:54,top,width:Math.max(1,w-84),height:Math.max(1,h-top-bottom)},view.slice);
+        const {left,top:y,width,height,scale}=frame;
+        ctx.strokeStyle="#26382e";ctx.lineWidth=1;
+        for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(left+width*i/4,y);ctx.lineTo(left+width*i/4,y+height);ctx.moveTo(left,y+height*i/4);ctx.lineTo(left+width,y+height*i/4);ctx.stroke();}
+        ctx.strokeStyle="#77978a";ctx.strokeRect(left,y,width,height);ctx.fillStyle="#b6c9bd";ctx.font="11px ui-monospace,monospace";
+        ctx.fillText("0",left-12,y+height+15);ctx.fillText(`${names[axes[0]]} →  ${micrometers(dimensions[axes[0]])} µm`,left+width-ctx.measureText(`${names[axes[0]]} →  ${micrometers(dimensions[axes[0]])} µm`).width,y+height+15);
+        ctx.fillText(`${names[axes[1]]} ↑  ${micrometers(dimensions[axes[1]])} µm`,left,y-10);
+        const target=dimensions[axes[0]]/4,unit=10**Math.floor(Math.log10(target)),ruler=[5,2,1].map(factor=>factor*unit).find(length=>length<=target),rulerY=y+height+34;
+        ctx.beginPath();ctx.moveTo(left,rulerY-4);ctx.lineTo(left,rulerY);ctx.lineTo(left+ruler*scale,rulerY);ctx.lineTo(left+ruler*scale,rulerY-4);ctx.stroke();ctx.fillText(`${micrometers(ruler)} µm`,left+ruler*scale+6,rulerY+3);
+        for(const marker of markers){ctx.beginPath();ctx.arc(marker.x,marker.y,3.5,0,Math.PI*2);ctx.fillStyle=color(marker.genome_key);ctx.fill();if(marker.id===view.selected){ctx.beginPath();ctx.arc(marker.x,marker.y,6.5,0,Math.PI*2);ctx.strokeStyle="#ffffff";ctx.lineWidth=1.5;ctx.stroke();}}
+        view.hits=markers;$("cell-count").textContent=`${markers.length.toLocaleString("en-US")} / ${cells.length.toLocaleString("en-US")}`;
+        $("chamber").setAttribute("aria-label",`${view.plane.toUpperCase()} physical centers, ${names[axes[0]]} right and ${names[axes[1]]} up, ${view.slice.enabled?`${names[axes[2]]} slice`:"full projection"}. ${markers.length} visible of ${cells.length} living cells at shown snapshot tick ${view.state.tick}. Arrow keys navigate visible exact IDs.`);
+      }
+
       function retireLayout(cells){
         const living=new Set(cells.map(cell=>cell.id));
         for(const [id,slot] of view.layout){if(!living.has(id)){view.layout.delete(id);view.usedSlots.delete(slot);}}
@@ -197,12 +318,17 @@
       function drawChamber() {
         const {ctx,w,h}=prepare($("chamber"));ctx.clearRect(0,0,w,h);ctx.fillStyle="#080d0b";ctx.fillRect(0,0,w,h);
         const cells=view.state?.cells||[], pad=34, head=document.querySelector(".stage-head"), meta=document.querySelector(".stage-meta");
+        view.hits=[];view.projectionError=null;
+        if(view.state?.chamber_format===2){
+          try{drawPhysical(ctx,w,h,cells);}catch(error){view.hits=[];view.projectionError=error.message;$("cell-count").textContent=`0 / ${cells.length}`;$("projection-range").textContent="Slice interval unavailable";$("chamber").setAttribute("aria-label",`Physical projection unavailable at shown snapshot tick ${view.state.tick}: ${error.message}`);}
+          $("projection-error").hidden=!view.projectionError;$("projection-error").textContent=view.projectionError?`Cannot show physical centers: ${view.projectionError}`:"";
+          view.visibleIds=view.hits.map(hit=>hit.id);view.drawnTick=view.state.tick;return;
+        }
         const top=head.offsetTop+head.offsetHeight+24, bottom=meta.offsetHeight+32;
         const usableW=Math.max(1,w-pad*2), usableH=Math.max(1,h-top-bottom);
         const base=Math.max(3,Math.min(13,Math.sqrt(usableW*usableH/Math.max(1,cells.length))*0.25));
         const latestTick=Math.max(-1,...(view.state?.events||[]).map((event)=>finite(event.tick,-1)));
         const affected=new Set((view.state?.events||[]).filter((event)=>finite(event.tick,-1)===latestTick).flatMap((event)=>[event.cell_id,event.parent_id,...(event.children||[])].filter(Boolean)));
-        view.hits=[];
         for(const cell of cells){
           if(!view.layout.has(cell.id)){let slot=hash(cell.id)%12288,probes=0;while(view.usedSlots.has(slot)&&probes++<12288)slot=(slot+1)%12288;view.usedSlots.add(slot);view.layout.set(cell.id,slot);}
           const slot=view.layout.get(cell.id), hx=(slot%128+.5)/128, hy=(Math.floor(slot/128)+.5)/96;
@@ -216,6 +342,7 @@
           roundRect(ctx,-length/2-3,-thickness/2-3,length+6,thickness+6,(thickness+6)/2);ctx.stroke();ctx.restore();
           view.hits.push({id:cell.id,x,y,r:Math.max(8,length*.62)});
         }
+        view.visibleIds=view.hits.map(hit=>hit.id);view.drawnTick=view.state?.tick??null;
         $("chamber").setAttribute("aria-label",`${cells.length} living cells in a schematic inventory, not physical coordinates. Select a cell to inspect it.`);
       }
 
@@ -234,20 +361,30 @@
       function objectPairs(host,title,object){if(!object||typeof object!=="object"||!Object.keys(object).length)return;const wrap=document.createElement("div");wrap.className="object";const label=document.createElement("div");label.className="micro";label.textContent=title;const dl=document.createElement("dl");dl.className="kv object-grid";for(const [key,value] of Object.entries(object))addPair(dl,key,inspectValue(value));wrap.append(label,dl);host.append(wrap);}
       function renderInspector(){
         const cell=(view.state?.cells||[]).find((item)=>item.id===view.selected), host=$("cell-detail");host.replaceChildren();
-        if(!cell){host.className="empty";host.textContent=view.selected?"Selected cell is no longer living.":"Select a living cell.";$("selection-state").textContent=view.selected?"not living":"none selected";return;}
-        host.className="";$("selection-state").textContent=`generation ${cell.generation}`;
+        const tick=view.drawnTick??"—",physical=view.state?.chamber_format===2,outside=physical&&!view.visibleIds.includes(view.selected);
+        if(!cell){host.className="empty";host.textContent=view.selected?`ID ${view.selected} is not present in the shown snapshot at tick ${tick}.`:`Select a living cell or enter its exact ID. Shown snapshot tick ${tick}.`;$("selection-state").textContent=view.selected?"not present":"none selected";return;}
+        host.className="";$("selection-state").textContent=view.projectionError?"position unavailable":outside?"outside slice":`generation ${cell.generation}`;
         const code=document.createElement("div");code.className="selected-code";const dot=document.createElement("span");dot.className="swatch";dot.style.background=color(cell.genome_key);const name=document.createElement("b");name.textContent=cell.genome_key;code.append(dot,name);host.append(code);
-        const dl=document.createElement("dl");dl.className="kv object-grid";addPair(dl,"id",cell.id);addPair(dl,"parent",cell.parent_id??"founder");addPair(dl,"birth tick",String(cell.birth_tick));addPair(dl,"age",`${format(cell.age_s)} s`);addPair(dl,"mass",`${format(cell.mass_mol)} mol`);addPair(dl,"division mass",`${format(cell.division_mass_mol)} mol`);addPair(dl,"energy",`${format(cell.energy_j)} J`);host.append(dl);objectPairs(host,"Genome",cell.genome);objectPairs(host,"Phenotype",cell.phenotype);
+        if(view.projectionError||outside){const note=document.createElement("p");note.className="selection-note";note.textContent=view.projectionError?"The physical projection is unavailable; coordinates are not replaced.":"Selected cell is outside the current slice; its saved center is shown below.";host.append(note);}
+        const dl=document.createElement("dl");dl.className="kv object-grid";addPair(dl,"id",cell.id);addPair(dl,"shown snapshot tick",String(tick));addPair(dl,"parent",cell.parent_id??"founder");addPair(dl,"birth tick",String(cell.birth_tick));addPair(dl,"age",`${format(cell.age_s)} s`);addPair(dl,"mass",`${format(cell.mass_mol)} mol`);addPair(dl,"division mass",`${format(cell.division_mass_mol)} mol`);addPair(dl,"energy",`${format(cell.energy_j)} J`);
+        if(physical){try{validateDimensions(view.state.model?.dimensions_m);validatePosition(cell.position_m,view.state.model.dimensions_m);for(const [axis,name] of ["x","y","z"].entries())addPair(dl,`${name} center`,`${micrometers(cell.position_m[axis])} µm`);}catch(error){addPair(dl,"position",error.message);}}
+        host.append(dl);objectPairs(host,"Genome",cell.genome);objectPairs(host,"Phenotype",cell.phenotype);
       }
+      function renderCandidates(){
+        const host=$("hit-candidates"),list=$("candidate-list");list.replaceChildren();host.hidden=view.candidates.length<2||view.candidateTick!==view.drawnTick;
+        if(host.hidden)return;$("hit-label").textContent=`${view.candidates.length} hits · snapshot tick ${view.candidateTick}`;list.size=Math.min(4,view.candidates.length);
+        for(const candidate of view.candidates){const option=document.createElement("option");option.value=candidate.id;option.textContent=candidate.id;option.selected=candidate.id===view.selected;list.append(option);}
+      }
+      function selectCell(id){view.selected=id;drawChamber();renderInspector();renderCandidates();}
 
       function trim(samples,limit=360){if(samples.length<=limit)return samples;return Array.from({length:limit},(_,i)=>samples[Math.round(i*(samples.length-1)/(limit-1))]).filter((s,i,a)=>!i||s.tick!==a[i-1].tick);}
       function mergeHistory(samples){const map=new Map(view.history.map((s)=>[s.tick,s]));for(const sample of samples)map.set(sample.tick,sample);view.history=trim([...map.values()].sort((a,b)=>a.tick-b.tick));}
       function liveSample(state){return {tick:finite(state.tick),sim_time:finite(state.sim_time),living_cells:finite(state.summary?.living_cells),births:finite(state.summary?.births),deaths:finite(state.summary?.deaths),biomass_mol:finite(state.summary?.total_biomass_mol),cell_energy_j:finite(state.summary?.total_cell_energy_j),resources:Object.fromEntries((state.resources||[]).map((r)=>[r.id,finite(r.concentration)])),genomes:Object.fromEntries((state.cells||[]).reduce((map,c)=>map.set(c.genome_key,(map.get(c.genome_key)||0)+1),new Map()))};}
       async function loadHistory(force=false){
         if(view.historyBusy||!view.identity)return;const now=Date.now();if(!force&&now-view.historyAt<4000)return;
-        view.historyAt=now;view.historyBusy=true;view.historyStatus="loading";renderCharts();
-        try{const payload=await json("/api/history");if(`${payload.run_id}\n${payload.session_id}`!==view.identity)return;mergeHistory(payload.samples||[]);view.historyStatus="ready";}
-        catch(error){console.warn(error);view.historyStatus="unavailable";}finally{view.historyBusy=false;}
+        const identity=view.identity;view.historyAt=now;view.historyBusy=true;view.historyStatus="loading";renderCharts();
+        try{const payload=await json("/api/history");if(identity!==view.identity||`${payload.run_id}\n${payload.session_id}`!==identity)return;mergeHistory(payload.samples||[]);view.historyStatus="ready";}
+        catch(error){console.warn(error);if(identity===view.identity)view.historyStatus="unavailable";}finally{view.historyBusy=false;renderCharts();}
       }
       function chartBase(canvas){const out=prepare(canvas),p={l:36,r:7,t:8,b:20};out.ctx.clearRect(0,0,out.w,out.h);out.ctx.strokeStyle="#27342d";out.ctx.lineWidth=1;for(let i=0;i<3;i++){const y=p.t+(out.h-p.t-p.b)*i/2+.5;out.ctx.beginPath();out.ctx.moveTo(p.l,y);out.ctx.lineTo(out.w-p.r,y);out.ctx.stroke();}return {...out,p,iw:out.w-p.l-p.r,ih:out.h-p.t-p.b};}
       function renderCharts(){
@@ -266,14 +403,40 @@
 
       function renderSave(){const p=view.state?.persistence,status=$("save-status"),button=$("save");if(view.saveRequest&&view.pollSerial>view.saveRequest.serial&&!p?.saving&&!view.state?.save_pending&&p?.saved_tick!=null&&finite(p.saved_tick)>=view.saveRequest.tick){view.saveRequest=null;view.saveError=null;}if(p?.error)view.saveRequest=null;const error=view.saveError||p?.error,saving=!!p?.saving||!!view.state?.save_pending||!!view.saveRequest;button.disabled=saving||!p?.enabled;status.dataset.state=error?"error":saving?"saving":"saved";if(error){status.textContent=`error · ${error}`;status.title=error;}else if(saving){status.textContent=`${view.state?.save_pending?"queued":"saving"} ${view.saveRequest?.tick??view.state.tick}`;}else if(p?.saved_tick!=null){status.textContent=`saved ${p.saved_tick}`;status.title=p.saved_at?new Date(p.saved_at).toLocaleString():"";}else status.textContent="not saved";}
       function renderState(){
-        const s=view.state;if(!s)return;$("scenario").textContent=s.scenario;$("seed").textContent=s.seed;$("hash").textContent=s.config_hash;$("wfv").textContent=s.world_format_version;$("tick").textContent=finite(s.tick).toLocaleString("en-US");$("tps").textContent=format(s.measured_tps);$("actual-speed").textContent=`×${format(s.measured_multiplier)}`;$("target-speed").textContent=s.pacing?.mode==="maximum"?"Maximum":`×${format(s.pacing?.multiplier)} / ${format(s.target_tps)}`;$("dt").textContent=`dt ${format(s.dt_seconds)} s`;$("generation").textContent=String(s.summary?.generation_max??0);$("matter").textContent=s.residual?.matter??"—";$("energy").textContent=s.residual?.energy??"—";$("cell-count").textContent=finite(s.summary?.living_cells).toLocaleString("en-US");$("physical-state-note").hidden=!s.model?.spatial_positions;$("volume").textContent=`${format(s.model?.volume_m3)} m³`;$("temperature").textContent=`${format(s.model?.temperature_k)} K`;$("sim-time").textContent=`model time ${format(s.sim_time)} s`;$("event-totals").textContent=`${finite(s.summary?.births)} born · ${finite(s.summary?.deaths)} died · ${finite(s.summary?.divisions)} divisions`;$("live").dataset.live=String(s.running&&s.alive!==false?1:0);$("live-label").textContent=s.error?"simulation error":s.alive===false?"stopped":s.running?"evolving":"paused";
+        const s=view.state;if(!s)return;$("scenario").textContent=s.scenario;$("seed").textContent=s.seed;$("hash").textContent=s.config_hash;$("wfv").textContent=s.world_format_version;$("tick").textContent=finite(s.tick).toLocaleString("en-US");$("tps").textContent=format(s.measured_tps);$("actual-speed").textContent=`×${format(s.measured_multiplier)}`;$("target-speed").textContent=s.pacing?.mode==="maximum"?"Maximum":`×${format(s.pacing?.multiplier)} / ${format(s.target_tps)}`;$("dt").textContent=`dt ${format(s.dt_seconds)} s`;$("generation").textContent=String(s.summary?.generation_max??0);$("matter").textContent=s.residual?.matter??"—";$("energy").textContent=s.residual?.energy??"—";$("cell-count").textContent=finite(s.summary?.living_cells).toLocaleString("en-US");$("volume").textContent=`${format(s.model?.volume_m3)} m³`;$("temperature").textContent=`${format(s.model?.temperature_k)} K`;$("sim-time").textContent=`model time ${format(s.sim_time)} s`;$("event-totals").textContent=`${finite(s.summary?.births)} born · ${finite(s.summary?.deaths)} died · ${finite(s.summary?.divisions)} divisions`;$("live").dataset.live=String(s.running&&s.alive!==false?1:0);$("live-label").textContent=s.error?"simulation error":s.alive===false?"stopped":s.running?"evolving":"paused";
         $("play").innerHTML=s.running?'<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="4" height="16" x="6" y="4" rx="1"/><rect width="4" height="16" x="14" y="4" rx="1"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>';$("play").setAttribute("aria-label",s.running?"Pause simulation":"Run simulation");$("play").title=s.running?"Pause":"Run";
-        if(document.activeElement!==$("reset-seed"))$("reset-seed").value=s.seed;if(document.activeElement!==$("speed")&&Number.isFinite(s.pacing?.multiplier))$("speed").value=String(s.pacing.multiplier);$("maximum").setAttribute("aria-pressed",String(s.pacing?.mode==="maximum"));renderSave();renderInspector();renderResources();renderEvents();renderCharts();
+        if(document.activeElement!==$("reset-seed"))$("reset-seed").value=s.seed;if(document.activeElement!==$("speed")&&Number.isFinite(s.pacing?.multiplier))$("speed").value=String(s.pacing.multiplier);$("maximum").setAttribute("aria-pressed",String(s.pacing?.mode==="maximum"));renderSave();renderResources();renderEvents();renderCharts();
       }
-      async function poll(){if(view.pollBusy)return;view.pollBusy=true;try{const state=await json("/api/state");if(state.kind!=="cells")throw new Error(`Expected cell-host state, received ${state.kind||"unknown"}`);view.state=state;view.pollSerial++;const p=state.persistence,identity=p?.enabled?`${p.run_id}\n${p.session_id}`:null;if(identity!==view.identity){view.identity=identity;view.history=[];view.historyAt=0;view.historyStatus="loading";view.selected=null;view.layout.clear();view.usedSlots.clear();view.saveRequest=null;view.saveError=null;}retireLayout(state.cells||[]);mergeHistory([liveSample(state)]);$("offline").dataset.open="0";await loadHistory();renderState();}catch(error){$("offline").textContent=error instanceof Error?error.message:String(error);$("offline").dataset.open="1";$("live").dataset.live="0";$("live-label").textContent="disconnected";}finally{view.pollBusy=false;}}
+      function commitState(state){
+        const priorTick=view.state?.tick;view.state=state;view.pollSerial++;const p=state.persistence,identity=p?.enabled?`${p.run_id}\n${p.session_id}`:null;
+        const changed=identity!==view.identity;if(changed){view.identity=identity;view.history=[];view.historyAt=0;view.historyStatus="loading";view.selected=null;view.layout.clear();view.usedSlots.clear();view.saveRequest=null;view.saveError=null;view.slice.enabled=false;view.sliceAxis=null;}
+        if(changed||priorTick!==state.tick){view.candidates=[];view.candidateTick=null;}retireLayout(state.cells||[]);mergeHistory([liveSample(state)]);$("offline").dataset.open="0";
+        // No await between assigning the sole latest snapshot and committing
+        // its readouts, canvas/hits, and inspector. History is independent.
+        configureProjection(changed);renderState();drawChamber();renderInspector();renderCandidates();
+      }
+      async function poll(){
+        if(view.pollBusy)return;view.pollBusy=true;
+        try{const state=await json("/api/state");if(state.kind!=="cells")throw new Error(`Expected cell-host state, received ${state.kind||"unknown"}`);commitState(state);void loadHistory();}
+        catch(error){$("offline").textContent=error instanceof Error?error.message:String(error);$("offline").dataset.open="1";$("live").dataset.live="0";$("live-label").textContent="disconnected";}
+        finally{view.pollBusy=false;}
+      }
 
-      $("chamber").addEventListener("pointerdown",event=>{const rect=event.currentTarget.getBoundingClientRect(),x=event.clientX-rect.left,y=event.clientY-rect.top;const hit=[...view.hits].reverse().find(item=>Math.hypot(x-item.x,y-item.y)<=item.r);view.selected=hit?.id||null;drawChamber();renderInspector();});
-      $("chamber").addEventListener("keydown",event=>{const cells=view.state?.cells||[];if(!cells.length||!["ArrowLeft","ArrowRight"].includes(event.key))return;event.preventDefault();const index=Math.max(0,cells.findIndex(cell=>cell.id===view.selected)),next=(index+(event.key==="ArrowRight"?1:-1)+cells.length)%cells.length;view.selected=cells[next].id;drawChamber();renderInspector();});
+      $("chamber").addEventListener("pointerdown",event=>{if(view.drawnTick!==view.state?.tick)return;const rect=event.currentTarget.getBoundingClientRect();view.candidates=hitCandidates(view.hits,event.clientX-rect.left,event.clientY-rect.top);view.candidateTick=view.drawnTick;selectCell(view.candidates[0]?.id??null);});
+      $("chamber").addEventListener("keydown",event=>{if(view.drawnTick!==view.state?.tick||!["ArrowLeft","ArrowRight"].includes(event.key))return;const id=navigateVisibleIds(view.visibleIds,view.selected,event.key==="ArrowRight"?1:-1);if(id===null)return;event.preventDefault();selectCell(id);});
+      $("candidate-list").addEventListener("change",event=>{if(view.candidateTick===view.drawnTick&&view.candidates.some(hit=>hit.id===event.target.value))selectCell(event.target.value);});
+      $("cell-search").addEventListener("submit",event=>{event.preventDefault();const id=$("cell-id").value.trim();if(!/^\d+$/.test(id)){$("cell-id").setCustomValidity("Enter the exact decimal cell ID");$("cell-id").reportValidity();return;}$("cell-id").setCustomValidity("");view.candidates=[];selectCell(id);});
+      $("cell-id").addEventListener("input",()=>$("cell-id").setCustomValidity(""));
+      function redrawProjection(){view.candidates=[];drawChamber();renderInspector();renderCandidates();}
+      $("projection-plane").addEventListener("change",event=>{view.plane=event.target.value;configureProjection(true);redrawProjection();});
+      function updateSlice(){
+        const center=$("slice-center"),thickness=$("slice-thickness"),error=$("slice-error"),c=center.valueAsNumber/1e6,t=thickness.valueAsNumber/1e6;
+        const valid=center.checkValidity()&&thickness.checkValidity()&&Number.isFinite(c)&&Number.isFinite(t)&&c>=0&&t>=0;
+        error.hidden=!view.slice.enabled||valid;error.textContent=valid?"":"Enter a center within the box and nonnegative thickness. The last valid slice is shown.";
+        if(valid){view.slice.center=c;view.slice.thickness=t;}redrawProjection();
+      }
+      $("slice-enabled").addEventListener("change",event=>{view.slice.enabled=event.target.checked;configureProjection();updateSlice();});
+      for(const id of ["slice-center","slice-thickness"])$(id).addEventListener("input",updateSlice);
       $("play").addEventListener("click",()=>applyControl(view.state?.running?"pause":"run"));$("step").addEventListener("click",()=>applyControl("step"));
       async function applyControl(action,value){
         try{await control(action,value);$("control-error").textContent="";await poll();return true;}
