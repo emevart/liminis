@@ -73,7 +73,8 @@
   фиксируются в checks JSON и не выдаются за содержимое Playwright trace.
   Actual Astra и независимый trace/CDP review выполнены; гонка late trace
   completion после timeout устранена, metadata присваивается после deadline.
-  Syntax/diff PASS; actual trace/browser результат остаётся NOT RUN до CI.
+  Syntax/diff PASS; actual trace/browser выполнены на f9fb7a2 ниже.
+  Изменённый кандидат требует собственного exact-head CI.
   Согласованный Node-only recorded-browser job использует существующий LIVE
   protected compatibility image ubuntu-22.04, official Playwright1.61.1 в
   RUNNER_TEMP, exact HEAD checkout/env/artifact, contents:read, credentials:false,
@@ -95,7 +96,8 @@
   protected launch не допускает root; Firefox content uid_map EPERM;
   WebKit требует библиотек, official install-deps отказан apt setgroups/
   setegid/seteuid (exit100). Sandbox/network/security не ослаблялись.
-  Интегратор должен выполнить actual browser script и закрыть gap до merge.
+  Actual QA перенесена в согласованный GitHub Actions job; локальный gap
+  не закрыт обходом защиты. До merge требуется зелёный exact-head browser job.
 - Rust/Cargo локально NOT RUN: scope public JS/CSS, Rust paths неизменны;
   весь требуемый Rust CI идёт обычным workflow кандидата. Новая Rust установка
   для первого PR не нужна.
@@ -121,3 +123,77 @@ create_goal/get_goal/attach_artifact не доступны. Исполнител
 активный turn и bounded проверку issue/PR, но не обещает автоматический новый
 turn после финального ответа. GitHub PR/checkpoint/issue являются durable
 передачей без зависимости от открытого Codex на ПК.
+
+
+## Сохранение Перед Возможной Передачей — 2026-10-04
+
+- Текущая опубликованная база этого follow-up: branch
+  `codex/recorded-physical-clock`, PR [#13](https://github.com/emevart/liminis/pull/13),
+  HEAD `f9fb7a2c6055620030f9077bf8eebc6ce9d7ef49`, tree
+  `b54271621bc4fe3bda95af3c0ffb49e5c281e136`, parent main
+  `c5be8fc8652433c67378a689fbb151ea4bad510a`.
+  Follow-up commit включает только этот checkpoint и собственный browser runner;
+  его полный HEAD публикуется в PR/issue11 после проверки равенства Git trees.
+  Новая миграция/смена интегратора не выполнена; существующий CLOUD LIVE — soleowner.
+- Exact-head [CI run37206398277](https://github.com/emevart/liminis/actions/runs/37206398277)
+  завершён: десять checks SUCCESS (Workers; recorded data contract; build/lint/test;
+  LIVE browser; hooks Linux/macOS/Windows; world version; frozen documents;
+  no bare Q). Recorded browser job111448421541 FAILURE: 22checks, 19PASS/3FAIL.
+  Три FAIL — Page request event counter после native download: expected3/actual2.
+  Сам фактический download всех трёх файлов прошёл bytes/SHA; default/cadence,
+  canvas, desktop/mobile layout, physical controls, hold30/60, endpoints/replay,
+  fail-closed fixtures прошли. Общая browser QA остаётся FAIL, не PASS.
+- Реальный Chromium149.0.7827.55 на existing ubuntu22 runner: sandbox=true;
+  CDP actual command-line guard PASS, forbidden switches отсутствуют. Trace PASS:
+  13,373,530 bytes, SHA256
+  `6615bcf5ec62a55c5010be70366b441bc49fb944739326ca16b79aabe0cd425b`.
+  [Artifact11305036205](https://github.com/emevart/liminis/actions/runs/37206398277/artifacts/11305036205)
+  содержит evidence.json, trace.zip и восемь PNG; archive12,845,994bytes SHA256
+  `afd63134677736adc4cd9e15aa4b9ac43715117e367538bc25b64914c0f5aa07`.
+  Retention7days, expires2026-10-11. Это launch evidence, не kernel attestation.
+- Независимый code/CI review до f9:0 blockers. Отдельный UX reviewer реально
+  посмотрел PNG1440desktop, 1366×600desktop, 390/320mobile, held30/60;
+  сверил digests и source hashes, 0 product UX/code blockers. Native background
+  scheduling NOT ASSERTED; visibility case synthetic. Speed/seek используют
+  DOM events, полноценный native keyboard/touch/a11y audit не заявляется.
+- До исправления HTTP счётчика снова фактически вызван gpt-6-astra. Принят
+  server-side request log со snapshot baseline после served-source verification,
+  перед каждой fresh page. Exact catalog GET + recording GET, и только один
+  дополнительный recording GET для explicit download; playback/draw не добавляют
+  HTTP. Post-ready/networkidle baseline также проверяет отсутствие HTTP ко
+  всем server paths и новых Page requests при controls/hold/FPS/end/replay/visibility.
+  Page events после native download остаются диагностикой. Remote-base mode без server counter
+  честно отмечает HTTP NOT_ASSERTED и не может получить общий PASS. Реальный
+  browser rerun нового HEAD ещё НЕ выполнен; независимый review этой дельты:
+  0 blockers после исправления all-path HTTP coverage. Node49/49, syntax/diff PASS.
+- Сохранение scoped: перед follow-up только site/playback.browser.mjs modified;
+  после обновления добавлен только этот checkpoint. Untracked/ignored внутри
+  checkout отсутствуют; чужие/generated/secret files не включаются в commit.
+  Reset/clean, удаление артефактов, новый clone и merge не выполняются.
+- Git-ignored repo artifacts: на этом snapshot отсутствуют. Вне checkout
+  сохранены downloaded archive и распакованный qa-recorded-f9fb7a2 (JSON/PNG/trace),
+  без удаления. Они не tracked и не включены в Git; точные failure bytes доступны
+  в Actions до expiry, долговременное сохранение сверх7days не обеспечено.
+  Source/runner/CI позволяют повторить сценарии, но не воспроизвести идентичные
+  timestamps/trace bytes. Official package/browser caches воспроизводимы registry
+  install и не являются evidence. Временный ADR suffix — воспроизводим из Git.
+- Fresh-main/ADR: LIVE1 уже merged; ADR107 appended после полного byte-identical
+  main prefix с ADR106. Existing CI prefix byte-identical, один согласованный job
+  appended. Следующие shared ADR принимаются последовательно интегратором после
+  fresh-main, не перезаписываются. Scope guard ровно10 путей; Rust/exporter/data/
+  schema/catalog/core/LIVE/LAB/README/nav/SPEC/NORTH_STAR не изменены.
+- RECORDED-2 пока READONLY: actual Astra + отдельный inventory/review и bounded
+  size baseline опубликованы в issue11. Legacy files201samples SHA неизменны;
+  total16,716,206 bytes +catalog115,338, compact saved-frame maxima
+  67,955/67,955/27,481bytes. Это не parsed-memory/chunk/coordinates/all-tick budget.
+  Предложены separate bytes/memory/requests limits, streaming real states,
+  overview +declared dense windows, manifest/chunk identity/integrity, bounded
+  cache/inflight/cancellation; числовые caps не назначены. Не править exporter/
+  schema/delivery до принятия clock и явного назначения ownership через issue11.
+  LIVE chamber2 остаётся отдельным opt-in: старые public/exporter/LAB readers
+  должны отказать неизвестному формату. Physical coordinates type/units/axes/
+  domain/tick timing требуют отдельного согласования перед R2 schema.
+- Следующий шаг: независимый review HTTP delta, scoped commit/publish в текущий
+  PR13, exact-head CI/browser rerun, inspect artifact + independent review.
+  Зелёные старые checks не переносятся на новый HEAD. Затем handoff в issue11;
+  merge только интегратор. Продолжение согласованной очереди не отменено.

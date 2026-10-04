@@ -15,6 +15,7 @@ const siteRoot = dirname(fileURLToPath(import.meta.url));
 const evidenceDir = resolve(process.env.LIMINIS_BROWSER_EVIDENCE_DIR || "playback-browser-evidence");
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const controls = ["play", "previous", "next", "scrub", "speed", "speed-preset", "draw-fps"];
+const httpRequests = [];
 const timeouts = { launch: 20_000, cdp: 5000, traceStop: 15_000, cleanup: 5000 };
 const evidence = { nodeVersion: process.version, runner: { os: process.env.RUNNER_OS || process.platform, arch: process.env.RUNNER_ARCH || process.arch, imageOS: process.env.ImageOS || null, imageVersion: process.env.ImageVersion || null }, workflowRun: process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL || "https://github.com"}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : null, workflowAttempt: process.env.GITHUB_RUN_ATTEMPT || null, status: "NOT_RUN", startedAt: new Date().toISOString(), checks: [], screenshots: [], timeouts, trace: { status: "NOT_RUN", filename: "trace.zip", coverage: "Browser actions/network; Node assertion results are recorded in checks." }, launchArgumentCheck: { status: "NOT_RUN", method: "CDP Browser.getBrowserCommandLine" }, visibilityCoverage: "Synthetic document.hidden + visibilitychange tests adapter wiring only; native background scheduling is not asserted." };
 let server, browser, context, tracing = false, baseUrl;
@@ -31,6 +32,7 @@ async function serveSite() {
   server = createServer(async (request, response) => {
     try {
       const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
+      httpRequests.push({ method: request.method, path: pathname });
       if (pathname === "/favicon.ico") { response.writeHead(204); response.end(); return; }
       const filename = resolve(siteRoot, `.${pathname === "/" ? "/index.html" : pathname}`);
       if (!filename.startsWith(`${siteRoot}${sep}`)) { response.writeHead(403); response.end(); return; }
@@ -55,15 +57,41 @@ async function screenshot(page, filename) {
 }
 
 async function freshPage(viewport = { width: 1440, height: 900 }) {
+  const httpBaseline = httpRequests.length;
   const page = await context.newPage();
   await page.setViewportSize(viewport);
   page.setDefaultTimeout(10_000);
   page.setDefaultNavigationTimeout(30_000);
-  const errors = [], requests = [];
+  const errors = [], requests = [], allRequests = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
-  page.on("request", (request) => { if (new URL(request.url()).pathname.includes("/data/")) requests.push(request.url()); });
-  return { page, errors, requests };
+  page.on("request", (request) => { allRequests.push(request.url()); if (new URL(request.url()).pathname.includes("/data/")) requests.push(request.url()); });
+  return { page, errors, requests, allRequests, httpBaseline };
+}
+
+function dataHttp(name, baseline, recording, downloads = 0, pageEvents = null) {
+  if (!server) return; // Remote mode cannot attest actual HTTP with Page events.
+  const actual = httpRequests.slice(baseline).filter((request) => request.path.startsWith("/data/"));
+  const expected = [{ method: "GET", path: "/data/catalog.json" }];
+  if (recording) for (let index = 0; index <= downloads; index++) expected.push({ method: "GET", path: new URL(recording, baseUrl).pathname });
+  const check = { name, status: "FAIL", measurement: "local-http-server", baseline, requests: actual, expectedRequests: expected, pageRequestEvents: pageEvents };
+  (evidence.httpChecks ||= []).push(check);
+  assert.deepEqual(actual, expected, "Only catalog, selected recording and explicit downloads may reach the data server");
+  check.status = "PASS";
+}
+
+async function idleHttpBaseline(page, allRequests) {
+  await page.waitForLoadState("networkidle");
+  return { server: httpRequests.length, page: allRequests.length };
+}
+
+function idleHttp(name, baseline, allRequests) {
+  const pageRequests = allRequests.slice(baseline.page);
+  const check = { name, status: "FAIL", measurement: server ? "local-http-server-and-page-events" : "page-events-only", baseline, requests: server ? httpRequests.slice(baseline.server) : null, pageRequests };
+  (evidence.httpChecks ||= []).push(check);
+  assert.deepEqual(pageRequests, [], "Playback and draw changes must not cause browser requests");
+  if (server) assert.deepEqual(check.requests, [], "Playback and draw changes must not cause HTTP to any served path");
+  check.status = "PASS";
 }
 
 async function open(page, experiment) {
@@ -145,6 +173,7 @@ try {
   evidence.recordings = catalog.entries.map(({ id, sha256, bytes }) => ({ id, sha256, bytes }));
   baseUrl = process.env.LIMINIS_BASE_URL ? `${process.env.LIMINIS_BASE_URL.replace(/\/+$/, "")}/` : await serveSite();
   evidence.baseUrl = baseUrl;
+  evidence.httpRequestCoverage = server ? { status: "PENDING", measurement: "local-http-server" } : { status: "NOT_ASSERTED", reason: "Remote base URL has no built-in server counter; Page events do not attest native download HTTP." };
   // Evidence for an optional remote URL must still match this exact checkout.
   for (const source of evidence.sourceFiles) {
     const response = await fetch(new URL(source.filename, baseUrl), { signal: AbortSignal.timeout(10_000), cache: "no-store" });
@@ -175,7 +204,7 @@ try {
   evidence.status = "RUNNING";
 
   for (const entry of catalog.entries) await check(`default physical overview, cadence, verified download: ${entry.id}`, async () => {
-    const { page, errors, requests } = await freshPage();
+    const { page, errors, requests, httpBaseline } = await freshPage();
     try {
       await open(page, entry.id); await ready(page);
       const horizon = entry.experiment.steps * entry.experiment.dt_seconds;
@@ -191,11 +220,12 @@ try {
       await layout(page, true);
       await screenshot(page, `${entry.id}-desktop.png`);
       assert.equal(requests.length, 2, "Only catalog and selected recording should load");
+      dataHttp(`initial load HTTP: ${entry.id}`, httpBaseline, entry.recording, 0, requests.length);
       const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#download").click()]);
       const downloaded = await readFile(await download.path());
       assert.equal(downloaded.byteLength, entry.bytes); assert.equal(digest(downloaded), entry.sha256);
       evidence.checks.push({ name: `actual download integrity: ${entry.id}`, status: "PASS", bytes: downloaded.byteLength, sha256: digest(downloaded) });
-      assert.equal(requests.length, 3, "Explicit download adds only the selected recording request");
+      dataHttp(`actual download HTTP: ${entry.id}`, httpBaseline, entry.recording, 1, requests.length);
       assert.deepEqual(errors, []);
     } finally { await bounded(page.close(), timeouts.cleanup, "Page cleanup"); }
   });
@@ -213,9 +243,9 @@ try {
   });
 
   await check("real wall-time 1× hold, pause/resume, rate change, invalid input, seek and sample stepping", async () => {
-    const { page, errors, requests } = await freshPage();
+    const { page, errors, requests, allRequests, httpBaseline } = await freshPage();
     try {
-      await open(page); await ready(page); await speed(page, 1);
+      await open(page); await ready(page); const idleBaseline = await idleHttpBaseline(page, allRequests); await speed(page, 1);
       assert.equal(await page.locator("#duration").textContent(), "3.47 d");
       const heldPixels = await canvasDigest(page);
       await page.locator("#play").click(); await page.waitForTimeout(1100); await page.locator("#play").click();
@@ -240,14 +270,16 @@ try {
       await page.locator("#next").click(); assert.equal(await shownNumber(page, "time"), gap * 2); assert.equal(await shownNumber(page, "playhead"), gap * 2);
       await page.locator("#previous").click(); assert.equal(await shownNumber(page, "time"), gap); assert.equal(await shownNumber(page, "playhead"), gap);
       assert.equal(requests.length, 2, "Playback controls must not fetch observations");
+      dataHttp("physical playback controls HTTP", httpBaseline, entry.recording, 0, requests.length);
+      idleHttp("physical controls issue no HTTP", idleBaseline, allRequests);
       assert.deepEqual(errors, []);
     } finally { await bounded(page.close(), timeouts.cleanup, "Page cleanup"); }
   });
 
   await check("held real sample pixels remain identical through RAF at draw30/60", async () => {
-    const { page, errors, requests } = await freshPage();
+    const { page, errors, requests, allRequests, httpBaseline } = await freshPage();
     try {
-      await open(page); await speed(page, 1);
+      await open(page); const idleBaseline = await idleHttpBaseline(page, allRequests); await speed(page, 1);
       const baseline = await canvasDigest(page), duration = await page.locator("#duration").textContent();
       for (const fps of [30, 60]) {
         await page.locator("#draw-fps").selectOption(String(fps));
@@ -260,14 +292,14 @@ try {
         evidence.screenshots.push({ filename: `held-${fps}fps.png`, sha256: digest(await readFile(resolve(evidenceDir, `held-${fps}fps.png`))) });
       }
       evidence.checks.push({ name: "held sample canvas pixel SHA-256", status: "PASS", sha256: baseline });
-      assert.equal(requests.length, 2); assert.deepEqual(errors, []);
+      assert.equal(requests.length, 2); dataHttp("playback/draw target HTTP", httpBaseline, entry.recording, 0, requests.length); idleHttp("held draw30/60 issue no HTTP", idleBaseline, allRequests); assert.deepEqual(errors, []);
     } finally { await bounded(page.close(), timeouts.cleanup, "Page cleanup"); }
   });
 
   for (const fps of [30, 60]) await check(`draw target ${fps} FPS preserves duration, reaches real endpoint, explicit replay`, async () => {
-    const { page, errors, requests } = await freshPage();
+    const { page, errors, requests, allRequests, httpBaseline } = await freshPage();
     try {
-      await open(page); await page.locator("#draw-fps").selectOption(String(fps));
+      await open(page); const idleBaseline = await idleHttpBaseline(page, allRequests); await page.locator("#draw-fps").selectOption(String(fps));
       const horizon = entry.experiment.steps * entry.experiment.dt_seconds;
       await speed(page, horizon); assert.equal(await page.locator("#duration").textContent(), "1 s");
       const started = Date.now(); await page.locator("#play").click();
@@ -281,14 +313,14 @@ try {
       assert.equal(await page.locator("#play").getAttribute("aria-label"), "Pause recording");
       assert.ok(await shownNumber(page, "playhead") < horizon);
       await page.locator("#play").click();
-      assert.equal(requests.length, 2); assert.deepEqual(errors, []);
+      assert.equal(requests.length, 2); dataHttp("playback/draw target HTTP", httpBaseline, entry.recording, 0, requests.length); idleHttp(`draw${fps} endpoint/replay issue no HTTP`, idleBaseline, allRequests); assert.deepEqual(errors, []);
     } finally { await bounded(page.close(), timeouts.cleanup, "Page cleanup"); }
   });
 
   await check("synthetic visibility event cancels playback without auto-resume or hidden backlog (native scheduling NOT ASSERTED)", async () => {
-    const { page, errors, requests } = await freshPage();
+    const { page, errors, requests, allRequests, httpBaseline } = await freshPage();
     try {
-      await open(page); await speed(page, 1); await page.locator("#play").click(); await page.waitForTimeout(200);
+      await open(page); const idleBaseline = await idleHttpBaseline(page, allRequests); await speed(page, 1); await page.locator("#play").click(); await page.waitForTimeout(200);
       await page.evaluate(() => { Object.defineProperty(document, "hidden", { configurable: true, get: () => true }); document.dispatchEvent(new Event("visibilitychange")); });
       const paused = await shownNumber(page, "playhead");
       assert.equal(await page.locator("#play").getAttribute("aria-label"), "Play recording");
@@ -297,13 +329,13 @@ try {
       await page.waitForTimeout(100); assert.equal(await shownNumber(page, "playhead"), paused);
       await page.locator("#play").click(); await page.waitForTimeout(200); await page.locator("#play").click();
       assert.ok(await shownNumber(page, "playhead") < paused + 1, "Hidden time must not become a resumed burst");
-      assert.equal(requests.length, 2); assert.deepEqual(errors, []);
+      assert.equal(requests.length, 2); dataHttp("playback/draw target HTTP", httpBaseline, entry.recording, 0, requests.length); idleHttp("visibility pause/resume issue no HTTP", idleBaseline, allRequests); assert.deepEqual(errors, []);
     } finally { await bounded(page.close(), timeouts.cleanup, "Page cleanup"); }
   });
 
   await check("unknown experiment fails closed without a dataset request", async () => {
-    const { page, errors, requests } = await freshPage();
-    try { await open(page, "not-in-the-catalog"); await errorDisabled(page, /not in the catalog/i); assert.equal(requests.length, 1); assert.deepEqual(errors, []); }
+    const { page, errors, requests, httpBaseline } = await freshPage();
+    try { await open(page, "not-in-the-catalog"); await errorDisabled(page, /not in the catalog/i); assert.equal(requests.length, 1); dataHttp("unknown experiment HTTP", httpBaseline, null, 0, requests.length); assert.deepEqual(errors, []); }
     finally { await bounded(page.close(), timeouts.cleanup, "Page cleanup"); }
   });
 
@@ -330,6 +362,7 @@ try {
       await open(page); await errorDisabled(page, /unsupported schema/i); assert.deepEqual(errors, []);
     } finally { await bounded(page.close(), timeouts.cleanup, "Page cleanup"); }
   });
+  if (server) evidence.httpRequestCoverage.status = evidence.httpChecks?.length && evidence.httpChecks.every((item) => item.status === "PASS") ? "PASS" : "FAIL";
   evidence.status = evidence.checks.some((item) => item.status === "FAIL") ? "FAIL" : "PASS";
 } catch (error) {
   evidence.status = browser ? "FAIL" : "NOT_RUN";
@@ -360,6 +393,7 @@ try {
     if (server) { await cleanup("server", () => new Promise((closed, reject) => server.close((error) => error ? reject(error) : closed()))); server.closeAllConnections(); }
   } finally {
     if (evidence.status === "PASS" && evidence.trace.status !== "PASS") { evidence.status = "FAIL"; evidence.blocker = "Required context trace was not published."; }
+    if (evidence.status === "PASS" && evidence.httpRequestCoverage?.status !== "PASS") { evidence.status = "NOT_RUN"; evidence.blocker = "Full HTTP acceptance requires the built-in server counter; remote UI observations are retained."; }
     evidence.finishedAt = new Date().toISOString();
     await writeFile(resolve(evidenceDir, "evidence.json"), `${JSON.stringify(evidence, null, 2)}\n`);
     console.log(JSON.stringify({ status: evidence.status, checks: evidence.checks.length, failed: evidence.checks.filter((item) => item.status === "FAIL").length, evidenceDir }));
