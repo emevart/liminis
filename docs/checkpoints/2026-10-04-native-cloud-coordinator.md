@@ -480,3 +480,54 @@ accepted subchecks исходногоFAIL не переносятся.
 durable bounded originals/readback, guardedmerge толькоgreen+review0,
 существующий public dense gate с catalog/module/index/manifest/gzip bytes.
 Сохранность архива подтверждена; publicdense acceptance покаpending.
+
+### REC-2 принят к merge, публичное воспроизведение отдельно
+
+2026-10-04, 20:35 UTC. Exact e2451e3142def791eb44aba4fcb19ada1aa1ed78 /
+tree27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a, run37231067824: все11checks
+SUCCESS, включая полный Rust build/lint/test/exporter, оба protected browser
+jobs и existing Workers Build. Final source/doc review0 blockers. Actual
+dense artifact independent qualified PASS0:14checks,5PNG viewed,20exactsource
+pins,11actualaborts independently correlated, finalaggregate0. Numerics и
+регрессии independent qualified PASS0:79checks пяти reports, frozen/source/
+original bytes, dt30/H+1, measured1×1.503model/1.5034wall и publication budget
+согласованы. Full browser decode миллиона frames/peakheap/hardwareFPS/native
+BFCache/full response-body coverage не заявлены; подробные qualifiers в reviews.
+
+Original ZIPs и exact own reviews опубликованы evidence-only:
+- `codex/dense-recording-browser-evidence`, commit
+  `4a4ee92fd1bf0abe4dcfa3f1f9469a0e8719e537`, tree
+  `5efa2cfef82b1dcf6600edf087d8b6891affca38`:3ZIP/45312641bytes,
+  включая initial97FAIL, new dense и legacy;5small ownreview files.
+- `codex/dense-recording-regression-evidence`, commit
+  `0541137966aed15f350422ba9cc25a06e7324ddb`, tree
+  `bc7d975635e626cd91d142d944e5a89576e799bb`:3ZIP/40020865bytes,
+  LIVE/physical/projection плюс numerics и qualified privacy report.
+
+Оба bounded archivegroups<64MiB; fresh network fetch в две новые отдельные
+Git object databases подтвердил каждый original/review file size/SHA и ZIP
+CRC PASS. Public readback report:
+`docs/experiments/handoff/dense-e245-archives-network-readback.json`.
+Это saved byte evidence, не новый model/decode/browser/deployment claim.
+Old97 overallFAIL сохранён, original ZIP не перепакован/не заменён.
+
+PR19 ready и guarded merge с expected exact e245 SUCCESS. Новый main
+`239ec8bde3d2f15e2aa5b50e9294e65eab5c0926`; merge tree совпадает с candidate.
+Main push run`37232682967` IN_PROGRESS. Existing public gate отдельно должен
+подтвердить actual deployed catalog/module/index/manifest/gzip SHA и browser
+Next0→1/1×/held state. Пока этот gate pending, publicdense PASS не объявлен.
+Новый hosting/секреты/расходы не создавались. Все legacy URL/SHA/LAB сохранены.
+
+Реальный Astra read-only выбрал следующий bounded LIVE-3b после public REC-2
+приёмки: дополнительный ортографический Three.js3D view реальных chamber2
+centers в существующем live UI, camera/layers/opacity/slice/exact inspector.
+2D начальный; нет новых biology/coordinates/fields/interpolation/physicsbody.
+Pinned vendored modules с MIT/provenance/полным import closure, explicit host
+routes, отдельный WebGL canvas/lifecycle. Read-only проверен stable upstream
+three@0.180.0/r180, tag9e8635e…→commit0af9729d0c143a86a1d725d6e2c3ad83301f3f34.
+Files/ADR111/code/preflight пока не начаты. Protected WebGL2 availability —
+реальная первая неопределённость; при отказе sandbox не ослаблять.
+
+Следующий шаг: принять existing public main artifact/source/rawgzip bytes,
+сохранить оригинал+readback, затем открыть scoped LIVE-3b и append-only ADR111
+на fresh main. Автопробуждение после активного cloud turn не подтверждено.

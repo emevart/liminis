@@ -1,0 +1,118 @@
+{
+  "status": "PASS",
+  "archives": [
+    {
+      "status": "PASS",
+      "branch": "codex/dense-recording-browser-evidence",
+      "head": "4a4ee92fd1bf0abe4dcfa3f1f9469a0e8719e537",
+      "tree": "5efa2cfef82b1dcf6600edf087d8b6891affca38",
+      "method": "fresh_network_fetch_separate_git_database_all_archive_files_size_sha256_and_original_zip_crc",
+      "original_zip_bytes": 45312641,
+      "files": [
+        {
+          "path": "README.md",
+          "bytes": 3175,
+          "sha256": "44c4fbf6691adaf6af60a8c8f90cc8ab902d3b88357e0550e497595e80ffc24a"
+        },
+        {
+          "path": "archive-manifest.json",
+          "bytes": 4132,
+          "sha256": "b54cfb94e1a6051b80eda425c092fdc4063e6cf57b6cd7e5f274f4691165a037"
+        },
+        {
+          "path": "dense-97aed6f-failure-original.zip",
+          "bytes": 16581557,
+          "sha256": "0fdff34b12e5304ad718980061e10ddeb9cffedc097cdc0add3176c0fc8f3b6a",
+          "zip_crc": "PASS"
+        },
+        {
+          "path": "dense-e2451e3-success-original.zip",
+          "bytes": 16267063,
+          "sha256": "c43ab8e81c8da5b4980d78121dca652b72d18cf06c9848135eb57904904d1d9c",
+          "zip_crc": "PASS"
+        },
+        {
+          "path": "e245-contract-validation.json",
+          "bytes": 309,
+          "sha256": "a7b35874506f3660cc2ebf8412f706b598eb746a7658e4323c5c312b85895cf3"
+        },
+        {
+          "path": "e245-independent-review.json",
+          "bytes": 10707,
+          "sha256": "028862115a1853403fb5d122265badd0dea949b87925a5128e48233d9116017a"
+        },
+        {
+          "path": "e245-independent-review.md",
+          "bytes": 4652,
+          "sha256": "b40211a9a923d81712d46065aeb8f0f47ff26763f382ebb2fdf2ff836ba33b20"
+        },
+        {
+          "path": "e245-independent-validation.json",
+          "bytes": 945,
+          "sha256": "8a68984d88185f842c29f2352244c7241037f154f7d35ea27f3a606096341a67"
+        },
+        {
+          "path": "e245-numerics-review.json",
+          "bytes": 10255,
+          "sha256": "903c3d24fd9f7a67b8d75e21698b4952156907d32075a758f6515311ff729a2e"
+        },
+        {
+          "path": "recorded-e2451e3-success-original.zip",
+          "bytes": 12464021,
+          "sha256": "bb538216ff1c74c3e7d12c85b9a8f2bbc14e2582f44e29dd29c60c143b270fef",
+          "zip_crc": "PASS"
+        }
+      ],
+      "qualification": "Saved original bytes and review files only; no new model/decode/browser/public deployment claim."
+    },
+    {
+      "status": "PASS",
+      "branch": "codex/dense-recording-regression-evidence",
+      "head": "0541137966aed15f350422ba9cc25a06e7324ddb",
+      "tree": "bc7d975635e626cd91d142d944e5a89576e799bb",
+      "method": "fresh_network_fetch_separate_git_database_all_archive_files_size_sha256_and_original_zip_crc",
+      "original_zip_bytes": 40020865,
+      "files": [
+        {
+          "path": "README.md",
+          "bytes": 1055,
+          "sha256": "1c527fe6c74e3d4840ee95b0a06d539885badb24375eb4efc43f3a0500fce318"
+        },
+        {
+          "path": "archive-manifest.json",
+          "bytes": 2377,
+          "sha256": "91f8f537c56067178abd514dd1af66324175c37d854871d3482bf68b57600865"
+        },
+        {
+          "path": "e245-numerics-review.json",
+          "bytes": 10255,
+          "sha256": "903c3d24fd9f7a67b8d75e21698b4952156907d32075a758f6515311ff729a2e"
+        },
+        {
+          "path": "live-e2451e3-success-original.zip",
+          "bytes": 5754066,
+          "sha256": "9680e4d465cfeda3a9ea663a9a7758a6eb16d42b6b6574033b4fc373d9d8c7e8",
+          "zip_crc": "PASS"
+        },
+        {
+          "path": "physical-e2451e3-success-original.zip",
+          "bytes": 6131253,
+          "sha256": "d4fa7a2d245ce61bf37693bab561574fd6efb70b858a91f8bf4b9ead1f8821d8",
+          "zip_crc": "PASS"
+        },
+        {
+          "path": "privacy-review.json",
+          "bytes": 1332,
+          "sha256": "4ceee16f6294a0b5c2e027feae04daa4157cf534fb0640c540a4de81d90270c7"
+        },
+        {
+          "path": "projection-e2451e3-success-original.zip",
+          "bytes": 28135546,
+          "sha256": "cfcc711726956c51e61e634a556a893e0602cde8a85ccfacf7306a8a2fdd14da",
+          "zip_crc": "PASS"
+        }
+      ],
+      "qualification": "Saved original bytes and review files only; no new model/decode/browser/public deployment claim."
+    }
+  ]
+}
