@@ -63,7 +63,7 @@ fn cell_routes_are_separate_and_controls_publish_checked_ticks() {
             &shared,
             Method::Post,
             "/api/control",
-            r#"{"action":"speed","value":101}"#
+            r#"{"action":"speed","value":0}"#
         )
         .status,
         400
@@ -199,4 +199,379 @@ fn cell_world_29_resume_step_and_resave_preserve_its_identity() {
             .unwrap();
     assert_eq!(latest["world_format_version"], 29);
     drop(resumed.storage.take());
+}
+
+#[test]
+fn multipliers_validate_without_old_tps_clamps_and_maximum_retains_manual_speed() {
+    let shared = Arc::new(Mutex::new(fixture()));
+    for body in [
+        r#"{"action":"speed","value":0}"#,
+        r#"{"action":"speed","value":-1}"#,
+        r#"{"action":"speed","value":"NaN"}"#,
+        r#"{"action":"speed","value":1e999}"#,
+        r#"{"action":"speed","value":null}"#,
+    ] {
+        assert_eq!(
+            request(&shared, Method::Post, "/api/control", body).status,
+            400
+        );
+    }
+    assert!(Pacing::manual(f64::NAN, 30.0).is_err());
+    assert!(Pacing::manual(f64::INFINITY, 30.0).is_err());
+    assert!(Pacing::manual(f64::from_bits(1), 30.0).is_err());
+    for multiplier in [1.0e-200, 1.0, 100_000.0, f64::MAX] {
+        let body = json!({"action":"speed", "value":multiplier}).to_string();
+        assert_eq!(
+            request(&shared, Method::Post, "/api/control", &body).status,
+            200
+        );
+        let sim = lock(&shared);
+        assert_eq!(sim.state.tick, 0);
+        assert_eq!(sim.pacing.multiplier, multiplier);
+        assert_eq!(sim.target_tps, multiplier / sim.config.dt_seconds);
+    }
+    assert_eq!(
+        request(
+            &shared,
+            Method::Post,
+            "/api/control",
+            r#"{"action":"maximum"}"#
+        )
+        .status,
+        200
+    );
+    let sim = lock(&shared);
+    assert_eq!(sim.pacing.mode, PaceMode::Maximum);
+    assert_eq!(sim.pacing.multiplier, f64::MAX);
+    assert!(state_json(&sim)["target_tps"].is_null());
+    assert_eq!(sim.config.dt_seconds, 30.0);
+}
+
+#[test]
+fn new_pacing_envelopes_restore_and_legacy_tick_rates_remain_exact() {
+    let mut sim = fixture();
+    for mode in [PaceMode::Manual, PaceMode::Maximum] {
+        sim.pacing = Pacing {
+            mode,
+            multiplier: 0.125,
+        };
+        sim.target_tps = sim.pacing.tps(sim.config.dt_seconds);
+        let saved: SavedState = serde_json::from_value(capture(&sim).state).unwrap();
+        assert_eq!(
+            restore_pacing(&saved, sim.target_tps, 30.0).unwrap(),
+            sim.pacing
+        );
+        assert!(restore_pacing(&saved, sim.target_tps * 2.0, 30.0).is_err());
+    }
+    // This rate does not necessarily survive tps*dt/dt bit for bit.
+    for tps in [
+        0.5339,
+        0.500_000_000_000_000_1,
+        std::f64::consts::PI,
+        99.123_456_789,
+    ] {
+        let mut legacy = capture(&sim).state;
+        legacy["format"] = json!(1);
+        legacy.as_object_mut().unwrap().remove("pacing");
+        let saved: SavedState = serde_json::from_value(legacy).unwrap();
+        sim.pacing = restore_pacing(&saved, tps, 30.0).unwrap();
+        sim.target_tps = tps;
+        assert_eq!(capture(&sim).tps.to_bits(), tps.to_bits());
+        let migrated: SavedState = serde_json::from_value(capture(&sim).state).unwrap();
+        assert_eq!(restore_pacing(&migrated, tps, 30.0).unwrap(), sim.pacing);
+    }
+    let mut bad = capture(&sim).state;
+    bad["format"] = json!(1);
+    assert!(restore_pacing(&serde_json::from_value(bad).unwrap(), sim.target_tps, 30.0).is_err());
+    let mut bad = capture(&sim).state;
+    bad.as_object_mut().unwrap().remove("pacing");
+    assert!(restore_pacing(&serde_json::from_value(bad).unwrap(), sim.target_tps, 30.0).is_err());
+}
+
+fn start_worker(sim: Sim) -> (Arc<Mutex<Sim>>, std::thread::JoinHandle<()>) {
+    let shared = Arc::new(Mutex::new(sim));
+    let worker_shared = Arc::clone(&shared);
+    let worker = std::thread::spawn(move || run_loop(&worker_shared));
+    (shared, worker)
+}
+
+fn stop_worker(shared: &Arc<Mutex<Sim>>, worker: std::thread::JoinHandle<()>) {
+    lock(shared).alive = false;
+    worker.join().unwrap();
+}
+
+#[test]
+fn one_x_waits_the_real_dt_and_pause_step_speed_changes_discard_debt() {
+    let mut sim = fixture();
+    sim.pacing = Pacing::manual(1.0, sim.config.dt_seconds).unwrap();
+    sim.target_tps = sim.pacing.tps(sim.config.dt_seconds);
+    let (shared, worker) = start_worker(sim);
+    std::thread::sleep(Duration::from_millis(60));
+    assert_eq!(
+        lock(&shared).state.tick,
+        0,
+        "1x at dt30 must not tick immediately"
+    );
+    assert_eq!(lock(&shared).measured_tps, 0.0);
+    assert_eq!(
+        request(
+            &shared,
+            Method::Post,
+            "/api/control",
+            r#"{"action":"pause"}"#
+        )
+        .status,
+        200
+    );
+    assert_eq!(
+        request(
+            &shared,
+            Method::Post,
+            "/api/control",
+            r#"{"action":"step"}"#
+        )
+        .status,
+        200
+    );
+    assert_eq!(lock(&shared).state.tick, 1);
+    assert_eq!(
+        request(&shared, Method::Post, "/api/control", r#"{"action":"run"}"#).status,
+        200
+    );
+    std::thread::sleep(Duration::from_millis(30));
+    assert_eq!(lock(&shared).state.tick, 1);
+    assert_eq!(
+        request(
+            &shared,
+            Method::Post,
+            "/api/control",
+            r#"{"action":"maximum"}"#
+        )
+        .status,
+        200
+    );
+    std::thread::sleep(Duration::from_millis(30));
+    assert_eq!(
+        request(
+            &shared,
+            Method::Post,
+            "/api/control",
+            r#"{"action":"pause"}"#
+        )
+        .status,
+        200
+    );
+    let tick = lock(&shared).state.tick;
+    assert!(tick > 1);
+    std::thread::sleep(Duration::from_millis(30));
+    assert_eq!(lock(&shared).state.tick, tick);
+    assert_eq!(
+        request(
+            &shared,
+            Method::Post,
+            "/api/control",
+            r#"{"action":"speed","value":1}"#
+        )
+        .status,
+        200
+    );
+    assert_eq!(
+        request(&shared, Method::Post, "/api/control", r#"{"action":"run"}"#).status,
+        200
+    );
+    std::thread::sleep(Duration::from_millis(30));
+    assert_eq!(
+        lock(&shared).state.tick,
+        tick,
+        "paused Maximum must not leave catchup debt"
+    );
+    stop_worker(&shared, worker);
+}
+
+#[test]
+fn actual_maximum_and_manual_workers_match_manual_step_core_rng_ids_and_balances() {
+    for pacing in [
+        Pacing {
+            mode: PaceMode::Maximum,
+            multiplier: 90.0,
+        },
+        Pacing {
+            mode: PaceMode::Manual,
+            multiplier: 30_000.0,
+        },
+    ] {
+        let mut sim = fixture();
+        sim.pacing = pacing;
+        sim.target_tps = pacing.tps(sim.config.dt_seconds);
+        let (shared, worker) = start_worker(sim);
+        std::thread::sleep(Duration::from_millis(40));
+        let started = Instant::now();
+        assert_eq!(request(&shared, Method::Get, "/api/state", "").status, 200);
+        assert_eq!(
+            request(
+                &shared,
+                Method::Post,
+                "/api/control",
+                r#"{"action":"pause"}"#
+            )
+            .status,
+            200
+        );
+        assert!(
+            started.elapsed() < Duration::from_secs(2),
+            "read/pause should acquire between checked ticks"
+        );
+        let actual = lock(&shared);
+        let mut stepped = fixture();
+        assert!(actual.state.tick > 0);
+        for _ in 0..actual.state.tick {
+            advance_one(&mut stepped).unwrap();
+        }
+        assert_eq!(actual.state.snapshot(), stepped.state.snapshot());
+        assert_eq!(
+            serde_json::to_value(&actual.observation).unwrap(),
+            serde_json::to_value(&stepped.observation).unwrap()
+        );
+        assert_eq!(metric(&actual), metric(&stepped));
+        validate_observation(&actual).unwrap();
+        drop(actual);
+        stop_worker(&shared, worker);
+    }
+}
+
+fn resume_after_writer(root: &Path, run: &str) -> Sim {
+    let deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        match resume_sim(root, run, None) {
+            Ok(sim) => return sim,
+            Err(error) if error.to_string().contains("writer") && Instant::now() < deadline => {
+                std::thread::sleep(Duration::from_millis(2));
+            }
+            Err(error) => panic!("resume failed: {error:#}"),
+        }
+    }
+}
+
+#[test]
+fn legacy_checkpoint_migrates_without_rounding_speed_and_keeps_exact_future() {
+    let root = Temp::new();
+    let mut original = fixture();
+    for _ in 0..137 {
+        advance_one(&mut original).unwrap();
+    }
+    original.target_tps = 0.5339;
+    original.pacing =
+        Pacing::manual(original.target_tps * original.config.dt_seconds, 30.0).unwrap();
+    start_storage(&mut original, &root.0).unwrap();
+    let mut legacy = capture(&original);
+    legacy.state["format"] = json!(1);
+    legacy.state.as_object_mut().unwrap().remove("pacing");
+    original.storage.as_mut().unwrap().save(legacy).unwrap();
+    original.storage.as_mut().unwrap().wait_for_save().unwrap();
+    let run = original.storage.as_ref().unwrap().status()["run_id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    drop(original.storage.take());
+    let mut resumed = resume_after_writer(&root.0, &run);
+    assert_eq!(resumed.target_tps.to_bits(), original.target_tps.to_bits());
+    assert_eq!(resumed.state.snapshot(), original.state.snapshot());
+    resumed.pacing.mode = PaceMode::Maximum;
+    save(&mut resumed).unwrap();
+    resumed.storage.as_mut().unwrap().wait_for_save().unwrap();
+    drop(resumed.storage.take());
+    let mut second = resume_after_writer(&root.0, &run);
+    assert_eq!(second.target_tps.to_bits(), original.target_tps.to_bits());
+    assert_eq!(second.pacing.mode, PaceMode::Maximum);
+    assert_eq!(second.state.snapshot(), original.state.snapshot());
+    for _ in 0..89 {
+        advance_one(&mut original).unwrap();
+        advance_one(&mut second).unwrap();
+        assert_eq!(second.state.snapshot(), original.state.snapshot());
+        assert_eq!(metric(&second), metric(&original));
+    }
+    drop(second.storage.take());
+}
+
+#[test]
+fn pause_and_step_checkpoint_requests_survive_a_full_optional_queue() {
+    for action in ["pause", "step"] {
+        let root = Temp::new();
+        let mut sim = fixture();
+        start_storage(&mut sim, &root.0).unwrap();
+        let release = sim.storage.as_ref().unwrap().test_block_worker();
+        let shared = Arc::new(Mutex::new(sim));
+        let command = json!({"action": action}).to_string();
+        assert_eq!(
+            request(&shared, Method::Post, "/api/control", &command).status,
+            200
+        );
+        {
+            let mut sim = lock(&shared);
+            assert!(sim.save_requested);
+            assert!(state_json(&sim)["save_pending"].as_bool().unwrap());
+            assert!(!sim.storage.as_ref().unwrap().busy());
+            assert!(!sim.running);
+            service_storage(&mut sim);
+            assert!(
+                sim.save_requested,
+                "retry must retain the only bounded pending request"
+            );
+        }
+        assert_eq!(
+            request(
+                &shared,
+                Method::Post,
+                "/api/control",
+                r#"{"action":"save"}"#
+            )
+            .status,
+            409
+        );
+        release.send(()).unwrap();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        loop {
+            let mut sim = lock(&shared);
+            service_storage(&mut sim);
+            if !sim.save_requested {
+                sim.storage.as_mut().unwrap().wait_for_save().unwrap();
+                assert_eq!(
+                    sim.storage.as_ref().unwrap().status()["saved_tick"],
+                    sim.state.tick
+                );
+                assert!(!sim.running);
+                break;
+            }
+            assert!(Instant::now() < deadline);
+            drop(sim);
+            std::thread::sleep(Duration::from_millis(2));
+        }
+    }
+}
+
+#[test]
+fn autosave_backpressure_does_not_stop_maximum_and_retries_checkpoint() {
+    let root = Temp::new();
+    let mut sim = fixture();
+    sim.pacing.mode = PaceMode::Maximum;
+    start_storage(&mut sim, &root.0).unwrap();
+    let release = sim.storage.as_ref().unwrap().test_block_worker();
+    sim.storage.as_mut().unwrap().test_make_autosave_due();
+    assert!(safe_advance(&mut sim));
+    assert!(sim.running);
+    assert!(sim.save_requested);
+    assert_eq!(sim.state.tick, 1);
+    assert!(sim.storage.as_ref().unwrap().error().is_none());
+    assert!(safe_advance(&mut sim));
+    assert_eq!(sim.state.tick, 2);
+    release.send(()).unwrap();
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while sim.save_requested {
+        service_storage(&mut sim);
+        assert!(Instant::now() < deadline);
+        std::thread::sleep(Duration::from_millis(2));
+    }
+    sim.storage.as_mut().unwrap().wait_for_save().unwrap();
+    assert!(sim.running);
+    assert_eq!(sim.storage.as_ref().unwrap().status()["saved_tick"], 2);
 }

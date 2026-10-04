@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Validate recordings, catalog freshness, and download integrity
-        run: node --test site/*.test.mjs
+        run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs
 
   check:
     name: build, lint, test

@@ -95,7 +95,16 @@ It defaults to port 8083, seed 42 and `configs/scenarios/cell-chamber.toml`.
 Its own storage is `.liminis/cells`; after stopping its server, continue with
 `.\scripts\start-local.ps1 -Cells -Resume latest`. Pause and Save commit the
 exact cell table and counters, not the browser picture. Autosave is every minute,
-history samples every ten completed ticks, and the last three checkpoints remain.
+history samples completed states at most every 250 ms of wall time, and the last
+three checkpoints remain. A saturated optional-history queue reports skipped
+observations without stopping biology; disk failures still stop it visibly.
+Live speed is a model-time multiplier: 1× means one model second per real second,
+so dt=30 s gives one tick every 30 real seconds. New runs default to 90×
+(the previous 3 TPS for this scenario); Maximum computes every checked tick as
+fast as the host permits. Target and measured speed are separate. Screen 30/60
+FPS redraws the latest confirmed state independently of HTTP polling, computation
+and saves; it invents no intermediate biology or physical movement. Legacy
+checkpoints retain their saved TPS and exact core state.
 Selecting a cell shows its actual identity and decoded traits. A hard safety
 limit stops the experiment visibly; it never silently suppresses births or resets.
 The old culture servers and `.liminis/runs` remain independent.
