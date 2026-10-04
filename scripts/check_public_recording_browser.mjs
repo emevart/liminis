@@ -48,14 +48,28 @@ async function check(name, action) {
 }
 
 // Bound both time and decoded response size. The target URL cannot be supplied
-// externally, and redirects cannot move these read-only requests elsewhere.
+// externally. Bounded canonical HTML redirects remain same-origin HTTPS GETs.
 async function fetchAsset(asset, timeout) {
   const url = new URL(asset.filename, publicBase);
   const observation = { filename: asset.filename, url: url.href, expectedBytes: asset.bytes, expectedSha256: asset.sha256, status: "FAIL" };
   const controller = new AbortController(), timer = setTimeout(() => controller.abort(), timeout);
   let reader;
   try {
-    const response = await fetch(url, { signal: controller.signal, cache: "no-store", redirect: "error", headers: { "Cache-Control": "no-cache" } });
+    let current = url, response;
+    observation.redirects = [];
+    for (let hop = 0; ; hop++) {
+      response = await fetch(current, { signal: controller.signal, cache: "no-store", redirect: "manual", headers: { "Cache-Control": "no-cache" } });
+      if (![301, 302, 303, 307, 308].includes(response.status)) break;
+      const location = response.headers.get("location");
+      assert.ok(location && hop < 4, "Canonical redirect must have a bounded target");
+      const target = new URL(location, current);
+      assert.equal(target.origin, publicBase.origin, "Canonical redirect must remain on liminis.dev");
+      assert.equal(target.protocol, "https:");
+      observation.redirects.push({ from: current.href, status: response.status, to: target.href });
+      await response.body?.cancel();
+      current = target;
+    }
+    observation.finalUrl = current.href;
     Object.assign(observation, { httpStatus: response.status, contentLength: response.headers.get("content-length"), etag: response.headers.get("etag"), lastModified: response.headers.get("last-modified") });
     assert.equal(response.status, 200, `Public asset HTTP status: ${asset.filename}`);
     assert.ok(response.body, `Missing response body: ${asset.filename}`);
@@ -73,7 +87,7 @@ async function fetchAsset(asset, timeout) {
     assert.equal(bytes, asset.bytes, `Public asset size differs: ${asset.filename}`);
     assert.equal(observation.sha256, asset.sha256, `Public asset SHA-256 differs: ${asset.filename}`);
     observation.status = "PASS";
-  } catch (error) { observation.error = error.message || String(error); }
+  } catch (error) { observation.error = error.message || String(error); observation.errorCause = error.cause?.message || null; }
   finally { controller.abort(); clearTimeout(timer); if (reader) await bounded(reader.cancel(), timeouts.cleanup, "Public response cleanup").catch(() => {}); }
   return observation;
 }
@@ -133,6 +147,12 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
   const observation = { name, viewport, status: "RUNNING", sourceResponses: [], requests: [], errors: [] };
   evidence.browserObservations.push(observation);
   const expected = new Map(assets.map((asset) => [new URL(asset.filename, publicBase).pathname, asset]));
+  const attestedRedirects = new Map();
+  for (const verified of evidence.publicAssets.verifiedResponses) {
+    const asset = assets.find((item) => item.filename === verified.filename);
+    expected.set(new URL(verified.finalUrl).pathname, asset);
+    for (const redirect of verified.redirects) attestedRedirects.set(redirect.from, redirect);
+  }
   const bodyReads = [];
   page.on("pageerror", (error) => observation.errors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error") observation.errors.push(message.text()); });
@@ -141,6 +161,20 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
   page.on("response", (response) => {
     const url = new URL(response.url()), asset = url.origin === publicBase.origin ? expected.get(url.pathname) : null;
     if (!asset) return;
+    if ([301, 302, 303, 307, 308].includes(response.status())) {
+      const result = { url: response.url(), httpStatus: response.status(), status: "FAIL", measurement: "Browser canonical redirect headers; no asset byte claim" };
+      (observation.redirectResponses ||= []).push(result);
+      try {
+        const target = new URL(response.headers().location, response.url());
+        const attested = attestedRedirects.get(response.url());
+        assert.equal(target.origin, publicBase.origin);
+        assert.ok(attested, "Browser redirect must match the verified Node chain");
+        assert.equal(response.status(), attested.status);
+        assert.equal(target.href, attested.to);
+        Object.assign(result, { target: target.href, status: "PASS" });
+      } catch (error) { result.error = error.message || String(error); }
+      return;
+    }
     const result = { filename: asset.filename, url: response.url(), httpStatus: response.status(), measurement: "Playwright response.body", expectedBytes: asset.bytes, expectedSha256: asset.sha256, status: "FAIL" };
     observation.sourceResponses.push(result);
     bodyReads.push(bounded(response.body(), timeouts.operation, `Browser response body: ${asset.filename}`).then((bytes) => {
@@ -160,6 +194,7 @@ async function viewportSmoke(name, viewport, assets, entry, data) {
     await page.waitForLoadState("networkidle"); await Promise.all(bodyReads);
     for (const asset of assets) assert.ok(observation.sourceResponses.some((item) => item.filename === asset.filename && item.status === "PASS"), `Browser did not receive verified ${asset.filename}`);
     assert.ok(observation.sourceResponses.every((item) => item.status === "PASS"), "Every observed critical browser response must match the checkout");
+    assert.ok((observation.redirectResponses || []).every((item) => item.status === "PASS"), "Browser redirects must match the verified canonical chain");
     assert.ok(observation.requests.every((item) => item.method === "GET" && new URL(item.url).origin === publicBase.origin), "Smoke must only observe read-only requests to liminis.dev");
 
     const first = data.frames[0], next = data.frames[1], horizon = data.frames.at(-1).sim_time - first.sim_time;
