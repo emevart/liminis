@@ -96,6 +96,9 @@ function idleHttp(name, baseline, allRequests) {
 
 async function open(page, experiment) {
   const url = new URL("observe.html", baseUrl);
+  // Preserve the historical sparse-playback acceptance as an explicit archive.
+  // Dense playback has its own mandatory actual-browser gate.
+  url.searchParams.set("recording", "archive");
   if (experiment) url.searchParams.set("experiment", experiment);
   await page.goto(url.href);
   await page.waitForFunction(() => document.getElementById("workspace").getAttribute("aria-busy") === "false");

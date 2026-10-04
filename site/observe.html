@@ -36,7 +36,7 @@
             </div>
             <div class="playback-settings">
               <label class="speed-control" for="speed"><span>Speed ×</span><input id="speed" type="number" step="any" value="1" inputmode="decimal" aria-describedby="clock-help rate-error" disabled /></label>
-              <label class="sr-only" for="speed-preset">Playback speed preset</label><select id="speed-preset" disabled><option value="overview">Overview · 2 min</option><option value="1">1×</option><option value="10">10×</option><option value="100">100×</option><option value="1000">1,000×</option><option value="10000">10,000×</option><option value="100000">100,000×</option><option value="1000000">1,000,000×</option><option value="custom" disabled>Custom</option></select>
+              <label class="sr-only" for="speed-preset">Playback speed preset</label><select id="speed-preset" disabled><option value="overview">Overview · nominal 2 min</option><option value="1">1×</option><option value="10">10×</option><option value="100">100×</option><option value="1000">1,000×</option><option value="10000">10,000×</option><option value="100000">100,000×</option><option value="1000000">1,000,000×</option><option value="custom" disabled>Custom</option></select>
               <label class="draw-control" for="draw-fps"><span>Draw target</span><select id="draw-fps" disabled><option value="30">30 FPS</option><option value="60">60 FPS</option></select></label>
               <span id="playback-status" role="status">Paused</span>
               <span id="rate-error" role="alert" hidden></span>
@@ -44,20 +44,20 @@
             <div class="clock-readout mono">
               <span>Playback <b id="playhead">—</b> model s</span>
               <span>Shown sample <b id="time">—</b> model s · tick <b id="tick">—</b></span>
-              <span>Full duration <b id="duration">—</b> · remaining <b id="remaining">—</b></span>
+              <span title="Nominal duration at the selected speed, excluding buffering">Nominal duration <b id="duration">—</b> · remaining <b id="remaining">—</b></span>
             </div>
-            <div class="sampling-note"><span id="sample-cadence">Loading sample cadence…</span><span id="clock-help">1× = 1 model second per real second. States are held until the next recorded sample; no intermediate biology is reconstructed. Draw FPS does not add observations.</span></div>
+            <div class="sampling-note"><span id="sample-cadence">Loading sample cadence…</span><span id="clock-help">1× = 1 model second per real second. States are held until the next recorded sample. Nominal duration excludes buffering. Draw FPS does not add observations.</span></div>
           </div>
         </section>
         <aside class="inspector" aria-label="Observation details">
           <section class="panel cell-panel"><div class="panel-head"><h2>Cell inspector</h2><span class="eyebrow" id="selection-label">none selected</span></div><div id="cell-detail" class="empty">Select a living cell in the chamber.</div></section>
-          <section class="panel"><div class="panel-head"><h2>Population history</h2><span class="eyebrow">each / recorded max</span></div><canvas class="chart" id="population-chart" aria-label="Living cell count and biomass history"></canvas><div class="legend"><span style="--key:#489c75">living cells</span><span style="--key:#5c6861">biomass</span></div></section>
-          <section class="panel"><div class="panel-head"><h2>Genome frequencies</h2><span class="eyebrow" id="genome-total">—</span></div><canvas class="chart compact" id="genome-chart" aria-label="Genome frequency history"></canvas><div class="frequency-list" id="frequencies"></div></section>
-          <section class="panel"><div class="panel-head"><h2>Environment</h2><span class="eyebrow">each / recorded max</span></div><canvas class="chart compact" id="resource-chart" aria-label="Resource concentration history"></canvas><div class="resource-list" id="resources"></div></section>
+          <section class="panel"><div class="panel-head"><h2>Population overview</h2><span class="eyebrow">sampled / own max</span></div><canvas class="chart" id="population-chart" aria-label="Sampled overview of living cell count and biomass"></canvas><div class="legend"><span style="--key:#489c75">living cells</span><span style="--key:#5c6861">biomass</span></div></section>
+          <section class="panel"><div class="panel-head"><h2>Genome frequencies</h2><span class="eyebrow" id="genome-total">—</span></div><canvas class="chart compact" id="genome-chart" aria-label="Sampled overview of genome frequencies"></canvas><div class="frequency-list" id="frequencies"></div></section>
+          <section class="panel"><div class="panel-head"><h2>Environment</h2><span class="eyebrow">each / own max</span></div><canvas class="chart compact" id="resource-chart" aria-label="Sampled overview of resource concentrations"></canvas><div class="resource-list" id="resources"></div></section>
           <section class="panel facts"><div class="panel-head"><h2>Experiment</h2><span class="eyebrow" id="checks">—</span></div><dl class="kv" id="experiment-facts"></dl><a class="download" id="download" download hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Download observation dataset</a></section>
         </aside>
       </main>
     </div>
-    <script type="module" src="./observer.js?v=physical-clock-1"></script>
+    <script type="module" src="./observer.js?v=dense-recording-1"></script>
   </body>
 </html>
