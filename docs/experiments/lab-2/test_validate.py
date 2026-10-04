@@ -136,6 +136,60 @@ class MatrixValidationTests(unittest.TestCase):
         value["runs"][6]["identity"]["canonical_digest"] = "blake3:" + "f" * 64
         self.reject(value, "hash changes across seeds")
 
+    def test_different_canonical_conditions_cannot_share_every_engine_hash(self):
+        value = self.altered()
+        original = value["runs"][0]["identity"]
+        for row in value["runs"]:
+            row["identity"]["config_hash"] = original["config_hash"]
+            row["identity"]["canonical_digest"] = original["canonical_digest"]
+        self.reject(value, "conditions share")
+
+    def test_starvation_cannot_claim_growth_or_reappear_as_food(self):
+        value = self.altered()
+        row = value["runs"][2]
+        for state in [row["summary"], *row["samples"][1:]]:
+            state["accounting"]["growth_extent"] = "1"
+        self.reject(value, "starvation control")
+
+    def test_unknown_result_row_summary_and_identity_fields_are_rejected(self):
+        for section in ("root", "row", "summary", "identity"):
+            with self.subTest(section=section):
+                value = self.altered()
+                target = value if section == "root" else value["runs"][0] if section == "row" else value["runs"][0][section]
+                target["unsupported"] = True
+                self.reject(value, "unknown/missing fields")
+
+    def test_exported_cumulative_energy_and_channel_corruption_are_rejected(self):
+        value = self.altered()
+        value["runs"][0]["samples"][1]["accounting"]["medium_energy_units"] = str(
+            int(value["runs"][0]["samples"][1]["accounting"]["medium_energy_units"]) + 1)
+        self.reject(value, "sampled cumulative energy")
+        value = self.altered()
+        value["runs"][0]["samples"][1]["accounting"]["medium_matter_units"][0] = str(
+            int(value["runs"][0]["samples"][1]["accounting"]["medium_matter_units"][0]) + 1)
+        self.reject(value, "sampled medium")
+
+    def test_all_refused_unknown_identity_condition_keeps_24_rows(self):
+        value = self.altered()
+        for row in value["runs"]:
+            if row["condition"] != "starvation":
+                continue
+            row.update(status="refused", stop_reason="input_or_admission_refused", error="synthetic refused input; no identity",
+                       identity=None, canonical_config=None, checked_ticks=0, attempted_tick=None,
+                       attempt_residuals=None, attempted_cell_ticks="0", committed_cell_ticks="0",
+                       summary=None, samples=[], samples_truncated=False)
+            for field in ("final_state_digest", "tick_reports_digest", "tick_reports_hashed", "tick_report_digest_encoding"):
+                row.pop(field)
+        value["batch"]["attempted_cell_ticks"] = str(sum(int(row["attempted_cell_ticks"]) for row in value["runs"]))
+        value["batch"]["committed_cell_ticks"] = value["batch"]["attempted_cell_ticks"]
+        value["batch"]["admitted_requested_steps"] = 20 * lab.STEPS
+        rows = lab.validate(self.manifest, value, self.baseline)
+        self.assertEqual(len(rows), 24)
+        self.assertEqual(sum(row["identity"] is None for row in rows), 4)
+        extracted = lab.comparisons(rows, {})
+        self.assertTrue(all(row["available_pairs"] == 0 for row in extracted["landmark_comparisons"]
+                            if row["condition"] == "starvation"))
+
     def test_exact_integers_and_batch_work_totals_cannot_be_faked(self):
         value = self.altered()
         value["runs"][0]["summary"]["lifecycle"]["fissions"] = 7
@@ -181,8 +235,9 @@ class MatrixValidationTests(unittest.TestCase):
     def cli_fixture(self, directory, manifest_name="manifest.json"):
         root = Path(directory)
         paths = [root / manifest_name, root / "results.json", root / "baseline.toml"]
-        paths[0].write_text(json.dumps(self.manifest))
-        paths[1].write_text(json.dumps(self.results))
+        source_directory = Path(__file__).resolve().parent
+        paths[0].write_bytes((source_directory / "manifest.json").read_bytes())
+        paths[1].write_bytes((source_directory / "results.json").read_bytes())
         source = Path(__file__).resolve().parents[3] / "configs/scenarios/cell-chamber.toml"
         paths[2].write_bytes(source.read_bytes())
         return paths
@@ -226,6 +281,17 @@ class MatrixValidationTests(unittest.TestCase):
             self.assertEqual(extracted, [p.read_bytes() for p in outputs])
             self.assertEqual(original, [hashlib.sha256(p.read_bytes()).hexdigest() for p in paths])
             self.assertFalse(list(Path(directory).glob(".lab2-validator-*.tmp")))
+
+    def test_cli_sha_anchors_reject_changed_inputs_without_writes(self):
+        for index, expected in ((0, "manifest"), (2, "baseline")):
+            with self.subTest(input=expected), tempfile.TemporaryDirectory() as directory:
+                paths = self.cli_fixture(directory)
+                paths[index].write_bytes(paths[index].read_bytes() + b"\n")
+                original = [hashlib.sha256(p.read_bytes()).hexdigest() for p in paths]
+                self.assertEqual(self.cli(paths, directory), 1)
+                self.assertEqual(original, [hashlib.sha256(p.read_bytes()).hexdigest() for p in paths])
+                self.assertFalse((Path(directory) / "comparisons.json").exists())
+                self.assertFalse((Path(directory) / "summary.csv").exists())
 
 
 if __name__ == "__main__":

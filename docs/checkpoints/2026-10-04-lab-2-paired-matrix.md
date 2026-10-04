@@ -17,6 +17,10 @@
   секреты, платный API и изменение инфраструктуры не используются.
 - Full remote HEAD/tree и PR фиксируются в issue #11 после публикации;
   этот файл не содержит круговой ссылки на собственный commit.
+- Draft PR #15: https://github.com/emevart/liminis/pull/15 . Base — LAB-1 branch
+  для отдельного data diff; после интеграции #14 целевая база main.
+- Safe snapshot `ff402c988b5d4db79566b2c43d621d0b99892613` сохранил все результаты
+  и scoped drafts перед продолжением final guards. Файлы не потеряны.
 
 ## Предрегистрация и законченные результаты
 
@@ -71,21 +75,31 @@ PASS:
 - Независимо сверены preregistration bytes и source stock через Git.
 - Текущий Python validator принимает actual24; root создал summary.csv и
   comparisons.json (35 fixed landmarks, 20 latest-common diagnostics).
-- Текущий code snapshot: 17 functional tests сообщил owner; root/final review
-  этих дополнительных guards ещё выполняются. Output alias protection исправлена.
+- Финальные 23 functional Python tests PASS у root (6.824s), final CLI PASS actual24.
+- Независимые code и numerics review blockers0 на frozen validator SHA256
+  `ae9171a6759ae49b58177fb6840bd8b2cde73ec303127c19c5facef6a1a32651` и tests SHA256
+  `22f22b37ae064721928ff7e647aa8cfd8f34663c7516fcea82d886b2f3496e89`.
+- CLI SHA anchors frozen baseline/preregistered manifest, strict schemas,
+  treatment/canonical consistency, starvation control, output alias safeguards
+  и corruption fixtures завершены. Unknown identities у refusals сохранены.
+- Sampled cumulative energy audit использует source formation enthalpies,
+  exported scales и Fraction; не реконструирует скрытые промежуточные ticks.
 - Source LAB-1: 16 runner tests debug/release, code/numerics review и exact-head
   CI приняты интегратором. Это source evidence, не CI нового LAB-2 head.
 
-UNFINISHED, честно сохранено для продолжения:
+Открытые gates после завершения реализации:
 
-- validate.py/test_validate.py: snapshot включает range width, allele composition,
-  строгие schemas, starvation guard и защиту raw inputs от output aliases.
-  CLI SHA anchors frozen baseline/preregistered manifest ещё добавляются;
-  dedicated corruption fixtures и правило distinct hashes только среди доступных
-  identities для целиком refused condition ещё не закончены в этом snapshot.
-- Final independent code review, final numerics verdict, root tests/scoped guards,
-  итоговый validation.md и отдельный LAB-2 PR/CI ещё pending.
+- Candidate CI и явный ACCEPTED/MERGED финального exact head LAB-2 у интегратора.
+  Snapshot CI не подменяет CI следующего commit.
+- Последовательный merge LIVE→RECORDED→LAB остаётся у soleowner.
 - Browser QA N/A: этот этап не содержит UI. LAB-3 потребует реального browser gate.
+
+Итоговая приёмка/commands/наблюдения/ограничения —
+[validation.md](../experiments/lab-2/validation.md). Итоговый comparisons.json:
+1 116 928 bytes, SHA256
+`e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3`.
+Summary.csv: 17 059 bytes, SHA256
+`a8a6e8ae5356b42bb52ecc18d9b70869ca32df8b57ff9560e06ff6b01769fab0`.
 
 Python static validation не пересчитывает BLAKE3 и не восстанавливает полный
 state или ledger stream из aggregate samples. Raw file SHA256, структурный аудит,
@@ -96,13 +110,14 @@ Native FLOAT не аттестуется между hardware; runtime rustc не
 
 Законченный оригинальный scientific artifact находится в assigned
 docs/experiments/lab-2/results.json и закрепляется snapshot commit в GitHub.
-Manifest/method, scoped Python draft/tests и извлечённые summary/comparisons
+Manifest/method, scoped Python validator/tests и извлечённые summary/comparisons
 сохраняются в той же собственной ветке, отдельно от LAB-1.
 
 Ignored target/qa/lab-2/repeat-results.json остаётся локальным duplicate evidence:
 его bytes равны опубликованному results.json, отдельно в Git не stage.
 Оngoing batch отсутствует; private artifacts нет. Git-ignored build/QA cache
-не stage автоматически. Unfinished code gaps перечислены выше.
+не stage автоматически. Незавершённой simulation или unsaved original data нет.
+Открыты только candidate CI/integration gates, перечисленные выше.
 
 Фактически вызван Astra до метода и после результатов: рекомендует зафиксировать
 эти 24 опыта, завершить review/приёмку и перейти к LAB-3 после ACCEPTED.
@@ -111,8 +126,8 @@ Ignored target/qa/lab-2/repeat-results.json остаётся локальным 
 смешанные знаки. Итоговый extent одинаков у baseline/mutation_off/oxygen_low/
 founder_k2, поэтому низкий O2 не называется подавлением суммарного20k роста.
 
-Следующий шаг: завершить оставшиеся validator guards/fixtures, независимые review,
-обновить evidence/checkpoint, открыть явно dependent LAB-2 PR без merge.
+Следующий шаг: опубликовать финальный exact head в явно dependent PR #15,
+проверить candidate CI и получить интеграционную приёмку без собственного merge.
 После его ACCEPTED/MERGED — отдельные site/lab* и site/data/lab/**, actual browser
 QA через existing Actions у интегратора при cloud sandbox gap. Автоматический
 новый turn/create_goal недоступен; активное cloud продолжение не зависит от ПК.

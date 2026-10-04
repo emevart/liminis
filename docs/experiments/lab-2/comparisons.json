@@ -28,7 +28,12 @@
       "Core simulation/replay",
       "Build attestation",
       "Independent per-tick numerical ledger verification"
-    ]
+    ],
+    "independent_exported_energy_checks": {
+      "retained_samples": 4044,
+      "unretained_final_summaries": 0,
+      "scope": "Exported cumulative endpoints only: E(state)-E(genesis)=medium_energy and sum(weight*medium_matter)=medium_energy. Exact integer coefficients use declared formation enthalpies and exported scales for this fixed matrix; unseen ticks are not independently checked."
+    }
   },
   "matrix": {
     "seeds": [

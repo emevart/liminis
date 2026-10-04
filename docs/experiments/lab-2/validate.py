@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import copy
 import csv
+from fractions import Fraction
 import hashlib
 import io
 import json
@@ -24,6 +25,8 @@ import tempfile
 import tomllib
 
 SOURCE_COMMIT = "21cbe90732128edee61963544e414d29a7420577"
+BASELINE_SHA256 = "d6a2d667317b0eca9837e96f4d8234d8be7e55e67927cd95ab67042b3906d526"
+MANIFEST_SHA256 = "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
 SEEDS = ("1", "7", "42", "2026")
 CONDITIONS = ("baseline", "mutation_off", "starvation", "oxygen_low", "exchange_half", "founder_k2")
 LANDMARKS = (100, 500, 1000, 2000, 5000, 10000, 20000)
@@ -112,7 +115,7 @@ def scenario_for(baseline, condition):
 def validate_manifest(manifest, baseline):
     require(isinstance(manifest, dict) and set(manifest) == {"schema_version", "batch_id", "runs"},
             "manifest: unknown/missing fields")
-    require(manifest["schema_version"] == 1 and isinstance(manifest["batch_id"], str)
+    require(type(manifest["schema_version"]) is int and manifest["schema_version"] == 1 and isinstance(manifest["batch_id"], str)
             and ID.fullmatch(manifest["batch_id"]), "manifest: schema/batch_id mismatch")
     require(baseline["dt"] == DT and baseline["chamber"]["max_cells"] == 512
             and baseline["genome"]["mutation_probability"] == 0.02
@@ -155,7 +158,8 @@ def check_identity(identity, scenario, context):
                      "declared_max_cells", "derived", "dt_seconds", "energy_units_per_joule", "matter_scales",
                      "model", "scenario", "spatial_positions", "temperature_k", "units", "volume_m3",
                      "world_format_version"), context + ".identity")
-    require(identity["world_format_version"] == 30 and identity["chamber_format"] == 1,
+    require(type(identity["world_format_version"]) is int and type(identity["chamber_format"]) is int
+            and identity["world_format_version"] == 30 and identity["chamber_format"] == 1,
             f"{context}: engine/chamber version mismatch")
     require(identity["scenario"] == scenario["name"] and identity["dt_seconds"] == DT
             and identity["volume_m3"] == scenario["chamber"]["volume_m3"]
@@ -296,6 +300,8 @@ def check_run(row, request, scenario):
             check_identity(identity, scenario, context)
     status, reason = row["status"], row["stop_reason"]
     checked = natural(row["checked_ticks"], context + ".checked", STEPS)
+    if row["attempted_tick"] is not None:
+        natural(row["attempted_tick"], context + ".attempted tick", STEPS + 1)
     attempted = integer_string(row["attempted_cell_ticks"], context + ".attempted")
     committed = integer_string(row["committed_cell_ticks"], context + ".committed")
     require(committed <= attempted and committed <= checked * 512, f"{context}: invalid work evidence")
@@ -363,8 +369,40 @@ def check_run(row, request, scenario):
     if checked % SAMPLE_EVERY:
         expected.append(checked)
     require(ticks == (expected[:len(ticks)] if row["samples_truncated"] else expected), f"{context}: missing/invented sample schedule")
+    require(samples or checked == 0, f"{context}: positive checked history has no retained genesis")
     if samples and ticks[-1] == checked:
         require(samples[-1] == summary, f"{context}: final sample/summary mismatch")
+    check_exported_energy(samples, summary, scenario, identity, context)
+
+
+def check_exported_energy(samples, final, scenario, identity, context):
+    """Independently audit exported cumulative endpoints, never unseen ticks."""
+    scales = {item["id"]: int(item["units_per_mol"]) for item in identity["matter_scales"]}
+    energy_scale = int(identity["energy_units_per_joule"])
+    weights = {}
+    for substance in scenario["substance"]:
+        # This fixed source's coefficient products are exact integers. Reject
+        # a changed fractional case rather than invent a new rounding engine.
+        coefficient = Fraction(str(substance["enthalpy_formation"])) * energy_scale / scales[substance["id"]]
+        require(coefficient.denominator == 1, f"{context}: coefficient outside fixed sampled-energy audit")
+        weights[substance["id"]] = coefficient.numerator
+    def total(state):
+        value = int(state["bath_heat_units"]) + int(state["internal_energy_units"])
+        for pool in state["matter"]:
+            amount = int(pool["free_units"])
+            if pool["id"] == identity["biomass_substance"]:
+                amount += int(state["structural_mass_units"])
+            value += weights[pool["id"]] * amount
+        return value
+    genesis = samples[0] if samples else final
+    reference = total(genesis)
+    endpoints = samples + ([final] if not samples or samples[-1]["tick"] != final["tick"] else [])
+    ids = [item["id"] for item in identity["matter_scales"]]
+    for state in endpoints:
+        channel = int(state["accounting"]["medium_energy_units"])
+        require(total(state) - reference == channel, f"{context}: sampled cumulative energy does not close")
+        credited = sum(weights[species] * int(amount) for species, amount in zip(ids, state["accounting"]["medium_matter_units"]))
+        require(credited == channel, f"{context}: sampled medium matter/energy channels disagree")
 
 
 def validate(manifest, results, baseline):
@@ -372,7 +410,7 @@ def validate(manifest, results, baseline):
     scenarios = validate_manifest(manifest, baseline)
     fields(results, ("batch", "batch_id", "budgets", "determinism", "kind", "limitations", "provenance",
                      "runs", "schema_version", "source_commit"), "results")
-    require(isinstance(results, dict) and results["schema_version"] == 1 and results["kind"] == "comparative_cell_lab",
+    require(type(results["schema_version"]) is int and results["schema_version"] == 1 and results["kind"] == "comparative_cell_lab",
             "results: unsupported schema")
     require(results["source_commit"] == SOURCE_COMMIT, "results: source differs from accepted LAB-1 engine")
     require(results["batch_id"] == manifest["batch_id"], "results: batch_id mismatch")
@@ -392,7 +430,8 @@ def validate(manifest, results, baseline):
                              ("max_batch_steps", 24 * STEPS, 2_000_000), ("max_cells", 512, 4096),
                              ("max_cell_ticks", 1, 100_000_000), ("max_output_bytes", 1, RESULT_LIMIT)):
         require(type(b[field]) is int and low <= b[field] <= high, f"results: invalid {field}")
-    require(b["max_run_seconds"] == b["max_batch_seconds"] == 0 and results["determinism"]["watchdogs_enabled"] is False,
+    require(type(b["max_run_seconds"]) is int and type(b["max_batch_seconds"]) is int
+            and b["max_run_seconds"] == b["max_batch_seconds"] == 0 and results["determinism"]["watchdogs_enabled"] is False,
             "results: watchdog not preregistered")
     rows = results["runs"]
     require(isinstance(rows, list) and len(rows) == 24, "results: missing/extra rows")
@@ -408,11 +447,12 @@ def validate(manifest, results, baseline):
                 if storage is None:
                     storage = scales
                 require(scales == storage, "results: fixed-registry scales changed across conditions")
-    require(len(seen) == 6 and len({value[1] for value in seen.values()}) == 6
-            and len({value[2] for value in seen.values()}) == 6,
+    require(len({value[1] for value in seen.values()}) == len(seen)
+            and len({value[2] for value in seen.values()}) == len(seen),
             "results: different materialized conditions share config/canonical hashes")
     batch = results["batch"]
     fields(batch, ("admitted_requested_steps", "attempted_cell_ticks", "committed_cell_ticks"), "results.batch")
+    natural(batch["admitted_requested_steps"], "batch admitted requested", 24 * STEPS)
     attempted = integer_string(batch["attempted_cell_ticks"], "batch attempted")
     committed = integer_string(batch["committed_cell_ticks"], "batch committed")
     require(attempted == sum(int(row["attempted_cell_ticks"]) for row in rows)
@@ -502,7 +542,12 @@ def comparisons(rows, integrity):
                        "independent_integrity": integrity,
                        "engine_produced_evidence": "BLAKE3 and every-tick ledger checks are runner evidence; Python checks structure/counts, not truth by re-execution.",
                        "not_performed": ["Independent BLAKE3 recomputation", "Core simulation/replay", "Build attestation",
-                                         "Independent per-tick numerical ledger verification"]},
+                                         "Independent per-tick numerical ledger verification"],
+                       "independent_exported_energy_checks": {
+                           "retained_samples": sum(len(row["samples"]) for row in rows),
+                           "unretained_final_summaries": sum(row["summary"] is not None and
+                               (not row["samples"] or row["samples"][-1]["tick"] != row["summary"]["tick"]) for row in rows),
+                           "scope": "Exported cumulative endpoints only: E(state)-E(genesis)=medium_energy and sum(weight*medium_matter)=medium_energy. Exact integer coefficients use declared formation enthalpies and exported scales for this fixed matrix; unseen ticks are not independently checked."}},
         "matrix": {"seeds": list(SEEDS), "conditions": list(CONDITIONS), "expected_runs": 24,
                    "requested_steps": STEPS, "sample_every": SAMPLE_EVERY, "dt_seconds": DT},
         "metrics": {k: {"unit": v, "encoding": "decimal integer string" if k in EXACT_STRING_METRICS else "JSON number"} for k, v in METRIC_UNITS.items()},
@@ -599,6 +644,8 @@ def main(argv=None):
         m = read_bounded(args.manifest, MANIFEST_LIMIT)
         r = read_bounded(args.results, RESULT_LIMIT)
         b = read_bounded(args.baseline_config, 100 * 1024)
+        require(hashlib.sha256(m).hexdigest() == MANIFEST_SHA256, "manifest: SHA-256 differs from preregistration")
+        require(hashlib.sha256(b).hexdigest() == BASELINE_SHA256, "baseline: SHA-256 differs from accepted source")
         manifest, results = parse_json(m), parse_json(r)
         rows = validate(manifest, results, tomllib.loads(b.decode()))
         require(len(r) <= results["budgets"]["max_output_bytes"], "results: raw bytes exceed declared output cap")
