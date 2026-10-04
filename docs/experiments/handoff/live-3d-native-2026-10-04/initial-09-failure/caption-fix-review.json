@@ -1,0 +1,20 @@
+{
+  "status": "QUALIFIED_SOURCE_PASS",
+  "blockers": 0,
+  "head": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+  "tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "prior": "09f3c64af37c9037aa291b9efeb249c4508eba91",
+  "authorFix": "bea8cdc9fa9140fce2369f200f1afbe407dc0635",
+  "deltaPaths": [
+    "crates/liminis/src/cell-viewer.html",
+    "docs/checkpoints/2026-10-04-live-physical-observer-3d.md"
+  ],
+  "authorUiFilesExact": 11,
+  "authorQaFilesExact": 1,
+  "oldProjectionQaSha256": "58bd4a87e85756ffcd214bea35fa3ce6d1224445ee4861eedd03c51b24384edf",
+  "oldQaUnchanged": true,
+  "newQaVendorProjectorCiApiModelsDataUnchanged": true,
+  "rootPhaseHistoryHonest": true,
+  "behavior": "Restore exactly accepted2D outside-slice caption; retain3D status-specific text and projection-error branch. No QA regex weakening.",
+  "qualification": "Source-only delta0. Original09 remainsFAIL; fresh exact-head old2D/new3D protected artifacts and fullCI mandatory before acceptance."
+}

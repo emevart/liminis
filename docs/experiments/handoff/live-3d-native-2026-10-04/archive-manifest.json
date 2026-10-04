@@ -68,8 +68,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 1814,
-      "sha256": "44b91206dc47a683836b240637be55a769180b2944eb8d68dc30e1c6cece4e85",
+      "bytes": 2185,
+      "sha256": "9b461ab6934715b2c55c3330865da2be1a37327479038e8062a2f026ca298f67",
       "scope": "coordinator qualification"
     },
     {
@@ -83,9 +83,27 @@
       "bytes": 4254907,
       "sha256": "7afc4b88db78a9a32d83f99534ee13e463e18fd48411003e7b31b6cb29d56ffd",
       "scope": "original GH artifact ZIP, no repacking; overall FAIL"
+    },
+    {
+      "path": "initial-09-failure/REVIEW.md",
+      "bytes": 3593,
+      "sha256": "8090eac4f2ccb521975fde0196db37d61b0b616f224ed9fd31fc7d75f04baae9",
+      "scope": "exact independent original09 diagnostic / narrow9d caption-fix review"
+    },
+    {
+      "path": "initial-09-failure/diagnostics.json",
+      "bytes": 4648,
+      "sha256": "e1f348dea178d16d5b3b1c705f813a58cded07963050408f0e3904c68811bca8",
+      "scope": "exact independent original09 diagnostic / narrow9d caption-fix review"
+    },
+    {
+      "path": "initial-09-failure/caption-fix-review.json",
+      "bytes": 978,
+      "sha256": "b06d7ed6f00a260b94791c39d8706a9059f0dd1347d678046ed3bd59bd1bb8fb",
+      "scope": "exact independent original09 diagnostic / narrow9d caption-fix review"
     }
   ],
-  "unique_bytes": 4331606,
+  "unique_bytes": 4341196,
   "archive_group_cap_bytes": 67108864,
   "original_zip_count": 1,
   "qualifications": [
@@ -102,5 +120,8 @@
     "page_errors": 0,
     "console_errors": 0,
     "cleanup_errors": 0
-  }
+  },
+  "subsequent_candidate_commit": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+  "subsequent_candidate_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "subsequent_workflow_run": 37238281987
 }

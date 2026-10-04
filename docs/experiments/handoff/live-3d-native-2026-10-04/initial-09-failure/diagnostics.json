@@ -1,0 +1,218 @@
+{
+  "status": "CONFIRMED_ORIGINAL_FAIL",
+  "originalZip": {
+    "bytes": 4254907,
+    "sha256": "7afc4b88db78a9a32d83f99534ee13e463e18fd48411003e7b31b6cb29d56ffd",
+    "outerMembers": 9,
+    "outerCrc": "PASS",
+    "nestedCrc": "PASS",
+    "combinedExpandedBytesIncludingNestedZip": 10845593
+  },
+  "exactHead": "09f3c64af37c9037aa291b9efeb249c4508eba91",
+  "exactTree": "77dd4de7d268523036bf09049eb30cd20bb26e4d",
+  "run": "37237631167",
+  "artifact": "11316008695",
+  "checksPass": 6,
+  "checksFail": 1,
+  "observedFailure": "Retained outside-slice2D inspector caption changed; exact old regex /outside the current slice/ failed. Coordinates/counts/current tick retained.",
+  "overallAcceptance": "FAIL retained; remaining2D checks and new3D NOT_RUN",
+  "imagesViewed": [
+    "source-cube.png",
+    "failure.png"
+  ],
+  "additionalObservedBlockers": 0,
+  "sandboxObservedForbiddenSwitches": [],
+  "geometry": {
+    "records": 11,
+    "markers": 69,
+    "maxCoordinateErrorCSSpx": 0,
+    "rows": [
+      {
+        "label": "source-cube",
+        "tick": 0,
+        "plane": "xy",
+        "visibleIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ]
+      },
+      {
+        "label": "atomic-before-history-release",
+        "tick": 1,
+        "plane": "xy",
+        "visibleIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ]
+      },
+      {
+        "label": "xy",
+        "tick": 1,
+        "plane": "xy",
+        "visibleIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ]
+      },
+      {
+        "label": "xz",
+        "tick": 1,
+        "plane": "xz",
+        "visibleIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ]
+      },
+      {
+        "label": "yz",
+        "tick": 1,
+        "plane": "yz",
+        "visibleIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ]
+      },
+      {
+        "label": "xy",
+        "tick": 1,
+        "plane": "xy",
+        "visibleIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ]
+      },
+      {
+        "label": "xz",
+        "tick": 1,
+        "plane": "xz",
+        "visibleIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ]
+      },
+      {
+        "label": "yz",
+        "tick": 1,
+        "plane": "yz",
+        "visibleIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ]
+      },
+      {
+        "label": "inclusive-upper",
+        "tick": 1,
+        "plane": "yz",
+        "visibleIds": [
+          "1",
+          "2"
+        ]
+      },
+      {
+        "label": "inclusive-lower",
+        "tick": 1,
+        "plane": "yz",
+        "visibleIds": [
+          "1",
+          "3"
+        ]
+      },
+      {
+        "label": "zero-width",
+        "tick": 1,
+        "plane": "yz",
+        "visibleIds": [
+          "1"
+        ]
+      }
+    ]
+  },
+  "trace": {
+    "members": 131,
+    "expandedBytes": 6239780,
+    "scriptTraceGitExact": true,
+    "htmlTraceGitExact": 2,
+    "originalSavedStepBodies": [
+      {
+        "action": "step"
+      }
+    ],
+    "actualArrowPresses": 36,
+    "eventCounts": {
+      "context-options": 1,
+      "before": 317,
+      "event": 3,
+      "after": 317,
+      "frame-snapshot": 655,
+      "log": 637,
+      "screencast-frame": 119,
+      "console": 2,
+      "input": 72
+    },
+    "captionSnapshots": 8,
+    "3DAssetRequests": 0
+  },
+  "errorArraysZero": true,
+  "privacy": {
+    "utf8Files": 18,
+    "utf8Bytes": 1271018,
+    "binaryFilesNotTextScanned": 121,
+    "obviousFindings": [],
+    "cookieAuthHeaders": [],
+    "qualification": "Bounded obvious-pattern outer+nested text scan and both actualPNG visual inspection; not exhaustive absence-of-secrets guarantee."
+  },
+  "limits": [
+    "Early desktop2D failure artifact only: no mobile, held30/60, division, fallback or3D acceptance.",
+    "Binary SHA gives existing CI build provenance, not standalone source/OS isolation attestation.",
+    "Privacy scan bounded obvious patterns and bothPNG view, not exhaustive absence-of-secrets guarantee.",
+    "No models/build/browser runs, no failed artifact relabelledPASS."
+  ]
+}
