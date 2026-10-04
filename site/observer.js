@@ -187,6 +187,7 @@ function denseStatus(status, detail) {
 async function load() {
   try {
     const { entry, data, mode, dense } = await loadRecording(location.search);
+    const archiveLink = $("archive-link"); if (archiveLink) { archiveLink.href = `./observe.html?experiment=${encodeURIComponent(entry.id)}&recording=archive`; archiveLink.hidden = mode !== "dense"; }
     view.data = data; view.dense = mode === "dense" ? dense : null; view.metadata = view.dense ? dense.manifest : data;
     view.clock = new PlaybackClock(timeline()); if (!view.dense) buildLayout(data);
     $("seed").textContent = view.metadata.identity.seed; $("config").textContent = view.metadata.identity.config_hash; $("world").textContent = view.metadata.identity.world_format_version; $("scrub").min = String(view.clock.firstTime); $("scrub").max = String(view.clock.endTime); $("speed").value = String(view.clock.rate);
