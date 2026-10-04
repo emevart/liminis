@@ -1,0 +1,84 @@
+{
+  "status": "PASS_WITH_SCOPE",
+  "blockers": 0,
+  "other_findings": 0,
+  "source_head": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+  "source_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "workflow_run": "https://github.com/emevart/liminis/actions/runs/37238281987",
+  "scope": "Independent saved-artifact numerical, source-identity and protected-browser regression review; no simulation, Cargo, browser or million-frame decode rerun.",
+  "mandatory_checks": {
+    "live_chamber1": 15,
+    "live_physical": 16,
+    "physical_2d": 12,
+    "legacy_recordings": 22,
+    "dense_recordings": 14,
+    "total": 79
+  },
+  "integrity": {
+    "detail": "integrity.json",
+    "original_archives": 5,
+    "original_zip_bytes": 71515404,
+    "outer_members": 50,
+    "nested_trace_members": 1736,
+    "screenshots": 28,
+    "zip_sha_size_crc_and_unique_relative_paths": "PASS",
+    "report_and_available_screenshot_trace_sha": "PASS",
+    "source_script_and_served_hash_comparisons": 30,
+    "source_heads_trees_and_successful_checks": "PASS"
+  },
+  "numerical_evidence": {
+    "live": "Both real-host gates retain dt=30 seconds, seed42, manual1x target1/30 ticks/second, paused single Step and equal held pixels at draw30/60. The physical gate records8 moved surviving centers from tick2 to3. Maximum-mode final tick counts are bounded run observations, not a controlled transport comparison.",
+    "projection_2d": "Actual API SI centers, equal scale in all three nonsquare planes, inclusive and exact zero-width slices, exact-u64-ID navigation, atomic tick0-to1 commit before held history, and first real division at tick47 are present. Daughter16/17 have the same actual inherited center; absent parent5 is not classified as death. Source and nonsquare volume both record1e-12m3; mathematical product equality is qualified without a general binary equality claim.",
+    "legacy_recordings": "Three original sparse JSON downloads preserve their byte hashes. The browser assertions cover held real sample pixels, nominal wall-clock pacing, endpoints and replay. Sparse samples retain their sampling cadence and do not become every-tick observations. Synthetic visibility coverage does not claim native background scheduling.",
+    "dense_clock": {
+      "measured_wall_ms": 1556.2999999999884,
+      "model_seconds_advanced": 1.5560000000004948,
+      "absolute_error_seconds": 0.0002999999994934832,
+      "allowed_seconds": 0.1,
+      "additional_http_while_hold": 0,
+      "draw_targets": [
+        30,
+        60
+      ]
+    },
+    "dense_frames": "101 original tiny frames agree with independent Python reference values. The real255-to256 boundary holds the previous pixels and inspector until the next validated frame commits; buffering time is excluded. The actual100k and1M catalog endpoints each use3 chunk requests; shown1M frame is tick1000000, with1000001 real states. No full recording fetch or million-frame browser array is asserted.",
+    "dense_cache": {
+      "retained_chunks": 1,
+      "retained_frames": 1,
+      "two_chunk_partial_100k_fixture": true,
+      "largest_chunk_gzip_bytes": 1046390,
+      "largest_chunk_decoded_bytes": 4135813,
+      "bounded_seek_elapsed_ms": 3695,
+      "timer_interval_ms": 10,
+      "largest_seek_timer_max_gap_ms": 454.20000000001164,
+      "single_cdp_used_heap_bytes": 14449244,
+      "qualification": "This bounded workload and one heap snapshot are not peak heap, hardware performance or universal device guarantees."
+    },
+    "archive_identity": "Dense endpoints retain archived engineb2024cef08f0aa910a711a41c6a37fbc7b2ba35a, world30, chamber1, seed42 and configblake3:1802c0f129855749. Published indexc7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b and publication48cf7367c19e3fed7669e0a26473f6ceb02b720d6d0e70d19f140a672aa6368b remain pinned. These are separate from current physical LIVE world31/chamber2."
+  },
+  "source_binding": {
+    "current_core_configs_cargo_lock_toolchain_site_data_equal_accepted_base239ec8b": true,
+    "3d_projector_and_vendor_equal_reviewed86175ef7": true,
+    "delta09f3c64_to9d": "One HTML caption restores accepted2D outside-slice wording; checkpoint records the earlier failed attempt. No geometry, QA, model or data change. Earlier09 failure is not substituted for this actual9d success."
+  },
+  "visual_review": [
+    "physical LIVE desktop world31 saved-center view",
+    "2D nonsquare coincident daughters and exact selected inspector",
+    "dense million endpoint world30, every-tick count versus201 sparse overview samples"
+  ],
+  "privacy": {
+    "utf8_members_scanned": 221,
+    "utf8_bytes_scanned": 75474985,
+    "obvious_credential_matches": 0,
+    "private_old_context_matches": 0,
+    "nonempty_sensitive_request_response_headers": 0,
+    "qualification": "Bounded UTF8 report/log/trace and structured-header scan. Binary and PNG contents are not covered by a comprehensive secret guarantee. Three representative PNGs were inspected visually."
+  },
+  "qualifications": [
+    "Pinned official Playwright1.61.1 Chromium/Linux launches retain chromiumSandbox and have no listed sandbox opt-out switches. Actual stock SwiftShader flags remain visible; software GPU, kernel/container sandbox internals and hardware rendering/FPS are not attested.",
+    "30/60 are display targets. No achieved-FPS, complete accessibility/device audit, native background scheduling, cross-platform float or new physical/scientific inference is made.",
+    "Physical glyphs display saved point centers; marker dimensions are visual. Excluded volume, collisions and spatial chemistry remain outside the model.",
+    "Dense negative controls and all expected browser cancellations are qualified by the exact source gate; an intentional uninstrumented sensitivity-control rejection is distinct from production failures.",
+    "This report covers five existing regression archives only. Independent acceptance of the separately delivered3D original is recorded separately; workflow success alone is not3D projection proof."
+  ]
+}

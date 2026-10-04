@@ -1,0 +1,393 @@
+{
+  "source_head": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+  "source_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "status": "PASS",
+  "artifacts": [
+    {
+      "artifact_id": 11316755095,
+      "zip_bytes": 12704737,
+      "zip_sha256": "614da10dad572d0e24914f436defc1694a3241f7af0a38142f3d5ca70dcab2e2",
+      "report_sha256": "d11486ac93933e84023d43a5b09b6c9f237131bb368c41a445c67403c973e46a",
+      "checks": 22,
+      "outer": {
+        "members": 10,
+        "expanded_bytes": 13824203,
+        "crc": "PASS",
+        "unique_safe_paths": true
+      },
+      "trace": {
+        "bytes": 13061660,
+        "sha256": "fb69aa8c096b95d5460024d9f2a755deac0556357ac05ef7f7846a83965fd39e",
+        "members": 214,
+        "expanded_bytes": 54300557,
+        "crc": "PASS",
+        "unique_safe_paths": true
+      },
+      "screenshots": [
+        {
+          "filename": "cell-chamber-10k-desktop.png",
+          "bytes": 106211,
+          "sha256": "ffb1eada5d0310b3c4de687a8a12b42ca035adbf9cf10283f9effc59550e65e4",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        {
+          "filename": "cell-chamber-100k-desktop.png",
+          "bytes": 114558,
+          "sha256": "736056bd50439519fdfbef8a29962c44e8843b28d4ed300a6fed168a9017c2c2",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        {
+          "filename": "cell-chamber-1m-desktop.png",
+          "bytes": 115603,
+          "sha256": "62fb47d3b5518dd8adb6c0f503adfec46c039b04b1ea056da18cd7a083fe657f",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        {
+          "filename": "desktop-short.png",
+          "bytes": 85576,
+          "sha256": "3231b145d2b9b7e216552754d859d98fc3e0761fb8c3235e3bed2af8e8c6ae59",
+          "dimensions": [
+            1366,
+            600
+          ]
+        },
+        {
+          "filename": "mobile.png",
+          "bytes": 134675,
+          "sha256": "35d77f5fd6f1885cab285e0fcbd8f8884e2402b54005571cd760b18bc7354aec",
+          "dimensions": [
+            390,
+            2150
+          ]
+        },
+        {
+          "filename": "mobile-narrow.png",
+          "bytes": 131177,
+          "sha256": "fe4d179c441df1c702774ae844648d91b3b50d830aab17906a471b46b22fb8fa",
+          "dimensions": [
+            320,
+            2250
+          ]
+        },
+        {
+          "filename": "held-30fps.png",
+          "bytes": 27470,
+          "sha256": "b7803f89d00ba65682e658394f14a8cd8e527a0bc84cd279c67623cf6ed56aca",
+          "dimensions": [
+            1114,
+            678
+          ]
+        },
+        {
+          "filename": "held-60fps.png",
+          "bytes": 27470,
+          "sha256": "b7803f89d00ba65682e658394f14a8cd8e527a0bc84cd279c67623cf6ed56aca",
+          "dimensions": [
+            1114,
+            678
+          ]
+        }
+      ],
+      "protected_argv_without_optouts": true
+    },
+    {
+      "artifact_id": 11316533025,
+      "zip_bytes": 30501374,
+      "zip_sha256": "cb29064636bd50c5ae5b5ec74539f2c4538ea0271ca8f684572b1a511e025bb4",
+      "report_sha256": "106b451a6d461b16290201b482b548be86b24d299a41208d26972b1b0e3b8603",
+      "checks": 12,
+      "outer": {
+        "members": 15,
+        "expanded_bytes": 31594090,
+        "crc": "PASS",
+        "unique_safe_paths": true
+      },
+      "trace": {
+        "bytes": 30748555,
+        "sha256": "f9c911edc1938b7030331d87dd850a53095eab8ab8fed63bc8ff38b32a490645",
+        "members": 972,
+        "expanded_bytes": 40880607,
+        "crc": "PASS",
+        "unique_safe_paths": true
+      },
+      "screenshots": [
+        {
+          "filename": "source-cube.png",
+          "bytes": 83102,
+          "sha256": "ef612c21bcaf99dab046290127d7af6cdff8234dbfaa5e49744803772b87793b",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        {
+          "filename": "desktop.png",
+          "bytes": 110326,
+          "sha256": "326d52e2e3940a7e8c1b930449cd351c39df138d158b821bc0ad02be7fda09b0",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        {
+          "filename": "desktop-short.png",
+          "bytes": 96098,
+          "sha256": "012d4fa84845b24d640843d63f9789d37af7a9a426b7e372c253ffc1e72ec5c6",
+          "dimensions": [
+            1440,
+            720
+          ]
+        },
+        {
+          "filename": "mobile.png",
+          "bytes": 116711,
+          "sha256": "e847687ce889817f7f5aeec1552dab1b4305cff0569131ef54e7ae05c78fc51c",
+          "dimensions": [
+            390,
+            2437
+          ]
+        },
+        {
+          "filename": "mobile-narrow.png",
+          "bytes": 116243,
+          "sha256": "ef13b64e0ae61d18876ef2d32b923b095c5f43a99ba0ea2f5a08b30f85b0ac37",
+          "dimensions": [
+            320,
+            2481
+          ]
+        },
+        {
+          "filename": "coincident-daughters.png",
+          "bytes": 103469,
+          "sha256": "dc7784a198ff7073429a5c91e910950344a59f05cc847984ce91ae4f10afb49d",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        {
+          "filename": "legacy-chamber1.png",
+          "bytes": 84539,
+          "sha256": "0d164c1b74d03894874b7cb8b64a4348538fe6e7e4a1ec6820169bf4ee083f53",
+          "dimensions": [
+            1440,
+            900
+          ]
+        }
+      ],
+      "protected_argv_without_optouts": true
+    },
+    {
+      "artifact_id": 11316383477,
+      "zip_bytes": 6876222,
+      "zip_sha256": "334fa733315c5dcdcb13a52cce5fc8c9dd4e34c9d363fd5098141b518cf222b2",
+      "report_sha256": "0f2c6df2ff883a2c3c2238ef893d9173f1faffb4df0a4b49af1dba88027325a0",
+      "checks": 16,
+      "outer": {
+        "members": 9,
+        "expanded_bytes": 7579625,
+        "crc": "PASS",
+        "unique_safe_paths": true
+      },
+      "trace": {
+        "bytes": 7041092,
+        "sha256": "7ce90e06aa0be36fcb4d6a097f9093471054db63b73ce8c2cd41440df6cb2cf6",
+        "members": 213,
+        "expanded_bytes": 9256465,
+        "crc": "PASS",
+        "unique_safe_paths": true
+      },
+      "screenshots": [
+        {
+          "filename": "viewer-1440.png",
+          "bytes": 129196,
+          "sha256": "8e1469b059988436ef64a90d87c0ea420734a971371b8e921237222dac11ff61",
+          "dimensions": [
+            1440,
+            1000
+          ]
+        },
+        {
+          "filename": "viewer-590.png",
+          "bytes": 120689,
+          "sha256": "7ccb807bfdedcd2b4037bf0941acaee827708727992a8ddf3996b1ba00d33e83",
+          "dimensions": [
+            590,
+            1474
+          ]
+        },
+        {
+          "filename": "viewer-420.png",
+          "bytes": 111217,
+          "sha256": "16bf499a54d6f7249c65d6e44f29d09adf692655d2355d0d79ce0d54ac6af0a1",
+          "dimensions": [
+            420,
+            1823
+          ]
+        },
+        {
+          "filename": "viewer-320.png",
+          "bytes": 107788,
+          "sha256": "97951f0b159512404aa3354076175b8af99fb490162059572194d70795b562c2",
+          "dimensions": [
+            320,
+            1917
+          ]
+        }
+      ],
+      "protected_argv_without_optouts": true
+    },
+    {
+      "artifact_id": 11316383473,
+      "zip_bytes": 5011027,
+      "zip_sha256": "badcb7b7ef963940f90ceebc510a2bed5715efbe1b2963ffd74e3667dfafed1f",
+      "report_sha256": "65ddf97a423015894a16400287fdd4470502e6222cb43cbe60efefde0b201ce4",
+      "checks": 15,
+      "outer": {
+        "members": 9,
+        "expanded_bytes": 8231298,
+        "crc": "PASS",
+        "unique_safe_paths": true
+      },
+      "trace": {
+        "bytes": 7224111,
+        "sha256": "76ffc5423b9100829479a66fc420fdf4e4a582961e976f0ce346d7d2823ddd2b",
+        "members": 206,
+        "expanded_bytes": 8987803,
+        "crc": "PASS",
+        "unique_safe_paths": true
+      },
+      "screenshots": [
+        {
+          "filename": "viewer-1440.png",
+          "bytes": 376583,
+          "sha256": "3cf1d46e38d167da14d9d46ffa6ce0eb6713315fc1ad9efd2be5a5b07ac34487",
+          "dimensions": [
+            1440,
+            1000
+          ]
+        },
+        {
+          "filename": "viewer-590.png",
+          "bytes": 236896,
+          "sha256": "9cfbf76430d0e1589cf39c7a7a332fa403b9f8f66f396b323750947a350b9335",
+          "dimensions": [
+            590,
+            1474
+          ]
+        },
+        {
+          "filename": "viewer-420.png",
+          "bytes": 171233,
+          "sha256": "468ab1ff9a254b18cd1e22fe5546c3e392511cf37f88d772fd25e0d8477fd8f2",
+          "dimensions": [
+            420,
+            1733
+          ]
+        },
+        {
+          "filename": "viewer-320.png",
+          "bytes": 147583,
+          "sha256": "58c9d4708a4ee89150a8dbce4691f67c00accaeaaeed165d25318d0af32e2e19",
+          "dimensions": [
+            320,
+            1797
+          ]
+        }
+      ],
+      "protected_argv_without_optouts": true
+    },
+    {
+      "artifact_id": 11315808862,
+      "zip_bytes": 16422044,
+      "zip_sha256": "1fd9da2e6ec866aa00b943870ffa6fd5a4b81d4b13d642fcae41fc5ab167d46f",
+      "report_sha256": "0632df00448e2d47e64ccdb5900ed18efa9c244b986f5a0730f3fa382eadb573",
+      "checks": 14,
+      "outer": {
+        "members": 7,
+        "expanded_bytes": 16601359,
+        "crc": "PASS",
+        "unique_safe_paths": true
+      },
+      "trace": {
+        "bytes": 15105465,
+        "sha256": "c31939c594b9009b93409d468615873b32e2b57243aa89dab64965702e75b5c4",
+        "members": 131,
+        "expanded_bytes": 33179274,
+        "crc": "PASS",
+        "unique_safe_paths": true
+      },
+      "screenshots": [
+        {
+          "filename": "dense-desktop.png",
+          "bytes": 331424,
+          "sha256": "de6aea6ade4cd2857683fa2c1be3dfc057829efded1c54c137668db866b414a3",
+          "dimensions": [
+            1440,
+            900
+          ]
+        },
+        {
+          "filename": "dense-desktop-short.png",
+          "bytes": 288648,
+          "sha256": "711195cb3f175d1ef8c7596606062006ab4b43fbc5cb0b313ac49aa9d0480bb8",
+          "dimensions": [
+            1440,
+            720
+          ]
+        },
+        {
+          "filename": "dense-mobile.png",
+          "bytes": 251606,
+          "sha256": "99000cf45797fe61b20b8bf4bbf97565f2071b7176b4aa09fdcb9196ed50a48b",
+          "dimensions": [
+            390,
+            2393
+          ]
+        },
+        {
+          "filename": "dense-mobile-narrow.png",
+          "bytes": 236210,
+          "sha256": "91a130bad0bd0d81497bd9e7e1d14633430b60750b8f4e242a42492fc2f5fcd2",
+          "dimensions": [
+            320,
+            2564
+          ]
+        },
+        {
+          "filename": "dense-million-end.png",
+          "bytes": 230938,
+          "sha256": "cfbbfe29d4ba980f29589ead36ccac170684e413e03bec76d5ac38b781885c9e",
+          "dimensions": [
+            1440,
+            900
+          ]
+        }
+      ],
+      "protected_argv_without_optouts": true
+    }
+  ],
+  "source_hash_checks": 30,
+  "privacy_scan": {
+    "utf8_members": 221,
+    "utf8_bytes": 75474985,
+    "credential_token": 0,
+    "private_context": 0
+  },
+  "scan_limits": {
+    "max_entries_per_archive": 5000,
+    "max_expanded_bytes_per_archive": 350000000,
+    "max_member_bytes": 64000000,
+    "binary_png_not_secret_audited": true,
+    "guarantee": "Bounded obvious-token/private-context/structured sensitive-header scan only; no comprehensive secret guarantee."
+  }
+}

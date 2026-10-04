@@ -1,0 +1,703 @@
+{
+  "nodeVersion": "v24.21.0",
+  "runner": {
+    "os": "Linux",
+    "arch": "X64",
+    "imageOS": "ubuntu22",
+    "imageVersion": "20260927.309.1"
+  },
+  "workflowRun": "https://github.com/emevart/liminis/actions/runs/37238281987",
+  "workflowAttempt": "1",
+  "status": "PASS",
+  "startedAt": "2026-10-04T22:03:10.498Z",
+  "checks": [
+    {
+      "name": "Protected launch has actual CDP arguments without sandbox opt-out switches",
+      "status": "PASS"
+    },
+    {
+      "name": "canvas pixels: cell-chamber-10k",
+      "status": "PASS",
+      "paintedPixels": 3809
+    },
+    {
+      "name": "actual download integrity: cell-chamber-10k",
+      "status": "PASS",
+      "bytes": 6047570,
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+    },
+    {
+      "name": "default physical overview, cadence, verified download: cell-chamber-10k",
+      "status": "PASS",
+      "elapsedMs": 1079
+    },
+    {
+      "name": "canvas pixels: cell-chamber-100k",
+      "status": "PASS",
+      "paintedPixels": 3809
+    },
+    {
+      "name": "actual download integrity: cell-chamber-100k",
+      "status": "PASS",
+      "bytes": 5356325,
+      "sha256": "b8db46c1dc83f8cd642ee2a3bd7913890e6868e265c61a8d390797399b37a4c9"
+    },
+    {
+      "name": "default physical overview, cadence, verified download: cell-chamber-100k",
+      "status": "PASS",
+      "elapsedMs": 772
+    },
+    {
+      "name": "canvas pixels: cell-chamber-1m",
+      "status": "PASS",
+      "paintedPixels": 3809
+    },
+    {
+      "name": "actual download integrity: cell-chamber-1m",
+      "status": "PASS",
+      "bytes": 5312311,
+      "sha256": "ee236189e9b6891599bc428aefb0e4b892c7397e712bcf045f7db14a5bc4061d"
+    },
+    {
+      "name": "default physical overview, cadence, verified download: cell-chamber-1m",
+      "status": "PASS",
+      "elapsedMs": 807
+    },
+    {
+      "name": "responsive controls and real canvas: desktop-short",
+      "status": "PASS",
+      "elapsedMs": 664
+    },
+    {
+      "name": "responsive controls and real canvas: mobile",
+      "status": "PASS",
+      "elapsedMs": 938
+    },
+    {
+      "name": "responsive controls and real canvas: mobile-narrow",
+      "status": "PASS",
+      "elapsedMs": 964
+    },
+    {
+      "name": "real wall-time 1× hold, pause/resume, rate change, invalid input, seek and sample stepping",
+      "status": "PASS",
+      "elapsedMs": 3042
+    },
+    {
+      "name": "held sample canvas pixel SHA-256",
+      "status": "PASS",
+      "sha256": "7b2d91e129b3caae433ffc012d46ed579d4ab0ec89e8ee04ef50b3942b5bb2ca"
+    },
+    {
+      "name": "held real sample pixels remain identical through RAF at draw30/60",
+      "status": "PASS",
+      "elapsedMs": 1558
+    },
+    {
+      "name": "draw target 30 FPS preserves duration, reaches real endpoint, explicit replay",
+      "status": "PASS",
+      "elapsedMs": 1914
+    },
+    {
+      "name": "draw target 60 FPS preserves duration, reaches real endpoint, explicit replay",
+      "status": "PASS",
+      "elapsedMs": 1944
+    },
+    {
+      "name": "synthetic visibility event cancels playback without auto-resume or hidden backlog (native scheduling NOT ASSERTED)",
+      "status": "PASS",
+      "elapsedMs": 1626
+    },
+    {
+      "name": "unknown experiment fails closed without a dataset request",
+      "status": "PASS",
+      "elapsedMs": 185
+    },
+    {
+      "name": "same-size corrupted recording fails digest before controls/download activate",
+      "status": "PASS",
+      "elapsedMs": 633
+    },
+    {
+      "name": "integrity-valid unsupported recording schema keeps every control/download disabled",
+      "status": "PASS",
+      "elapsedMs": 713
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "cell-chamber-10k-desktop.png",
+      "sha256": "ffb1eada5d0310b3c4de687a8a12b42ca035adbf9cf10283f9effc59550e65e4"
+    },
+    {
+      "filename": "cell-chamber-100k-desktop.png",
+      "sha256": "736056bd50439519fdfbef8a29962c44e8843b28d4ed300a6fed168a9017c2c2"
+    },
+    {
+      "filename": "cell-chamber-1m-desktop.png",
+      "sha256": "62fb47d3b5518dd8adb6c0f503adfec46c039b04b1ea056da18cd7a083fe657f"
+    },
+    {
+      "filename": "desktop-short.png",
+      "sha256": "3231b145d2b9b7e216552754d859d98fc3e0761fb8c3235e3bed2af8e8c6ae59"
+    },
+    {
+      "filename": "mobile.png",
+      "sha256": "35d77f5fd6f1885cab285e0fcbd8f8884e2402b54005571cd760b18bc7354aec"
+    },
+    {
+      "filename": "mobile-narrow.png",
+      "sha256": "fe4d179c441df1c702774ae844648d91b3b50d830aab17906a471b46b22fb8fa"
+    },
+    {
+      "filename": "held-30fps.png",
+      "sha256": "b7803f89d00ba65682e658394f14a8cd8e527a0bc84cd279c67623cf6ed56aca"
+    },
+    {
+      "filename": "held-60fps.png",
+      "sha256": "b7803f89d00ba65682e658394f14a8cd8e527a0bc84cd279c67623cf6ed56aca"
+    }
+  ],
+  "timeouts": {
+    "launch": 20000,
+    "cdp": 5000,
+    "traceStop": 15000,
+    "cleanup": 5000
+  },
+  "trace": {
+    "status": "PASS",
+    "filename": "trace.zip",
+    "coverage": "Browser actions/network; Node assertion results are recorded in checks.",
+    "bytes": 13061660,
+    "sha256": "fb69aa8c096b95d5460024d9f2a755deac0556357ac05ef7f7846a83965fd39e"
+  },
+  "launchArgumentCheck": {
+    "status": "PASS",
+    "method": "CDP Browser.getBrowserCommandLine",
+    "arguments": [
+      "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+      "--disable-field-trial-config",
+      "--disable-background-networking",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-back-forward-cache",
+      "--disable-breakpad",
+      "--disable-client-side-phishing-detection",
+      "--disable-component-extensions-with-background-pages",
+      "--disable-component-update",
+      "--no-default-browser-check",
+      "--disable-default-apps",
+      "--disable-dev-shm-usage",
+      "--disable-edgeupdater",
+      "--disable-extensions",
+      "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+      "--enable-features=CDPScreenshotNewSurface",
+      "--allow-pre-commit-input",
+      "--disable-hang-monitor",
+      "--disable-ipc-flooding-protection",
+      "--disable-popup-blocking",
+      "--disable-prompt-on-repost",
+      "--disable-renderer-backgrounding",
+      "--force-color-profile=srgb",
+      "--metrics-recording-only",
+      "--no-first-run",
+      "--password-store=basic",
+      "--use-mock-keychain",
+      "--no-service-autorun",
+      "--export-tagged-pdf",
+      "--disable-search-engine-choice-screen",
+      "--unsafely-disable-devtools-self-xss-warnings",
+      "--edge-skip-compat-layer-relaunch",
+      "--disable-infobars",
+      "--disable-search-engine-choice-screen",
+      "--disable-sync",
+      "--enable-unsafe-swiftshader",
+      "--headless",
+      "--hide-scrollbars",
+      "--mute-audio",
+      "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+      "--enable-automation",
+      "--user-data-dir=/tmp/playwright_chromiumdev_profile-07iCAC",
+      "--remote-debugging-pipe",
+      "--no-startup-window",
+      "--use-gl=angle",
+      "--use-angle=swiftshader-webgl",
+      "--ozone-platform=headless",
+      "--allow-pre-commit-input"
+    ],
+    "forbiddenSwitches": []
+  },
+  "visibilityCoverage": "Synthetic document.hidden + visibilitychange tests adapter wiring only; native background scheduling is not asserted.",
+  "sourceCommit": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+  "sourceTree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "trackedWorkingTreeStatus": "",
+  "scriptSha256": "4ea59640417ecde91154a68bd5189e035bb0d937f9ade06d04241c8e85ddab21",
+  "sourceFiles": [
+    {
+      "filename": "observe.html",
+      "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+      "servedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d"
+    },
+    {
+      "filename": "observer.js",
+      "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422",
+      "servedSha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+    },
+    {
+      "filename": "observer.css",
+      "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347",
+      "servedSha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+    },
+    {
+      "filename": "playback.mjs",
+      "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37",
+      "servedSha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+    },
+    {
+      "filename": "recording-loader.mjs",
+      "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241",
+      "servedSha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+    },
+    {
+      "filename": "recording.mjs",
+      "sha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334",
+      "servedSha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334"
+    },
+    {
+      "filename": "catalog.mjs",
+      "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602",
+      "servedSha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+    },
+    {
+      "filename": "data/catalog.json",
+      "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3",
+      "servedSha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+    }
+  ],
+  "recordings": [
+    {
+      "id": "cell-chamber-10k",
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+      "bytes": 6047570
+    },
+    {
+      "id": "cell-chamber-100k",
+      "sha256": "b8db46c1dc83f8cd642ee2a3bd7913890e6868e265c61a8d390797399b37a4c9",
+      "bytes": 5356325
+    },
+    {
+      "id": "cell-chamber-1m",
+      "sha256": "ee236189e9b6891599bc428aefb0e4b892c7397e712bcf045f7db14a5bc4061d",
+      "bytes": 5312311
+    }
+  ],
+  "baseUrl": "http://127.0.0.1:34587/",
+  "httpRequestCoverage": {
+    "status": "PASS",
+    "measurement": "local-http-server"
+  },
+  "playwrightVersion": "1.61.1",
+  "browser": {
+    "engine": "Chromium",
+    "version": "149.0.7827.55",
+    "chromiumSandbox": true
+  },
+  "httpChecks": [
+    {
+      "name": "initial load HTTP: cell-chamber-10k",
+      "status": "PASS",
+      "measurement": "local-http-server",
+      "baseline": 8,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "expectedRequests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "pageRequestEvents": 2
+    },
+    {
+      "name": "actual download HTTP: cell-chamber-10k",
+      "status": "PASS",
+      "measurement": "local-http-server",
+      "baseline": 8,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "expectedRequests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "pageRequestEvents": 2
+    },
+    {
+      "name": "initial load HTTP: cell-chamber-100k",
+      "status": "PASS",
+      "measurement": "local-http-server",
+      "baseline": 19,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42-100k.json"
+        }
+      ],
+      "expectedRequests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42-100k.json"
+        }
+      ],
+      "pageRequestEvents": 2
+    },
+    {
+      "name": "actual download HTTP: cell-chamber-100k",
+      "status": "PASS",
+      "measurement": "local-http-server",
+      "baseline": 19,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42-100k.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42-100k.json"
+        }
+      ],
+      "expectedRequests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42-100k.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42-100k.json"
+        }
+      ],
+      "pageRequestEvents": 2
+    },
+    {
+      "name": "initial load HTTP: cell-chamber-1m",
+      "status": "PASS",
+      "measurement": "local-http-server",
+      "baseline": 30,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42-1m.json"
+        }
+      ],
+      "expectedRequests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42-1m.json"
+        }
+      ],
+      "pageRequestEvents": 2
+    },
+    {
+      "name": "actual download HTTP: cell-chamber-1m",
+      "status": "PASS",
+      "measurement": "local-http-server",
+      "baseline": 30,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42-1m.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42-1m.json"
+        }
+      ],
+      "expectedRequests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42-1m.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42-1m.json"
+        }
+      ],
+      "pageRequestEvents": 2
+    },
+    {
+      "name": "physical playback controls HTTP",
+      "status": "PASS",
+      "measurement": "local-http-server",
+      "baseline": 71,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "expectedRequests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "pageRequestEvents": 2
+    },
+    {
+      "name": "physical controls issue no HTTP",
+      "status": "PASS",
+      "measurement": "local-http-server-and-page-events",
+      "baseline": {
+        "server": 81,
+        "page": 10
+      },
+      "requests": [],
+      "pageRequests": []
+    },
+    {
+      "name": "playback/draw target HTTP",
+      "status": "PASS",
+      "measurement": "local-http-server",
+      "baseline": 81,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "expectedRequests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "pageRequestEvents": 2
+    },
+    {
+      "name": "held draw30/60 issue no HTTP",
+      "status": "PASS",
+      "measurement": "local-http-server-and-page-events",
+      "baseline": {
+        "server": 91,
+        "page": 10
+      },
+      "requests": [],
+      "pageRequests": []
+    },
+    {
+      "name": "playback/draw target HTTP",
+      "status": "PASS",
+      "measurement": "local-http-server",
+      "baseline": 91,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "expectedRequests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "pageRequestEvents": 2
+    },
+    {
+      "name": "draw30 endpoint/replay issue no HTTP",
+      "status": "PASS",
+      "measurement": "local-http-server-and-page-events",
+      "baseline": {
+        "server": 101,
+        "page": 10
+      },
+      "requests": [],
+      "pageRequests": []
+    },
+    {
+      "name": "playback/draw target HTTP",
+      "status": "PASS",
+      "measurement": "local-http-server",
+      "baseline": 101,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "expectedRequests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "pageRequestEvents": 2
+    },
+    {
+      "name": "draw60 endpoint/replay issue no HTTP",
+      "status": "PASS",
+      "measurement": "local-http-server-and-page-events",
+      "baseline": {
+        "server": 111,
+        "page": 10
+      },
+      "requests": [],
+      "pageRequests": []
+    },
+    {
+      "name": "playback/draw target HTTP",
+      "status": "PASS",
+      "measurement": "local-http-server",
+      "baseline": 111,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "expectedRequests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        },
+        {
+          "method": "GET",
+          "path": "/data/cell-chamber-seed-42.json"
+        }
+      ],
+      "pageRequestEvents": 2
+    },
+    {
+      "name": "visibility pause/resume issue no HTTP",
+      "status": "PASS",
+      "measurement": "local-http-server-and-page-events",
+      "baseline": {
+        "server": 121,
+        "page": 10
+      },
+      "requests": [],
+      "pageRequests": []
+    },
+    {
+      "name": "unknown experiment HTTP",
+      "status": "PASS",
+      "measurement": "local-http-server",
+      "baseline": 121,
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        }
+      ],
+      "expectedRequests": [
+        {
+          "method": "GET",
+          "path": "/data/catalog.json"
+        }
+      ],
+      "pageRequestEvents": 1
+    }
+  ],
+  "finishedAt": "2026-10-04T22:03:33.156Z"
+}
