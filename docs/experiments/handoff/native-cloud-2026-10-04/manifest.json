@@ -23,14 +23,46 @@
       "bytes": 3609,
       "sha256": "ab392968b11b7cd9b91a39f4bac9fb5c481d74263de2952dfffe834317408c55",
       "status": "FAIL: canonical redirect not admitted by original gate; diagnostic, not acceptance"
+    },
+    {
+      "filename": "live2-f919-default.zip",
+      "bytes": 4922179,
+      "sha256": "a0cbc43ebad23991707daea4f146b5b4ea9b259ae7dc5c028a8956835deff2c2",
+      "workflow_run": 37217188695,
+      "artifact_id": 11308648470,
+      "source_head": "f9197b8493672304dae99abe190cdae664774de0",
+      "source_tree": "a5370d4d7177cf89adccf5a92a32f1616f32d17e",
+      "status": "Actual protected browser PASS; fullCI/finalindependentacceptance pending"
+    },
+    {
+      "filename": "live2-f919-physical.zip",
+      "bytes": 7805106,
+      "sha256": "6ee0b329ac3b8c539135f4979962636a2d191f93cbdf0ff906662ef11adddcc4",
+      "workflow_run": 37217188695,
+      "artifact_id": 11308648472,
+      "source_head": "f9197b8493672304dae99abe190cdae664774de0",
+      "source_tree": "a5370d4d7177cf89adccf5a92a32f1616f32d17e",
+      "status": "Actual protected browser PASS; fullCI/finalindependentacceptance pending"
+    },
+    {
+      "filename": "recorded-f919-regression.zip",
+      "bytes": 12487766,
+      "sha256": "71cb2185d9420a20bcd91b54e4f7b8b27f3a07d14291690836c027b116cb108e",
+      "workflow_run": 37217188695,
+      "artifact_id": 11308877830,
+      "source_head": "f9197b8493672304dae99abe190cdae664774de0",
+      "source_tree": "a5370d4d7177cf89adccf5a92a32f1616f32d17e",
+      "status": "Actual protected browser PASS; fullCI/finalindependentacceptance pending"
     }
   ],
   "privacy": {
-    "text_entries_pattern_scanned": 21,
+    "text_entries_pattern_scanned": 104,
     "pattern_hits": 0,
     "limit": "Bounded pattern scan plus both production screenshots viewed, not a full secret guarantee.",
-    "representative_pngs_viewed": 2
+    "representative_pngs_viewed": 2,
+    "live2_final_png_review": "pending independent artifactreview; production2PNG already viewed"
   },
   "hosting_qualification": "Browser raw HTML differs by exactly one independently pinned Cloudflare insertion; removing that insertion yields source bytes. Its exact analytics Script GET is blocked at CDP Request stage with ACK. Critical application resources and recording match bytes; analytics execution not tested. Original ZIPs retained without repacking.",
-  "independent_artifact_review": "Qualified PASS, 0 blockers: bytes/trace/rawHTML/2PNG/lifecycle/controls/protectedargv independently reviewed; fullCI still pending."
+  "independent_artifact_review": "Qualified PASS, 0 blockers: bytes/trace/rawHTML/2PNG/lifecycle/controls/protectedargv independently reviewed; fullCI still pending.",
+  "live2_scope": "Default15/physical16checks passed actualprotectedChromium, glyphs still inventoryschematic; Saveack does not claim browserresume. Native actualdisk tests cover restart/future."
 }
