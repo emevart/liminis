@@ -625,3 +625,54 @@ API geometry/resource/argv acceptance, bounded originalZIP archive с новым
 Git network readback; только затем guarded PR20 merge и existing public
 delivery follow-up. LAB-3a scope Astra выбран read-only, coding пока не открыт.
 Никакой вечный auto-resume после завершения active turn не обещан.
+
+### LIVE-3b принят и объединён; новый main FAIL сохранён, LAB-3a открыт
+
+2026-10-04, 23:17 UTC. OWNERSHIP ACCEPTED. PR20 guarded merge выполнен
+после exact candidate `9d9f70903939b93905beed9e0ad2be5c3f4d18ff`, всех11
+SUCCESS checks run37238281987 и независимых actual13GL+79regression checks
+с0 findings. Новый main `5beaafb2c4f717862b62e67fd3e23e7d81860535`, tree
+`7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d` идентичен принятому tree.
+
+Original3D44944288bytes доставлен fixed evidence-only Actions helper
+ea6bba6a930e88715f7898a5da658a81f4d44ccd, run37240071604. Три raw slices
+соединены без перепаковки; original size/SHA/CRC совпали. Все7 originalZIP,
+собственные source/code/numerics/artifact reviews и receipts опубликованы
+в трёх отдельных группах, каждая<64MiB, с независимым закрытым Git network
+size/SHA/CRC readback: observer `e7bd2662aa76ab463a709cb4da08f2143d3e5608`,
+regressions `ff5e3fec5647fbd7a723e9b98b20e0e50cd287fe`, recorded
+`d3d707639e0860d69bb60f529956e94f86707576`. Итог121544108bytes/56files.
+Результаты: `docs/experiments/handoff/live-3d-archives-network-readback.json`
+и `live-3d-9d-exact-head-checks.json`. Распакованный объём отдельно от cap.
+
+Новый main push run37241483046 завершён FAILURE: 3D check8 сравнил PNG SHA
+после paused display60 с baseline и получил mismatch. Original18,078,055B,
+artifact11317433841, SHA256
+`71ab3e8085e7c13e49920b4b505e118c0df882d3ee89678c66b528a2e8e874ab`
+скачан, CRC/source pins/trace проверены; FAIL не переименован. Independent
+code/numerics подтверждают неизменные22API состояния tick1, но исходные
+baseline/30/60 canvas PNG и post-FPS camera audits не сохранены. Причина
+encoding/raster/timing неизвестна; production fix и flaky claim не обоснованы.
+Astra явно одобрил узкое QA уточнение: same whole compositor region,
+строго dimensions+decoded RGBA, никаких tolerance/masks/retries. Все три
+original captures, encoded/decoded hashes, camera/viewport/API/layers и
+pixel diff count/bounds должны сохраниться до assert. Нужен свежий exact CI;
+прежний main3D FAIL остаётся историческим фактом.
+
+Main public artifact11317418838: 5634585bytes, SHA256
+`7686895bf55e00810d676aeaf2ebd948bc68678481c238eebe26fb1b82cc7d1f`.
+Independent qualified PASS0:19 HTTPS source/metadata/data pins включают
+final gzip всех3 horizons; default10k desktop/mobile Next0→1 и1×/hold
+подтверждены actual protected browser/2PNG. Нет full2.42GB HTTP readback,
+public100k/1M rendering или overallmainGREEN claim. Эти два новых originals
+и собственные reviews готовятся в отдельный bounded durable archive.
+
+LAB-3a по approved ADR112 открыт: data43356e5d674053d269290a988677062b7325d9a1,
+UI fa4ce68e5896ada440eccfd84e64b8173551f0dd опубликованы clean; scoped
+browser QA в работе. Root integration codex/lab-aggregate-site основан на
+5bea и владеет общими ADR/ACCEPTANCE/navigation/CI. Raw24/source21cbe907
+сохранены, новых model runs нет. Data15Python и UI12Node PASS означают
+source checks; actual LAB browser/fullCI/independent acceptance ещё pending.
+Поручение пользователя сохраняет write-go и делегирует решения Astra.
+Следующий шаг: narrow QA repair/review, LAB source integration и один
+fresh protected exact-head CI; merge только после green независимой приёмки.

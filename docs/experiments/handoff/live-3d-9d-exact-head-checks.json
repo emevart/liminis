@@ -1,0 +1,112 @@
+{
+  "source_head": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+  "source_tree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+  "workflow_run": 37238281987,
+  "status": "PASS",
+  "observed_at": "2026-10-04 22:46 UTC",
+  "checks": [
+    {
+      "id": 111549337087,
+      "name": "Workers Builds: liminis",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "started_at": "2026-10-04T22:40:52Z",
+      "completed_at": "2026-10-04T22:40:52Z"
+    },
+    {
+      "id": 111541733673,
+      "name": "hook tests (macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "started_at": "2026-10-04T22:00:09Z",
+      "completed_at": "2026-10-04T22:04:45Z"
+    },
+    {
+      "id": 111541733615,
+      "name": "build, lint, test",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "started_at": "2026-10-04T22:00:04Z",
+      "completed_at": "2026-10-04T22:17:43Z"
+    },
+    {
+      "id": 111541733577,
+      "name": "hook tests (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "started_at": "2026-10-04T22:00:04Z",
+      "completed_at": "2026-10-04T22:03:11Z"
+    },
+    {
+      "id": 111541733573,
+      "name": "world semantics version (ADR-020)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "started_at": "2026-10-04T22:00:03Z",
+      "completed_at": "2026-10-04T22:00:39Z"
+    },
+    {
+      "id": 111541733569,
+      "name": "live cells browser acceptance",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "started_at": "2026-10-04T22:00:03Z",
+      "completed_at": "2026-10-04T22:05:14Z"
+    },
+    {
+      "id": 111541733545,
+      "name": "no bare arithmetic over Q (ADR-022)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "started_at": "2026-10-04T22:00:05Z",
+      "completed_at": "2026-10-04T22:02:51Z"
+    },
+    {
+      "id": 111541733529,
+      "name": "hook tests (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "started_at": "2026-10-04T22:00:03Z",
+      "completed_at": "2026-10-04T22:04:30Z"
+    },
+    {
+      "id": 111541733519,
+      "name": "frozen documents (ADR-032)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "started_at": "2026-10-04T22:00:03Z",
+      "completed_at": "2026-10-04T22:00:40Z"
+    },
+    {
+      "id": 111541733510,
+      "name": "recorded player browser acceptance",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "started_at": "2026-10-04T22:00:03Z",
+      "completed_at": "2026-10-04T22:04:03Z"
+    },
+    {
+      "id": 111541733427,
+      "name": "recorded observer data contract",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "9d9f70903939b93905beed9e0ad2be5c3f4d18ff",
+      "started_at": "2026-10-04T22:00:03Z",
+      "completed_at": "2026-10-04T22:02:53Z"
+    }
+  ],
+  "qualifications": [
+    "Latest exact-head check snapshot, including provider re-build",
+    "Actual independent artifact acceptance and archive readback are separate"
+  ]
+}
