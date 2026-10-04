@@ -220,10 +220,15 @@ async function actualUi() {
   });
   await check("Actual dense pixels/counters are held at 1x; draw targets do not add HTTP or samples", async () => {
     await seekUi(992); await page.waitForLoadState("networkidle"); const baseline = report.http.length, pixels = await pixelDigest(), startTick = await shown("tick"), time = await shown("time");
-    await page.locator("#speed-preset").selectOption("1"); await page.locator("#play").click(); const firstTime = await shown("playhead");
+    await page.locator("#speed-preset").selectOption("1"); assert.equal(Number(await page.locator("#speed").inputValue()), 1);
+    await page.locator("#play").evaluate((button) => { button.__denseQaClickTimes = []; button.addEventListener("click", () => { if (button.__denseQaClickTimes.length < 3) button.__denseQaClickTimes.push(performance.now()); }); });
+    const firstTime = await shown("playhead"); await page.locator("#play").click();
     for (const fps of [30, 60]) { await page.locator("#draw-fps").selectOption(String(fps)); await sleep(700); assert.equal(await shown("tick"), startTick); assert.equal(await shown("time"), time); assert.equal(await pixelDigest(), pixels); }
-    const finalTime = await shown("playhead"); await page.locator("#play").click(); assert.ok(finalTime > firstTime && finalTime < (startTick + 1) * 30); assert.equal(report.http.length, baseline);
-    report.ui.hold = { tick: startTick, rate: 1, targets: [30, 60], observedWallMs: 1400, fromPlayhead: firstTime, toPlayhead: finalTime, pixelSha256: pixels, httpRequests: 0 };
+    await page.locator("#play").click(); const finalTime = await shown("playhead"), clickTimes = await page.locator("#play").evaluate((button) => button.__denseQaClickTimes);
+    assert.equal(clickTimes.length, 2); const measuredWallMs = clickTimes[1] - clickTimes[0], modelSecondsAdvanced = finalTime - firstTime, toleranceSeconds = .1;
+    report.ui.hold = { tick: startTick, rate: 1, targets: [30, 60], requestedHoldMs: 1400, measuredWallMs, wallMeasurement: "Browser performance.now() at actual Play and Pause click events; includes intervening commands", browserClickTimesMs: clickTimes, modelSecondsAdvanced, toleranceSeconds, fromPlayhead: firstTime, toPlayhead: finalTime, pixelSha256: pixels, httpRequests: report.http.length - baseline };
+    assert.ok(Number.isFinite(measuredWallMs) && measuredWallMs > 0 && Number.isFinite(modelSecondsAdvanced) && modelSecondsAdvanced >= 1 && Math.abs(modelSecondsAdvanced - measuredWallMs / 1000) < toleranceSeconds, `Physical 1x: ${modelSecondsAdvanced} model seconds / ${measuredWallMs / 1000} measured wall seconds`);
+    assert.ok(finalTime < (startTick + 1) * 30); assert.equal(await page.locator("#play").getAttribute("aria-label"), "Play recording"); assert.equal(report.http.length, baseline);
   });
   await check("Actual dense controls fit desktop, short desktop and 390/320px mobile", async () => {
     for (const [filename, viewport] of [["dense-desktop.png", { width: 1440, height: 900 }], ["dense-desktop-short.png", { width: 1440, height: 720 }], ["dense-mobile.png", { width: 390, height: 844 }], ["dense-mobile-narrow.png", { width: 320, height: 844 }]]) await layout(filename, viewport);
