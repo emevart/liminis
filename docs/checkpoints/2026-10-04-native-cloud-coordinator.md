@@ -201,3 +201,38 @@ existing201samples: currentJSON≈301MB/2.66GB/26.4GB; gzip≈40.4/348/3592MB,
 Никаких новыхLAB24runs, переписыванияoldJSON/SHA, fakeworld30source или infra.
 LIVE3a rootdependentintegration подготовлен отдельно, его actualQA ещё в работе;
 после приёмки2D nextpriority REC2everytick; Three3D потомотдельнымstage.
+
+### LIVE2 full-CI blocker исправлен; источники записей сохранены
+
+Main85974e3b7eb886ec7d8df70966d91db08778ba54 push run37216990692
+завершён SUCCESS, включая реальную publicproduction playback проверку.
+
+LIVE2 run37217188695 на f9197b8 завершён FAILURE: общий core integration test
+`every_scenario_in_the_repository_loads` выбирал chamber loader только по имени
+`cell-chamber.toml` и ошибочно подавал `cell-chamber-physical.toml` voxel loader.
+Protected default15/physical16 browser checks и recorded22browser/17HTTP прошли,
+но это частичные результаты failed CI, НЕ приёмка LIVE2.
+
+Новый PR17 candidate33272bc452aca6a7e8716483da5d66941213cebf/
+tree5d8dd0426d4970908c739bc7e902b6f9e07b8334 исправляет только inventory test:
+все TOML проверяются по declared family, chamber_format через строгий
+micro_config::parse_live; historical loader/core/config/runtime не изменены.
+Focused config_hash16PASS, fmt и focusedclippyPASS; independent read-only
+review0blockers. Публикация normal nonforce Gitpush; новый exacthead full CI
+и actual browser artifacts обязательны до merge, прежний PASS не переносится.
+
+Дополненный durable evidence-only ref codex/native-cloud-evidence-20261004,
+commitebb79be4ed1ed8ea97fa235dd018e3d53df0db2e:
+6 original ZIP без перепаковки, 29,807,240bytes; manifestSHA
+b37b9c86c96e6a8b3e13e5a16d495ca98d63ace63145fcad6deaf4ae1550af0e.
+Published-ref readback size/SHA/CRC6/6PASS. Это включает f919 browser partial
+evidence, статус failed full CI выше; не productrelease/deploy.
+104textentries bounded privacy pattern0hits,14uniquePNG viewed;
+не fullsecretguarantee, recorded regression PNG не повторно просмотрены полностью.
+
+REC2 author подготовил streaming producer/packer/independent decoder на
+archival b2024ce, Python codec fixtures12PASS без Cargo/modelsteps.
+Root actual clean-source build и bounded10k measurement ещё pending.
+Каждый тик остаётся целью для всех трёх горизонтов; windows не подставляются.
+LIVE3 physical2D QA дополнен реальными keyboard событиями с independently
+ordered visible IDs и final post-cleanup error gates; final review/CI pending.
