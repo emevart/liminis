@@ -2,7 +2,9 @@
 use liminis_core::config::{self, Config};
 use liminis_core::ledger::{DomainSums, Ledger};
 use liminis_core::numeric::{M64, run_key};
+use liminis_core::observe::snapshot::{SnapshotIdentity, snapshot_read_into, snapshot_write};
 use liminis_core::process::{ProcessId, ROSTER_LEN, RosterEntry, Scratch, Tick};
+use liminis_core::version::WORLD_FORMAT_VERSION;
 use liminis_core::world::{Boundary, Grid, LaneRef, Registry, World, WorldLayout};
 use liminis_core::worldgen;
 
@@ -337,6 +339,88 @@ fn the_colony_expands_a_measured_biomass_contour_and_replays_exactly() {
     println!("front threshold={threshold} mol/m3 radius {before_radius} -> {after_radius} m");
     assert!(after_radius > before_radius + 2.0 * colony.config.grid.dx);
     assert!(colony.totals().iter().sum::<i128>() > before_mass);
+}
+
+#[test]
+fn full_checkpoint_resume_replays_genetic_colony_and_channel_counters() {
+    for seed in [42, u64::MAX] {
+        let mut uninterrupted = Culture::new(source(8, 0.02), seed);
+        uninterrupted.advance(137);
+        let identity = SnapshotIdentity {
+            seed,
+            config_hash: config::config_hash(&uninterrupted.config).expect("identity hash"),
+            world_format_version: WORLD_FORMAT_VERSION,
+            tick: uninterrupted.t,
+        };
+        let mut checkpoint = Vec::new();
+        snapshot_write(
+            &mut checkpoint,
+            &identity,
+            &uninterrupted.world,
+            &uninterrupted.ledger,
+        )
+        .expect("full checkpoint capture");
+        let canonical = config::canonical(&uninterrupted.config).expect("saved canonical config");
+        let mut restored = Culture::new(
+            config::parse(&canonical).expect("saved config reload"),
+            seed,
+        );
+        restored.t = snapshot_read_into(
+            checkpoint.as_slice(),
+            &identity,
+            &mut restored.world,
+            &mut restored.ledger,
+        )
+        .expect("restore into fresh world and ledger");
+        assert_eq!(restored.t, uninterrupted.t);
+
+        uninterrupted.advance(89);
+        restored.advance(89);
+        let final_identity = SnapshotIdentity {
+            tick: uninterrupted.t,
+            ..identity
+        };
+        let mut expected = Vec::new();
+        let mut actual = Vec::new();
+        snapshot_write(
+            &mut expected,
+            &final_identity,
+            &uninterrupted.world,
+            &uninterrupted.ledger,
+        )
+        .expect("uninterrupted state");
+        snapshot_write(
+            &mut actual,
+            &final_identity,
+            &restored.world,
+            &restored.ledger,
+        )
+        .expect("resumed state");
+        assert!(
+            actual == expected,
+            "both field buffers and all exact channel counters must replay, seed={seed}"
+        );
+    }
+}
+
+#[test]
+fn full_checkpoint_capture_reports_the_shipped_colony_copy_cost() {
+    let culture = Culture::new(source(24, 0.02), 42);
+    let identity = SnapshotIdentity {
+        seed: 42,
+        config_hash: config::config_hash(&culture.config).expect("identity hash"),
+        world_format_version: WORLD_FORMAT_VERSION,
+        tick: culture.t,
+    };
+    let started = std::time::Instant::now();
+    let mut bytes = Vec::new();
+    snapshot_write(&mut bytes, &identity, &culture.world, &culture.ledger).expect("capture");
+    println!(
+        "genetic-colony 24^3 checkpoint bytes={} capture_micros={}",
+        bytes.len(),
+        started.elapsed().as_micros()
+    );
+    assert!(!bytes.is_empty());
 }
 
 #[test]

@@ -22,8 +22,8 @@ use std::sync::{Arc, Mutex};
 /// The viewer, compiled in rather than read from disk.
 ///
 /// One binary and one command, which is what open question C-5 asks for. It also
-/// means this server has no path that reaches the filesystem at all — see the
-/// note at the top of `http.rs`.
+/// means no URL selects a disk file. Experiment storage is controlled by the
+/// host, not by this router — see the note at the top of `http.rs`.
 const VIEWER: &str = include_str!("viewer.html");
 
 #[derive(Debug, Parser)]
@@ -64,18 +64,23 @@ enum Command {
     /// explicit overrides for reproducible experiments (ADR-095).
     Serve {
         /// Path to a scenario TOML file.
-        #[arg(
-            long,
-            value_name = "PATH",
-            default_value = "configs/scenarios/genetic-colony.toml"
-        )]
-        config: PathBuf,
+        #[arg(long, value_name = "PATH", conflicts_with = "resume")]
+        config: Option<PathBuf>,
         /// Seed for the run.
-        #[arg(long, value_name = "N", default_value_t = 42)]
-        seed: u64,
+        #[arg(long, value_name = "N", conflicts_with = "resume")]
+        seed: Option<u64>,
         /// Port to listen on.
         #[arg(long, default_value_t = 8080)]
         port: u16,
+        /// Local experiment storage (outside build outputs).
+        #[arg(long, default_value = ".liminis/runs", value_name = "PATH")]
+        data_dir: PathBuf,
+        /// Continue a saved experiment, using its exact config and seed.
+        #[arg(long, value_name = "RUN_ID|latest")]
+        resume: Option<String>,
+        /// Explicit older checkpoint; never silently fall back from a corrupt latest.
+        #[arg(long, value_name = "CHECKPOINT_ID", requires = "resume")]
+        checkpoint: Option<String>,
     },
 }
 
@@ -101,7 +106,21 @@ fn main() -> Result<()> {
             );
             Ok(())
         }
-        Command::Serve { config, seed, port } => serve::run(port, &config, seed),
+        Command::Serve {
+            config,
+            seed,
+            port,
+            data_dir,
+            resume,
+            checkpoint,
+        } => serve::run(
+            port,
+            &config.unwrap_or_else(|| PathBuf::from("configs/scenarios/genetic-colony.toml")),
+            seed.unwrap_or(42),
+            &data_dir,
+            resume.as_deref(),
+            checkpoint.as_deref(),
+        ),
     }
 }
 
@@ -130,6 +149,7 @@ fn route(shared: &Arc<Mutex<serve::Sim>>, request: &Request) -> Response {
 
     if path == "/api/state"
         || path == "/api/ecology"
+        || path == "/api/history"
         || path.starts_with("/api/volume/")
         || path.starts_with("/api/profile/")
     {
@@ -149,17 +169,35 @@ mod tests {
 
     #[test]
     fn serve_defaults_to_the_accepted_genetic_experiment() {
-        let Command::Serve { config, seed, port } =
-            Cli::try_parse_from(["liminis", "serve"]).unwrap().command
+        let Command::Serve {
+            config,
+            seed,
+            port,
+            data_dir,
+            resume,
+            checkpoint,
+        } = Cli::try_parse_from(["liminis", "serve"]).unwrap().command
         else {
             panic!("serve must select the local observer");
         };
-        assert_eq!(
-            config,
-            PathBuf::from("configs/scenarios/genetic-colony.toml")
-        );
-        assert_eq!(seed, 42);
+        assert_eq!(config, None);
+        assert_eq!(seed, None);
         assert_eq!(port, 8080);
+        assert_eq!(data_dir, PathBuf::from(".liminis/runs"));
+        assert!(resume.is_none() && checkpoint.is_none());
+    }
+
+    #[test]
+    fn resume_refuses_conflicting_identity_and_checkpoint_without_resume() {
+        for args in [
+            vec!["liminis", "serve", "--resume", "latest", "--seed", "42"],
+            vec![
+                "liminis", "serve", "--resume", "latest", "--config", "foo.toml",
+            ],
+            vec!["liminis", "serve", "--checkpoint", "checkpoint-1"],
+        ] {
+            assert!(Cli::try_parse_from(args).is_err());
+        }
     }
 
     fn get(shared: &Arc<Mutex<serve::Sim>>, path: &str) -> Response {

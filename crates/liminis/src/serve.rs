@@ -37,10 +37,12 @@
 //! green zero, and nothing else in the corpus would catch it — `assert_closed`
 //! walks substances one at a time and lives in another build.
 //!
-//! # No path reaches the filesystem
+//! # No URL chooses a filesystem path
 //!
 //! Inherited from `http.rs` and worth restating where the names come in: the
-//! substance name in a URL addresses the registry, never a path. An unknown name
+//! substance name in a URL addresses the registry, never a path. Storage uses
+//! only the experiment root selected at startup and host-generated identifiers.
+//! An unknown name
 //! is a 404 that says which name, and never a volume of zeros of the right
 //! length — that picture is indistinguishable from a dead world.
 
@@ -61,6 +63,8 @@ use crate::http::{Request, Response};
 
 #[path = "ecology.rs"]
 mod ecology;
+#[path = "persistence.rs"]
+mod persistence;
 
 /// The magic of the volume payload: "LMNV", little-endian, as the viewer reads
 /// it.
@@ -136,6 +140,10 @@ pub struct Sim {
     last: Option<Residual>,
     /// Whether the simulation thread is still alive. See [`SimAlive`].
     alive: bool,
+    persistence: Option<persistence::Persistence>,
+    transitioning: bool,
+    last_tick_nanos: u64,
+    save_requested: bool,
 }
 
 /// Everything a route knows about one substance.
@@ -178,10 +186,29 @@ struct Residual {
 ///
 /// Returns an error if the scenario cannot be read, validated or built into a
 /// world, or if the port cannot be bound.
-pub fn run(port: u16, config: &Path, seed: u64) -> Result<()> {
-    let scenario = config::load(config)?;
-    let sim = build(&scenario, seed)
-        .with_context(|| format!("building a world out of {}", config.display()))?;
+pub fn run(
+    port: u16,
+    config: &Path,
+    seed: u64,
+    data_dir: &Path,
+    resume: Option<&str>,
+    checkpoint: Option<&str>,
+) -> Result<()> {
+    // Bind first: a failed port must not create an experiment or hold its lock.
+    let listener = std::net::TcpListener::bind(("127.0.0.1", port))?;
+    let mut sim = if let Some(run) = resume {
+        persistence::resume(data_dir, run, checkpoint)?
+    } else {
+        let scenario = config::load(config)?;
+        let mut sim = build(&scenario, seed)
+            .with_context(|| format!("building a world out of {}", config.display()))?;
+        sim.persistence = Some(persistence::Persistence::create(data_dir, &sim)?);
+        sim
+    };
+    sim.persistence
+        .as_mut()
+        .expect("serve always persists")
+        .wait_for_save()?;
 
     let identity = format!(
         "seed={} config_hash={} world_format_version={}",
@@ -189,7 +216,6 @@ pub fn run(port: u16, config: &Path, seed: u64) -> Result<()> {
     );
     let shared = Arc::new(Mutex::new(sim));
 
-    let listener = std::net::TcpListener::bind(("127.0.0.1", port))?;
     println!("liminis viewer on http://127.0.0.1:{port}/");
     println!("{identity}");
 
@@ -312,6 +338,10 @@ fn build(scenario: &Config, seed: u64) -> Result<Sim> {
         measured_tps: 0.0,
         last: None,
         alive: true,
+        persistence: None,
+        transitioning: false,
+        last_tick_nanos: 0,
+        save_requested: false,
     })
 }
 
@@ -438,7 +468,8 @@ fn run_loop(shared: &Arc<Mutex<Sim>>) {
         let started = Instant::now();
         let period = {
             let mut sim = lock(shared);
-            if !sim.running || !sim.alive {
+            service_storage(&mut sim);
+            if !sim.running || !sim.alive || sim.transitioning {
                 sim.measured_tps = 0.0;
                 drop(sim);
                 mark = Instant::now();
@@ -532,6 +563,16 @@ fn advance_one(sim: &mut Sim) {
 
 /// Keep a failed world stopped and observable until an explicit reset.
 fn safe_advance(sim: &mut Sim) -> bool {
+    if sim
+        .persistence
+        .as_ref()
+        .is_some_and(|p| p.error().is_some())
+    {
+        sim.running = false;
+        sim.measured_tps = 0.0;
+        return false;
+    }
+    let started = Instant::now();
     match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| advance_one(sim))) {
         Ok(()) => {
             if sim
@@ -558,7 +599,118 @@ fn safe_advance(sim: &mut Sim) -> bool {
         sim.alive = false;
         sim.measured_tps = 0.0;
     }
+    sim.last_tick_nanos = started.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64;
+    if sim.alive
+        && let Some(mut storage) = sim.persistence.take()
+    {
+        let result = storage.after_tick(sim);
+        sim.persistence = Some(storage);
+        if result.is_err() {
+            sim.running = false;
+            sim.measured_tps = 0.0;
+            return false;
+        }
+    }
     sim.alive
+}
+
+fn service_storage(sim: &mut Sim) {
+    if let Some(storage) = &sim.persistence {
+        if storage.error().is_some() {
+            sim.running = false;
+            sim.measured_tps = 0.0;
+        } else if sim.save_requested && !storage.busy() && sim.alive && !sim.transitioning {
+            sim.save_requested = false;
+            if request_save(sim).is_err() {
+                sim.running = false;
+            }
+        }
+    }
+}
+
+fn request_save(sim: &mut Sim) -> Result<()> {
+    anyhow::ensure!(
+        sim.alive && sim.error.is_none(),
+        "cannot checkpoint an incomplete or failed tick"
+    );
+    let mut storage = sim
+        .persistence
+        .take()
+        .context("local storage is not enabled")?;
+    let result = storage.save(sim, true);
+    sim.persistence = Some(storage);
+    result
+}
+
+fn reset_persistent(shared: &Arc<Mutex<Sim>>, command: &serde_json::Value) -> Response {
+    let (scenario, seed, tps, running, root, wait) = {
+        let mut sim = lock(shared);
+        if sim.transitioning || sim.persistence.as_ref().is_some_and(|p| p.busy()) {
+            return Response::error(
+                409,
+                "wait for the pending checkpoint before starting a new experiment",
+            );
+        }
+        let seed = match reset_seed(command, sim.identity.seed) {
+            Ok(seed) => seed,
+            Err(error) => return Response::error(400, &error),
+        };
+        let running = sim.running;
+        let root = sim.persistence.as_ref().unwrap().root().to_path_buf();
+        sim.running = false;
+        sim.measured_tps = 0.0;
+        if sim.alive
+            && let Err(error) = request_save(&mut sim)
+        {
+            return Response::error(503, &format!("saving the previous experiment: {error:#}"));
+        }
+        let wait = sim.persistence.as_ref().unwrap().waiter();
+        sim.transitioning = true;
+        (
+            sim.scenario.clone(),
+            seed,
+            sim.target_tps,
+            running,
+            root,
+            wait,
+        )
+    };
+    // Building, waiting for the old checkpoint and writing the new baseline
+    // happen outside the active world's lock. Other controls refuse during it.
+    let replacement = (|| -> Result<Sim> {
+        wait()?;
+        let mut fresh = build(&scenario, seed)?;
+        fresh.running = running;
+        fresh.target_tps = tps;
+        let mut storage = persistence::Persistence::create(&root, &fresh)?;
+        storage.wait_for_save()?;
+        fresh.persistence = Some(storage);
+        Ok(fresh)
+    })();
+    let mut sim = lock(shared);
+    match replacement {
+        Ok(fresh) => {
+            *sim = fresh;
+            Response::json(state_json(&sim))
+        }
+        Err(error) => {
+            sim.transitioning = false;
+            Response::error(
+                503,
+                &format!("new experiment failed; previous world is retained on pause: {error:#}"),
+            )
+        }
+    }
+}
+
+fn reset_seed(command: &serde_json::Value, previous: u64) -> std::result::Result<u64, String> {
+    match command.get("seed") {
+        None => Ok(previous),
+        Some(serde_json::Value::String(seed)) => seed
+            .parse::<u64>()
+            .map_err(|_| "seed must be a decimal unsigned 64-bit integer".into()),
+        _ => Err("seed must be a string to preserve its exact value".into()),
+    }
 }
 
 /// The largest signed matter residual, not a sum that could cancel errors.
@@ -592,8 +744,22 @@ pub fn route(shared: &Arc<Mutex<Sim>>, request: &Request) -> Response {
     let path = request.path.as_str();
 
     if path == "/api/control" {
+        if let Ok(command) = serde_json::from_slice::<serde_json::Value>(&request.body)
+            && command["action"] == "reset"
+            && lock(shared).persistence.is_some()
+        {
+            return reset_persistent(shared, &command);
+        }
         let mut sim = lock(shared);
         return apply_control(&mut sim, &request.body);
+    }
+
+    if path == "/api/history" {
+        let sim = lock(shared);
+        return match &sim.persistence {
+            Some(storage) => Response::json(storage.history().to_string()),
+            None => Response::json("{\"run_id\":null,\"session_id\":null,\"samples\":[],\"total_samples\":0,\"truncated\":false}".into()),
+        };
     }
 
     if path == "/api/state" {
@@ -687,6 +853,15 @@ fn state_json(sim: &Sim) -> String {
         Some(error) => push_json_string(&mut out, error),
         None => out.push_str("null"),
     }
+    out.push_str(",\"persistence\":");
+    out.push_str(
+        &sim.persistence
+            .as_ref()
+            .map_or_else(|| serde_json::json!({"enabled":false}), |p| p.status())
+            .to_string(),
+    );
+    out.push_str(",\"transitioning\":");
+    out.push_str(if sim.transitioning { "true" } else { "false" });
     out.push_str(",\"ecology\":");
     out.push_str(&sim.ecology.summary(sim).to_string());
 
@@ -857,6 +1032,9 @@ fn profile_json(sim: &Sim, field: &str) -> Option<String> {
 /// A command swallowed in silence looks exactly like a simulator that has hung,
 /// so every action this does not understand is answered 400 and named back.
 fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
+    if sim.transitioning {
+        return Response::error(409, "a new experiment is being prepared");
+    }
     let Ok(command) = serde_json::from_slice::<serde_json::Value>(body) else {
         return Response::error(400, "the control body must be valid JSON");
     };
@@ -869,6 +1047,9 @@ fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
 
     match action {
         "play" | "run" => {
+            if let Some(error) = sim.persistence.as_ref().and_then(|p| p.error()) {
+                return Response::error(503, &error);
+            }
             if !sim.alive {
                 return Response::error(
                     503,
@@ -883,6 +1064,10 @@ fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
             // polls immediately after the POST, and a rate that lingers for one
             // frame is a paused simulation claiming to be running.
             sim.measured_tps = 0.0;
+            if sim.persistence.is_some() {
+                sim.save_requested = true;
+                service_storage(sim);
+            }
         }
         "step" => {
             if !sim.alive {
@@ -897,7 +1082,23 @@ fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
             // poll the page makes immediately after this response, and the
             // button looks unpressed every other time.
             if !safe_advance(sim) {
-                return Response::error(503, sim.error.as_deref().unwrap_or("the tick failed"));
+                let error = sim
+                    .error
+                    .clone()
+                    .or_else(|| sim.persistence.as_ref().and_then(|p| p.error()));
+                return Response::error(
+                    503,
+                    error
+                        .as_deref()
+                        .unwrap_or("the tick or history write failed"),
+                );
+            }
+            if let Some(mut storage) = sim.persistence.take() {
+                let result = storage.sample(sim);
+                sim.persistence = Some(storage);
+                if let Err(error) = result {
+                    return Response::error(503, &format!("history write: {error:#}"));
+                }
             }
         }
         "speed" => {
@@ -916,23 +1117,9 @@ fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
             sim.target_tps = value;
         }
         "reset" => {
-            let seed = match command.get("seed") {
-                None => sim.identity.seed,
-                Some(serde_json::Value::String(seed)) => match seed.parse::<u64>() {
-                    Ok(seed) => seed,
-                    Err(_) => {
-                        return Response::error(
-                            400,
-                            "seed must be a decimal unsigned 64-bit integer",
-                        );
-                    }
-                },
-                _ => {
-                    return Response::error(
-                        400,
-                        "seed must be a string to preserve its exact value",
-                    );
-                }
+            let seed = match reset_seed(&command, sim.identity.seed) {
+                Ok(seed) => seed,
+                Err(error) => return Response::error(400, &error),
             };
             match build(&sim.scenario, seed) {
                 Ok(mut reset) => {
@@ -941,6 +1128,14 @@ fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
                     *sim = reset;
                 }
                 Err(error) => return Response::error(400, &format!("reset failed: {error:#}")),
+            }
+        }
+        "save" => {
+            if sim.persistence.as_ref().is_some_and(|p| p.busy()) {
+                return Response::error(409, "a checkpoint is already being saved");
+            }
+            if let Err(error) = request_save(sim) {
+                return Response::error(503, &format!("checkpoint: {error:#}"));
             }
         }
         other => {

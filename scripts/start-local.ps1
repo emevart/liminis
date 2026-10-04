@@ -4,6 +4,9 @@ param(
     [string]$Config,
     [ValidatePattern('^[0-9]{1,20}$')]
     [string]$Seed = '42',
+    [string]$DataDir,
+    [string]$Resume,
+    [string]$Checkpoint,
     [switch]$OpenBrowser
 )
 
@@ -11,6 +14,10 @@ $ErrorActionPreference = 'Stop'
 $projectPath = Split-Path -Parent $PSScriptRoot
 Push-Location -LiteralPath $projectPath
 try {
+    if ($Resume -and ($Config -or $PSBoundParameters.ContainsKey('Seed'))) {
+        throw 'Resume uses the saved config and seed; do not pass Config or Seed.'
+    }
+    if ($Checkpoint -and -not $Resume) { throw 'Checkpoint requires Resume.' }
     cargo build --release -p liminis
     if ($LASTEXITCODE -ne 0) { throw 'Liminis build failed.' }
 
@@ -33,7 +40,15 @@ try {
     Copy-Item -LiteralPath $binaryPath -Destination $runPath -Force
     $logPath = Join-Path $projectPath "target\local-$chosenPort.log"
     $errorPath = Join-Path $projectPath "target\local-$chosenPort.error.log"
-    $serverArgs = @('serve', '--port', $chosenPort, '--seed', $Seed)
+    if (-not $DataDir) { $DataDir = Join-Path $projectPath '.liminis\runs' }
+    $dataPath = [System.IO.Path]::GetFullPath($DataDir)
+    $serverArgs = @('serve', '--port', $chosenPort, '--data-dir', "`"$dataPath`"")
+    if ($Resume) {
+        $serverArgs += @('--resume', "`"$Resume`"")
+        if ($Checkpoint) { $serverArgs += @('--checkpoint', "`"$Checkpoint`"") }
+    } else {
+        $serverArgs += @('--seed', $Seed)
+    }
     if ($Config) {
         $configPath = (Resolve-Path -LiteralPath $Config).Path
         $serverArgs += @('--config', "`"$configPath`"")
@@ -43,7 +58,7 @@ try {
         -RedirectStandardOutput $logPath -RedirectStandardError $errorPath
     $localUrl = "http://127.0.0.1:$chosenPort/"
     $ready = $false
-    for ($attempt = 0; $attempt -lt 40; $attempt++) {
+    for ($attempt = 0; $attempt -lt 120; $attempt++) {
         Start-Sleep -Milliseconds 250
         if ($serverProcess.HasExited) {
             throw "Liminis stopped. See $errorPath"
@@ -58,6 +73,7 @@ try {
         throw "Liminis did not answer. See $errorPath"
     }
     Write-Output "Liminis: $localUrl (process $($serverProcess.Id))"
+    Write-Output "Experiment: $($state.persistence.run_id) in $dataPath"
     if ($OpenBrowser) { Start-Process $localUrl }
 } finally {
     Pop-Location

@@ -122,6 +122,40 @@ impl Ecology {
         }
     }
 
+    pub(super) fn first_seen(&self) -> BTreeMap<String, Option<u32>> {
+        self.types
+            .iter()
+            .zip(&self.first_seen)
+            .map(|(t, seen)| (t.id.clone(), *seen))
+            .collect()
+    }
+
+    pub(super) fn restore_first_seen(
+        &mut self,
+        seen: &BTreeMap<String, Option<u32>>,
+        tick: u32,
+    ) -> anyhow::Result<()> {
+        anyhow::ensure!(
+            seen.len() == self.types.len(),
+            "checkpoint ecotype roster differs"
+        );
+        for (t, target) in self.types.iter().zip(&mut self.first_seen) {
+            let value = seen
+                .get(&t.id)
+                .ok_or_else(|| anyhow::anyhow!("checkpoint has no ecotype {}", t.id))?;
+            anyhow::ensure!(
+                value.is_none_or(|v| v <= tick),
+                "first_seen is later than the checkpoint"
+            );
+            *target = *value;
+        }
+        Ok(())
+    }
+
+    pub(super) fn ids(&self) -> Vec<String> {
+        self.types.iter().map(|t| t.id.clone()).collect()
+    }
+
     pub(super) fn summary(&self, sim: &Sim) -> Value {
         let totals: Vec<f64> = self.types.iter().map(|t| total_mol(sim, &t.id)).collect();
         let biomass: f64 = totals.iter().sum();
