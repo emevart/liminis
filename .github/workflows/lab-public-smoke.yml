@@ -1,0 +1,66 @@
+name: Public LAB evidence only
+
+on:
+  push:
+    branches: [codex/lab-public-smoke-run-20261004]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-lab-evidence-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  public-lab:
+    name: protected public LAB delivery acceptance
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /AGENTS.md
+            /scripts/check_public_lab_browser.mjs
+            /scripts/lab-public-expected-assets.json
+            /site/lab.html
+            /site/lab.js
+            /site/lab.css
+            /site/lab-data.mjs
+            /site/data/lab-2/
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Require pinned accepted product before any public requests
+        run: |
+          node --input-type=module - <<'JS'
+          import assert from 'node:assert/strict';
+          import { readFileSync, appendFileSync } from 'node:fs';
+          const manifest = JSON.parse(readFileSync('scripts/lab-public-expected-assets.json'));
+          assert.match(manifest.deployed_product_head || '', /^[a-f0-9]{40}$/);
+          assert.match(manifest.product_candidate_head || '', /^[a-f0-9]{40}$/);
+          appendFileSync(process.env.GITHUB_ENV, `LIMINIS_LAB_PRODUCT_HEAD=${manifest.deployed_product_head}\n`);
+          JS
+          product_head="$(node -p "JSON.parse(require('fs').readFileSync('scripts/lab-public-expected-assets.json')).deployed_product_head")"
+          candidate_head="$(node -p "JSON.parse(require('fs').readFileSync('scripts/lab-public-expected-assets.json')).product_candidate_head")"
+          git fetch --filter=blob:none --no-tags --depth=1 origin "$product_head" "$candidate_head"
+      - name: Install unchanged official protected browser runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/liminis-public-lab-browser" --no-save --package-lock=false playwright@1.61.1
+          "$RUNNER_TEMP/liminis-public-lab-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Read actual HTTPS LAB assets and observe public browser
+        env:
+          LIMINIS_PLAYWRIGHT_MODULE: ${{ runner.temp }}/liminis-public-lab-browser/node_modules/playwright
+          LIMINIS_EXPECTED_HEAD: ${{ github.sha }}
+        run: LIMINIS_EXPECTED_TREE="$(git rev-parse 'HEAD^{tree}')" node scripts/check_public_lab_browser.mjs
+      - name: Preserve original exact-head evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-lab-${{ github.sha }}
+          path: target/qa/public-lab/
+          if-no-files-found: error
+          retention-days: 7
