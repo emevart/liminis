@@ -1,0 +1,56 @@
+{
+  "kind": "independent_geometry_qa_source_review/v1",
+  "status": "PASS_WITH_PROTECTED_ARTIFACTS_PENDING",
+  "blockers": 0,
+  "other_findings": 0,
+  "candidate_commit": "09f3c64af37c9037aa291b9efeb249c4508eba91",
+  "candidate_tree": "77dd4de7d268523036bf09049eb30cd20bb26e4d",
+  "source_author_commit": "86175ef7a2ff1ac93bbcf7afbf602bfac16bd8ca",
+  "source_owned_paths_exact": 11,
+  "qa_author_commit": "336071358b1c4f64bdba2f43bc694ea5d00bfcfa",
+  "qa_author_tree": "44c5dec4e1c982e9b2c5b758695c6d1f50ff26c3",
+  "qa_path": "scripts/check_physical_3d_browser.mjs",
+  "qa_sha256": "c3a6642f73c2a00fdfaea6c4b321e93a58e6c031dab2d220c3f044fe0c86de01",
+  "combined_source_byte_identity": "PASS",
+  "immutable_core_config_cargo_toolchain_recordings_experiments": "PASS",
+  "qa_projection_oracle": "Independent API meters→one scene scalar→camera translation→quaternion-rotated basis dot products→orthographic frustum/zoom→CSS pixels. Quaternion basis independently checked against lookAt/right-handed cross products. No production matrices/projectCenter/axisLabels/hit-map used as expected geometry.",
+  "actual_evidence_required_by_script": {
+    "checks": 13,
+    "screenshots": 9,
+    "pages": 4,
+    "viewports": [
+      [
+        1440,
+        900
+      ],
+      [
+        1440,
+        720
+      ],
+      [
+        390,
+        844
+      ],
+      [
+        320,
+        844
+      ]
+    ],
+    "sources": "clean exact HEAD/tree and digest pins; actual release host serves exact immutable module/vendor bytes",
+    "pixels": "API centers, all 12 box edges and µm axis endpoint labels; 7±2 CSS-pixel glyph under actual zoom; opacity/layer changes",
+    "snapshot": "Delayed original module and history bytes with actual paused Step; latest snapshot drawn before history release",
+    "picking": "Actual ID search/arrows/orbit/pan/zoom/drag-return/touch cancellation; real coincident daughters and camera revision invalidation",
+    "state": "held API tick/positions/dt/pacing/counters/residual; 30/60 targets preserve pixels and normal single-flight polls",
+    "resources": "observed WebGL2/backend, one context, fixed shared resources/current population, 6 toggles; explicit labeled context-loss and unavailable controls; legacy chamber1 without WebGL assets"
+  },
+  "docs_ci_scope": "ADR111/ACCEPTANCE retain 2D default, true saved centers/common SI scale, unchanged well-mixed biology and separate actual protected/full-CI gates. Existing regressions remain mandatory. Checkpoint09 distinguishes native unsupported no-storage Reset from broader reconnect/same-tick identity contract. Public dense final-chunk pins are bounded Node HTTPS delivery checks, not 100k/1M endpoint rendering or full download.",
+  "qualifications": [
+    "Source/math verdict only; protected Chromium execution/artifacts and final exact-head full CI remain pending.",
+    "Existing official stock Playwright SwiftShader defaults are reported separately from added launch flags; software geometry evidence is not hardware-FPS/kernel attestation.",
+    "Source oracle uses bounded synthetic Node camera/point cases; author-reported 30 Node and root-reported 32 native host tests were not repeated.",
+    "No model/browser/Cargo/REC2 rerun or large recording decode.",
+    "Final published candidate must retain reviewed source bytes and bind all fresh required artifacts to its own HEAD/tree."
+  ],
+  "findings": [],
+  "resolved_snapshot_identity_fix": "86175ef7a2ff1ac93bbcf7afbf602bfac16bd8ca"
+}

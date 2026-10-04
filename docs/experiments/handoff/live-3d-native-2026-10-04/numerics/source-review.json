@@ -1,0 +1,69 @@
+{
+  "kind": "independent_geometry_source_review/v1",
+  "status": "PASS_WITH_BROWSER_GATE_PENDING",
+  "source_commit": "86175ef7a2ff1ac93bbcf7afbf602bfac16bd8ca",
+  "source_tree": "9d90638b16a092fdd23a7f990975c0212406b43e",
+  "base_commit": "239ec8bde3d2f15e2aa5b50e9294e65eab5c0926",
+  "blockers": 0,
+  "other_findings": 0,
+  "reviewed_sources": [
+    {
+      "path": "crates/liminis/src/cell-viewer-3d.mjs",
+      "bytes": 15849,
+      "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+    },
+    {
+      "path": "crates/liminis/src/cell-viewer.html",
+      "bytes": 62370,
+      "sha256": "a4679212a3f74ab01881e631a977bc42809d78f9508f39c0e1e70d7e1199f73f"
+    },
+    {
+      "path": "crates/liminis/src/cells_host.rs",
+      "bytes": 37837,
+      "sha256": "caf0a290dbf7f6167204f276b7f9b496a6699c7c13b3dc2d69b0b1af95c10325"
+    },
+    {
+      "path": "crates/liminis/src/cells_host_tests.rs",
+      "bytes": 32119,
+      "sha256": "497bcb1c24f14eb4428e278d4085888907ea3cf311b4806334aacabb81ec2439"
+    },
+    {
+      "path": "scripts/cell-viewer-3d.test.mjs",
+      "bytes": 23028,
+      "sha256": "77b98a1720f0db8a35489f594083a04633e94bb5431166ed0c36e581a2586e3d"
+    },
+    {
+      "path": "scripts/cell-viewer.test.mjs",
+      "bytes": 19753,
+      "sha256": "618e77dce3e6cceb272f47a7a633bd8b1499d703ae1fbebf22ac7ea9c7354b36"
+    }
+  ],
+  "immutable_engine_config_recording_evidence_objects": "PASS",
+  "geometry": {
+    "source_units": "API position_m and dimensions_m remain meters; inspector labels micrometers",
+    "scene_scale": "1 / max(dimensions_m), same scalar on all three axes; no source-coordinate translation or normalization by each axis",
+    "camera": "Right-handed orthographic lookAt of scaled box midpoint; common pixel scale, aspect-correct frustum, explicit zoom; no damping/autorotation",
+    "css_oracle": {
+      "projected_cases": 1440,
+      "synthetic_camera_count": 144,
+      "max_css_pixel_error": 3.4924596548080444e-10,
+      "tolerance": 1e-06,
+      "source_oracle_sha256": "49640ba63404f25f2427d510b5c7b6dc582281ecfe0a743c76148def02a87759"
+    },
+    "selection": "Coincident source centers remain coincident; candidates use CSS distance then exact BigInt ID. Slice bounds are inclusive and zero thickness compares represented source coordinates exactly. Hidden-layer and clipped-camera selection status stays separate from absence.",
+    "snapshot": "Source seed/config/world/chamber and persistence identity changes retire candidate geometry and active gestures even at the same tick. Unchanged paused polls preserve valid candidates. Reset intent invalidates before awaiting control. State/readouts/geometry/hits/inspector commit before independent history; lazy activation uses latest snapshot.",
+    "marker": "7 CSS pixel glyph; 8 CSS pixel hit radius; display sizes are not cell bodies. GPU float rounding affects image only."
+  },
+  "qualifications": [
+    "Independent Node oracle uses synthetic camera/point fixtures and actual vendored camera matrices; it is not WebGL/native browser or actual API-to-pixel acceptance.",
+    "Protected exact-candidate WebGL2/backend/PNG/control/atomic Step/coincident-daughter/fallback/mobile/chamber1 and 2D regression artifacts still required.",
+    "No model/Cargo/browser/REC2 run or full recording decode performed. Upstream vendored-byte audit and host tests are separate checks.",
+    "No local spatial chemistry, excluded-volume, opacity measurement, universal frame rate, body geometry or cross-platform float guarantee.",
+    "QA336 source oracle and clean combined09 byte identity reviewed; actual protected artifacts and full CI remain pending."
+  ],
+  "candidate_commit": "09f3c64af37c9037aa291b9efeb249c4508eba91",
+  "candidate_tree": "77dd4de7d268523036bf09049eb30cd20bb26e4d",
+  "projector_proof_retained_from": "e9feb9aa7bc045f572d5155e2b8813eae5a78aa9",
+  "projector_vendor_picking_helpers_byte_identity": "PASS",
+  "resolved_issue": "Same-tick nonpersistent snapshot source identity could previously retain old candidates. Scoped fix861 compares stable identity and invalidates Reset intent while preserving run/session history identity."
+}

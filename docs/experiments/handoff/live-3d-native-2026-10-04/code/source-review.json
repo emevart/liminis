@@ -1,0 +1,213 @@
+{
+  "status": "QUALIFIED_SOURCE_PASS",
+  "sourceBlockers": 0,
+  "base": "239ec8bde3d2f15e2aa5b50e9294e65eab5c0926",
+  "integration": {
+    "head": "09f3c64af37c9037aa291b9efeb249c4508eba91",
+    "tree": "77dd4de7d268523036bf09049eb30cd20bb26e4d",
+    "clean": true
+  },
+  "ui": {
+    "head": "86175ef7a2ff1ac93bbcf7afbf602bfac16bd8ca",
+    "tree": "9d90638b16a092fdd23a7f990975c0212406b43e",
+    "initialHead": "e9feb9aa7bc045f572d5155e2b8813eae5a78aa9",
+    "narrowFix": [
+      "crates/liminis/src/cell-viewer.html",
+      "scripts/cell-viewer-3d.test.mjs"
+    ],
+    "authorReportedNodeTests": "30/30 PASS; source-only, independently read; not rerun"
+  },
+  "qa": {
+    "head": "336071358b1c4f64bdba2f43bc694ea5d00bfcfa",
+    "tree": "44c5dec4e1c982e9b2c5b758695c6d1f50ff26c3",
+    "sourceBlockers": 0,
+    "mandatoryActualChecks": 13,
+    "mandatoryScreenshots": 9,
+    "runtime": "NOT_RUN"
+  },
+  "ownedFileIdentity": [
+    {
+      "path": "crates/liminis/src/cell-viewer-3d.mjs",
+      "bytes": 15849,
+      "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac",
+      "integrationExact": true
+    },
+    {
+      "path": "crates/liminis/src/cell-viewer.html",
+      "bytes": 62370,
+      "sha256": "a4679212a3f74ab01881e631a977bc42809d78f9508f39c0e1e70d7e1199f73f",
+      "integrationExact": true
+    },
+    {
+      "path": "crates/liminis/src/cells_host.rs",
+      "bytes": 37837,
+      "sha256": "caf0a290dbf7f6167204f276b7f9b496a6699c7c13b3dc2d69b0b1af95c10325",
+      "integrationExact": true
+    },
+    {
+      "path": "crates/liminis/src/cells_host_tests.rs",
+      "bytes": 32119,
+      "sha256": "497bcb1c24f14eb4428e278d4085888907ea3cf311b4806334aacabb81ec2439",
+      "integrationExact": true
+    },
+    {
+      "path": "crates/liminis/src/vendor/three-r180/LICENSE",
+      "bytes": 1081,
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+      "integrationExact": true
+    },
+    {
+      "path": "crates/liminis/src/vendor/three-r180/OrbitControls.js",
+      "bytes": 38703,
+      "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c",
+      "integrationExact": true
+    },
+    {
+      "path": "crates/liminis/src/vendor/three-r180/provenance.json",
+      "bytes": 1576,
+      "sha256": "1d507127da6b37d10a9c7c2941b2d2d7f39e1ee54a0655519706008bbed3584a",
+      "integrationExact": true
+    },
+    {
+      "path": "crates/liminis/src/vendor/three-r180/three.core.js",
+      "bytes": 1403455,
+      "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20",
+      "integrationExact": true
+    },
+    {
+      "path": "crates/liminis/src/vendor/three-r180/three.module.js",
+      "bytes": 603113,
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a",
+      "integrationExact": true
+    },
+    {
+      "path": "scripts/cell-viewer-3d.test.mjs",
+      "bytes": 23028,
+      "sha256": "77b98a1720f0db8a35489f594083a04633e94bb5431166ed0c36e581a2586e3d",
+      "integrationExact": true
+    },
+    {
+      "path": "scripts/cell-viewer.test.mjs",
+      "bytes": 19753,
+      "sha256": "618e77dce3e6cceb272f47a7a633bd8b1499d703ae1fbebf22ac7ea9c7354b36",
+      "integrationExact": true
+    },
+    {
+      "path": "scripts/check_physical_3d_browser.mjs",
+      "bytes": 61791,
+      "sha256": "c3a6642f73c2a00fdfaea6c4b321e93a58e6c031dab2d220c3f044fe0c86de01",
+      "integrationExact": true
+    }
+  ],
+  "changedPaths": [
+    ".github/workflows/ci.yml",
+    "crates/liminis/src/cell-viewer-3d.mjs",
+    "crates/liminis/src/cell-viewer.html",
+    "crates/liminis/src/cells_host.rs",
+    "crates/liminis/src/cells_host_tests.rs",
+    "crates/liminis/src/vendor/three-r180/LICENSE",
+    "crates/liminis/src/vendor/three-r180/OrbitControls.js",
+    "crates/liminis/src/vendor/three-r180/provenance.json",
+    "crates/liminis/src/vendor/three-r180/three.core.js",
+    "crates/liminis/src/vendor/three-r180/three.module.js",
+    "docs/ACCEPTANCE.md",
+    "docs/DECISIONS.md",
+    "docs/checkpoints/2026-10-04-dense-recorded-observer.md",
+    "docs/checkpoints/2026-10-04-live-physical-observer-3d.md",
+    "scripts/cell-viewer-3d.test.mjs",
+    "scripts/cell-viewer.test.mjs",
+    "scripts/check_physical_3d_browser.mjs",
+    "scripts/check_public_recording_browser.mjs"
+  ],
+  "protectedIdentity": {
+    "crates/liminis-core": {
+      "base": "1f9031142731d138bf6de243ab2ac13d644e1553",
+      "candidate": "1f9031142731d138bf6de243ab2ac13d644e1553"
+    },
+    "configs": {
+      "base": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+      "candidate": "8970e88cd50ae3038d72a78dd16e9653fdf85aab"
+    },
+    "site": {
+      "base": "ee6bd108839c418e07c29d79a9b8fbd897b30093",
+      "candidate": "ee6bd108839c418e07c29d79a9b8fbd897b30093"
+    },
+    "docs/experiments": {
+      "base": "76aba23510e19899755aeff7771e0d8063f4bca8",
+      "candidate": "76aba23510e19899755aeff7771e0d8063f4bca8"
+    },
+    "docs/SPEC.md": {
+      "base": "32bf455e15a3a460590a9fa4001074e4f9512829",
+      "candidate": "32bf455e15a3a460590a9fa4001074e4f9512829"
+    },
+    "docs/NORTH_STAR.md": {
+      "base": "3f43d7ba6cdd3086c62b05d9aa374cba82db8048",
+      "candidate": "3f43d7ba6cdd3086c62b05d9aa374cba82db8048"
+    }
+  },
+  "adrPrefixExact": true,
+  "adrAddition": "111 only",
+  "vendorUpstream": "0af9729d0c143a86a1d725d6e2c3ad83301f3f34",
+  "vendorIndependentBytes": [
+    {
+      "path": "three.module.js",
+      "upstreamPath": "build/three.module.js",
+      "bytes": 603113,
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a",
+      "independentUpstreamByteEqual": true
+    },
+    {
+      "path": "three.core.js",
+      "upstreamPath": "build/three.core.js",
+      "bytes": 1403455,
+      "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20",
+      "independentUpstreamByteEqual": true
+    },
+    {
+      "path": "OrbitControls.js",
+      "upstreamPath": "examples/jsm/controls/OrbitControls.js",
+      "bytes": 38703,
+      "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c",
+      "independentUpstreamByteEqual": true
+    },
+    {
+      "path": "LICENSE",
+      "upstreamPath": "LICENSE",
+      "bytes": 1081,
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+      "independentUpstreamByteEqual": true
+    }
+  ],
+  "resolvedFinding": {
+    "path": "crates/liminis/src/cell-viewer.html",
+    "initialLine": 472,
+    "scope": "Synthetic exact consumer-function same-tick snapshot replacement; current native host rejects Reset without storage503. No native model/reset run or fabricated API acceptance.",
+    "before": "Exact commitState VM: seed1→seed2, tick0 both, moved center; invalidations0, old2candidates remain, revision9.",
+    "after": "Exact final commitState+invalidateGeometry VM: candidates0, candidateTick/revision null, geometryRevision10; identical paused identity/tick retains candidates.",
+    "fix": "Exact seed/config_hash/world_format_version/chamber_format comparison plus persistence identity; UI Reset invalidates tap/candidates before await; real-function source regressions cover all4fields, storage enabled→disabled, unchanged paused poll, delayed same-seed Reset."
+  },
+  "qualifiedSourceFindings": [
+    "Four vendored executable/license files byte-equal independently fetched upstream; module→localcore and Orbit→barethree exact local import map; no runtime CDN or import-closure gap.",
+    "Host6literal embedded GET routes/MIME, method/path failure closed; no filesystem mapping or API/model/core change.",
+    "3D module validated SI/current-population centers with common XYZ scale, exact decimal IDs, independent screen hit candidates and inclusive slice bounds; readonly audit supplies camera facts only.",
+    "Lazy renderer uses latest committed snapshot after await; one context/shared resources/current IDs, no per-history allocations; disposal once and explicit current2D unavailable/loss fallback.",
+    "Native getContext observer Reflect.apply synchronously preserves arguments/context objects; allocation-negative/loss controls explicitly labelled and do not modify API states.",
+    "Complete13check QA independent quaternion/lookAt/frustum API→compositor PNG expected oracle imports no Three/production projection/hit helpers; exact saved original module/history delayed responses, current Step before history and bounded real coincident division.",
+    "QA requires actual gesture/ID/arrow, paused rotate/zoom/pan/reset, layers/opacity/slice/pixels, single-flight normal polling, one-context resources/four layouts and post-close aggregate errors/trace/cleanup.",
+    "Observed officialPW1.61.1 argv guard prohibits8sandbox switches/disable-.*sandbox/GPUblocklist/web-security disable; stock softwareGPU flags disclosed without added launch GPU arguments or hardware/kernel/FPS claims.",
+    "Root CI preserves old3 sequential LIVE checks and adds mandatory4th with expectedHEAD/tree, actual release build and separate artifact; all source/unit tests remain distinct from runtime acceptance.",
+    "Public2fa additions keep browserAssets old14 default request contract; new NodeHTTPS all3metadata/finalgzip pins bounded/deduplicated, no public nondefault endpoint rendering/fullGB claim; future main run pending.",
+    "Root ADR111 append-only and checkpoint source/native/runtime qualifications accurate; nativehost32 prior source result is not relabelled final fresh compile/browserPASS."
+  ],
+  "remainingGates": [
+    "Fresh protected exact09f3/fullCI: mandatory actual native WebGL2/backend, all13 checks,9actual PNG+trace/report and independent artifact acceptance; preserve old chamber1/physical/2D regressions.",
+    "Overall fullCI green mandatory before guarded merge; source verdict alone is not runtime or merge acceptance.",
+    "Extended3horizon public NodeHTTPS delivery gate requires future main deployment/run; accepted239 public scope remains default10k UI only."
+  ],
+  "reviewActions": [
+    "Read complete changed3Dmodule, complete232lineQA/tests and viewer integration, host delta, CI/docs/public flow.",
+    "Independently fetched4 vendored files+package.json at public pinned upstream; exact byte/import closure compared.",
+    "Ran isolated exact consumer-function VM reproduction and narrow final positive/paused-retention check.",
+    "No author/root source edits, builds, Cargo, model, browser, broad tests or CI runs."
+  ]
+}

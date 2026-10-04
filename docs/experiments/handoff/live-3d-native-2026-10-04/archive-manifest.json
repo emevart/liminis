@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "kind": "live_3d_native_evidence_archive",
+  "candidate_commit": "09f3c64af37c9037aa291b9efeb249c4508eba91",
+  "candidate_tree": "77dd4de7d268523036bf09049eb30cd20bb26e4d",
+  "workflow_run": 37237631167,
+  "status": "SOURCE_REVIEW_PASS_ACTUAL_BROWSER_PENDING",
+  "files": [
+    {
+      "path": "code/REVIEW.md",
+      "bytes": 3827,
+      "sha256": "f57fdce7bd433e17747a2a0afac6287cfb3b9d05918dad656d9f195b9c4f5656",
+      "scope": "exact independent pre-browser review bytes"
+    },
+    {
+      "path": "code/source-review.json",
+      "bytes": 10443,
+      "sha256": "983a0825b6dc928e35a531230a5a442b3dd3a73b4c733ae6e82aee45fcfb9aa8",
+      "scope": "exact independent pre-browser review bytes"
+    },
+    {
+      "path": "code/scope-review.json",
+      "bytes": 2630,
+      "sha256": "6fc3d209d6f5b7bd1b70237f55938239ae757bcbac930a7c062de52f953027a0",
+      "scope": "exact independent pre-browser review bytes"
+    },
+    {
+      "path": "code/independent-upstream-pins.json",
+      "bytes": 854,
+      "sha256": "adae1516bc5d6de987df64fc5875088d292014adf73cf7dccaa58f197422aa6c",
+      "scope": "exact independent pre-browser review bytes"
+    },
+    {
+      "path": "numerics/source-review.json",
+      "bytes": 4173,
+      "sha256": "bbd85aa6bf16acab47db7762348fe6168d13e41e25b2f39f3ec3a197c4a13bc0",
+      "scope": "exact independent pre-browser review bytes"
+    },
+    {
+      "path": "numerics/qa-source-review.json",
+      "bytes": 3486,
+      "sha256": "f1be1f8634b18932c111382fcc2c0090ef870114b564fffa5f25b81109adc5a2",
+      "scope": "exact independent pre-browser review bytes"
+    },
+    {
+      "path": "numerics/identity-fix-review.json",
+      "bytes": 1460,
+      "sha256": "996591bf6ff589ccd03694e4668c706964d9637f5a0201e0a2540eba157bf4e0",
+      "scope": "exact independent pre-browser review bytes"
+    },
+    {
+      "path": "numerics/source-review-e9-superseded.json",
+      "bytes": 3506,
+      "sha256": "16921038c0c48a207dc5ebc1963be51ad78bc3c91533d165499d32bff220874d",
+      "scope": "exact independent pre-browser review bytes"
+    },
+    {
+      "path": "numerics/source-oracle.json",
+      "bytes": 860,
+      "sha256": "49640ba63404f25f2427d510b5c7b6dc582281ecfe0a743c76148def02a87759",
+      "scope": "exact independent pre-browser review bytes"
+    },
+    {
+      "path": "numerics/geometry-oracle.mjs",
+      "bytes": 3588,
+      "sha256": "682594006bf5e62abc44a006d9bb8f4f499a4a7081fa3a9222e85433bdb4e76e",
+      "scope": "exact independent pre-browser review bytes"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1020,
+      "sha256": "648b2abbf81e867c274fc8452a973a6aabc82ed7c885dbd69c96c228f00bdd8b",
+      "scope": "coordinator qualification"
+    }
+  ],
+  "unique_bytes": 35847,
+  "archive_group_cap_bytes": 67108864,
+  "original_zip_count": 0,
+  "qualifications": [
+    "pre-browser independent reviews only",
+    "no transferred actual WebGL/fullCI/public endpoint PASS",
+    "historical e9 review superseded by861 identity fix"
+  ]
+}

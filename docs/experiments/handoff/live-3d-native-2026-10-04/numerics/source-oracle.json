@@ -1,0 +1,15 @@
+{
+  "kind": "independent_geometry_source_oracle/v1",
+  "status": "PASS",
+  "source_commit": "e9feb9aa7bc045f572d5155e2b8813eae5a78aa9",
+  "source_tree": "c836ffbc7057c6507493e82bc23955a72d115ca6",
+  "projected_cases": 1440,
+  "synthetic_camera_count": 144,
+  "max_css_pixel_error": 3.4924596548080444e-10,
+  "css_pixel_tolerance": 0.000001,
+  "coincidence_and_exact_u64_id_candidate_comparisons": 4,
+  "zero_thickness_slice_visibility_axes": 3,
+  "oracle_sha256": "682594006bf5e62abc44a006d9bb8f4f499a4a7081fa3a9222e85433bdb4e76e",
+  "runner_sha256": "ffd5786c4d9f6ef05bbc3f085b3bc3bae9dd8b096cf221a7051c798489c1e919",
+  "qualification": "Bounded Node/source arithmetic verification using actual vendored camera matrices versus independent quaternion/frustum equations. Synthetic points only; no WebGL/native browser, API/model steps or browser acceptance."
+}

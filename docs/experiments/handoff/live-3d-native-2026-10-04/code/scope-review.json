@@ -1,0 +1,69 @@
+{
+  "stage": "PREPARED_CONTRACT_REVIEW",
+  "base": "239ec8bde3d2f15e2aa5b50e9294e65eab5c0926",
+  "head": "2fa49d661b27ff99ae408557e764e53f001a3f79",
+  "tree": "e9e42fbaa4200af85c3784349ba293bce90620a8",
+  "contractBlockers": 0,
+  "adrPrefixExact": true,
+  "adrAppendedOnly": "111",
+  "protectedOldBytesUnchanged": true,
+  "ci": "ExistingUbuntu22/PW1.61.1/sandboxargv/threeolderLIVEgates retained; fourth mandatory sequential3D call expectedHEAD+TREE/separateartifact,15min job. No CI/browser executed.",
+  "publicEndpointFollowup": {
+    "head": "2fa49d661b27ff99ae408557e764e53f001a3f79",
+    "sourceBlockers": 0,
+    "fixedPriorBlocker": "Node-only pins were mistakenly passed to mandatory browser pin set; nowbrowserAssets copied before additions and bothviewportcalls useit.",
+    "horizons": [
+      10000,
+      100000,
+      1000000
+    ],
+    "additionalFinalGzipBytes": 978653,
+    "sourceRuntimeQualifier": "Existing239publicPASS default10k only. AdditionalNodeHTTPS metadata/finalchunk gate notrunyet; no fullGB/endpoint rendering claims."
+  },
+  "upstream": {
+    "commit": "0af9729d0c143a86a1d725d6e2c3ad83301f3f34",
+    "files": [
+      {
+        "path": "package.json",
+        "bytes": 4635,
+        "sha256": "aa42494664dba4cf76d89c6975ee38321a402f09a048672e190bad6f13beec93"
+      },
+      {
+        "path": "LICENSE",
+        "bytes": 1081,
+        "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+      },
+      {
+        "path": "build/three.module.js",
+        "bytes": 603113,
+        "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a"
+      },
+      {
+        "path": "build/three.core.js",
+        "bytes": 1403455,
+        "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20"
+      },
+      {
+        "path": "examples/jsm/controls/OrbitControls.js",
+        "bytes": 38703,
+        "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c"
+      }
+    ]
+  },
+  "actualStaticImportStatements": {
+    "build/three.module.js": [
+      "./three.core.js"
+    ],
+    "build/three.core.js": [],
+    "examples/jsm/controls/OrbitControls.js": [
+      "three"
+    ]
+  },
+  "pending": [
+    "Clean UIauthor exactcommit/fullsource/dependency/lifecycle review",
+    "Clean independentQAauthor exactcommit/contract/oracle/backend/cleanup review",
+    "Rootsourcefreeze and sourcechecks",
+    "Actual protected3D artifact+newpublicdelivery pins acceptance/fullCI"
+  ],
+  "reviewConstraints": "No author/source files modified, no source tests/model/Cargo/nativebrowser/CI run. Upstream read-only public downloads only."
+}

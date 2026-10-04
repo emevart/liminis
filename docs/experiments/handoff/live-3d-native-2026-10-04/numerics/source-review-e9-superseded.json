@@ -1,0 +1,64 @@
+{
+  "kind": "independent_geometry_source_review/v1",
+  "status": "PASS_WITH_BROWSER_GATE_PENDING",
+  "source_commit": "e9feb9aa7bc045f572d5155e2b8813eae5a78aa9",
+  "source_tree": "c836ffbc7057c6507493e82bc23955a72d115ca6",
+  "base_commit": "239ec8bde3d2f15e2aa5b50e9294e65eab5c0926",
+  "blockers": 0,
+  "other_findings": 0,
+  "reviewed_sources": [
+    {
+      "path": "crates/liminis/src/cell-viewer-3d.mjs",
+      "bytes": 15849,
+      "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+    },
+    {
+      "path": "crates/liminis/src/cell-viewer.html",
+      "bytes": 62048,
+      "sha256": "d05ab1778a37353c23cb147a247de5a3c40bacccc005d9d72d97d9c9bdcd6c93"
+    },
+    {
+      "path": "crates/liminis/src/cells_host.rs",
+      "bytes": 37837,
+      "sha256": "caf0a290dbf7f6167204f276b7f9b496a6699c7c13b3dc2d69b0b1af95c10325"
+    },
+    {
+      "path": "crates/liminis/src/cells_host_tests.rs",
+      "bytes": 32119,
+      "sha256": "497bcb1c24f14eb4428e278d4085888907ea3cf311b4806334aacabb81ec2439"
+    },
+    {
+      "path": "scripts/cell-viewer-3d.test.mjs",
+      "bytes": 19329,
+      "sha256": "596ff63af1b24af1b32a9e1e3a43410675be92a95f2e3780614146b2b23084f7"
+    },
+    {
+      "path": "scripts/cell-viewer.test.mjs",
+      "bytes": 19753,
+      "sha256": "618e77dce3e6cceb272f47a7a633bd8b1499d703ae1fbebf22ac7ea9c7354b36"
+    }
+  ],
+  "immutable_engine_config_recording_evidence_objects": "PASS",
+  "geometry": {
+    "source_units": "API position_m and dimensions_m remain meters; inspector labels micrometers",
+    "scene_scale": "1 / max(dimensions_m), same scalar on all three axes; no source-coordinate translation or normalization by each axis",
+    "camera": "Right-handed orthographic lookAt of scaled box midpoint; common pixel scale, aspect-correct frustum, explicit zoom; no damping/autorotation",
+    "css_oracle": {
+      "projected_cases": 1440,
+      "synthetic_camera_count": 144,
+      "max_css_pixel_error": 3.4924596548080444e-10,
+      "tolerance": 1e-06,
+      "source_oracle_sha256": "49640ba63404f25f2427d510b5c7b6dc582281ecfe0a743c76148def02a87759"
+    },
+    "selection": "Coincident source centers remain coincident; candidates use CSS distance then exact BigInt ID. Slice bounds are inclusive and zero thickness compares represented source coordinates exactly. Hidden-layer and clipped-camera selection status stays separate from absence.",
+    "snapshot": "All state/readouts/geometry/hits/inspector commit synchronously before history; view revisions retire candidates after camera, viewport, slice/layer changes on held tick. Lazy activation uses latest committed snapshot.",
+    "marker": "7 CSS pixel glyph; 8 CSS pixel hit radius; display sizes are not cell bodies. GPU float rounding affects image only."
+  },
+  "qualifications": [
+    "Independent Node oracle uses synthetic camera/point fixtures and actual vendored camera matrices; it is not WebGL/native browser or actual API-to-pixel acceptance.",
+    "Protected exact-candidate WebGL2/backend/PNG/control/atomic Step/coincident-daughter/fallback/mobile/chamber1 and 2D regression artifacts still required.",
+    "QA author clean commit and final integration source equality remain pending.",
+    "No model/Cargo/browser/REC2 run or full recording decode performed. Upstream vendored-byte audit and host tests are separate checks.",
+    "No local spatial chemistry, excluded-volume, opacity measurement, universal frame rate, body geometry or cross-platform float guarantee."
+  ]
+}

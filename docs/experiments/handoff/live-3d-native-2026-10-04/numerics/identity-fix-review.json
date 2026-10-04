@@ -1,0 +1,27 @@
+{
+  "kind": "independent_snapshot_identity_fix_review/v1",
+  "status": "PASS_WITH_BROWSER_GATE_PENDING",
+  "source_commit": "86175ef7a2ff1ac93bbcf7afbf602bfac16bd8ca",
+  "source_tree": "9d90638b16a092fdd23a7f990975c0212406b43e",
+  "candidate_commit": "09f3c64af37c9037aa291b9efeb249c4508eba91",
+  "candidate_tree": "77dd4de7d268523036bf09049eb30cd20bb26e4d",
+  "blockers": 0,
+  "other_findings": 0,
+  "changed_files": [
+    "crates/liminis/src/cell-viewer.html",
+    "scripts/cell-viewer-3d.test.mjs"
+  ],
+  "stable_source_identity": [
+    "seed",
+    "config_hash",
+    "world_format_version",
+    "chamber_format"
+  ],
+  "history_identity_preserved": "run_id\\nsession_id when enabled; null otherwise",
+  "reset_before_await_invalidation": "PASS",
+  "unchanged_paused_candidate_preservation": "PASS",
+  "regression_scope": "Actual commitState/invalidateGeometry/resetSimulation functions executed in author VM fixtures: same-tick moved centers, stable metadata replacement, enabled→disabled, unchanged paused snapshot and delayed same-seed Reset. 30 Node reported PASS, not repeated.",
+  "retained_projector_cases": 1440,
+  "projector_vendor_picking_helpers_unchanged": "PASS",
+  "qualification": "Read-only delta and exact combined byte review. Native no-storage Reset currently refuses; viewer source identity contract also handles reconnect. No new model/Cargo/native browser or repeated geometry/REC2 run. Actual protected browser/full CI required."
+}
