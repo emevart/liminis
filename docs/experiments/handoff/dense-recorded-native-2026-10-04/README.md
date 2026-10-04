@@ -35,7 +35,9 @@ Own review и квалификации сохранены exact в e245-independ
 и двух малых validation JSON. Original новый dense ZIP и отдельный22-check
 legacy ZIP сохранены без перепаковки; original97 FAIL остаётся отдельным.
 
-Full exact-head CI/Rust, independent legacy/regression review и публичный
-dense deployment требуют отдельных итогов; эти PASS не переносятся на main.
+Independent numerics/legacy/regression review: qualified PASS,0 blockers;
+79checks всех пяти browser reports согласованы. Exact own review сохранён
+в e245-numerics-review.json. Full exact-head CI/Rust и публичный dense
+deployment требуют отдельных итогов; эти PASS не переносятся на main.
 Fresh network readback новых original ZIP ещё pending. Manifest содержит
 точные sizes/SHA и разные acceptance boundaries, общий ZIP budget45.3MB.

@@ -25,7 +25,7 @@
       "artifact_id": 11314645215,
       "overall_status": "PASS",
       "required_checks": 14,
-      "qualification": "Independent actual dense artifact qualified PASS,0 blockers; full CI/public deployment separate pending gates."
+      "qualification": "Independent artifact review qualified PASS,0 blockers; full CI/public deployment separate pending gates."
     },
     {
       "path": "recorded-e2451e3-success-original.zip",
@@ -37,7 +37,7 @@
       "artifact_id": 11314136248,
       "overall_status": "PASS",
       "required_checks": 22,
-      "qualification": "Observed protected workflow report PASS; independent artifact acceptance and full CI pending."
+      "qualification": "Independent artifact review qualified PASS,0 blockers; full CI/public deployment separate pending gates."
     }
   ],
   "readback": "New candidate original ZIPs pending independent fresh network fetch.",
@@ -82,8 +82,18 @@
         "sha256": "8a68984d88185f842c29f2352244c7241037f154f7d35ea27f3a606096341a67"
       }
     ],
-    "legacy_regression_review": "Pending independent numerics/regression acceptance.",
+    "legacy_regression_review": "Independent numerics/regression review qualified PASS,0 blockers.",
     "full_ci": "Pending Rust completion; actual artifacts do not replace mandatory full CI.",
+    "public_dense": "Pending existing post-merge deployment verification."
+  },
+  "numerics_and_regression_review": {
+    "path": "e245-numerics-review.json",
+    "bytes": 10255,
+    "sha256": "903c3d24fd9f7a67b8d75e21698b4952156907d32075a758f6515311ff729a2e",
+    "status": "PASS_WITH_QUALIFICATIONS",
+    "blockers": 0,
+    "checks_across_five_reports": 79,
+    "full_ci": "Pending Rust completion.",
     "public_dense": "Pending existing post-merge deployment verification."
   }
 }

@@ -1,0 +1,231 @@
+{
+  "kind": "independent_numerics_review/v1",
+  "status": "PASS_WITH_QUALIFICATIONS",
+  "reviewed_at_utc": "2026-10-04T20:28:46.251786+00:00",
+  "blockers": 0,
+  "other_findings": 0,
+  "scope": "Read-only independent numerical, provenance and regression review of saved protected-Chromium artifacts; no new model, browser, Cargo or full recording decode.",
+  "candidate": {
+    "commit": "e2451e3142def791eb44aba4fcb19ada1aa1ed78",
+    "tree": "27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a",
+    "workflow_run": "https://github.com/emevart/liminis/actions/runs/37231067824",
+    "workflow_attempt": 1,
+    "chromium": "149.0.7827.55",
+    "playwright": "1.61.1",
+    "node": "v24.21.0"
+  },
+  "artifact_integrity": {
+    "groups": [
+      {
+        "name": "dense",
+        "archive_bytes": 16267063,
+        "archive_sha256": "c43ab8e81c8da5b4980d78121dca652b72d18cf06c9848135eb57904904d1d9c",
+        "archive_entries": 7,
+        "archive_uncompressed_bytes": 16468287,
+        "report_sha256": "61bd9331ae414acbbb248f28a79f4662b1a45e071664ed8f07a7beaaefa17d42",
+        "report_status": "PASS",
+        "passed_checks": 14,
+        "screenshots": 5,
+        "outer_crc": "PASS",
+        "nested_trace_crc": "PASS",
+        "trace_entries": 130,
+        "trace_uncompressed_bytes": 33029298
+      },
+      {
+        "name": "recorded",
+        "archive_bytes": 12464021,
+        "archive_sha256": "bb538216ff1c74c3e7d12c85b9a8f2bbc14e2582f44e29dd29c60c143b270fef",
+        "archive_entries": 10,
+        "archive_uncompressed_bytes": 13761476,
+        "report_sha256": "b1d75901fdd0317ee51d811dc8f651297354fb200973e804f53a7e189fe3c5a7",
+        "report_status": "PASS",
+        "passed_checks": 22,
+        "screenshots": 8,
+        "outer_crc": "PASS",
+        "nested_trace_crc": "PASS",
+        "trace_entries": 209,
+        "trace_uncompressed_bytes": 54214046
+      },
+      {
+        "name": "live",
+        "archive_bytes": 5754066,
+        "archive_sha256": "9680e4d465cfeda3a9ea663a9a7758a6eb16d42b6b6574033b4fc373d9d8c7e8",
+        "archive_entries": 9,
+        "archive_uncompressed_bytes": 8931745,
+        "report_sha256": "ce3e7bf87d00636fb1e3938eb9d694d367729ef296b8eb75bd07c20fbd319b8e",
+        "report_status": "passed",
+        "passed_checks": 15,
+        "screenshots": 4,
+        "outer_crc": "PASS",
+        "nested_trace_crc": "PASS",
+        "trace_entries": 215,
+        "trace_uncompressed_bytes": 9710768
+      },
+      {
+        "name": "physical",
+        "archive_bytes": 6131253,
+        "archive_sha256": "d4fa7a2d245ce61bf37693bab561574fd6efb70b858a91f8bf4b9ead1f8821d8",
+        "archive_entries": 9,
+        "archive_uncompressed_bytes": 7239950,
+        "report_sha256": "fd7d4d651514440441556857a135e4a722ab09c6d6bda5321a45c9ceb64f50eb",
+        "report_status": "passed",
+        "passed_checks": 16,
+        "screenshots": 4,
+        "outer_crc": "PASS",
+        "nested_trace_crc": "PASS",
+        "trace_entries": 209,
+        "trace_uncompressed_bytes": 8798685
+      },
+      {
+        "name": "projection",
+        "archive_bytes": 28135546,
+        "archive_sha256": "cfcc711726956c51e61e634a556a893e0602cde8a85ccfacf7306a8a2fdd14da",
+        "archive_entries": 15,
+        "archive_uncompressed_bytes": 29057288,
+        "report_sha256": "d7e0d76da95dd384f77ba490417fb75e652f94601f3f5faae7e6b5e51b6331d7",
+        "report_status": "PASS",
+        "passed_checks": 12,
+        "screenshots": 7,
+        "outer_crc": "PASS",
+        "nested_trace_crc": "PASS",
+        "trace_entries": 908,
+        "trace_uncompressed_bytes": 37787900
+      }
+    ],
+    "total_checks_passed": 79,
+    "total_screenshots": 28,
+    "bounded_inventory": "Five outer ZIPs: at most 20 entries and 32 MiB decoded each. Nested traces: at most 1024 entries, 64 MiB decoded and 32 MiB per entry. Relative paths checked; all CRCs passed."
+  },
+  "independent_source_checks": {
+    "dense_reported_files": 20,
+    "legacy_reported_and_served_files": 8,
+    "legacy_original_recordings": 3,
+    "reported_screenshot_hashes_and_trace_hashes": "PASS where present",
+    "exact_candidate_binding_all_five_reports": "PASS",
+    "biology_config_cargo_toolchain_unchanged_from_main_base": "61d5c22",
+    "dense_rust_exporter_byte_equal_producer": "PASS",
+    "seven_frozen_git_objects_equal_across_producer_engine_legacy_refs": "PASS",
+    "legacy_original_bytes_equal_main_base": "PASS"
+  },
+  "recording_identity": {
+    "engine_commit": "b2024cef08f0aa910a711a41c6a37fbc7b2ba35a",
+    "producer_commit": "bb70c9eb448b55ef3f50dfd6cd2a70213157bd8d",
+    "producer_tree": "93975cb83da179e15c60e937772bf9b656e5279b",
+    "legacy_engine_ref": "43f4a2df25c356ff387b71ac1961b516975f999b",
+    "world_format_version": 30,
+    "chamber_format": 1,
+    "seed": "42",
+    "config_hash": "blake3:1802c0f129855749",
+    "dt_seconds": 30,
+    "sample_every": 1,
+    "horizons": [
+      {
+        "ticks": 10000,
+        "frames": 10001,
+        "chunks": 41,
+        "duration_model_seconds": 300000
+      },
+      {
+        "ticks": 100000,
+        "frames": 100001,
+        "chunks": 393,
+        "duration_model_seconds": 3000000
+      },
+      {
+        "ticks": 1000000,
+        "frames": 1000001,
+        "chunks": 3909,
+        "duration_model_seconds": 30000000
+      }
+    ]
+  },
+  "published_evidence_binding": {
+    "index_sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+    "publication_sha256": "48cf7367c19e3fed7669e0a26473f6ceb02b720d6d0e70d19f140a672aa6368b",
+    "original_index_sha256": "44b142721927011cef693ba75bb9867d928d6a1d9cd172f050f2bf54832685b9",
+    "full_validation_report_sha256": "af409a80ff61fecd4600c971fac21b3fbc1cb30cbfbdb24f43af225156f88f47",
+    "validation_receipt_sha256": "0cff85b03a18a63efeea14bc617a13dee956ac69b84dfd305b492fba9e7db1bd",
+    "metadata_hashes": "PASS",
+    "manifest_changes_from_original": "gzip paths only; all other metadata including genomes, observations descriptors and provenance exact",
+    "actual_files": 3919,
+    "actual_total_bytes_including_metadata": 2424602694,
+    "budget_bytes": 3000000000,
+    "budget_check": "PASS",
+    "receipt_qualification": "Externally pinned trusted completed-decode assertion; not cryptographic attestation. Prior full-million validation reviewed separately; not repeated here."
+  },
+  "quantitative_browser_evidence": {
+    "actual_real_frames_compared_to_python": 101,
+    "corruption_sha_crc_truncation_trailing_member_refusal": "PASS",
+    "one_tick_atomic_buffer_boundary": [
+      255,
+      256
+    ],
+    "buffered_old_frame_inspector_pixels_retained": true,
+    "buffer_delay_excluded_from_playhead": true,
+    "one_x": {
+      "shown_tick_held": 992,
+      "measured_wall_seconds": 1.5034000000000234,
+      "displayed_model_seconds_advanced": 1.5030000000006112,
+      "absolute_seconds_difference": 0.0003999999994122039,
+      "tolerance_seconds": 0.1,
+      "draw_targets": [
+        30,
+        60
+      ],
+      "extra_http_requests": 0,
+      "measurement": "Browser performance.now at actual Play/Pause clicks compared with displayed playhead delta."
+    },
+    "endpoint_checks": [
+      {
+        "horizon": 100000,
+        "shownTick": 100000,
+        "chunkRequests": 3,
+        "method": "actual DOM/canvas and original archival endpoint values"
+      },
+      {
+        "horizon": 1000000,
+        "shownTick": 1000000,
+        "chunkRequests": 3,
+        "method": "actual DOM/canvas and original archival endpoint values"
+      }
+    ],
+    "ten_k_endpoint_checked_against_original_archive": true,
+    "retained_payload_bound_observed": 1,
+    "retained_frames_observed": 1,
+    "largest_saved_test_chunk": {
+      "gzip_bytes": 1046390,
+      "decoded_bytes": 4135813,
+      "records": 225,
+      "elapsed_ms": 2762,
+      "ten_ms_timer_max_gap_ms": 329.6000000000058,
+      "heap_used_snapshot_bytes": 21775564
+    },
+    "production_unhandled_errors": 0,
+    "synthetic_error_control_events": 1
+  },
+  "regression_evidence": {
+    "legacy_sparse_archives": "201 original frames each; cadences 50/500/5000 ticks; exact unchanged downloads and 30/60 held PNG byte equality. Archive-specific query remains separate from dense UI.",
+    "live_legacy": "Chamber 1 remains schematic without invented coordinates; dt=30, manual 1x target=1/30 TPS, paused Step/save/pacing checks PASS.",
+    "live_physical": "Chamber 2/world 31; passive dilute Brownian, reflecting SI centers, well-mixed resources, excluded_volume=false. One real paused tick moves eight surviving cells; dt=30 preserved.",
+    "projection": "Twenty recorded geometries, maximum one state request in flight; raw nonsquare config changes dimensions only. Actual tick47 state has coincident daughters with exact parent/birth tick and age zero; absent parent is not relabeled as death.",
+    "draw_30_60_held_png_byte_equality": [
+      "recorded",
+      "live",
+      "physical"
+    ],
+    "representative_pngs_visually_reviewed": [
+      "recorded:cell-chamber-1m-desktop.png",
+      "physical:viewer-1440.png",
+      "projection:coincident-daughters.png"
+    ]
+  },
+  "qualifications": [
+    "Protected CI Chromium/Linux and saved artifacts only; full Rust CI and deployed public-provider acceptance remain separate gates.",
+    "Browser checks use bounded actual chunks and endpoint seeks; no full-million browser decode, full 2.4 GB browser fetch or million-frame array is claimed.",
+    "The 100k performance fixture contains only two original chunks and is explicitly partial; actual final catalog attachments and endpoints are separately checked.",
+    "Largest-chunk elapsed time, timer gaps and a single heap snapshot are runner-specific; no peak-heap, achieved-FPS or universal performance claim.",
+    "Visibility scheduling controls are synthetic adapter tests; native background scheduling, BFCache, accessibility and kernel isolation are not established by these reports.",
+    "Dense frames retain saved observations; no interpolated state, browser biology, local spatial chemistry, excluded-volume, physical body-size or cross-platform numerical claim.",
+    "Browser source hashes and reported CI host build provenance bind evidence operationally; they do not provide standalone cryptographic binary attestation."
+  ]
+}
