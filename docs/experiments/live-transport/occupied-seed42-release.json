@@ -1,0 +1,165 @@
+{
+  "status": "PASS",
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "cpu": "AMD EPYC 7763 64-Core Processor",
+  "source_commit": "3489d1647e2cf1f27d382d3f6c61d24aec2e27a3",
+  "source_tree": "c7ca3c22ea75fe3fe41ba1ed8a40a26d2f790638",
+  "tracked_diff": [],
+  "runtime_rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+  "build_attestation": false,
+  "build_requirement": "cargo build --locked --release -p liminis at source; runtime rustc and binary digest alone do not attest build origin",
+  "runner_sha256": "763ff8fa3ac4091d017ed3a742ef0952f5870ca903bf089fb97d0484d4c7019a",
+  "binary_sha256": "be14eca5dbcb44fc1c773f38cc145b59b0ceaaac5b768e0eee7c10129aac35ee",
+  "base_scenario_sha256": "867b52c37b6160bb6a9076f13cac9378fc49e226ae96753596d0c5d01fe90245",
+  "limits": "single native build/hardware, sampled living inventory; no integrated cell-work or controlled D timing comparison",
+  "benchmarks": [
+    {
+      "name": "live_cells_chamber2_seed42_release_D0_target1000",
+      "mobility_scale": 0.0,
+      "scenario_sha256": "12b9ea3d00bee661a8c253e6aedde660ffafa92ac70e1d5ac9a477432892b931",
+      "canonical_config_hash": "blake3:a8486787c0e0aa6a",
+      "model": {
+        "boundaries": "reflecting",
+        "dimensions_m": [
+          0.0001,
+          0.0001,
+          0.0001
+        ],
+        "environment": "well_mixed",
+        "excluded_volume": false,
+        "spatial_positions": true,
+        "temperature_k": 298.15,
+        "transport": "passive_dilute_brownian",
+        "viscosity_pa_s": 0.001,
+        "volume_m3": 1e-12
+      },
+      "seed": "42",
+      "dt_seconds": 30,
+      "requested_target_ticks": 1000,
+      "actual_ticks": 1182,
+      "actual_tps": 7695.38143780999,
+      "actual_multiplier": 230861.4431342997,
+      "wall_seconds_including_http_and_pause": 0.15359862399964186,
+      "observed_living_min": 8,
+      "observed_living_max": 222,
+      "all_observed_occupied": true,
+      "first_step_changed_survivor_positions": 0,
+      "http_max_ms": 41.50612099965656,
+      "pause_ms": 6.702274000417674,
+      "http_and_pause_budget_seconds": 2.0,
+      "save_ack_tick": 1182,
+      "samples": [
+        {
+          "tick": 0,
+          "living_cells": 8
+        },
+        {
+          "tick": 0,
+          "living_cells": 8
+        },
+        {
+          "tick": 0,
+          "living_cells": 8
+        },
+        {
+          "tick": 457,
+          "living_cells": 124
+        },
+        {
+          "tick": 588,
+          "living_cells": 124
+        },
+        {
+          "tick": 833,
+          "living_cells": 207
+        },
+        {
+          "tick": 1154,
+          "living_cells": 222
+        },
+        {
+          "tick": 1182,
+          "living_cells": 222
+        }
+      ]
+    },
+    {
+      "name": "live_cells_chamber2_seed42_release_Dpositive_target1000",
+      "mobility_scale": 1.0,
+      "scenario_sha256": "867b52c37b6160bb6a9076f13cac9378fc49e226ae96753596d0c5d01fe90245",
+      "canonical_config_hash": "blake3:f59bd3e5709fc316",
+      "model": {
+        "boundaries": "reflecting",
+        "dimensions_m": [
+          0.0001,
+          0.0001,
+          0.0001
+        ],
+        "environment": "well_mixed",
+        "excluded_volume": false,
+        "spatial_positions": true,
+        "temperature_k": 298.15,
+        "transport": "passive_dilute_brownian",
+        "viscosity_pa_s": 0.001,
+        "volume_m3": 1e-12
+      },
+      "seed": "42",
+      "dt_seconds": 30,
+      "requested_target_ticks": 1000,
+      "actual_ticks": 2092,
+      "actual_tps": 4020.347516885749,
+      "actual_multiplier": 120610.42550657246,
+      "wall_seconds_including_http_and_pause": 0.5203530269991461,
+      "observed_living_min": 8,
+      "observed_living_max": 242,
+      "all_observed_occupied": true,
+      "first_step_changed_survivor_positions": 8,
+      "http_max_ms": 226.70252100033395,
+      "pause_ms": 80.67621699956362,
+      "http_and_pause_budget_seconds": 2.0,
+      "save_ack_tick": 2092,
+      "samples": [
+        {
+          "tick": 0,
+          "living_cells": 8
+        },
+        {
+          "tick": 21,
+          "living_cells": 8
+        },
+        {
+          "tick": 195,
+          "living_cells": 64
+        },
+        {
+          "tick": 299,
+          "living_cells": 124
+        },
+        {
+          "tick": 345,
+          "living_cells": 124
+        },
+        {
+          "tick": 522,
+          "living_cells": 124
+        },
+        {
+          "tick": 955,
+          "living_cells": 216
+        },
+        {
+          "tick": 995,
+          "living_cells": 216
+        },
+        {
+          "tick": 1703,
+          "living_cells": 242
+        },
+        {
+          "tick": 2092,
+          "living_cells": 91
+        }
+      ]
+    }
+  ]
+}

@@ -264,3 +264,34 @@ GitHub archive commit/PR в существующем repo, ≤32MiB total и ≤
 
 Это final pause для handoff. Выполненные LIVE1 и WIP LIVE2 сохранены; завершение
 физики, новый write-go, merge или deployment этим документом не объявляются.
+
+
+## Native coordinator: продолжение LIVE-2
+
+Сохранённый d536234 retested в native environment: focused micro43PASS/0FAIL/1ignored,
+host31PASS/0FAIL. Затем только два acceptance fixture расширены: absolute SI
+Stokes–Einstein oracle и eco30 advance/save/second resume exact future. Оба targeted
+test PASS. Независимый numerics-review a4dfdf3 — 0 blockers; oracle literals
+отдельно пересчитаны 90-digit Decimal, relative literal error <7e-17.
+
+Fresh RECmain3b66c2cb интегрирован без переписывания WIP истории. ADR-108 append-only
+после107 согласован Astra: узкое CPU/native-f64 исключение015/022, opt-in частичная
+отмена099; strict chamber1 exporter/LAB и агрегатная NDJSON история остаются прежними.
+SPEC/NORTH_STAR не менялись. Clippy выявил два equivalent range patterns и loop
+в test; исправлены без numerical semantics изменения. fmt и полный
+clippy --locked --workspace --all-targets -- -D warnings PASS.
+
+Явная последовательная cargo build --locked --release -p liminis выполнена root
+на чистых tracked source3489d1647e2cf1f27d382d3f6c61d24aec2e27a3.
+Named occupied D0/Dpositive release benchmark сохранён без перерасчёта:
+docs/experiments/live-transport/occupied-seed42-release.json и reproduce script.
+D0:1182actualticks, observed living8–222, HTTPmax41.51ms/Pause6.71ms;
+Dpositive:2092actualticks, observed living8–242, HTTPmax226.71ms/Pause80.68ms;
+оба ниже объявленного2sbudget, после Pause tick не меняется, checkpoint ack exacttick.
+Target1000 означает остановку после первого observed crossing, не exact horizon;
+HTTP/control scheduling даёт overshoot. Это sampled inventory и одно hardware/build,
+не integratedcellwork или controlled D timing comparison.
+D0firstStep changedpositions0, Dpositive8; actual per-tick residuals exactzero.
+Final necessary CI/full review/default+physical protected browser acceptance ещё PENDING.
+Новый physical invocation добавлен последовательно в existing live-browser job;
+official runtime/sandbox/CDP guard прежние, artifacts разделены по format.
