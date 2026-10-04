@@ -78,3 +78,29 @@ flags и actualbackend; software geometry не hardwareFPS/kernelattestation.
 
 Pending: clean QA freeze, independent exactcombinedsource/numerics review,
 один fresh protected fullCI и actual3D artifacts; no merge до green gates.
+
+## QA freeze и combined candidate, 21:39 UTC
+
+QA author clean/published `336071358b1c4f64bdba2f43bc694ea5d00bfcfa`,
+tree `44c5dec4e1c982e9b2c5b758695c6d1f50ff26c3`, только new script;
+SHA256 `c3a6642f73c2a00fdfaea6c4b321e93a58e6c031dab2d220c3f044fe0c86de01`.
+Syntax/diff и6arithmetic/5PNGfilter synthetic oracle checks PASS, не browser.
+13mandatory checks/9PNG/trace,300s+boundedcleanup; old regressions сохранены.
+Root normal cherry-pick combined `cfa5eac5bdeda75ef27a7610f4c953f82f2c3033`,
+tree `7d8290afc003b90f1c0ccd865acc792f409a208e`, clean/published.
+
+Independent numerical source review exacte9:0blockers.1440cases over144
+camera/frustum/zoom/nonsquare fixtures согласуются с независимой проекцией
+до3.49246e-10CSSpx при tolerance1e-6; u64ties/zero-slice/snapshot/revision
+проверены. Source review JSON SHA256
+`16921038c0c48a207dc5ebc1963be51ad78bc3c91533d165499d32bff220874d`.
+Combined final source/QA review и fresh protected acceptance ещё pending.
+Никакого nativeGL/productionmodel/datasetdecode repeat.
+
+Следующий этап после принятого3D — Astra read-only scope LAB-3a:
+отдельная плотная LAB страница existing site, матрица6conditions×4seeds,
+парные агрегатные графики/sample selector/kinetics alleles/provenance.
+Published24runs/4044samples не содержат индивидуальных клеток/xyz/full
+genomes; их не реконструировать.20horizon-censored/4extinction454, missing
+landmarks не нули/carry-forward. Новый этап пока не открыт для coding;
+raw/source21cbe907 и все прежние scientific bytes сохраняются.
