@@ -13,14 +13,16 @@ codec = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(codec)
 
 
-def metadata(manifest_path):
+def metadata(manifest_path, *, raw=None, index_bytes=None):
     path = Path(manifest_path)
-    with path.open("rb") as stream:
-        raw = stream.read(16 * 1024 * 1024 + 1)
+    if raw is None:
+        with path.open("rb") as stream:
+            raw = stream.read(16 * 1024 * 1024 + 1)
     codec.require(len(raw) <= 16 * 1024 * 1024, "manifest byte cap exceeded")
     manifest = codec.parse(raw)
-    with (path.parent / "index.json").open("rb") as stream:
-        index_bytes = stream.read(64 * 1024 + 1)
+    if index_bytes is None:
+        with (path.parent / "index.json").open("rb") as stream:
+            index_bytes = stream.read(64 * 1024 + 1)
     codec.require(len(index_bytes) <= 64 * 1024, "index byte cap exceeded")
     index = codec.parse(index_bytes)
     codec.fields(index, ("schema_version", "kind", "identity", "provenance", "manifests", "unique_chunks", "unique_gzip_bytes", "decoded_chunk_bytes"))

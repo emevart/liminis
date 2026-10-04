@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Codec fixtures only: existing observations and synthetic values; no model steps."""
 import copy
+import errno
 import gzip
 import hashlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import random
 import struct
@@ -126,6 +128,7 @@ def publication_source(directory, split=False, prefixes=False):
     return hashlib.sha256((directory / "index.json").read_bytes()).hexdigest()
 
 
+@unittest.skipUnless(sys.platform == "linux", "publisher requires Linux renameat2")
 class DensePublicationTests(unittest.TestCase):
     def publish(self, source, output, **kwargs):
         expected = kwargs.pop("expected_source_sha", hashlib.sha256((source / "index.json").read_bytes()).hexdigest())
@@ -345,6 +348,92 @@ class DensePublicationTests(unittest.TestCase):
                     self.publish(source, output, **kwargs)
                 self.assertFalse(output.exists())
                 self.assertFalse(list(Path(temporary).glob(".dense-publication-*")))
+
+    def test_fifo_index_manifest_receipt_and_chunk_race_are_bounded(self):
+        child = '''
+import importlib.util, os, sys
+from pathlib import Path
+root, source, output, expected, kind, chunk_name = sys.argv[1:]
+source, output = Path(source), Path(output)
+spec = importlib.util.spec_from_file_location("bounded_fifo_publisher", Path(root) / "scripts/publish_dense_recording.py")
+p = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(p)
+p.publisher_identity = lambda expected: {"test_fixture": True}
+kwargs = {}
+if kind == "chunk_race":
+    original = p.validate_inventory
+    def raced_inventory(directory, expected_files):
+        original(directory, expected_files)
+        path = directory / chunk_name
+        path.unlink()
+        os.mkfifo(path)
+    p.validate_inventory = raced_inventory
+if kind == "receipt":
+    kwargs = {"receipt_path": source.parent / "receipt.fifo", "expected_receipt_sha": "c" * 64}
+try:
+    p.publish(source, output, expected, "a" * 40, **kwargs)
+except (ValueError, OSError) as error:
+    print(error)
+    raise SystemExit(0)
+raise SystemExit("FIFO unexpectedly accepted")
+'''
+        for kind in ("index", "manifest", "receipt", "chunk_race"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temporary:
+                source, output = Path(temporary) / "source", Path(temporary) / "published"
+                expected = publication_source(source)
+                chunk_name = codec.parse((source / "horizon-100.json").read_bytes())["chunks"][0]["path"]
+                if kind in ("index", "manifest"):
+                    path = source / ("index.json" if kind == "index" else "horizon-100.json")
+                    path.unlink()
+                    os.mkfifo(path)
+                if kind == "receipt": os.mkfifo(Path(temporary) / "receipt.fifo")
+                result = subprocess.run([sys.executable, "-B", "-c", child, str(ROOT), str(source), str(output), expected, kind, chunk_name],
+                                        timeout=3, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("regular file", result.stdout)
+                self.assertFalse(os.path.lexists(output))
+                self.assertFalse(list(Path(temporary).glob(".dense-publication-*")))
+
+    def test_atomic_noreplace_preserves_raced_empty_directory_and_dangling_symlink(self):
+        for kind in ("empty_directory", "dangling_symlink"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temporary:
+                source, output = Path(temporary) / "source", Path(temporary) / "published"
+                publication_source(source)
+                original = publisher.atomic_noreplace
+                competitor = {}
+                def raced_rename(staging, destination, operation):
+                    if destination == output:
+                        if kind == "empty_directory": output.mkdir()
+                        else: output.symlink_to(Path(temporary) / "nonexistent-target")
+                        competitor["inode"] = os.lstat(output).st_ino
+                    return original(staging, destination, operation)
+                with patch.object(publisher, "atomic_noreplace", side_effect=raced_rename):
+                    with self.assertRaises(OSError) as rejected:
+                        self.publish(source, output)
+                self.assertEqual(rejected.exception.errno, errno.EEXIST)
+                self.assertEqual(os.lstat(output).st_ino, competitor["inode"])
+                if kind == "empty_directory": self.assertEqual(list(output.iterdir()), [])
+                else:
+                    self.assertTrue(output.is_symlink())
+                    self.assertEqual(output.readlink(), Path(temporary) / "nonexistent-target")
+                with self.assertRaisesRegex(ValueError, "already exists"):
+                    self.publish(source, output)
+                self.assertEqual(os.lstat(output).st_ino, competitor["inode"])
+                self.assertFalse(list(Path(temporary).glob(".dense-publication-*")))
+
+    def test_no_replace_preflight_checks_actual_filesystem_and_fails_unsupported(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            operation = publisher.preflight_noreplace(Path(temporary))
+            self.assertTrue(callable(operation))
+            self.assertEqual(list(Path(temporary).iterdir()), [])
+            with patch.object(publisher, "atomic_noreplace", side_effect=OSError(errno.ENOSYS, "unsupported")):
+                with self.assertRaises(OSError) as rejected:
+                    publisher.preflight_noreplace(Path(temporary))
+            self.assertEqual(rejected.exception.errno, errno.ENOSYS)
+            self.assertEqual(list(Path(temporary).iterdir()), [])
+            with patch.object(publisher.sys, "platform", "darwin"):
+                with self.assertRaisesRegex(ValueError, "Linux"):
+                    publisher.preflight_noreplace(Path(temporary))
 
 
 class DenseCodecTests(unittest.TestCase):

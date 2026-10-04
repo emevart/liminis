@@ -2,10 +2,13 @@
 """Publish a byte-preserving transport layout, without running the model."""
 import argparse
 import copy
+import ctypes
+import errno
 import hashlib
 import importlib.util
 import os
 from pathlib import Path
+import stat
 import subprocess
 import sys
 import tempfile
@@ -35,20 +38,105 @@ def digest(value):
     codec.require(type(value) is str and codec.HEX.fullmatch(value), "expected external SHA-256 is required")
 
 
+DIRECTORY_FLAGS = (os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC) if sys.platform == "linux" else None
+FILE_FLAGS = (os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC) if sys.platform == "linux" else None
+
+
+def open_directory(directory):
+    codec.require(sys.platform == "linux", "publisher requires Linux safe-FD access")
+    path = Path(directory)
+    parts = path.parts[1:] if path.is_absolute() else path.parts
+    descriptor = os.open("/" if path.is_absolute() else ".", DIRECTORY_FLAGS)
+    try:
+        for component in parts:
+            codec.require(component not in ("", ".", ".."), "unsafe directory path")
+            next_descriptor = os.open(component, DIRECTORY_FLAGS, dir_fd=descriptor)
+            os.close(descriptor)
+            descriptor = next_descriptor
+        return descriptor
+    except BaseException:
+        os.close(descriptor)
+        raise
+
+
 def read_file(directory, relative, maximum):
-    directory = Path(directory)
-    codec.require(directory.is_dir() and not directory.is_symlink(), "source root is not a plain directory")
-    root = directory.resolve(strict=True)
-    path = root
-    for component in Path(relative).parts:
-        codec.require(component not in ("", ".", "..") and not Path(relative).is_absolute(), "unsafe source path")
-        path /= component
-        codec.require(not path.is_symlink(), "source symlink is forbidden")
-    codec.require(path.resolve(strict=True).is_relative_to(root), "source path escapes its root")
-    with path.open("rb") as stream:
-        data = stream.read(maximum + 1)
-    codec.require(len(data) <= maximum, "source file byte cap exceeded")
-    return data
+    path = Path(relative)
+    codec.require(not path.is_absolute() and path.parts
+                  and all(part not in ("", ".", "..") for part in path.parts), "unsafe source path")
+    directory_descriptor = open_directory(directory)
+    file_descriptor = None
+    try:
+        for component in path.parts[:-1]:
+            next_descriptor = os.open(component, DIRECTORY_FLAGS, dir_fd=directory_descriptor)
+            os.close(directory_descriptor)
+            directory_descriptor = next_descriptor
+        file_descriptor = os.open(path.parts[-1], FILE_FLAGS, dir_fd=directory_descriptor)
+        info = os.fstat(file_descriptor)
+        codec.require(stat.S_ISREG(info.st_mode), "source must be a regular file")
+        codec.require(info.st_size <= maximum, "source file byte cap exceeded")
+        data = bytearray()
+        while len(data) <= maximum:
+            piece = os.read(file_descriptor, min(64 * 1024, maximum + 1 - len(data)))
+            if not piece:
+                break
+            data.extend(piece)
+        codec.require(len(data) <= maximum, "source file byte cap exceeded")
+        return bytes(data)
+    finally:
+        if file_descriptor is not None:
+            os.close(file_descriptor)
+        os.close(directory_descriptor)
+
+
+def linux_renameat2():
+    codec.require(sys.platform == "linux", "publisher requires Linux renameat2(RENAME_NOREPLACE)")
+    library = ctypes.CDLL(None, use_errno=True)
+    try:
+        operation = library.renameat2
+    except AttributeError as error:
+        raise OSError(errno.ENOSYS, "libc renameat2 is unavailable; no overwrite fallback") from error
+    operation.argtypes = (ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint)
+    operation.restype = ctypes.c_int
+    return operation
+
+
+def atomic_noreplace(source, destination, operation):
+    source, destination = Path(source), Path(destination)
+    codec.require(source.name and destination.name and source.name not in (".", "..")
+                  and destination.name not in (".", ".."), "invalid rename basename")
+    source_descriptor = open_directory(source.parent)
+    try:
+        destination_descriptor = open_directory(destination.parent)
+        try:
+            result = operation(source_descriptor, os.fsencode(source.name), destination_descriptor, os.fsencode(destination.name), 1)
+            if result != 0:
+                code = ctypes.get_errno()
+                raise OSError(code, os.strerror(code), str(destination))
+        finally:
+            os.close(destination_descriptor)
+    finally:
+        os.close(source_descriptor)
+
+
+def preflight_noreplace(parent):
+    operation = linux_renameat2()
+    with tempfile.TemporaryDirectory(prefix=".dense-publication-probe-", dir=parent) as temporary:
+        source, existing, absent = (Path(temporary) / name for name in ("source", "existing", "absent"))
+        source.mkdir()
+        existing.mkdir()
+        source_inode, existing_inode = source.stat().st_ino, existing.stat().st_ino
+        try:
+            atomic_noreplace(source, existing, operation)
+        except OSError as error:
+            if error.errno != errno.EEXIST:
+                raise
+        else:
+            raise ValueError("filesystem no-replace probe overwrote an existing destination")
+        codec.require(source.is_dir() and existing.is_dir() and source.stat().st_ino == source_inode
+                      and existing.stat().st_ino == existing_inode and not list(existing.iterdir()), "no-replace probe changed existing directory")
+        atomic_noreplace(source, absent, operation)
+        codec.require(not os.path.lexists(source) and absent.is_dir() and absent.stat().st_ino == source_inode, "no-replace probe did not move absent destination")
+    return operation
 
 
 def validate_inventory(source, expected_files):
@@ -118,9 +206,11 @@ def boundary_genomes(raw):
 def publish(source, output, expected_source_sha, expected_publisher_commit, receipt_path=None, expected_receipt_sha=None):
     source, output = Path(source), Path(output)
     digest(expected_source_sha)
-    codec.require(not output.exists(), "output directory already exists; never overwrite")
+    codec.require(not os.path.lexists(output), "output directory already exists; never overwrite")
     codec.require((receipt_path is None) == (expected_receipt_sha is None), "receipt path and external receipt SHA must be paired")
     publisher = publisher_identity(expected_publisher_commit)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    rename_operation = preflight_noreplace(output.parent)
     index_bytes = read_file(source, "index.json", 64 * 1024)
     codec.require(sha(index_bytes) == expected_source_sha, "source index differs from external SHA")
     index = codec.parse(index_bytes)
@@ -130,7 +220,7 @@ def publish(source, output, expected_source_sha, expected_publisher_commit, rece
         horizon = codec.natural(entry["last_tick"], 1_000_000)
         codec.require(entry["path"] == f"horizon-{horizon}.json", "unsafe manifest path")
         raw = read_file(source, entry["path"], 16 * 1024 * 1024)
-        manifest, parsed_index, checked_raw, checked_index = decoder.metadata(source / entry["path"])
+        manifest, parsed_index, checked_raw, checked_index = decoder.metadata(source / entry["path"], raw=raw, index_bytes=index_bytes)
         codec.require(raw == checked_raw and index_bytes == checked_index and codec.exact(index, parsed_index), "source metadata changed during validation")
         manifests.append(manifest)
         originals["original/" + entry["path"]] = raw
@@ -149,7 +239,6 @@ def publish(source, output, expected_source_sha, expected_publisher_commit, rece
         originals["original/validation-receipt.json"] = receipt_raw
     cap = full["bounds"]["total_artifact_bytes_cap"]
     codec.require(index["unique_gzip_bytes"] + sum(len(data) for data in originals.values()) <= cap, "publication metadata exceeds total budget")
-    output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".dense-publication-", dir=output.parent) as temporary:
         staging = Path(temporary) / "complete"
         staging.mkdir()
@@ -221,8 +310,8 @@ def publish(source, output, expected_source_sha, expected_publisher_commit, rece
         codec.require(total <= cap, "publication exceeds complete artifact budget")
         (staging / "publication.json").write_bytes(publication)
         codec.require(read_file(source, "index.json", 64 * 1024) == index_bytes, "source index changed during publication")
-        codec.require(not output.exists(), "output appeared during publication")
-        os.rename(staging, output)
+        codec.require(not os.path.lexists(output), "output appeared during publication")
+        atomic_noreplace(staging, output, rename_operation)
     return {"publication_sha256": sha(publication), "publication_bytes": len(publication), "artifact_bytes": total,
             "source_index_sha256": expected_source_sha, "published_index_sha256": sha(published_index_bytes), "chunks": len(mapping)}
 

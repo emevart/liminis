@@ -285,7 +285,12 @@ ordinal и пути, что полный manifest. Reference codec/decoder пр�
 у всех descriptors до seek, включая chunks вне запрошенного диапазона.
 `..`, абсолютные paths, иные директории и несовпадение path/range запрещены.
 Publisher дополнительно отвергает source symlinks и path resolution вне
-корня dataset. Input inventory замкнут на index, перечисленные manifests
+корня dataset. Metadata, receipt и chunks открываются через rooted directory
+FDs с `O_NOFOLLOW|O_NONBLOCK`; `fstat` требует regular file и допустимый размер
+до первого read. Поэтому FIFO или подмена pathname между проверкой и open
+не переводит publisher в блокирующее чтение специального файла. Проверка
+metadata использует уже безопасно прочитанные bytes, без повторного path open.
+Input inventory замкнут на index, перечисленные manifests
 и chunks; неожиданные files/directories отвергаются, отчёты и logs хранятся
 снаружи. Прежние strict decoders
 из `bb70c9e` принимают только flat layout и не читают новый transport layout;
@@ -346,8 +351,18 @@ digests и digests/length всех metadata files. Digest самого publicati
 выдаётся в stdout report и закрепляется внешним catalog/evidence.
 Полный cap включает уникальные gzip bytes, новые index/manifests,
 `original/`, receipt и сам `publication.json`. При переполнении запись
-отказывается от публикации. Staging directory переименовывается только
-после всех проверок; существующий output не перезаписывается. Никакие
+отказывается от публикации. Publisher работает только на Linux с libc
+`renameat2(RENAME_NOREPLACE)`; переносимые decoders/browser этого ограничения
+не имеют. До bulk validation/copy выполняется приватная маленькая probe на
+destination filesystem: существующий пустой каталог должен дать `EEXIST`
+с сохранением inode, отсутствующий target — успешно принять rename.
+Отсутствующий symbol, неподдерживаемые kernel/filesystem, `EXDEV` и любые
+ошибки завершают публикацию отказом; overwrite fallback отсутствует.
+Staging создаётся рядом с destination и переименовывается только после всех
+проверок одним atomic no-replace operation. Вновь появившийся пустой каталог
+или dangling symlink также сохраняется. Cleanup удаляет только собственные
+staging/probe, а не конкурирующий output. Это гарантия атомарной видимости,
+без дополнительного обещания crash durability. Никакие
 network upload, push, изменение сайта или rerun модели helper не выполняет.
 
 Из clean publisher checkout, после внешнего закрепления source index SHA:
