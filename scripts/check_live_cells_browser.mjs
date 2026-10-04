@@ -16,16 +16,40 @@ const { chromium } = await import(resolvedModule.startsWith('/') ? pathToFileURL
 const execute = promisify(execFile);
 const head = (await execute('git', ['rev-parse', 'HEAD'])).stdout.trim();
 const tree = (await execute('git', ['rev-parse', 'HEAD^{tree}'])).stdout.trim();
+const trackedStatus = (await execute('git', ['status', '--porcelain', '--untracked-files=no'])).stdout.trim();
+assert.equal(trackedStatus, '', 'browser QA requires a clean tracked checkout');
+if (process.env.LIMINIS_EXPECTED_TREE) assert.equal(tree, process.env.LIMINIS_EXPECTED_TREE, 'browser QA must run the expected tree');
 assert.ok(process.env.LIMINIS_EXPECTED_HEAD, 'LIMINIS_EXPECTED_HEAD must identify the exact PR head');
 assert.equal(head, process.env.LIMINIS_EXPECTED_HEAD, 'browser QA must run the exact requested PR head');
 const output = resolve('target/qa/live-browser');
 await mkdir(output, { recursive: true });
 const temporary = await mkdtemp(resolve(tmpdir(), 'liminis-browser-'));
-const report = { gitHead: head, gitTree: tree, playwright: '1.61.1 (pinned by CI)', status: 'running', checks: [], screenshots: [], consoleErrors: [], pageErrors: [], resourceWarnings: [] };
-let host, browser;
+const report = { gitHead: head, gitTree: tree, trackedClean: true, chromiumSandbox: true, playwright: '1.61.1 (pinned by CI)', status: 'running', checks: [], screenshots: [], consoleErrors: [], pageErrors: [], resourceWarnings: [] };
+let host, browser, context, page;
+let tracing = false;
+let stopping = false;
 let hostLog = '';
 const check = name => report.checks.push(name);
 const delay = ms => new Promise(done => setTimeout(done, ms));
+async function bounded(operation, timeout, label) {
+  let timer;
+  try {
+    return await Promise.race([operation, new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`Timed out: ${label} (${timeout}ms)`)), timeout);
+    })]);
+  } finally { clearTimeout(timer); }
+}
+function fail(error, stage = 'run') {
+  stopping = true;
+  report.status = 'failed';
+  report.failures ??= [];
+  report.failures.push({ stage, error: error.stack || String(error) });
+  process.exitCode = 1;
+}
+function appendHostLog(data) {
+  // Keep a bounded diagnostic tail even if a failing host logs indefinitely.
+  hostLog = (hostLog + data).slice(-1024 * 1024);
+}
 async function eventually(predicate, label, timeout = 15000) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
@@ -35,26 +59,40 @@ async function eventually(predicate, label, timeout = 15000) {
   }
   throw new Error(`Timed out: ${label}`);
 }
-try {
+async function run() {
   const reservation = createServer();
   reservation.listen(0, '127.0.0.1');
-  await once(reservation, 'listening');
+  await bounded(once(reservation, 'listening'), 5000, 'free port reservation');
   const port = reservation.address().port;
   await new Promise(done => reservation.close(done));
   const origin = `http://127.0.0.1:${port}`;
   host = spawn(resolve('target/release/liminis'), ['cells', '--seed', '42', '--port', String(port), '--data-dir', temporary], { stdio: ['ignore', 'pipe', 'pipe'] });
-  host.on('error', error => { hostLog += `${error.stack}\n`; });
-  host.stdout.on('data', data => { hostLog += data; });
-  host.stderr.on('data', data => { hostLog += data; });
+  host.on('error', error => appendHostLog(`${error.stack}\n`));
+  host.stdout.on('data', appendHostLog);
+  host.stderr.on('data', appendHostLog);
   const state = async () => {
-    const response = await fetch(`${origin}/api/state`);
+    const response = await fetch(`${origin}/api/state`, { signal: AbortSignal.timeout(5000) });
     assert.equal(response.status, 200);
     return response.json();
   };
   await eventually(async () => { try { return (await state()).kind === 'cells'; } catch { return false; } }, 'real host readiness');
-  browser = await chromium.launch({ headless: true });
+  browser = await chromium.launch({ headless: true, chromiumSandbox: true, timeout: 20000 });
   report.browserVersion = browser.version();
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+  const browserSession = await bounded(browser.newBrowserCDPSession(), 5000, 'browser command-line session');
+  try {
+    const commandLine = await bounded(browserSession.send('Browser.getBrowserCommandLine'), 5000, 'protected browser command-line evidence');
+    report.browserArguments = commandLine.arguments;
+    const forbidden = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-seccomp-filter-sandbox', '--disable-namespace-sandbox', '--disable-gpu-sandbox'];
+    assert.ok(Array.isArray(report.browserArguments), 'Chromium must disclose command-line evidence');
+    for (const flag of forbidden) assert.ok(!report.browserArguments.some(argument => argument === flag || argument.startsWith(`${flag}=`)), `protected launch must not contain ${flag}`);
+    check('Chromium command line contains no sandbox-disabling flags');
+  } finally { await bounded(browserSession.detach(), 3000, 'browser command-line session close'); }
+  context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+  context.setDefaultTimeout(10000);
+  context.setDefaultNavigationTimeout(15000);
+  await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
+  tracing = true;
+  page = await context.newPage();
   let stateRequests = 0;
   page.on('request', request => { if (new URL(request.url()).pathname === '/api/state') stateRequests++; });
   page.on('console', message => {
@@ -184,28 +222,51 @@ try {
   assert.deepEqual(report.pageErrors, []);
   assert.deepEqual(report.consoleErrors, []);
   check('no Chromium page/console errors');
+  assert.equal((await execute('git', ['rev-parse', 'HEAD'])).stdout.trim(), head, 'HEAD changed during browser QA');
+  assert.equal((await execute('git', ['rev-parse', 'HEAD^{tree}'])).stdout.trim(), tree, 'tree changed during browser QA');
+  assert.equal((await execute('git', ['status', '--porcelain', '--untracked-files=no'])).stdout.trim(), '', 'tracked checkout changed during browser QA');
+  assert.equal(stopping, false, 'browser QA was interrupted or timed out');
   report.status = 'passed';
   report.finalState = { tick: afterMaximum.tick, dt_seconds: afterMaximum.dt_seconds, pacing: afterMaximum.pacing };
-  console.log(JSON.stringify(report, null, 2));
+}
+try {
+  await bounded(run(), 120000, 'complete protected browser QA');
 } catch (error) {
-  report.status = 'failed';
-  report.error = error.stack || String(error);
-  process.exitCode = 1;
-  console.error(report.error);
+  fail(error);
 } finally {
+  if (report.status === 'failed' && page && !page.isClosed()) {
+    try {
+      await bounded(page.screenshot({ path: resolve(output, 'failure.png'), fullPage: true, timeout: 3000 }), 4000, 'failure screenshot');
+      report.screenshots.push('failure.png');
+    } catch (error) { report.failureScreenshotError = String(error); }
+  }
+  if (tracing && context) {
+    try {
+      await bounded(context.tracing.stop({ path: resolve(output, 'trace.zip') }), 5000, 'trace publication');
+      report.trace = 'trace.zip';
+    } catch (error) { fail(error, 'trace cleanup'); }
+  }
   if (browser) {
-    try { await Promise.race([browser.close(), delay(3000)]); }
-    catch (error) { report.cleanupError = String(error); process.exitCode = 1; }
+    try { await bounded(browser.close(), 5000, 'protected browser close'); }
+    catch (error) { fail(error, 'browser cleanup'); }
   }
   if (host && host.exitCode === null && host.signalCode === null) {
-    host.kill('SIGTERM');
-    await Promise.race([once(host, 'exit'), delay(3000)]);
-    if (host.exitCode === null && host.signalCode === null) {
-      host.kill('SIGKILL');
-      await Promise.race([once(host, 'exit'), delay(3000)]);
-    }
+    try {
+      const exited = once(host, 'exit');
+      host.kill('SIGTERM');
+      try { await bounded(exited, 3000, 'host SIGTERM'); }
+      catch {
+        if (host.exitCode === null && host.signalCode === null) {
+          host.kill('SIGKILL');
+          await bounded(exited, 3000, 'host SIGKILL');
+        }
+      }
+    } catch (error) { fail(error, 'host cleanup'); }
   }
+  try { await bounded(rm(temporary, { recursive: true, force: true }), 5000, 'temporary data cleanup'); }
+  catch (error) { fail(error, 'data cleanup'); }
+  // Serialize only after cleanup so a teardown failure cannot retain a green report.
   await writeFile(resolve(output, 'host.log'), hostLog);
   await writeFile(resolve(output, 'report.json'), JSON.stringify(report, null, 2) + '\n');
-  await rm(temporary, { recursive: true, force: true });
+  console.log(JSON.stringify(report, null, 2));
 }

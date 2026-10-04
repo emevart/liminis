@@ -25,11 +25,14 @@ jobs:
     name: live cells browser acceptance
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v7
         with:
           # Evidence belongs to the PR candidate, not GitHub's synthetic merge.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: '24'

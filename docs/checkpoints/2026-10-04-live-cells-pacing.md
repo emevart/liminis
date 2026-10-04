@@ -140,3 +140,22 @@ existing actions/upload-artifact даже при падении. Exactfavicon404
 resourceWarning, прочие browsererrors fail. Independent review workflow/script:
 blockers0 после fixes importdir/headassert/UIrace. Actual browser job пока pending;
 merge gate закрыт до PASS и визуального просмотра артефактов точного кандидата.
+
+
+## Защищённый Browser Gate И Восстановление
+
+На candidate f1fab2b842a72c6181d381f6b98f50d85e2821ef все10checks PASS,
+включая full workspace CI и actual Chromium149 UI. Отчёт/скриншоты exacttree
+a9e116ebdf7e6958fe15b4776127bf51918238a1 получены из Actions37201843089,
+artifact11302379823. Root и independent reviewer просмотрели1440/590/420/320,
+controls/canvas/heldpixels/HTTPcadence приняты. Однако последующее прямое
+указание требует explicit chromiumSandbox:true: прежний Playwright defaultfalse
+не удовлетворяет этому gate. Этот PASS не является защищённой приёмкой; merge
+не выполнен. Astra фактически повторно вызван и одобрил narrowhardening:
+contents:read/persistcredentialsfalse, protectedlaunchбезfallback, boundedHTTP/
+cleanup, trace/screenshots и итоговый failedreport при cleanupfailure.
+
+Работа восстановлена в том же checkout/ветке без reset/clean или потериизменений.
+Прежние viewer/Astra/review субагенты возобновлены через existing tasks.
+RECORDED PR13 и LAB PR14 ожидают LIVE1→RECORDED1→LAB1; исполнители неmerge.
+Protected browser evidence нового exacthead и зелёныйCI обязательны.
