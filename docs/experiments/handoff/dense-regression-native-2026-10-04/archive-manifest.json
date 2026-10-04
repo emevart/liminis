@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "kind": "dense_regression_browser_handoff_evidence",
+  "archive_scope": "Original workflow ZIP bytes, evidence-only branch; no product release/deploy.",
+  "files": [
+    {
+      "path": "live-e2451e3-success-original.zip",
+      "bytes": 5754066,
+      "sha256": "9680e4d465cfeda3a9ea663a9a7758a6eb16d42b6b6574033b4fc373d9d8c7e8",
+      "head": "e2451e3142def791eb44aba4fcb19ada1aa1ed78",
+      "tree": "27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a",
+      "workflow_run": 37231067824,
+      "artifact_id": 11314400838,
+      "overall_status": "passed",
+      "required_checks": 15,
+      "qualification": "Independent artifact review qualified PASS,0 blockers; full CI/public deployment separate pending gates."
+    },
+    {
+      "path": "physical-e2451e3-success-original.zip",
+      "bytes": 6131253,
+      "sha256": "d4fa7a2d245ce61bf37693bab561574fd6efb70b858a91f8bf4b9ead1f8821d8",
+      "head": "e2451e3142def791eb44aba4fcb19ada1aa1ed78",
+      "tree": "27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a",
+      "workflow_run": 37231067824,
+      "artifact_id": 11313851907,
+      "overall_status": "passed",
+      "required_checks": 16,
+      "qualification": "Independent artifact review qualified PASS,0 blockers; full CI/public deployment separate pending gates."
+    },
+    {
+      "path": "projection-e2451e3-success-original.zip",
+      "bytes": 28135546,
+      "sha256": "cfcc711726956c51e61e634a556a893e0602cde8a85ccfacf7306a8a2fdd14da",
+      "head": "e2451e3142def791eb44aba4fcb19ada1aa1ed78",
+      "tree": "27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a",
+      "workflow_run": 37231067824,
+      "artifact_id": 11313851910,
+      "overall_status": "PASS",
+      "required_checks": 12,
+      "qualification": "Independent artifact review qualified PASS,0 blockers; full CI/public deployment separate pending gates."
+    }
+  ],
+  "total_zip_bytes": 40020865,
+  "readback": "New candidate original ZIPs pending independent fresh network fetch.",
+  "numerics_and_regression_review": {
+    "path": "e245-numerics-review.json",
+    "bytes": 10255,
+    "sha256": "903c3d24fd9f7a67b8d75e21698b4952156907d32075a758f6515311ff729a2e",
+    "status": "PASS_WITH_QUALIFICATIONS",
+    "blockers": 0,
+    "checks_across_five_reports": 79,
+    "full_ci": "Pending Rust completion.",
+    "public_dense": "Pending existing post-merge deployment verification."
+  }
+}

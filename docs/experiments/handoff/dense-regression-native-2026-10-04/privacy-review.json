@@ -1,0 +1,37 @@
+{
+  "status": "PASS",
+  "files": [
+    {
+      "file": "recorded-e2451e3-success-original.zip",
+      "utf8_files": 14,
+      "utf8_bytes": 46609993,
+      "binary_members_not_text_scanned": 204,
+      "obvious_marker_hits": 0,
+      "qualification": "Bounded obvious credential/private-context text scan; no full secret guarantee for binary content."
+    },
+    {
+      "file": "live-e2451e3-success-original.zip",
+      "utf8_files": 34,
+      "utf8_bytes": 1113012,
+      "binary_members_not_text_scanned": 189,
+      "obvious_marker_hits": 0,
+      "qualification": "Bounded obvious credential/private-context text scan; no full secret guarantee for binary content."
+    },
+    {
+      "file": "physical-e2451e3-success-original.zip",
+      "utf8_files": 35,
+      "utf8_bytes": 1186184,
+      "binary_members_not_text_scanned": 182,
+      "obvious_marker_hits": 0,
+      "qualification": "Bounded obvious credential/private-context text scan; no full secret guarantee for binary content."
+    },
+    {
+      "file": "projection-e2451e3-success-original.zip",
+      "utf8_files": 117,
+      "utf8_bytes": 5059146,
+      "binary_members_not_text_scanned": 805,
+      "obvious_marker_hits": 0,
+      "qualification": "Bounded obvious credential/private-context text scan; no full secret guarantee for binary content."
+    }
+  ]
+}
