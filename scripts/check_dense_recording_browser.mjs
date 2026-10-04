@@ -24,7 +24,7 @@ const pins = [
   ["chunk-0000768-0000992.jsonl.gz", 1046390, "8acb535328f123b618f0d9d86044a8d3a0c0cac66c85143b0bcfa5aeed468f4c"],
 ];
 const report = {
-  status: "NOT_RUN", startedAt: new Date().toISOString(), timeouts, checks: [], screenshots: [], sources: [], http: [], pageErrors: [], consoleErrors: [], unhandled: [], requestFailures: [], cleanupErrors: [],
+  status: "NOT_RUN", startedAt: new Date().toISOString(), timeouts, checks: [], screenshots: [], sources: [], http: [], pageErrors: [], consoleErrors: [], unhandled: [], requestFailures: [], requestObservations: [], cleanupErrors: [],
   nodeVersion: process.version, runner: { os: process.env.RUNNER_OS || process.platform, arch: process.env.RUNNER_ARCH || process.arch, imageOS: process.env.ImageOS || null },
   workflowRun: process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL || "https://github.com"}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : null,
   workflowAttempt: process.env.GITHUB_RUN_ATTEMPT || null,
@@ -32,7 +32,7 @@ const report = {
   decoder: { status: "NOT_RUN" }, ui: { status: "NOT_RUN", requiredHorizons: [10_000, 100_000, 1_000_000] },
   limits: ["The 100k fixture is PARTIAL original metadata plus only two saved chunks, never a complete 100k recording.", "Chromium/Linux and four viewport sizes; no achieved-FPS, full accessibility, native background or universal performance claim.", "Elapsed time, a 10ms timer gap and heap observations describe this bounded workload/runner, not peak heap or every device.", "The actual final catalog/UI/data are mandatory; their absence fails this gate, without substituting a catalog or frames.", "No browser biology, interpolated states, full million-frame array or full 3GB browser download. High rates may skip displayed states."],
 };
-let server, browser, context, page, tracing = false, stopping = false, origin, running;
+let server, browser, context, page, pageProof, tracing = false, stopping = false, origin, running;
 let servedBytes = 0; const releases = new Set(), references = new Map();
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 function fail(error, stage = "run") { stopping = true; report.status = "FAIL"; process.exitCode = 1; (report.failures ||= []).push({ stage, error: error.stack || String(error) }); }
@@ -94,16 +94,127 @@ function observePage() {
   addEventListener("unhandledrejection", (event) => window.__denseQaErrors.unhandled.push(String(event.reason?.stack || event.reason)));
   addEventListener("error", (event) => window.__denseQaErrors.errors.push(event.message));
   let last = performance.now(); setInterval(() => { const now = performance.now(), sample = window.__denseQaErrors.timer; sample.samples++; sample.maxGapMs = Math.max(sample.maxGapMs, now - last); last = now; }, 10);
+  // Observe the real native call/signals/read results. Forward the original
+  // this/arguments and return the same Promise, Response and Reader objects.
+  const originalFetch = window.fetch, defaultAbort = new AbortController(); defaultAbort.abort();
+  window.__denseQaFetch = { calls: [], errors: [], defaultAbort: { name: defaultAbort.signal.reason.name, message: defaultAbort.signal.reason.message } };
+  const observation = window.__denseQaFetch, epoch = () => performance.timeOrigin + performance.now(); let sequence = 0;
+  const defect = (error) => { if (observation.errors.length < 8) observation.errors.push(String(error?.stack || error)); };
+  window.fetch = function (...args) {
+    if (observation.calls.length >= 512) { defect("native fetch observation cap"); return Reflect.apply(originalFetch, this, args); }
+    const [input, options] = args; let signal, url, method;
+    try { signal = options?.signal ?? (input instanceof Request ? input.signal : null); url = new URL(input instanceof Request ? input.url : String(input), location.href).href; method = String(options?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase(); } catch (error) { defect(error); return Reflect.apply(originalFetch, this, args); }
+    const call = { id: ++sequence, url, method, startEpochMs: epoch(), hasSignal: signal instanceof AbortSignal, initiallyAborted: signal?.aborted === true, abort: null, response: null, body: { bytes: 0, doneEpochMs: null, readError: null, readers: 0 } }; observation.calls.push(call);
+    const canceled = () => { call.abort = { epochMs: epoch(), name: signal.reason?.name ?? null, message: signal.reason?.message ?? null }; };
+    if (call.hasSignal) { if (signal.aborted) canceled(); else signal.addEventListener("abort", canceled, { once: true }); }
+    const receiver = this, name = `__denseQaFetch_${call.id}`;
+    // Chromium records this unique function name in the request's initiator
+    // stack: a signal cannot be borrowed from another same-URL invocation.
+    const invoke = { [name](...forwarded) { return Reflect.apply(originalFetch, receiver, forwarded); } };
+    const nativePromise = invoke[name](...args);
+    void nativePromise.then((response) => {
+      call.response = { status: response.status, epochMs: epoch(), contentLength: response.headers.get("content-length") };
+      if (!response.body) return;
+      const stream = response.body, getReader = stream.getReader;
+      Object.defineProperty(stream, "getReader", { configurable: true, value: function (...forwarded) {
+        const reader = Reflect.apply(getReader, this, forwarded); call.body.readers++;
+        if (call.body.readers !== 1) { defect("multiple readers for one observed fetch body"); return reader; }
+        const read = reader.read;
+        Object.defineProperty(reader, "read", { configurable: true, value: function (...readArgs) {
+          const result = Reflect.apply(read, this, readArgs);
+          void result.then((part) => { if (part.done) call.body.doneEpochMs = epoch(); else call.body.bytes += part.value.byteLength; }, (error) => { call.body.readError = { epochMs: epoch(), name: error?.name ?? null }; }).catch(defect);
+          return result;
+        } }); return reader;
+      } });
+    }, (error) => { call.fetchError = { epochMs: epoch(), name: error?.name ?? null }; }).catch(defect);
+    return nativePromise;
+  };
+}
+function initiatorFetchIds(stack, depth = 0) {
+  if (!stack || depth > 16) return [];
+  const own = (stack.callFrames || []).flatMap((frame) => { const match = /^__denseQaFetch_([1-9][0-9]*)$/.exec(frame.functionName); return match ? [Number(match[1])] : []; });
+  // Use the nearest native invocation, not an earlier async ancestor's call.
+  return own.length ? [...new Set(own)] : initiatorFetchIds(stack.parent, depth + 1);
+}
+function classifyRequests(evidence, failures = report.requestFailures) {
+  const consumed = new Set(), consumedCalls = new Set(), pageFailures = failures.filter((request) => request.pageId === evidence.pageId), pairCounts = new Map();
+  for (const failed of pageFailures) {
+    const candidates = evidence.network.filter((request) => request.url === failed.url && request.method === failed.method && request.occurrence === failed.occurrence);
+    const request = candidates.length === 1 ? candidates[0] : null, ids = request?.fetchIds || [], calls = ids.length === 1 ? evidence.native?.calls.filter((item) => item.id === ids[0]) || [] : [], call = calls.length === 1 ? calls[0] : null;
+    if (request?.failure) pairCounts.set(request.requestId, (pairCounts.get(request.requestId) || 0) + 1);
+    const rejection = (reason) => { failed.classification = reason; failed.intentional = false; };
+    if (!request || !call || call.url !== failed.url || call.method !== failed.method || consumed.has(request.requestId) || consumedCalls.has(call.id) || evidence.network.filter((row) => row.fetchIds.includes(call.id)).length !== 1) { rejection("Missing, ambiguous or reused native-call / CDP request identity"); continue; }
+    consumed.add(request.requestId); consumedCalls.add(call.id); failed.correlation = { requestId: request.requestId, nativeFetchId: call.id, occurrence: request.occurrence };
+    if (failed.error !== "net::ERR_ABORTED" || request.failure?.errorText !== "net::ERR_ABORTED" || request.failure.canceled !== true || failed.resourceType !== "fetch" || request.resourceType !== "Fetch") { rejection("Failure is not an observed canceled native fetch"); continue; }
+    const abort = call.abort, failureEpochMs = request.wallEpochMs + (request.failure.timestamp - request.timestamp) * 1000;
+    failed.correlation.failureEpochMs = failureEpochMs; failed.correlation.abort = abort;
+    if (!call.hasSignal || call.initiallyAborted || !abort || abort.name !== "AbortError" || !Number.isFinite(failureEpochMs) || abort.epochMs > failureEpochMs + 1) { rejection("Missing preceding actual AbortError signal; deadline/late cleanup is not intent"); continue; }
+    if ([call.fetchError, call.body.readError].some((error) => error && error.epochMs <= abort.epochMs)) { rejection("A native fetch/body failure preceded cancellation; cleanup cannot relabel it"); continue; }
+    const explicit = ["Dense recording request superseded or aborted", "Dense QA mid-body cancellation"].includes(abort.message);
+    const defaultAbort = abort.name === evidence.native.defaultAbort.name && abort.message === evidence.native.defaultAbort.message;
+    const declared = call.response?.contentLength, complete = defaultAbort && !call.fetchError && call.response?.status === 200 && typeof declared === "string" && /^(0|[1-9][0-9]*)$/.test(declared) && Number(declared) <= 16 * 1024 * 1024 && call.body.bytes === Number(declared) && call.body.readError === null && call.body.doneEpochMs !== null && call.body.doneEpochMs <= abort.epochMs;
+    failed.intentional = explicit || complete;
+    failed.classification = explicit ? "Exact explicit module/test signal cancellation" : complete ? "Native full body EOF/count observed before successful finally cleanup abort" : "Unproven abort; ordinary failure followed by cleanup is not accepted";
+    failed.correlation.clockQuantizationAllowanceMs = 1;
+  }
+  const networkFailures = evidence.network.filter((request) => request.failure), paired = networkFailures.every((request) => pairCounts.get(request.requestId) === 1);
+  evidence.failureBijection = { status: paired && networkFailures.length === pageFailures.length ? "PASS" : "FAIL", cdpFailures: networkFailures.length, playwrightFailures: pageFailures.length, pairedRequestIds: [...pairCounts.keys()] };
+  if (evidence.failureBijection.status !== "PASS" && evidence.errors.length < 8) evidence.errors.push("CDP loadingFailed / Playwright requestfailed multiset mismatch");
+}
+function classificationSelfCheck() {
+  // Synthetic proof metadata only: these are never browser responses, frames,
+  // catalog entries or claimed observations of the actual protected run.
+  const fixture = () => { const url = "http://127.0.0.1:1/classifier-only.gz"; return {
+    evidence: { pageId: 1, errors: [], native: { defaultAbort: { name: "AbortError", message: "platform default" }, calls: [{ id: 1, url, method: "GET", hasSignal: true, initiallyAborted: false, abort: { name: "AbortError", message: "Dense recording request superseded or aborted", epochMs: 1100 }, response: { status: 200, contentLength: "16" }, body: { bytes: 16, doneEpochMs: 1050, readError: null } }] }, network: [{ requestId: "one", url, method: "GET", occurrence: 1, resourceType: "Fetch", timestamp: 1, wallEpochMs: 1000, fetchIds: [1], failure: { errorText: "net::ERR_ABORTED", canceled: true, timestamp: 1.2 } }] },
+    failures: [{ pageId: 1, url, method: "GET", occurrence: 1, resourceType: "fetch", error: "net::ERR_ABORTED", intentional: false }],
+  }; };
+  const cases = [
+    ["explicit cancellation", () => {}, true],
+    ["verified EOF cleanup", (e) => { e.native.calls[0].abort.message = "platform default"; }, true],
+    ["body rejection after explicit abort", (e) => { e.native.calls[0].body.readError = { epochMs: 1150 }; }, true],
+    ["timeout", (e) => { e.native.calls[0].abort.name = "TimeoutError"; }, false],
+    ["late signal", (e) => { e.native.calls[0].abort.epochMs = 1300; }, false],
+    ["fetch failure before explicit abort", (e) => { e.native.calls[0].fetchError = { epochMs: 1050 }; }, false],
+    ["body failure before explicit abort", (e) => { e.native.calls[0].body.readError = { epochMs: 1050 }; }, false],
+    ["post-failure cleanup", (e) => { e.native.calls[0].abort.message = "platform default"; e.native.calls[0].fetchError = { epochMs: 1050 }; }, false],
+    ["short body cleanup", (e) => { e.native.calls[0].abort.message = "platform default"; e.native.calls[0].body.bytes = 15; }, false],
+    ["no EOF cleanup", (e) => { e.native.calls[0].abort.message = "platform default"; e.native.calls[0].body.doneEpochMs = null; }, false],
+    ["same URL wrong native identity", (e) => { e.native.calls.push({ ...e.native.calls[0], id: 2, abort: null }); e.network[0].fetchIds = [2]; }, false],
+    ["reused native identity", (e) => { e.network.push({ ...e.network[0], requestId: "two", occurrence: 2, failure: null }); }, false],
+    ["unmatched CDP failure", (e) => { e.network.push({ ...e.network[0], requestId: "two", occurrence: 2, fetchIds: [] }); }, false, true],
+    ["unmatched Playwright failure", (_, f) => { f.push({ ...f[0], occurrence: 2 }); }, false, true],
+    ["repeated request failure identity", (_, f) => { f.push({ ...f[0] }); }, false, true],
+  ];
+  for (const [name, mutate, accepted, mismatch = false] of cases) {
+    const { evidence, failures } = fixture(); mutate(evidence, failures); classifyRequests(evidence, failures);
+    const result = failures.every((failure) => failure.intentional) && evidence.failureBijection.status === "PASS"; assert.equal(result, accepted, name);
+    if (mismatch) assert.equal(evidence.failureBijection.status, "FAIL", name);
+  }
+  return { kind: "synthetic classifier metadata self-check; not browser/recording evidence", cases: cases.map(([name]) => name), passed: cases.length };
+}
+async function finishRequestProof() {
+  if (!pageProof) return;
+  const { evidence, session } = pageProof;
+  try { evidence.native = await evaluate(() => window.__denseQaFetch); classifyRequests(evidence); assert.deepEqual(evidence.native.errors, []); assert.deepEqual(evidence.errors, []); }
+  finally { try { await bounded(session.detach(), timeouts.cdp, "request observation CDP detach"); } finally { pageProof = null; } }
 }
 async function fresh(viewport = { width: 1440, height: 900 }) {
   assert.equal(stopping, false); page = await bounded(context.newPage(), timeouts.operation, "page creation"); await page.setViewportSize(viewport);
+  const evidence = { pageId: report.requestObservations.length + 1, nodeRequests: [], network: [], errors: [] }, identities = new WeakMap(), nodeOccurrences = new Map(), networkOccurrences = new Map(), networkIds = new Map(); report.requestObservations.push(evidence);
+  const error = (message) => { if (evidence.errors.length < 8) evidence.errors.push(message); }, occurrence = (map, key) => { const next = (map.get(key) || 0) + 1; map.set(key, next); return next; };
+  const session = await bounded(context.newCDPSession(page), timeouts.cdp, "request observation CDP session"); pageProof = { evidence, session };
+  session.on("Network.requestWillBeSent", (event) => { if (evidence.network.length >= 512 || networkIds.has(event.requestId)) { error("CDP request cap or duplicate/redirect identity"); return; } const row = { requestId: event.requestId, url: event.request.url, method: event.request.method, resourceType: event.type, occurrence: occurrence(networkOccurrences, `${event.request.method} ${event.request.url}`), timestamp: event.timestamp, wallEpochMs: event.wallTime * 1000, fetchIds: initiatorFetchIds(event.initiator?.stack) }; evidence.network.push(row); networkIds.set(event.requestId, row); });
+  session.on("Network.responseReceived", (event) => { const row = networkIds.get(event.requestId); if (row) row.response = { status: event.response.status, timestamp: event.timestamp }; });
+  session.on("Network.loadingFailed", (event) => { const row = networkIds.get(event.requestId); if (row) row.failure = { errorText: event.errorText, canceled: event.canceled === true, timestamp: event.timestamp }; else error("Unmatched CDP failure identity"); });
+  await bounded(session.send("Network.enable"), timeouts.cdp, "request observation Network.enable");
+  page.on("request", (request) => { if (evidence.nodeRequests.length >= 512) { error("Playwright request observation cap"); return; } const row = { pageId: evidence.pageId, nodeRequestId: evidence.nodeRequests.length + 1, url: request.url(), method: request.method(), resourceType: request.resourceType(), occurrence: occurrence(nodeOccurrences, `${request.method()} ${request.url()}`) }; identities.set(request, row); evidence.nodeRequests.push(row); });
   page.on("pageerror", (error) => report.pageErrors.push(error.stack || error.message));
-  page.on("console", (message) => { if (message.type() !== "error") return; const item = { text: message.text(), location: message.location() }; if (/net::ERR_ABORTED/.test(item.text) && /\/__dense_qa__\/(stream|late)\//.test(item.location.url)) return; report.consoleErrors.push(item); });
-  page.on("requestfailed", (request) => { const intentional = /\/__dense_qa__\/(stream|late)\//.test(request.url()) && /ERR_ABORTED|aborted/i.test(request.failure()?.errorText || ""); report.requestFailures.push({ url: request.url(), error: request.failure()?.errorText, intentional }); });
+  page.on("console", (message) => { if (message.type() === "error") report.consoleErrors.push({ text: message.text(), location: message.location() }); });
+  page.on("requestfailed", (request) => { report.requestFailures.push({ ...(identities.get(request) || { pageId: evidence.pageId, url: request.url() }), error: request.failure()?.errorText, intentional: false, classification: "Pending actual request/signal correlation" }); });
   await page.addInitScript(observePage); return page;
 }
 async function evaluate(...args) { return bounded(page.evaluate(...args), timeouts.operation, "browser module operation"); }
-async function pageEnd() { await page.waitForLoadState("networkidle"); await sleep(50); const observed = await evaluate(() => window.__denseQaErrors); (report.pageMeasurements ||= []).push(observed); assert.deepEqual(observed.unhandled, []); assert.deepEqual(observed.errors, []); await page.close(); page = null; }
+async function pageEnd() { await page.waitForLoadState("networkidle"); await sleep(50); const observed = await evaluate(() => window.__denseQaErrors); (report.pageMeasurements ||= []).push(observed); assert.deepEqual(observed.unhandled, []); assert.deepEqual(observed.errors, []); await finishRequestProof(); await page.close(); page = null; }
 async function screenshot(filename) { await bounded(page.screenshot({ path: join(output, filename), fullPage: true }), timeouts.operation, "screenshot"); const value = await readFile(join(output, filename)); report.screenshots.push({ filename, bytes: value.length, sha256: digest(value) }); }
 const shown = async (id) => Number((await page.locator(`#${id}`).textContent()).replaceAll(",", ""));
 async function waitTick(tick) { await page.waitForFunction((expected) => Number(document.getElementById("tick").textContent.replaceAll(",", "")) === expected && document.getElementById("workspace").getAttribute("aria-busy") === "false", tick); }
@@ -167,7 +278,7 @@ async function standalone() {
     assert.equal(report.decoder.largest.stats.maxRetainedChunks, 1); assert.equal(report.decoder.largest.stats.retainedFrames, 1); await evaluate(() => window.__denseQaLoader.close());
   });
   await check("Mid-body real fetch abort is caught with no browser unhandled rejection", async () => {
-    const result = await evaluate(async (origin) => { const controller = new AbortController(); let headers; const received = new Promise((done) => { headers = done; }); const pending = window.__denseQaModule.createDenseRecordingLoader({ indexUrl: `${origin}/__dense_qa__/stream/index.json`, indexSha256: "d3d102bcb4233900416ba0532c9cdd83b41b353963b15c47a9c66e4852b260aa", manifestPath: "horizon-100.json", baseUrl: origin, signal: controller.signal, fetcher: async (url, options) => { const response = await fetch(url, options); headers(); return response; } }); const caught = pending.then(() => "unexpected success", (error) => error.name); await received; await new Promise((done) => setTimeout(done, 100)); controller.abort(); const error = await caught; await new Promise((done) => setTimeout(done, 30)); return { error, unhandled: window.__denseQaErrors.unhandled }; }, origin);
+    const result = await evaluate(async (origin) => { const controller = new AbortController(); let headers; const received = new Promise((done) => { headers = done; }); const pending = window.__denseQaModule.createDenseRecordingLoader({ indexUrl: `${origin}/__dense_qa__/stream/index.json`, indexSha256: "d3d102bcb4233900416ba0532c9cdd83b41b353963b15c47a9c66e4852b260aa", manifestPath: "horizon-100.json", baseUrl: origin, signal: controller.signal, fetcher: async (url, options) => { const response = await fetch(url, options); headers(); return response; } }); const caught = pending.then(() => "unexpected success", (error) => error.name); await received; await new Promise((done) => setTimeout(done, 100)); controller.abort(new DOMException("Dense QA mid-body cancellation", "AbortError")); const error = await caught; await new Promise((done) => setTimeout(done, 30)); return { error, unhandled: window.__denseQaErrors.unhandled }; }, origin);
     assert.equal(result.error, "AbortError"); assert.deepEqual(result.unhandled, []); assert.ok(report.http.some((item) => item.path === "/__dense_qa__/stream/index.json" && item.bytesWritten === 16)); report.decoder.bodyAbort = result;
   });
   await check("Superseded and closed real loader fetches cannot commit a late frame or failure", async () => {
@@ -251,6 +362,7 @@ async function run() {
   const declared = JSON.parse(await source("scripts/fixtures/dense-recording/pilot-100000/fixture-pins.json")); assert.equal(declared.complete_recording, false); assert.match(declared.label, /^PARTIAL:/); assert.deepEqual(declared.files, pins.map(([path, bytes, sha256]) => ({ path, bytes, sha256 }))); assert.equal(declared.original_bytes, 1504219);
   for (const [filename, length, sha256] of pins) { const value = await source(`scripts/fixtures/dense-recording/pilot-100000/${filename}`); assert.equal(value.length, length); assert.equal(digest(value), sha256); }
   report.fixture = declared; await serve();
+  await check("Cancellation proof classifier rejects deadline, late cleanup and mismatched identities", async () => { report.requestClassificationSelfCheck = classificationSelfCheck(); });
   const require = createRequire(import.meta.url), moduleId = process.env.LIMINIS_PLAYWRIGHT_MODULE; assert.ok(moduleId); const pkg = require(`${moduleId}/package.json`); assert.equal(pkg.name, "playwright"); assert.equal(pkg.version, "1.61.1"); const { chromium } = require(moduleId);
   browser = await chromium.launch({ headless: true, chromiumSandbox: true, args: ["--enable-automation"], timeout: timeouts.launch }); report.browser = { version: browser.version(), playwright: pkg.version, chromiumSandbox: true };
   await check("Actual Chromium argv preserves every protected sandbox layer", async () => {
@@ -271,6 +383,7 @@ finally {
   for (const release of [...releases]) release();
   async function cleanup(name, action, timeout = timeouts.cleanup) { try { return { ok: true, value: await bounded(action(), timeout, name) }; } catch (error) { report.cleanupErrors.push({ name, error: error.stack || String(error) }); fail(error, name); return { ok: false }; } }
   if (report.status !== "PASS" && page && !page.isClosed()) await cleanup("failure PNG", () => screenshot("failure.png"));
+  if (pageProof && page && !page.isClosed()) await cleanup("final request/signal observations", finishRequestProof, timeouts.operation + timeouts.cdp);
   if (tracing && context) { const saved = await cleanup("trace publication", async () => { await context.tracing.stop({ path: join(output, "trace.zip") }); const value = await readFile(join(output, "trace.zip")); assert.ok(value.length); return { bytes: value.length, sha256: digest(value) }; }, timeouts.trace); Object.assign(report.trace, saved.ok ? { status: "PASS", ...saved.value } : { status: "FAIL" }); }
   if (context) await cleanup("context cleanup", () => context.close()); if (browser) await cleanup("browser cleanup", () => browser.close());
   if (server) await cleanup("loopback server cleanup", () => new Promise((done, reject) => { server.close((error) => error ? reject(error) : done()); server.closeAllConnections(); }));
