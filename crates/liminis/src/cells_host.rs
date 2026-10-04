@@ -577,6 +577,7 @@ fn start_storage(sim: &mut Sim, root: &Path) -> Result<()> {
         sim.config_hash.clone(),
         sim.seed.to_string(),
         sim.world_format_version,
+        sim.config.chamber_format,
     )?;
     storage.save(capture(sim))?;
     storage.wait_for_save()?;

@@ -84,7 +84,7 @@ fn capture(tick: u64) -> Capture {
 
 fn new_storage(root: &Temp) -> CellsStorage {
     let (config, hash) = identity();
-    CellsStorage::new_run(&root.0, config, hash, "42".into(), 29).expect("new cell experiment")
+    CellsStorage::new_run(&root.0, config, hash, "42".into(), 29, 1).expect("new cell experiment")
 }
 
 fn save(storage: &mut CellsStorage, tick: u64) -> CheckpointInfo {
@@ -158,11 +158,17 @@ fn exact_json_round_trips_and_resume_is_two_phase() {
 }
 
 #[test]
-fn cell_world_compatibility_is_exactly_29_or_30() {
+fn cell_world_chamber_compatibility_is_explicit() {
     assert!(supports_cell_version(29));
     assert!(supports_cell_version(30));
     assert!(!supports_cell_version(28));
-    assert!(!supports_cell_version(31));
+    assert!(supports_cell_version(31));
+    assert!(!supports_cell_version(32));
+    for world in 29..=31 {
+        assert!(supports_cell_identity(world, 1));
+        assert_eq!(supports_cell_identity(world, 2), world == 31);
+        assert!(!supports_cell_identity(world, 3));
+    }
 
     let mut legacy = serde_json::to_value(capture(7)).unwrap();
     legacy

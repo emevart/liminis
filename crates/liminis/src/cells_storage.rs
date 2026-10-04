@@ -15,7 +15,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
 const FORMAT: u32 = 1;
-const CHAMBER_FORMAT: u32 = 1;
 const KIND: &str = "cells";
 const HISTORY_LIMIT: usize = 360;
 const RETAIN_CHECKPOINTS: usize = 3;
@@ -291,8 +290,9 @@ impl CellsStorage {
         config_hash: String,
         seed: String,
         world_format_version: u32,
+        chamber_format: u32,
     ) -> Result<Self> {
-        validate_identity(&config_text, &config_hash, &seed, world_format_version)?;
+        validate_identity(&config_text, &config_hash, &seed, world_format_version, chamber_format)?;
         fs::create_dir_all(root)
             .with_context(|| format!("creating cell experiment storage {}", root.display()))?;
         let root = fs::canonicalize(root)?;
@@ -301,7 +301,7 @@ impl CellsStorage {
         let info = RunInfo {
             format: FORMAT,
             kind: KIND.into(),
-            chamber_format: CHAMBER_FORMAT,
+            chamber_format,
             run_id,
             seed,
             config_hash,
@@ -360,7 +360,7 @@ impl CellsStorage {
                         record: "header".into(),
                         format: FORMAT,
                         kind: KIND.into(),
-                        chamber_format: CHAMBER_FORMAT,
+                        chamber_format: worker_lease.info.chamber_format,
                         run_id: worker_lease.info.run_id.clone(),
                         session_id: worker_session.session_id.clone(),
                         seed: worker_lease.info.seed.clone(),
@@ -543,7 +543,7 @@ impl CellsStorage {
         let info = CheckpointInfo {
             format: FORMAT,
             kind: KIND.into(),
-            chamber_format: CHAMBER_FORMAT,
+            chamber_format: self.lease.info.chamber_format,
             checkpoint_id: String::new(),
             session_id: self.session.session_id.clone(),
             seed: self.lease.info.seed.clone(),
@@ -652,6 +652,7 @@ fn prepare_resume(root: &Path, run: &str, checkpoint: Option<&str>) -> Result<Pr
         &info.config_hash,
         &info.seed,
         info.world_format_version,
+        info.chamber_format,
     )?;
     let lease = Arc::new(Lease {
         root,
@@ -744,6 +745,7 @@ fn validate_identity(
     config_hash: &str,
     seed: &str,
     world_format_version: u32,
+    chamber_format: u32,
 ) -> Result<()> {
     ensure!(!config_text.is_empty(), "cell canonical config is empty");
     ensure!(!seed.is_empty(), "cell seed identity is empty");
@@ -754,8 +756,8 @@ fn validate_identity(
         "cell canonical config hash differs"
     );
     ensure!(
-        supports_cell_version(world_format_version),
-        "cell storage requires world format version 29 or 30"
+        supports_cell_identity(world_format_version, chamber_format),
+        "unsupported cell world/chamber format identity"
     );
     Ok(())
 }
@@ -765,7 +767,11 @@ fn legacy_cell_world_format() -> u32 {
 }
 
 fn supports_cell_version(version: u32) -> bool {
-    matches!(version, 29 | 30)
+    matches!(version, 29 | 30 | 31)
+}
+
+pub(crate) fn supports_cell_identity(world: u32, chamber: u32) -> bool {
+    matches!((world, chamber), (29 | 30 | 31, 1) | (31, 2))
 }
 
 fn validate_run_info(info: &RunInfo, run_id: &str) -> Result<()> {
@@ -773,7 +779,7 @@ fn validate_run_info(info: &RunInfo, run_id: &str) -> Result<()> {
     ensure!(
         info.format == FORMAT
             && info.kind == KIND
-            && info.chamber_format == CHAMBER_FORMAT
+            && supports_cell_identity(info.world_format_version, info.chamber_format)
             && info.run_id == run_id,
         "unsupported or mismatched cell run manifest"
     );
@@ -782,13 +788,15 @@ fn validate_run_info(info: &RunInfo, run_id: &str) -> Result<()> {
 
 fn validate_checkpoint_info(info: &CheckpointInfo, run: &RunInfo) -> Result<()> {
     ensure!(
-        info.format == FORMAT && info.kind == KIND && info.chamber_format == CHAMBER_FORMAT,
+        info.format == FORMAT && info.kind == KIND
+            && supports_cell_identity(info.world_format_version, info.chamber_format),
         "unsupported cell checkpoint envelope"
     );
     checked_prefixed_id(&info.checkpoint_id, "checkpoint-")?;
     checked_prefixed_id(&info.session_id, "session-")?;
     ensure!(
         info.seed == run.seed
+            && info.chamber_format == run.chamber_format
             && info.config_hash == run.config_hash
             && info.world_format_version == run.world_format_version,
         "cell checkpoint identity differs from run manifest"
@@ -931,7 +939,7 @@ fn load_history(lease: &Lease, checkpoint: &CheckpointInfo) -> Result<History> {
                     value.record == "header"
                         && value.format == FORMAT
                         && value.kind == KIND
-                        && value.chamber_format == CHAMBER_FORMAT
+                        && value.chamber_format == lease.info.chamber_format
                         && value.run_id == lease.info.run_id
                         && value.session_id == expected_session_id
                         && value.seed == lease.info.seed
