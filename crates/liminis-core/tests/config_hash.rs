@@ -646,11 +646,9 @@ fn the_canonical_form_reloads_to_the_same_hash() {
     assert!(reloaded.calibration.is_empty());
 }
 
-/// Nothing else in the repository opens `configs/scenarios/*.toml`.
-///
-/// CI runs `cargo test` and no step runs the binary, so a newly required key
-/// breaks the command printed in `README.md`, `CLAUDE.md` and the bug-report
-/// template without failing a single check. This is that check.
+/// Check every shipped scenario through its declared config family, including
+/// the explicitly opt-in live chamber format. Historical micro loaders stay
+/// strict format 1; a filename does not decide whether a scenario is voxel data.
 #[test]
 fn every_scenario_in_the_repository_loads() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../configs/scenarios");
@@ -658,11 +656,11 @@ fn every_scenario_in_the_repository_loads() {
     for entry in std::fs::read_dir(&dir).expect("configs/scenarios must exist") {
         let path = entry.expect("reading configs/scenarios").path();
         if path.extension().is_some_and(|ext| ext == "toml") {
-            let result = if path
-                .file_name()
-                .is_some_and(|name| name == "cell-chamber.toml")
-            {
-                micro_config::load(&path).map(|_| ())
+            let text = std::fs::read_to_string(&path).expect("reading scenario TOML");
+            let declaration: toml::Value =
+                toml::from_str(&text).expect("parsing scenario declaration");
+            let result = if declaration.get("chamber_format").is_some() {
+                micro_config::parse_live(&text).map(|_| ())
             } else {
                 config::load(&path).map(|_| ())
             };
