@@ -20,6 +20,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: Validate recordings, catalog freshness, and download integrity
         run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs
+      - name: Validate exact dense codec and Linux publication boundaries
+        run: python3 scripts/dense-recording-tests.py
 
   live-browser:
     name: live cells browser acceptance
@@ -419,6 +421,19 @@ jobs:
           LIMINIS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
           LIMINIS_BROWSER_EVIDENCE_DIR: target/qa/recorded-browser
         run: node site/playback.browser.mjs
+      - name: Real every-tick dense playback and transport acceptance
+        env:
+          LIMINIS_PLAYWRIGHT_MODULE: ${{ runner.temp }}/liminis-recorded-browser/node_modules/playwright
+          LIMINIS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: LIMINIS_EXPECTED_TREE="$(git rev-parse 'HEAD^{tree}')" node scripts/check_dense_recording_browser.mjs
+      - name: Attach exact-head dense screenshots, trace and transport evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dense-recording-browser-${{ github.event.pull_request.head.sha || github.sha }}
+          path: target/qa/dense-recording-browser/
+          if-no-files-found: error
+          retention-days: 7
       - name: Attach exact-head screenshots, trace, and browser evidence
         if: always()
         uses: actions/upload-artifact@v4
