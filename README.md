@@ -11,6 +11,12 @@ separates a field from an object, and the evolutionary threshold of a transition
 
 ## Status
 
+Watch a recorded individual-cell experiment at [liminis.dev](https://liminis.dev/).
+The public observer plays actual sampled states from the Rust engine, with cell
+identities, inherited traits and exact accounting. It is a recording, not a live
+server or a JavaScript reimplementation of the biology. The local observer below
+is where new simulations run.
+
 The local observer runs a microbial culture in Rust and serves an offline web
 application. A new genetic-colony experiment begins with a single founder
 population. Two binary loci encode growth speed/affinity and allocation between
@@ -49,6 +55,26 @@ scenarios and analysis tooling are welcome, and pull requests against the numeri
 kernels are accepted rarely — see `docs/COMMUNITY.md` for why the boundary sits there.
 
 ## Quickstart
+
+The [public observer](https://liminis.dev/) needs no installation. Its first
+curated experiment is `cell-chamber`, seed 42, for 10,000 ticks. The recording
+includes the canonical configuration, engine commit and world version. Every
+tick is checked; cell tables are sampled every 50 ticks. Screen positions are
+presentation only, not physical coordinates. Download the data from the observer
+or reproduce it from the matching source commit:
+
+```sh
+cargo run --release -p liminis --example export_cell_replay -- \
+  --config configs/scenarios/cell-chamber.toml --seed 42 \
+  --steps 10000 --sample-every 50 --source-commit <full-engine-commit> \
+  --output site/data/cell-chamber-seed-42.json
+```
+
+For a local preview of the public observer:
+
+```sh
+python3 -m http.server 8090 --bind 127.0.0.1 --directory site
+```
 
 For the new individual-cell chamber, start a separate local observer:
 
@@ -90,8 +116,8 @@ step, change speed, choose a slice, start a new experiment with a seed, save a
 checkpoint and export the current observation. A paused reset exposes tick 0
 in a new experiment and preserves the previous one. The observer includes actual food,
 detritus and oxygen fields, durable histories and decoded genotype traits with
-first-detection ticks, not a reconstructed ancestry tree. Nothing is deployed
-or sent to an external service.
+first-detection ticks, not a reconstructed ancestry tree. Local simulations do
+not upload their cultures or saved data to the public website.
 
 Choose an experiment explicitly:
 
