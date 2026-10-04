@@ -338,6 +338,7 @@ test("paused real-frame loader immediately notifies a corrupt active prefetch wi
   release(); await until(() => notifications.length === 1);
   const original = notifications[0]; assert.match(original.message, /gzip integrity/); assert.equal(loader.stats.failed, true); assert.equal(loader.current, null);
   assert.deepStrictEqual(validated, expected[0], "the consumer's immutable last validated snapshot remains usable");
+  assert.equal(loader.notificationError, null); assert.equal(loader.stats.notificationFailed, false);
   await assert.rejects(() => loader.seek(1), (error) => error === original); assert.equal(notifications.length, 1);
   unsubscribe(); unsubscribe(); const late = [], removeLate = loader.subscribeFailure((error) => late.push(error));
   assert.deepStrictEqual(late, [original], "late subscription receives retained failure immediately"); unsubscribe();
@@ -385,7 +386,7 @@ test("stale prefetch rejection and caller abort never notify fatal failure", asy
   await assert.rejects(() => pending, /abort/i); assert.deepStrictEqual(notifications, []); assert.equal(canceled.stats.failed, false); canceled.close();
 });
 
-test("throwing or rejecting failure callbacks preserve the original transport error and create no detached rejection", async () => {
+test("throwing or rejecting failure callbacks retain one separate diagnostic, preserve transport error and create no detached rejection", async () => {
   for (const asynchronous of [false, true]) {
     const files = originalFiles(), original = new Error("original chunk transport failure"), consumer = new Error("consumer failure");
     const loader = await createDenseRecordingLoader(loaderOptions(files, async (url) => {
@@ -394,8 +395,10 @@ test("throwing or rejecting failure callbacks preserve the original transport er
     assert.throws(() => loader.subscribeFailure(null), /callback/); const notifications = [];
     const unsubscribe = loader.subscribeFailure((error) => { notifications.push(error); if (asynchronous) return Promise.reject(consumer); throw consumer; });
     await assert.rejects(() => loader.seek(0), (error) => error === original); await assert.rejects(() => loader.seek(1), (error) => error === original);
+    await until(() => loader.stats.notificationFailed); assert.equal(loader.notificationError, consumer);
     assert.deepStrictEqual(notifications, [original]); unsubscribe();
-    loader.subscribeFailure(() => Promise.reject(consumer)); await new Promise((done) => setTimeout(done, 25)); loader.close();
+    loader.subscribeFailure(() => Promise.reject(new Error("later consumer failure"))); await new Promise((done) => setTimeout(done, 25));
+    assert.equal(loader.notificationError, consumer, "only the first notification defect is retained"); await assert.rejects(() => loader.seek(1), (error) => error === original); loader.close();
   }
 });
 

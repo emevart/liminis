@@ -325,15 +325,18 @@ export async function createDenseRecordingLoader({ indexUrl, indexSha256, manife
   const initialIndex = parseDenseJson(indexBytes); validateIndex(initialIndex); const manifestEntry = initialIndex.manifests.find((entry) => entry.path === manifestPath); requireThat(manifestEntry, "manifest must be index-allowlisted");
   const manifestBytes = await get(new URL(manifestEntry.path, url), DENSE_LIMITS.manifest, manifestEntry.bytes, lifetimeSignal);
   const admitted = await admitDenseRecording(indexBytes, manifestBytes, { indexSha256, manifestPath, cryptoProvider }); interrupted(lifetimeSignal);
-  const entries = new Map(); let serial = 0, activeSeek, closed = false, current = null, failure = null, subscriber = null, maximumEntries = 0;
+  const entries = new Map(); let serial = 0, activeSeek, closed = false, current = null, failure = null, subscriber = null, notificationError = null, maximumEntries = 0;
   const live = (entry) => !closed && entries.get(entry.index) === entry && !entry.controller.signal.aborted;
+  // Keep one diagnostic, never a growing notification-error queue. Non-Error
+  // values are summarized without invoking a consumer's arbitrary toString.
+  function notificationDefect(error) { if (notificationError === null) notificationError = error instanceof Error ? error : new Error(`Dense failure callback: ${typeof error === "string" ? error.slice(0, 1000) : "non-Error rejection"}`); }
   function notifyFailure() {
     const selected = subscriber;
     if (!failure || closed || !selected || selected.delivered) return;
     selected.delivered = true;
     // A consumer exception must not replace the original transport/admission
     // failure or create a detached rejection on the background prefetch path.
-    try { void Promise.resolve(selected.callback(failure)).catch(() => {}); } catch {}
+    try { void Promise.resolve(selected.callback(failure)).catch(notificationDefect); } catch (error) { notificationDefect(error); }
   }
   function subscribeFailure(callback) {
     // One active consumer, once per subscription; a late subscriber receives
@@ -360,7 +363,8 @@ export async function createDenseRecordingLoader({ indexUrl, indexSha256, manife
   lifetimeSignal?.addEventListener("abort", close, { once: true });
   return Object.freeze({ index: admitted.index, manifest: admitted.manifest, indexSha256,
     get current() { return current; },
-    get stats() { return Object.freeze({ retainedChunks: entries.size, cachedChunks: [...entries.values()].filter((entry) => entry.payload).length, loadingChunks: [...entries.values()].filter((entry) => !entry.payload && !entry.error).length, maxRetainedChunks: maximumEntries, retainedFrames: current ? 1 : 0, currentTick: current?.frame.tick ?? null, closed, failed: !!failure }); },
+    get notificationError() { return notificationError; },
+    get stats() { return Object.freeze({ retainedChunks: entries.size, cachedChunks: [...entries.values()].filter((entry) => entry.payload).length, loadingChunks: [...entries.values()].filter((entry) => !entry.payload && !entry.error).length, maxRetainedChunks: maximumEntries, retainedFrames: current ? 1 : 0, currentTick: current?.frame.tick ?? null, closed, failed: !!failure, notificationFailed: notificationError !== null }); },
     async seek(tick, { signal } = {}) {
       requireThat(!closed, "loader is closed"); if (failure) throw failure; interrupted(lifetimeSignal); interrupted(signal); natural(tick, admitted.manifest.experiment.steps);
       const requested = ++serial; activeSeek?.abort(abortError()); activeSeek = new AbortController(); current = null;
