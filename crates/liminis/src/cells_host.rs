@@ -18,6 +18,38 @@ use crate::http::{Method, Request, Response};
 mod storage;
 
 const VIEWER: &str = include_str!("cell-viewer.html");
+const DISPLAY_ASSETS: &[(&str, &str, &[u8])] = &[
+    (
+        "/assets/cell-viewer-3d.mjs",
+        "text/javascript; charset=utf-8",
+        include_bytes!("cell-viewer-3d.mjs"),
+    ),
+    (
+        "/assets/vendor/three-r180/three.module.js",
+        "text/javascript; charset=utf-8",
+        include_bytes!("vendor/three-r180/three.module.js"),
+    ),
+    (
+        "/assets/vendor/three-r180/three.core.js",
+        "text/javascript; charset=utf-8",
+        include_bytes!("vendor/three-r180/three.core.js"),
+    ),
+    (
+        "/assets/vendor/three-r180/OrbitControls.js",
+        "text/javascript; charset=utf-8",
+        include_bytes!("vendor/three-r180/OrbitControls.js"),
+    ),
+    (
+        "/assets/vendor/three-r180/LICENSE",
+        "text/plain; charset=utf-8",
+        include_bytes!("vendor/three-r180/LICENSE"),
+    ),
+    (
+        "/assets/vendor/three-r180/provenance.json",
+        "application/json",
+        include_bytes!("vendor/three-r180/provenance.json"),
+    ),
+];
 const DEFAULT_MULTIPLIER: f64 = 90.0;
 const CONTROL_POLL: Duration = Duration::from_millis(10);
 const SAMPLE_PERIOD: Duration = Duration::from_millis(250);
@@ -514,6 +546,21 @@ fn safe_advance(sim: &mut Sim) -> bool {
 }
 
 fn route(shared: &Arc<Mutex<Sim>>, request: &Request) -> Response {
+    // Только буквальный allowlist: display assets не открывают файловую систему.
+    if let Some((_, content_type, bytes)) = DISPLAY_ASSETS
+        .iter()
+        .find(|(path, _, _)| *path == request.path)
+    {
+        return if request.method == Method::Get {
+            Response {
+                status: 200,
+                content_type,
+                body: bytes.to_vec(),
+            }
+        } else {
+            Response::error(405, "unsupported method for this route")
+        };
+    }
     match (request.path.as_str(), request.method) {
         ("/" | "/index.html", Method::Get) => Response::html(VIEWER),
         ("/api/state", Method::Get) => Response::json(state_json(&lock(shared)).to_string()),
