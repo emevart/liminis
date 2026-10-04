@@ -1,0 +1,120 @@
+{
+  "viewportResults": [
+    {
+      "name": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "held": [
+        {
+          "drawTarget": 30,
+          "playhead": 1.149,
+          "modelSecondsAdvanced": 1.149,
+          "wallSeconds": 1.1488999999999652,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "7b2d91e129b3caae433ffc012d46ed579d4ab0ec89e8ee04ef50b3942b5bb2ca",
+          "durationAt1x": "3.47 d"
+        },
+        {
+          "drawTarget": 60,
+          "playhead": 2.2858,
+          "modelSecondsAdvanced": 1.1368,
+          "wallSeconds": 1.1367000000000116,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "7b2d91e129b3caae433ffc012d46ed579d4ab0ec89e8ee04ef50b3942b5bb2ca",
+          "durationAt1x": "3.47 d"
+        }
+      ],
+      "nextSample": {
+        "time": 30,
+        "tick": 1,
+        "livingCells": 8
+      },
+      "finalization": {
+        "pageClosed": true,
+        "pendingGuardActions": 0,
+        "settledBodyReads": 14,
+        "totalBodyReads": 14,
+        "expectedAnalyticsCount": 1,
+        "finalAnalyticsCount": 1
+      },
+      "unexpectedErrors": 0,
+      "exactBlockedAnalytics": 1
+    },
+    {
+      "name": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "held": [
+        {
+          "drawTarget": 30,
+          "playhead": 1.1515,
+          "modelSecondsAdvanced": 1.1515,
+          "wallSeconds": 1.1516000000000348,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "7f3d5033497cdc8f8fe734536ef1f1537c3185bbe9bdab54dac1483d6f0f3f01",
+          "durationAt1x": "3.47 d"
+        },
+        {
+          "drawTarget": 60,
+          "playhead": 2.2868,
+          "modelSecondsAdvanced": 1.1353,
+          "wallSeconds": 1.1354000000000233,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "7f3d5033497cdc8f8fe734536ef1f1537c3185bbe9bdab54dac1483d6f0f3f01",
+          "durationAt1x": "3.47 d"
+        }
+      ],
+      "nextSample": {
+        "time": 30,
+        "tick": 1,
+        "livingCells": 8
+      },
+      "finalization": {
+        "pageClosed": true,
+        "pendingGuardActions": 0,
+        "settledBodyReads": 14,
+        "totalBodyReads": 14,
+        "expectedAnalyticsCount": 1,
+        "finalAnalyticsCount": 1
+      },
+      "unexpectedErrors": 0,
+      "exactBlockedAnalytics": 1
+    }
+  ],
+  "tracePlayPauseIntervalsSeconds": [
+    1.1289479999999985,
+    1.1286540000000005,
+    1.134092999999999,
+    1.1245450000000001
+  ],
+  "tracePageClosures": [
+    "call@277",
+    "call@587"
+  ],
+  "wallMeasurementQualification": "Runtime evidence measures actual browser click performance.now(); locator evaluate return arrays are not echoed in this trace. Actual traced click intervals independently agree within 0.1s.",
+  "nodeAssetAttempts": 2,
+  "initialFailedAssetObservationsPreserved": [
+    {
+      "filename": "playback.mjs",
+      "httpStatus": 200,
+      "bytes": 4966
+    },
+    {
+      "filename": "dense-recording.mjs",
+      "httpStatus": 404,
+      "bytes": null
+    }
+  ],
+  "finalNodePinnedResponses": 14,
+  "actualBrowserPinnedResponses": 28,
+  "sandboxArgvForbidden": [],
+  "unexpectedPageConsoleRequestCleanupErrors": 0
+}

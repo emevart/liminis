@@ -1,0 +1,29 @@
+{
+  "sourceFilesVerified": 14,
+  "traceScriptExact": true,
+  "scriptSha256": "2333638709e657f9265408539c10d1fd3be68f203f41822dd7d947d5f3010f2d",
+  "nestedFiles": 144,
+  "nestedUncompressed": 11750280,
+  "combinedZipDecoded": 17492372,
+  "traceRows": 1319,
+  "traceNetworkRows": 32,
+  "actualRawHtmlVerified": 2,
+  "gitExactBrowserTraceAssetBodies": 14,
+  "rawGzipTraceBodies": 4,
+  "omittedJsTraceBodyCount": 12,
+  "omittedJsPaths": {
+    "/observer.js": 2,
+    "/recording-loader.mjs": 2,
+    "/playback.mjs": 2,
+    "/recording.mjs": 2,
+    "/catalog.mjs": 2,
+    "/dense-recording.mjs": 2
+  },
+  "actualBrowserRuntimePins": 28,
+  "qualification": "12 JavaScript trace bodies omitted; runtime response.body size/SHA evidence, Node HTTPS source pins and exact traced script verified. Available trace bodies match original Git bytes.",
+  "redirects": [
+    "https://liminis.dev/observe.html",
+    "https://liminis.dev/observe.html"
+  ],
+  "blockedAnalyticsNoHttpResponse": 2
+}

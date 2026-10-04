@@ -1,0 +1,9 @@
+{
+  "status": "NO_OBVIOUS_FINDINGS",
+  "utf8Files": 13,
+  "textBytes": 6962804,
+  "binarySkipped": 134,
+  "findings": [],
+  "requestAuthCookieHeaders": 0,
+  "qualification": "Bounded obvious credential/private-key/Bearer/private-chat/old-private-context UTF-8 scan. Both outer PNG viewed. Known fixed public Cloudflare client insertion retained without printing its contents. Binary gzip not inflated for privacy. Not an exhaustive secret guarantee."
+}

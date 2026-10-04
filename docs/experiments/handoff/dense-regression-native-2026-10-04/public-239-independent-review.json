@@ -1,0 +1,348 @@
+{
+  "verdict": "QUALIFIED_APPLICATION_PASS",
+  "blockers": 0,
+  "scope": "Independent acceptance of read-only deployed default dense recording smoke; selected public bytes/application playback only, separate from full CI and whole publication delivery.",
+  "sourceHead": "239ec8bde3d2f15e2aa5b50e9294e65eab5c0926",
+  "sourceTree": "27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a",
+  "workflowRun": "https://github.com/emevart/liminis/actions/runs/37232682967",
+  "artifactId": 11313789667,
+  "originalZip": {
+    "bytes": 5601441,
+    "sha256": "688833bc16b805f6433ecd5fb296a3b8e0ec10c6e3481f423b785ae4e9889b48",
+    "crc": "PASS",
+    "closedInventoryFiles": 6,
+    "uncompressedBytes": 5742092
+  },
+  "trace": {
+    "status": "PASS",
+    "filename": "trace.zip",
+    "coverage": "Actual public browser actions, responses, snapshots and screenshots; Node fetch observations are in evidence.json.",
+    "bytes": 5386589,
+    "sha256": "23e2831570c99a0f9de464a2a494a9316d574a65499568d5c6dfab5ed0b78e56",
+    "crc": "PASS",
+    "safePaths": "PASS",
+    "entries": 144,
+    "uncompressedBytes": 11750280,
+    "combinedZipDecodedBytes": 17492372,
+    "decodedBudgetBytes": 67108864
+  },
+  "sourceFiles": [
+    {
+      "filename": "observe.html",
+      "bytes": 6894,
+      "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d"
+    },
+    {
+      "filename": "observer.js",
+      "bytes": 30075,
+      "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+    },
+    {
+      "filename": "observer.css",
+      "bytes": 7408,
+      "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+    },
+    {
+      "filename": "playback.mjs",
+      "bytes": 10351,
+      "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+    },
+    {
+      "filename": "recording-loader.mjs",
+      "bytes": 3190,
+      "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+    },
+    {
+      "filename": "recording.mjs",
+      "bytes": 5021,
+      "sha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334"
+    },
+    {
+      "filename": "dense-recording.mjs",
+      "bytes": 41209,
+      "sha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f"
+    },
+    {
+      "filename": "catalog.mjs",
+      "bytes": 4345,
+      "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+    },
+    {
+      "filename": "data/catalog.json",
+      "bytes": 116490,
+      "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+    },
+    {
+      "filename": "data/cell-chamber-seed-42.json",
+      "bytes": 6047570,
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+    },
+    {
+      "filename": "data/dense-cell-chamber/index.json",
+      "bytes": 1977,
+      "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+    },
+    {
+      "filename": "data/dense-cell-chamber/horizon-10000.json",
+      "bytes": 18860,
+      "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+      "bytes": 312818,
+      "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+      "bytes": 917524,
+      "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+    }
+  ],
+  "sourceScriptSha256": "2333638709e657f9265408539c10d1fd3be68f203f41822dd7d947d5f3010f2d",
+  "sourceTraceBytesExact": true,
+  "byteValidation": {
+    "sourceFilesVerified": 14,
+    "traceScriptExact": true,
+    "scriptSha256": "2333638709e657f9265408539c10d1fd3be68f203f41822dd7d947d5f3010f2d",
+    "nestedFiles": 144,
+    "nestedUncompressed": 11750280,
+    "combinedZipDecoded": 17492372,
+    "traceRows": 1319,
+    "traceNetworkRows": 32,
+    "actualRawHtmlVerified": 2,
+    "gitExactBrowserTraceAssetBodies": 14,
+    "rawGzipTraceBodies": 4,
+    "omittedJsTraceBodyCount": 12,
+    "omittedJsPaths": {
+      "/observer.js": 2,
+      "/recording-loader.mjs": 2,
+      "/playback.mjs": 2,
+      "/recording.mjs": 2,
+      "/catalog.mjs": 2,
+      "/dense-recording.mjs": 2
+    },
+    "actualBrowserRuntimePins": 28,
+    "qualification": "12 JavaScript trace bodies omitted; runtime response.body size/SHA evidence, Node HTTPS source pins and exact traced script verified. Available trace bodies match original Git bytes.",
+    "redirects": [
+      "https://liminis.dev/observe.html",
+      "https://liminis.dev/observe.html"
+    ],
+    "blockedAnalyticsNoHttpResponse": 2
+  },
+  "nodeHttps": {
+    "verifiedAssets": 14,
+    "attempts": 2,
+    "initialFailuresPreserved": [
+      {
+        "filename": "playback.mjs",
+        "httpStatus": 200,
+        "bytes": 4966
+      },
+      {
+        "filename": "dense-recording.mjs",
+        "httpStatus": 404,
+        "bytes": null
+      }
+    ],
+    "finalAllPins": "PASS",
+    "qualification": "One bounded 5s retry resolved initially stale playback.mjs and initially absent dense-recording.mjs; those observations are retained. Same-origin HTTPS canonical observe.html307→observe attested separately."
+  },
+  "checks": [
+    {
+      "name": "Public critical assets and one allowlisted recording match checkout bytes",
+      "status": "PASS",
+      "elapsedMs": 5490
+    },
+    {
+      "name": "Observed browser arguments retain protected sandbox process model",
+      "status": "PASS",
+      "elapsedMs": 5
+    },
+    {
+      "name": "Public default observer ready, real canvas, physical 1× hold and every-tick stepping: desktop",
+      "status": "PASS",
+      "elapsedMs": 5125
+    },
+    {
+      "name": "Public default observer ready, real canvas, physical 1× hold and every-tick stepping: mobile",
+      "status": "PASS",
+      "elapsedMs": 5028
+    }
+  ],
+  "screenshotsBothViewed": [
+    {
+      "filename": "desktop-default.png",
+      "sha256": "598fcb148c7dc84a1498ea44cdc4377f9e4d81aa492f5e8e5e709b027e9e710b"
+    },
+    {
+      "filename": "mobile-default.png",
+      "sha256": "643fda0bf37625d3446271550e667306060ccab90b8ee9d7be48065df2428954"
+    }
+  ],
+  "viewportProof": [
+    {
+      "name": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "held": [
+        {
+          "drawTarget": 30,
+          "playhead": 1.149,
+          "modelSecondsAdvanced": 1.149,
+          "wallSeconds": 1.1488999999999652,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "7b2d91e129b3caae433ffc012d46ed579d4ab0ec89e8ee04ef50b3942b5bb2ca",
+          "durationAt1x": "3.47 d"
+        },
+        {
+          "drawTarget": 60,
+          "playhead": 2.2858,
+          "modelSecondsAdvanced": 1.1368,
+          "wallSeconds": 1.1367000000000116,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "7b2d91e129b3caae433ffc012d46ed579d4ab0ec89e8ee04ef50b3942b5bb2ca",
+          "durationAt1x": "3.47 d"
+        }
+      ],
+      "nextSample": {
+        "time": 30,
+        "tick": 1,
+        "livingCells": 8
+      },
+      "finalization": {
+        "pageClosed": true,
+        "pendingGuardActions": 0,
+        "settledBodyReads": 14,
+        "totalBodyReads": 14,
+        "expectedAnalyticsCount": 1,
+        "finalAnalyticsCount": 1
+      },
+      "unexpectedErrors": 0,
+      "exactBlockedAnalytics": 1
+    },
+    {
+      "name": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "held": [
+        {
+          "drawTarget": 30,
+          "playhead": 1.1515,
+          "modelSecondsAdvanced": 1.1515,
+          "wallSeconds": 1.1516000000000348,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "7f3d5033497cdc8f8fe734536ef1f1537c3185bbe9bdab54dac1483d6f0f3f01",
+          "durationAt1x": "3.47 d"
+        },
+        {
+          "drawTarget": 60,
+          "playhead": 2.2868,
+          "modelSecondsAdvanced": 1.1353,
+          "wallSeconds": 1.1354000000000233,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "7f3d5033497cdc8f8fe734536ef1f1537c3185bbe9bdab54dac1483d6f0f3f01",
+          "durationAt1x": "3.47 d"
+        }
+      ],
+      "nextSample": {
+        "time": 30,
+        "tick": 1,
+        "livingCells": 8
+      },
+      "finalization": {
+        "pageClosed": true,
+        "pendingGuardActions": 0,
+        "settledBodyReads": 14,
+        "totalBodyReads": 14,
+        "expectedAnalyticsCount": 1,
+        "finalAnalyticsCount": 1
+      },
+      "unexpectedErrors": 0,
+      "exactBlockedAnalytics": 1
+    }
+  ],
+  "traceClockCrossCheck": {
+    "playPauseIntervalsSeconds": [
+      1.1289479999999985,
+      1.1286540000000005,
+      1.134092999999999,
+      1.1245450000000001
+    ],
+    "qualification": "Runtime evidence measures actual browser click performance.now(); locator evaluate return arrays are not echoed in this trace. Actual traced click intervals independently agree within 0.1s."
+  },
+  "tracePageClosures": [
+    "call@277",
+    "call@587"
+  ],
+  "protectedBrowser": {
+    "playwright": "1.61.1",
+    "browser": {
+      "engine": "Chromium",
+      "version": "149.0.7827.55",
+      "chromiumSandbox": true
+    },
+    "runner": {
+      "os": "Linux",
+      "arch": "X64",
+      "imageOS": "ubuntu22",
+      "imageVersion": "20260927.309.1"
+    },
+    "observedArgvForbiddenSwitches": [],
+    "qualification": "Sandbox-enabled launch and observed CDP argv; no kernel attestation."
+  },
+  "hostingHtmlQualification": {
+    "rawHtmlMatchesSource": false,
+    "knownExactInsertionVerified": true,
+    "afterExactRemovalMatchesSource": true,
+    "sourceBytes": 6894,
+    "sourceSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+    "insertionOffset": 6878,
+    "insertionBytes": 367,
+    "insertionSha256": "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
+    "rawHtmlBytes": 7261,
+    "rawHtmlSha256": "47d1c84479b19c2025ddb8d273bf85d824c8aaf28f46a9043e475e015dea396a",
+    "analyticsRequestsBeforeSendBlockedAcknowledgedPerViewport": 1,
+    "analyticsExecution": "NOT_TESTED",
+    "qualification": "Known fixed insertion is retained in original raw HTML. Exact checked Script GET from attested document blocked at CDP Request stage. Only its exact requestfailed/console side effects acknowledged; no analytics execution PASS."
+  },
+  "applicationPlayback": "PASS",
+  "denseAdmission": {
+    "indexSha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+    "manifest": "horizon-10000.json",
+    "actualStates": 10001,
+    "sourceValidation": "Local publication was independently validated before merge; expected states decoded by reviewed source module",
+    "browserScope": "Deployed initial and prefetched chunks plus exact every-tick Step; whole-horizon rendering is not claimed",
+    "publicationRuntimeVerification": false
+  },
+  "unexpectedErrors": 0,
+  "privacy": {
+    "status": "NO_OBVIOUS_FINDINGS",
+    "utf8Files": 13,
+    "textBytes": 6962804,
+    "binarySkipped": 134,
+    "findings": [],
+    "requestAuthCookieHeaders": 0,
+    "qualification": "Bounded obvious credential/private-key/Bearer/private-chat/old-private-context UTF-8 scan. Both outer PNG viewed. Known fixed public Cloudflare client insertion retained without printing its contents. Binary gzip not inflated for privacy. Not an exhaustive secret guarantee."
+  },
+  "limits": [
+    "Chromium/Linux and desktop plus 390px mobile viewport only.",
+    "Input assignment plus dispatched change verifies adapter semantics; native typing/range/touch and full accessibility are not asserted.",
+    "Native background scheduling, achieved FPS, native download transport and kernel isolation are not asserted.",
+    "The 30/60 controls are draw targets; held sample pixels and physical playhead are checked, not achieved frame rate.",
+    "Only default10k initial/prefetched chunks and Step0→1. No entire3GB deployed file/byte proof, no public100k/1M rendering/endpoints, no achieved FPS.",
+    "12 JS bodies omitted by trace; actual runtime response.body pins are recorded, while available CSS/JSON/gzip/HTML bodies were independently checked against source/raw artifacts.",
+    "Default PNG captures initial state before 1x/Step controls; subsequent real browser actions/results are in trace and evidence."
+  ],
+  "remainingGates": [
+    "Automatic main full CI including Rust remains separately pending at task assignment; artifact acceptance is not overall CI verdict."
+  ],
+  "priorEvidence": "Accepted e245 local dense artifact unchanged; original97 overallFAIL preserved."
+}

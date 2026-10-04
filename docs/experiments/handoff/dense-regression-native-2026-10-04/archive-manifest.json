@@ -38,9 +38,21 @@
       "overall_status": "PASS",
       "required_checks": 12,
       "qualification": "Independent artifact review qualified PASS,0 blockers; full CI/public deployment separate pending gates."
+    },
+    {
+      "path": "public-239ec8b-dense-original.zip",
+      "bytes": 5601441,
+      "sha256": "688833bc16b805f6433ecd5fb296a3b8e0ec10c6e3481f423b785ae4e9889b48",
+      "head": "239ec8bde3d2f15e2aa5b50e9294e65eab5c0926",
+      "tree": "27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a",
+      "workflow_run": 37232682967,
+      "artifact_id": 11313789667,
+      "overall_status": "PASS",
+      "required_checks": 4,
+      "qualification": "Independent actual public default dense artifact QUALIFIED_APPLICATION_PASS,0 blockers; selected asset/source/response/PNG scope, no full dataset public readback."
     }
   ],
-  "total_zip_bytes": 40020865,
+  "total_zip_bytes": 45622306,
   "readback": "New candidate original ZIPs pending independent fresh network fetch.",
   "numerics_and_regression_review": {
     "path": "e245-numerics-review.json",
@@ -49,7 +61,43 @@
     "status": "PASS_WITH_QUALIFICATIONS",
     "blockers": 0,
     "checks_across_five_reports": 79,
-    "full_ci": "Pending Rust completion.",
+    "full_ci": "Exact e245 candidate all11checksSUCCESS,run37231067824; own review originally completed while Rust pending.",
     "public_dense": "Pending existing post-merge deployment verification."
+  },
+  "public_independent_review": {
+    "head": "239ec8bde3d2f15e2aa5b50e9294e65eab5c0926",
+    "status": "QUALIFIED_APPLICATION_PASS",
+    "blockers": 0,
+    "actual_pngs_viewed": 2,
+    "review_files": [
+      {
+        "path": "public-239-independent-review.md",
+        "bytes": 4940,
+        "sha256": "6e48a85057af69071dbfbd4d103f47187a8057cd369023f2a12a33ac358dd979"
+      },
+      {
+        "path": "public-239-independent-review.json",
+        "bytes": 12709,
+        "sha256": "84ab34b0e417df8e5c3bbfade31ce53905e6a05e11014538287c0bf7e5ef13c5"
+      },
+      {
+        "path": "public-239-byte-validation.json",
+        "bytes": 977,
+        "sha256": "c985fd31127b57126a18ac447f8ee54587b777a82dc595ccfacf370b05ac2387"
+      },
+      {
+        "path": "public-239-contract-validation.json",
+        "bytes": 3299,
+        "sha256": "d157b3f27f254b19b3eeadbd54787b518e76d20d1dd04242e0daf327dc45d043"
+      },
+      {
+        "path": "public-239-privacy-validation.json",
+        "bytes": 453,
+        "sha256": "9c6cbce067b422f13d6dcbabb485737f14e2d209f3cf888ca9128a34cb8bd810"
+      }
+    ],
+    "scope": "Default10k deployed source/metadata/first and prefetched gzip, actual Next0to1,1x held state; no full dataset or public100k/1M endpoint claim.",
+    "analytics_execution": "NOT_TESTED",
+    "readback": "Pending incremental network fetch into independent Git database."
   }
 }
