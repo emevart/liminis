@@ -1,0 +1,123 @@
+{
+  "verdict": "QUALIFIED_SOURCE_PASS",
+  "blockers": 0,
+  "head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+  "tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+  "baseHead": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+  "changedPathCount": 20,
+  "changedFilePins": {
+    ".github/workflows/ci.yml": {
+      "bytes": 22527,
+      "sha256": "a18aaf041f22bb2c30fda7639296fb8be3a8c908b85d0f165852ab1ab2cf8b02"
+    },
+    "docs/ACCEPTANCE.md": {
+      "bytes": 158762,
+      "sha256": "101a3e27d3cfc5e29f5c02fe8ef5e710b27b7492be5408fcb2a723b531bd3ad8"
+    },
+    "docs/DECISIONS.md": {
+      "bytes": 1539502,
+      "sha256": "79454b9441f11192599ffe570e4a7a262846c4349808f16e14349ac1625f881f"
+    },
+    "docs/checkpoints/2026-10-04-lab-aggregate-catalog.md": {
+      "bytes": 6873,
+      "sha256": "515cef470a9de38b40ea191a016036c64533f614b1b5059edf03342b414ee7a7"
+    },
+    "scripts/build_lab_catalog.py": {
+      "bytes": 17028,
+      "sha256": "2210c504eb01632bfcd56a29fc826c08ea238c59a0f55d754aa05fc3ff71fd2b"
+    },
+    "scripts/check_lab_browser.mjs": {
+      "bytes": 49335,
+      "sha256": "2453030e8925afea88a0236ecf8f7ab161f1b4e462157f59963c486de74ff277"
+    },
+    "scripts/check_physical_3d_browser.mjs": {
+      "bytes": 65448,
+      "sha256": "59fab4f9323e240b913a3006584b402ee3586032b98efad2dfa67ca78a908730"
+    },
+    "scripts/physical-3d-png.test.mjs": {
+      "bytes": 5177,
+      "sha256": "f9b41461d7d476fc389698cbc4369baf0d6eb2cb9e1e2073b29d3bb8b9203808"
+    },
+    "scripts/test_build_lab_catalog.py": {
+      "bytes": 13587,
+      "sha256": "77b6a0665bc2a043c9b7afa5c5ec09ed71c47671fe9c8d3aeb9c8c4589a53f49"
+    },
+    "site/data/lab-2/comparisons.json": {
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    "site/data/lab-2/descriptor.json": {
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    },
+    "site/data/lab-2/manifest.json": {
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    },
+    "site/data/lab-2/results.json": {
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    "site/index.html": {
+      "bytes": 2451,
+      "sha256": "02d628dcce5a5a34f2515640e9c53bbb4678249af1ba99732ad6d28e99826b7f"
+    },
+    "site/lab-data.mjs": {
+      "bytes": 20227,
+      "sha256": "68f31a12037c2118c1ab98366b95491b0b23756040bf645515ce2e550381e534"
+    },
+    "site/lab-data.test.mjs": {
+      "bytes": 7573,
+      "sha256": "39260d7570cf88cef11e2a67a49805e1bde9d219cb366ed212d4341401095df5"
+    },
+    "site/lab-ui.test.mjs": {
+      "bytes": 7947,
+      "sha256": "97b970e60ce43e64b1d9948eb93940eabdc804ba6ed71fd0b52e1d3a6bdc8606"
+    },
+    "site/lab.css": {
+      "bytes": 5018,
+      "sha256": "89b1e8594e68ad3224621f6c5b139677212cccec8c37806bba1b62c040045b06"
+    },
+    "site/lab.html": {
+      "bytes": 5393,
+      "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+    },
+    "site/lab.js": {
+      "bytes": 18486,
+      "sha256": "2cb9938799d7febe066a3f377c1970d5785b09352eec0972752040d5e7c9c8b5"
+    }
+  },
+  "authorFreezeIdentity": "All13 data/UI/LAB-QA owned files exact integrated frozen blobs; root patches only QA repair, homepage navigation, CI and docs.",
+  "sourceData": {
+    "rawCopyBytes": 6494550,
+    "rawCopyEqualityAndPins": "INDEPENDENT_PASS",
+    "descriptorBytes": 50708,
+    "descriptorSHA256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+    "runs": 24,
+    "samples": 4044,
+    "producer": "21cbe90732128edee61963544e414d29a7420577",
+    "world": 30,
+    "chamber": 1,
+    "dt_seconds": 30,
+    "build_attestation": false
+  },
+  "findings": [
+    "Builder requires original source/config pins and exact24run/4044sample joins before output; --check rejects missing/tampered/stale/unexpected delivery and performs no repair or recalculation.",
+    "Adapter bounds response size, pins descriptor and every raw SHA before exposing joined data. UI commits only fully validated evidence; integrity/invalid URL error hides workspace and disables controls.",
+    "24run matrix, retained selection, declared mol/m3 vs observed mol, exact integer strings, genesis unknown ledger, living histogram vs historical richness and20censored/4extinct endpoints remain explicit.",
+    "Plots use four seed trajectories/observations only, ending starvation454; published common400 and missing500/null0of4 remain distinct without pooled latest-common ranges.",
+    "QA uses original raw samples and BigInt exact deltas, not product adapter helpers; actualSVG coordinates/styles, observedresponsebody pins, controls/keyboard/history/layout and labelled same-size whitespace integrity negative are mandatory.",
+    "CI preserves official Playwright1.61.1, stock sandbox/observedCDPargv, expectedHEAD/tree and existing recorded/dense/live gates. LAB is mandatory sequential recorded-job step with separate artifact; Python freshness and focusedRGBA tests join site checks.",
+    "Public pin blocker found during review fixed by restoring observe.html exactly. Public script/pins unchanged; homepage alone links LAB.",
+    "Paused3D repair separately reviewed0: strict wholeRGBA/dimensions, retained3originals/prepostAPIsettings/audits. Originalmain5beaFAIL remainsFAIL.",
+    "No core/config/version/frozen/rawLAB/oldrecordings/catalog/player/decoder/3Druntime/vendor source delta. ADR exact old prefix with ADR112 append only."
+  ],
+  "verification": "Full source/QA/focusedtest read; independent raw6.5MB equality/hashes/source/scope/ADRprefix. No browser/models/Cargo/builds/author-source edits. Node/Python/preflight evidence is not browser PASS.",
+  "remainingGates": [
+    "Independent numerical/data and UX review.",
+    "Fresh exact-head LAB9checks/7originalPNGs/trace/observedbody artifact acceptance.",
+    "Fresh fixed3D13checks/all3pausedoriginalPNGs with strict zeroRGBA differences/prepost facts and old regressions.",
+    "All mandatory exact-head fullCI green and durable original/review evidence readback before merge.",
+    "Separate public LAB bytes/browser delivery acceptance after merge."
+  ]
+}

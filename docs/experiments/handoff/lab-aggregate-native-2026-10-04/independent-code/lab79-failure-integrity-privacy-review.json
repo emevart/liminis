@@ -1,0 +1,29 @@
+{
+  "verdict": "FAIL_DIAGNOSTIC_PRIVACY_REVIEW_COMPLETE",
+  "originalFile": "lab-browser-79df352-original.zip",
+  "bytes": 2210725,
+  "sha256": "bbd3f4dce56469c082be6e61f8d9abdd913d48987af6575620a6493e4bcb3a09",
+  "outerCRC": "PASS",
+  "outerMembers": 3,
+  "outerExpandedBytes": 2316450,
+  "traceCRC": "PASS",
+  "traceMembers": 22,
+  "traceExpandedBytes": 13217178,
+  "combinedExpandedBytes": 15533628,
+  "sourceHead": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+  "sourceTree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+  "checks": "2PASS/1FAIL exact CSS serialization mismatch; no overall or repaired source browser PASS.",
+  "PNGViewed": "failure.png actualfullpage viewed; correct raw counts92living/89dominant allele, old plotlabels visiblysmall. No invented state/coordinates or obviousprivate imagecontent.",
+  "privacy": {
+    "scope": "Bounded originalouter+nested ZIP UTF8 obviouscredential/privatecontext pattern scan plus actualPNG view; not fullsecretguarantee.",
+    "utf8Files": 11,
+    "utf8Bytes": 12694925,
+    "binaryOrNonUtf8": 13,
+    "candidateCounts": {
+      "credentialValue": 0,
+      "authorizationValue": 0,
+      "cookieValue": 0,
+      "privateOldContext": 0
+    }
+  }
+}

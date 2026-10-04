@@ -1,0 +1,46 @@
+{
+  "verdict": "QUALIFIED_SOURCE_PASS",
+  "blockers": 0,
+  "path": ".github/workflows/evidence-3d-transport.yml",
+  "bytes": 9315,
+  "sha256": "4d86e94ba70ebb444630cf5d742c185c533f36ada4d804fea049a7416eec8a2e",
+  "purpose": "Evidence-only raw byte transport. Never a product/overallworkflow acceptance.",
+  "pins": {
+    "repository": "emevart/liminis",
+    "repoId": 1317617987,
+    "run": 37243706546,
+    "job": 111557322570,
+    "artifact": 11318935319,
+    "head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+    "tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+    "originalBytes": 59183146,
+    "originalSHA256": "8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60",
+    "partSizes": [
+      16777216,
+      16777216,
+      16777216,
+      8851498
+    ],
+    "partOffsets": [
+      0,
+      16777216,
+      33554432,
+      50331648
+    ]
+  },
+  "guards": [
+    "Fixed exact push branch/path only; no PR/checkout/build/browser/model/product write, permissions actions:read.",
+    "Overall run MUST be completed FAILURE, exact repository/head/branch/event. Failure is not waived or relabelled.",
+    "Separate exact LIVE job MUST be completed SUCCESS and linked to same RUN/HEAD/name.",
+    "Artifact id/name/run/head/repository/size/digest exact and nonexpired; actual byte bound/SHA/ZIPCRC checked.",
+    "Token sent only to fixed api.github.com API URL; redirects disabled. Only manually validated official HTTPS storage host with no userinfo/other port, no Authorization forwarded.",
+    "Signed storage URL/headers/token never printed. Failure output only exceptionclass/httpstatus.",
+    "Four raw contiguous parts exactly sum original size, each<=16MiB; each receipt retains original identity/CRC/jobconclusion and actual overall workflowstatus/conclusion.",
+    "Five-minute job/150s read deadline/capped API JSON/25s socket/read bounds retained; uploadparts4 compression0/no arbitrary input."
+  ],
+  "qualifications": [
+    "Helper source-tree constant agrees previously independently reviewed git candidate tree; actual report source/tree still require later artifact verification.",
+    "Transport PASS is only byte delivery. OriginalGL actual acceptance, part/container reconstruction and privacy/artifact review remain separate.",
+    "No overall CI success, LAB PASS, browser rerun or payload change asserted."
+  ]
+}

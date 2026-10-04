@@ -1,0 +1,100 @@
+{
+  "kind": "independent_lab_responsive_cssom_source_delta_review/v1",
+  "verdict": "QUALIFIED_SOURCE_PASS",
+  "blocking_findings": 0,
+  "other_findings": 0,
+  "scope": "Narrow read-only source delta; no browser/model/Cargo or repeated saved-data arithmetic.",
+  "binding": {
+    "committed_head": "02aeab1d275dbb58b7278efa4a78eb4bc921ee05",
+    "committed_tree": "13f316e55a38ce35709542150c891c0c848c6eb3",
+    "dirty_owned_path": "scripts/check_lab_browser.mjs",
+    "qa_patch_bytes": 25460,
+    "qa_patch_sha256": "28016a8b43a4323ae4a5a8ba7674622658d65d521c8d8cbd4dd78d272322e706",
+    "file_pins": {
+      "site/lab.js": {
+        "bytes": 20139,
+        "sha256": "4d55cc9811dcaff292179138f3404ae4ddf3ceb3ce98bab085338955bb8444fd",
+        "committed_at_head": true
+      },
+      "site/lab.css": {
+        "bytes": 5019,
+        "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+        "committed_at_head": true
+      },
+      "site/lab-ui.test.mjs": {
+        "bytes": 10834,
+        "sha256": "3ea60c83f99decb646e6b9a2940f46716e3f62b1de99262d420a9c7d66d0eb3b",
+        "committed_at_head": true
+      },
+      "scripts/check_lab_browser.mjs": {
+        "bytes": 54084,
+        "sha256": "f8f4bc424406e1104c1a321cbd9dbb584165c4c59eb4052d6b3025a5b00b6231",
+        "committed_at_head": false
+      }
+    },
+    "not_yet_clean_candidate_for_actual_ci": true
+  },
+  "unchanged_data_and_source_objects": {
+    "site/data/lab-2": "39451a50e8fb8d30e5f10d2dc375be0ff961a360",
+    "site/lab-data.mjs": "1cac6bdfa4a9b3016eb1f59ae2831594b895431c",
+    "scripts/build_lab_catalog.py": "a86176d4c213835e7865b2af2a6bae10f7cef2fe",
+    "scripts/test_build_lab_catalog.py": "ddc4a106c811bdc02e897962804190e7e4ec1fbe",
+    "crates/liminis-core": "1f9031142731d138bf6de243ab2ac13d644e1553",
+    "configs": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+    "Cargo.toml": "4b7bef5047fafbdd10526a90de4a18952678a6a6",
+    "Cargo.lock": "224f065c1bbf103a5cfec139a2f3313e2bf80559",
+    "rust-toolchain.toml": "1fd6f1afaf9c17073863c2b9a9f50f90572a7edb",
+    "docs/experiments/lab-2": "246f2cce3ba9bf6612753267a24574f7a043add4",
+    "site/data/catalog.json": "07eabcff860ef15e7b84a315e4b870c715744fff",
+    "site/data/dense-cell-chamber": "01b9b066dc56be0aa75cb325398ba0aef97e70de",
+    "site/recording.mjs": "75e36b0e47f0c8323d84bb5942c6bac21a21c37f",
+    "site/dense-recording.mjs": "aa9b99b90e35797d7ae16cad62dbaf40401da802",
+    "site/playback.mjs": "19e198964ba31aa8801fed58e9f48eec60fc9ed9",
+    "site/observer.js": "199b8ad408ea1b2f6739fd1a9407109084b24996",
+    "crates/liminis/src/cell-viewer-3d.mjs": "c9c299a89431fd76a7ccc76ef408464fe5f5f69c",
+    "crates/liminis/src/vendor/three-r180": "37a4b0a1e61dc9e76649d0b37cc50eaa8bdb55f4",
+    "crates/liminis/src/cells_host.rs": "ff6f0113d9ed80c9d14e1a4782370240865ffb69",
+    "crates/liminis/src/cell-viewer.html": "fcab3f21526a10617067ce93d67ded19765e7521",
+    "site/observe.html": "87f30258d13440bb1204b42ccab88424c49e2edd",
+    "scripts/check_public_recording_browser.mjs": "7ad588601f09e2dd3f50a913e050a84c67b9a0dd"
+  },
+  "responsive_math": {
+    "height_css_px": 210,
+    "declared_width": "Measured actual SVG CSS width w; viewBox0,0,w,210",
+    "frame": {
+      "x0": 72,
+      "x1": "w-12",
+      "y0": 12,
+      "y1": 178
+    },
+    "expected_x": "72+(model_seconds/xmax)*(w-84)",
+    "expected_y": "178-(raw_metric/ymax)*166",
+    "domains": "xmax=window_ticks*30; ymax=actual raw maximum of retained displayed arms/seeds, or1 ifzero",
+    "source_labels": "Axis-only three-significant-digit formatting. Raw domain, observations, exact counts, details and published pairs are unchanged.",
+    "resize": "ResizeObserver rerenders geometry only when measured widths change; hidden/inactive charts are ignored. No model/interpolation or missing-value filling."
+  },
+  "cssom_finding_resolution": {
+    "old_location": "scripts/check_lab_browser.mjs:84 at79df352",
+    "resolved_in_reviewed_patch": true,
+    "new_contract": "Expected ratio comes only from original histogram count/living. Exact DOM counts/text remain checked. Actual declared style.width must exactly equal an isolated detached CSSStyleDeclaration serialization in the same real page; finite ratio/nonemptypercentage required.",
+    "limitation": "CSSOM declaration identity only, not rendered bar pixel dimensions. Empty extinction histogram creates no divide-by-zero expected rows.",
+    "global_tolerance_widened": false
+  },
+  "qa_numerical_independence": {
+    "responsive_svg": "Expected coordinates use raw original time/metric/domain and observed declared width, while declared width is checked against actual CSS width. Existing1e-5 SVG point/dot tolerance is unchanged.",
+    "typography": "At four actuallayouts require font11CSSpx declared and at least10CSSpx aftergetScreenCTM, positive uncut nonoverlapping label boxes, hours suffix and axis-only three-significant-digit serialization.",
+    "current_qualification": "RESOLVED in reviewed currentQA bytes: x axis values exactly match original model-time [0,window*30/7200,window*30/3600], y values exactly match original displayed raw maximum [0,max/2,max] (or1 zero domain). Exact three-significant-digit text follows independently anchored values; no production helper."
+  },
+  "reported_author_tests": {
+    "lab_node_passed": 14,
+    "independently_rerun_here": false,
+    "browser_pass": false
+  },
+  "previous_evidence": {
+    "lab79_workflow_run": "37243706546",
+    "lab79_status": "FAIL retained; twochecksPASS thenCSSOMassertionFAIL",
+    "original_main5bea_3d_status": "FAIL retained",
+    "fixed3d79": "Coordinator reportsjobSUCCESS; actual largeartifactreview pending here."
+  },
+  "acceptance_gate": "Publish coherentcleanHEAD/tree then requirefresh protected LAB/3D/regressions and independent actualartifactreview. Neither source/math verdict nor14reportedNodechecks isbrowserPASS."
+}

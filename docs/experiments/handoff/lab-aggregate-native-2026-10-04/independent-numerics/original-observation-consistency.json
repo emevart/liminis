@@ -1,0 +1,152 @@
+{
+  "status": "PASS",
+  "scope": "Independent saved-observation copying/typing/join/difference/range consistency only; not a new model/per-tick ledger/science validation.",
+  "source_head": "f356ab25d8307fd2b43472100104060e422afdf3",
+  "source_tree": "4d945837705b9cbc3cb673a279bc8b35b1051512",
+  "scientific_source": "21cbe90732128edee61963544e414d29a7420577",
+  "raw_pins": {
+    "results": {
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    "comparisons": {
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    "manifest": {
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    }
+  },
+  "descriptor": {
+    "bytes": 50708,
+    "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+  },
+  "runs": 24,
+  "retained_samples": 4044,
+  "histograms_checked": 4044,
+  "paired_records_checked": 160,
+  "available_pairs": 136,
+  "unavailable_pairs": 24,
+  "metrics_per_pair": 27,
+  "published_differences_checked": 3672,
+  "published_ranges_checked": 2835,
+  "published_output_changed": false,
+  "immutable_base_objects": {
+    "crates/liminis-core": "1f9031142731d138bf6de243ab2ac13d644e1553",
+    "configs": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+    "Cargo.toml": "4b7bef5047fafbdd10526a90de4a18952678a6a6",
+    "Cargo.lock": "224f065c1bbf103a5cfec139a2f3313e2bf80559",
+    "rust-toolchain.toml": "1fd6f1afaf9c17073863c2b9a9f50f90572a7edb",
+    "docs/experiments/lab-2": "246f2cce3ba9bf6612753267a24574f7a043add4",
+    "site/data/catalog.json": "07eabcff860ef15e7b84a315e4b870c715744fff",
+    "site/data/dense-cell-chamber": "01b9b066dc56be0aa75cb325398ba0aef97e70de",
+    "site/recording.mjs": "75e36b0e47f0c8323d84bb5942c6bac21a21c37f",
+    "site/dense-recording.mjs": "aa9b99b90e35797d7ae16cad62dbaf40401da802",
+    "site/playback.mjs": "19e198964ba31aa8801fed58e9f48eec60fc9ed9",
+    "site/observer.js": "199b8ad408ea1b2f6739fd1a9407109084b24996"
+  },
+  "boundaries": {
+    "starvation_terminal": 454,
+    "latest_common": 400,
+    "landmark500": "0/4, null range; not zero"
+  },
+  "baseline1800": {
+    "current_living_alleles": 2,
+    "historical_richness": 3
+  },
+  "candidate_binding": {
+    "head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+    "tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+    "clean_tracked_checkout": true,
+    "unchanged_lab_sources_from_arithmetic_head": true,
+    "lab_sources": {
+      "scripts/build_lab_catalog.py": {
+        "bytes": 17028,
+        "sha256": "2210c504eb01632bfcd56a29fc826c08ea238c59a0f55d754aa05fc3ff71fd2b",
+        "git_object": "a86176d4c213835e7865b2af2a6bae10f7cef2fe"
+      },
+      "scripts/check_lab_browser.mjs": {
+        "bytes": 49335,
+        "sha256": "2453030e8925afea88a0236ecf8f7ab161f1b4e462157f59963c486de74ff277",
+        "git_object": "71046fa1ab4cf7c79fc911924752bccdb719257e"
+      },
+      "scripts/test_build_lab_catalog.py": {
+        "bytes": 13587,
+        "sha256": "77b6a0665bc2a043c9b7afa5c5ec09ed71c47671fe9c8d3aeb9c8c4589a53f49",
+        "git_object": "ddc4a106c811bdc02e897962804190e7e4ec1fbe"
+      },
+      "site/data/lab-2/results.json": {
+        "bytes": 5294742,
+        "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+        "git_object": "65df63d0331c00203f216b4561ac32b1e2322ed0"
+      },
+      "site/data/lab-2/comparisons.json": {
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+        "git_object": "33289c45fdfdd70e0e964c84eff02df5a2739c86"
+      },
+      "site/data/lab-2/manifest.json": {
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+        "git_object": "64a5d60aec3329c2877c65b5f1a20758d70b1ac4"
+      },
+      "site/data/lab-2/descriptor.json": {
+        "bytes": 50708,
+        "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+        "git_object": "022099edbb665aca0246171b79f157bab4df65f2"
+      },
+      "site/lab-data.mjs": {
+        "bytes": 20227,
+        "sha256": "68f31a12037c2118c1ab98366b95491b0b23756040bf645515ce2e550381e534",
+        "git_object": "1cac6bdfa4a9b3016eb1f59ae2831594b895431c"
+      },
+      "site/lab-data.test.mjs": {
+        "bytes": 7573,
+        "sha256": "39260d7570cf88cef11e2a67a49805e1bde9d219cb366ed212d4341401095df5",
+        "git_object": "c54a16f3d1bed741bd69b46f75eed92894fa6b1c"
+      },
+      "site/lab-ui.test.mjs": {
+        "bytes": 7947,
+        "sha256": "97b970e60ce43e64b1d9948eb93940eabdc804ba6ed71fd0b52e1d3a6bdc8606",
+        "git_object": "520b76cde3548d6c5bbdb0d4e19f93d36588de2c"
+      },
+      "site/lab.css": {
+        "bytes": 5018,
+        "sha256": "89b1e8594e68ad3224621f6c5b139677212cccec8c37806bba1b62c040045b06",
+        "git_object": "3cb712166963fb51423c94deb518bf3f52ed1679"
+      },
+      "site/lab.html": {
+        "bytes": 5393,
+        "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+        "git_object": "19c81bf6d9665d5043f9e3bf9855a670330db674"
+      },
+      "site/lab.js": {
+        "bytes": 18486,
+        "sha256": "2cb9938799d7febe066a3f377c1970d5785b09352eec0972752040d5e7c9c8b5",
+        "git_object": "46344eaf7818d51bccf3ed07c0cb5b6f6c753465"
+      }
+    },
+    "immutable_base": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+    "immutable_objects": {
+      "crates/liminis-core": "1f9031142731d138bf6de243ab2ac13d644e1553",
+      "configs": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+      "Cargo.toml": "4b7bef5047fafbdd10526a90de4a18952678a6a6",
+      "Cargo.lock": "224f065c1bbf103a5cfec139a2f3313e2bf80559",
+      "rust-toolchain.toml": "1fd6f1afaf9c17073863c2b9a9f50f90572a7edb",
+      "docs/experiments/lab-2": "246f2cce3ba9bf6612753267a24574f7a043add4",
+      "site/data/catalog.json": "07eabcff860ef15e7b84a315e4b870c715744fff",
+      "site/data/dense-cell-chamber": "01b9b066dc56be0aa75cb325398ba0aef97e70de",
+      "site/recording.mjs": "75e36b0e47f0c8323d84bb5942c6bac21a21c37f",
+      "site/dense-recording.mjs": "aa9b99b90e35797d7ae16cad62dbaf40401da802",
+      "site/playback.mjs": "19e198964ba31aa8801fed58e9f48eec60fc9ed9",
+      "site/observer.js": "199b8ad408ea1b2f6739fd1a9407109084b24996",
+      "crates/liminis/src/cell-viewer-3d.mjs": "c9c299a89431fd76a7ccc76ef408464fe5f5f69c",
+      "crates/liminis/src/vendor/three-r180": "37a4b0a1e61dc9e76649d0b37cc50eaa8bdb55f4",
+      "crates/liminis/src/cells_host.rs": "ff6f0113d9ed80c9d14e1a4782370240865ffb69",
+      "crates/liminis/src/cell-viewer.html": "fcab3f21526a10617067ce93d67ded19765e7521",
+      "site/observe.html": "87f30258d13440bb1204b42ccab88424c49e2edd",
+      "scripts/check_public_recording_browser.mjs": "7ad588601f09e2dd3f50a913e050a84c67b9a0dd"
+    }
+  }
+}

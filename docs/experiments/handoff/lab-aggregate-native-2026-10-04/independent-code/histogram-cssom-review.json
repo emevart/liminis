@@ -1,0 +1,21 @@
+{
+  "verdict": "QUALIFIED_SOURCE_PASS",
+  "blockers": 0,
+  "baseHead": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+  "path": "scripts/check_lab_browser.mjs",
+  "bytes": 50205,
+  "sha256": "00bcf9e80dd6451036e591b8629e157a8b8edd645c5018a9c2265a698a487038",
+  "scope": "Independent read-only narrow dirty histogram declaration delta. No browser/model/build/source edit.",
+  "originalFailure": "Original LAB79 remains FAIL. Reviewed saved report actual serialization96.7391 versus rawratio96.73913043478261; this is not accepted actual newbrowser evidence.",
+  "guards": [
+    "Expected ratios originate only from original raw allele counts and living count.",
+    "Detached div CSSStyleDeclaration setter serializes expected percentage independently of the actual histogram DOM width.",
+    "Actual style.width and detached reference style.width must match exactly; count/text/raw-histogram identity and finite expected values remain mandatory.",
+    "Raw ratio, actual/ref serialized strings, original living/run/tick are persisted. No rendered bar pixel geometry is claimed.",
+    "No existing arithmetic/SVG tolerance, source pin, sandbox or cleanup gate is widened. Empty extinct histogram performs no0/0bar division."
+  ],
+  "remainingGates": [
+    "Final frozen combined exact-head source identity.",
+    "Fresh protected actual LAB browser artifact and independent acceptance; current originalFAIL retained."
+  ]
+}

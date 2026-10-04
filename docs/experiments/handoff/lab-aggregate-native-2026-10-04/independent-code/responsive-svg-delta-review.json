@@ -1,0 +1,45 @@
+{
+  "verdict": "QUALIFIED_SOURCE_PASS",
+  "blockers": 0,
+  "headBeforeDirtyQA": "02aeab1d275dbb58b7278efa4a78eb4bc921ee05",
+  "treeBeforeDirtyQA": "13f316e55a38ce35709542150c891c0c848c6eb3",
+  "files": {
+    "site/lab.js": {
+      "bytes": 20139,
+      "sha256": "4d55cc9811dcaff292179138f3404ae4ddf3ceb3ce98bab085338955bb8444fd"
+    },
+    "site/lab.css": {
+      "bytes": 5019,
+      "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+    },
+    "site/lab-ui.test.mjs": {
+      "bytes": 10834,
+      "sha256": "3ea60c83f99decb646e6b9a2940f46716e3f62b1de99262d420a9c7d66d0eb3b"
+    },
+    "scripts/check_lab_browser.mjs": {
+      "bytes": 54084,
+      "sha256": "f8f4bc424406e1104c1a321cbd9dbb584165c4c59eb4052d6b3025a5b00b6231"
+    }
+  },
+  "scope": "Read-only narrow UIa0 and root dirty responsive SVG/typography/CSSOM QA delta. No browser/build/model/source edits.",
+  "math": [
+    "All original observations/domains/dt/units and terminal454/common400/missing500 preserved. Only responsive SVG coordinate frame and short axislabels change.",
+    "Productionframe x0=72,x1=width-12,y0=12,y1=178,height210 uses attached measured CSSwidth; wholeSVGwidth sameviewBoxwidth removes shrinking11pxfonts.",
+    "QAframe literals computed separately; actualviewBox width checked against CSSwidth within.02 layout units, and existing raw paths/dots checked within1e-5 unchanged.",
+    "Ydomain recomputed from raw samples, Xdomain from raw dt/horizon. Three-significant-digit labels do not alter domains, coordinates, source samples or detail precision.",
+    "Four layout checks additionally require actual11pxcomputedfont/getScreenCTM effect>=10CSSpx, positive uncutnonoverlapping axis boxes, roundedlabelvalues and xhour suffix. Four typographyrecords mandatory aftercleanup."
+  ],
+  "lifecycle": [
+    "Unchanged width redraw avoided; own redraw yields stable widths. Hidden/notready callback ignored; pagehide disconnects and persisted pageshow resumes observation.",
+    "Dataset validates fully before commit reveals workspace for measurement; rendering is synchronous. No extra fetch/models/interpolatedstates.",
+    "StrictCSSOM histogram oracle still derives expected ratio from original counts/living with detached serialization; originalLAB79FAIL retained."
+  ],
+  "sourceInvariants": "PinnedLABraw/descriptor/adapter and production3D/publicobserve/publicpins/QA3Drepair exact79bytes. Dirty QA only; finalfreezeidentity still required.",
+  "verification": "Read wholechangedproduction/UItest functions/CSS and fullQA delta/adjacent contracts. Source-only author Node checks do not imply actual browser.",
+  "remainingGates": [
+    "Final frozen combined HEAD/tree sourceguard.",
+    "Fresh exact-head protected LAB9checks/7PNGs/trace/actualresponsivegeometry+4typography and histogramdeclaration artifact acceptance.",
+    "Preserved existing gates/fixed3D strictwholeRGBA acceptance and allmandatoryfullCIgreen.",
+    "Independentnumerics/UX evidence and durableoriginalreview/archive readback; publicLABdelivery separately aftermerge."
+  ]
+}

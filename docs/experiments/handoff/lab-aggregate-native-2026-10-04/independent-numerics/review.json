@@ -1,0 +1,262 @@
+{
+  "kind": "independent_lab_aggregate_numerics_source_review/v1",
+  "verdict": "QUALIFIED_SOURCE_NUMERICS_PASS_ACTUAL_LAB_FAIL",
+  "blocking_findings": 0,
+  "other_findings": 1,
+  "findings": [
+    {
+      "number": 1,
+      "file": "scripts/check_lab_browser.mjs",
+      "line": 84,
+      "category": "CSSOM serialization oracle",
+      "adr": "ADR-112",
+      "protocol_blocking": false,
+      "acceptance_gate_blocking": true,
+      "issue": "A fixed1e-5 comparison of parseFloat(serialized CSS width) against unformatted raw ratio rejects a correct CSSOM representation. The original LAB79 gate remains FAIL.",
+      "evidence": "Original baseline seed1 terminal histogram is {-1:2,0:89,1:1}, living92. CSSOM width96.7391% versus raw89/92*100=96.73913043478261; difference3.043478261e-5 exceeds1e-5. Exact counts/text were checked before the width assertion.",
+      "why": "Mixing a browser-serialized CSS number with an unformatted binary64 ratio prevents mandatory actual acceptance without demonstrating corrupted accounting or biological data.",
+      "check_needed": "Independently derive the ratio from original sample counts; assign ratio% to a detached CSSStyleDeclaration in the same real page and compare actual serialized width exactly to that reference. Require a nonempty valid reference and retain exact counts/text. Keep SVG/accounting checks unchanged, preserve original FAIL, then inspect a fresh exact-head protected run."
+    }
+  ],
+  "protocol": ".claude/agents/numerics-reviewer.md",
+  "adr": [
+    "ADR-004",
+    "ADR-026",
+    "ADR-112"
+  ],
+  "candidate": {
+    "head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+    "tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+    "clean_tracked_checkout": true
+  },
+  "scope": "Read-only numerical/source consistency of LAB data delivery, display/export, independent browser-QA calculations and the QA-only paused 3D raster oracle. No model, Cargo or browser execution.",
+  "historical_lab_identity": {
+    "source_commit": "21cbe90732128edee61963544e414d29a7420577",
+    "world_format_version": 30,
+    "chamber_format": 1,
+    "dt_seconds": 30,
+    "build_attestation": false,
+    "delivery_head_is_not_historical_engine_head": true
+  },
+  "source_binding": {
+    "lab_files_unchanged_from": "f356ab25d8307fd2b43472100104060e422afdf3",
+    "lab_files_count": 13,
+    "lab_file_pins": {
+      "scripts/build_lab_catalog.py": {
+        "bytes": 17028,
+        "sha256": "2210c504eb01632bfcd56a29fc826c08ea238c59a0f55d754aa05fc3ff71fd2b",
+        "git_object": "a86176d4c213835e7865b2af2a6bae10f7cef2fe"
+      },
+      "scripts/check_lab_browser.mjs": {
+        "bytes": 49335,
+        "sha256": "2453030e8925afea88a0236ecf8f7ab161f1b4e462157f59963c486de74ff277",
+        "git_object": "71046fa1ab4cf7c79fc911924752bccdb719257e"
+      },
+      "scripts/test_build_lab_catalog.py": {
+        "bytes": 13587,
+        "sha256": "77b6a0665bc2a043c9b7afa5c5ec09ed71c47671fe9c8d3aeb9c8c4589a53f49",
+        "git_object": "ddc4a106c811bdc02e897962804190e7e4ec1fbe"
+      },
+      "site/data/lab-2/results.json": {
+        "bytes": 5294742,
+        "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+        "git_object": "65df63d0331c00203f216b4561ac32b1e2322ed0"
+      },
+      "site/data/lab-2/comparisons.json": {
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+        "git_object": "33289c45fdfdd70e0e964c84eff02df5a2739c86"
+      },
+      "site/data/lab-2/manifest.json": {
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+        "git_object": "64a5d60aec3329c2877c65b5f1a20758d70b1ac4"
+      },
+      "site/data/lab-2/descriptor.json": {
+        "bytes": 50708,
+        "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+        "git_object": "022099edbb665aca0246171b79f157bab4df65f2"
+      },
+      "site/lab-data.mjs": {
+        "bytes": 20227,
+        "sha256": "68f31a12037c2118c1ab98366b95491b0b23756040bf645515ce2e550381e534",
+        "git_object": "1cac6bdfa4a9b3016eb1f59ae2831594b895431c"
+      },
+      "site/lab-data.test.mjs": {
+        "bytes": 7573,
+        "sha256": "39260d7570cf88cef11e2a67a49805e1bde9d219cb366ed212d4341401095df5",
+        "git_object": "c54a16f3d1bed741bd69b46f75eed92894fa6b1c"
+      },
+      "site/lab-ui.test.mjs": {
+        "bytes": 7947,
+        "sha256": "97b970e60ce43e64b1d9948eb93940eabdc804ba6ed71fd0b52e1d3a6bdc8606",
+        "git_object": "520b76cde3548d6c5bbdb0d4e19f93d36588de2c"
+      },
+      "site/lab.css": {
+        "bytes": 5018,
+        "sha256": "89b1e8594e68ad3224621f6c5b139677212cccec8c37806bba1b62c040045b06",
+        "git_object": "3cb712166963fb51423c94deb518bf3f52ed1679"
+      },
+      "site/lab.html": {
+        "bytes": 5393,
+        "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+        "git_object": "19c81bf6d9665d5043f9e3bf9855a670330db674"
+      },
+      "site/lab.js": {
+        "bytes": 18486,
+        "sha256": "2cb9938799d7febe066a3f377c1970d5785b09352eec0972752040d5e7c9c8b5",
+        "git_object": "46344eaf7818d51bccf3ed07c0cb5b6f6c753465"
+      }
+    },
+    "immutable_base": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+    "immutable_objects": {
+      "crates/liminis-core": "1f9031142731d138bf6de243ab2ac13d644e1553",
+      "configs": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+      "Cargo.toml": "4b7bef5047fafbdd10526a90de4a18952678a6a6",
+      "Cargo.lock": "224f065c1bbf103a5cfec139a2f3313e2bf80559",
+      "rust-toolchain.toml": "1fd6f1afaf9c17073863c2b9a9f50f90572a7edb",
+      "docs/experiments/lab-2": "246f2cce3ba9bf6612753267a24574f7a043add4",
+      "site/data/catalog.json": "07eabcff860ef15e7b84a315e4b870c715744fff",
+      "site/data/dense-cell-chamber": "01b9b066dc56be0aa75cb325398ba0aef97e70de",
+      "site/recording.mjs": "75e36b0e47f0c8323d84bb5942c6bac21a21c37f",
+      "site/dense-recording.mjs": "aa9b99b90e35797d7ae16cad62dbaf40401da802",
+      "site/playback.mjs": "19e198964ba31aa8801fed58e9f48eec60fc9ed9",
+      "site/observer.js": "199b8ad408ea1b2f6739fd1a9407109084b24996",
+      "crates/liminis/src/cell-viewer-3d.mjs": "c9c299a89431fd76a7ccc76ef408464fe5f5f69c",
+      "crates/liminis/src/vendor/three-r180": "37a4b0a1e61dc9e76649d0b37cc50eaa8bdb55f4",
+      "crates/liminis/src/cells_host.rs": "ff6f0113d9ed80c9d14e1a4782370240865ffb69",
+      "crates/liminis/src/cell-viewer.html": "fcab3f21526a10617067ce93d67ded19765e7521",
+      "site/observe.html": "87f30258d13440bb1204b42ccab88424c49e2edd",
+      "scripts/check_public_recording_browser.mjs": "7ad588601f09e2dd3f50a913e050a84c67b9a0dd"
+    },
+    "production_3d_core_configs_raw_lab_recorded_dense_observer_unchanged": true,
+    "qa_only_repair_commit": "3d48f47d5929fc7d06c808c3845d8d440ba4d716"
+  },
+  "independent_saved_observation_consistency": {
+    "artifact": {
+      "file": "original-observation-consistency.json",
+      "bytes": 6881,
+      "sha256": "f40745fdfdf4d35b9858a2a2e844d9e0cadd9936f30a528fa129bfbb4a9c5f9e"
+    },
+    "arithmetic_source_head": "f356ab25d8307fd2b43472100104060e422afdf3",
+    "all_raw_bytes_original": true,
+    "raw_bytes": 6494550,
+    "raw_pins": {
+      "results": {
+        "bytes": 5294742,
+        "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+      },
+      "comparisons": {
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+      },
+      "manifest": {
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+      }
+    },
+    "descriptor": {
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    },
+    "runs": 24,
+    "conditions": 6,
+    "paired_seeds": 4,
+    "retained_samples": 4044,
+    "histograms_checked": 4044,
+    "paired_records_checked": 160,
+    "available_pairs": 136,
+    "unavailable_pairs": 24,
+    "metrics_per_pair": 27,
+    "published_differences_checked": 3672,
+    "published_range_records_checked": 2835,
+    "method": "Independent Python over saved original JSON, with exact integer arithmetic and exported floating-value arithmetic; no producer, UI or validation helper imported. Results and comparisons were not overwritten or regenerated.",
+    "limits": "Consistency of retained published observations is not a new simulation, per-tick ledger validation, kernel reproducibility or build attestation."
+  },
+  "display_and_availability": {
+    "integer_strings": "Exact canonical decimal strings, including scales/counters above 2^53, stay strings in DOM and original downloads. BigInt is used for independent exact differences, without Number narrowing.",
+    "float_presentation": "Plot path serialization uses six decimals; floating readouts use six exponential decimals. These are presentation rules and do not alter exact counters or original JSON bytes.",
+    "units": "Model time is tick*30 s; declared concentrations are mol/m3, free pools and structural biomass are mol; bath/internal energy is J, energy scales are units/J, temperature is K, exchange is 1/s.",
+    "plots": "Only retained observations; shared y-domain is actual displayed raw maximum or 1 if zero. Four paired seed curves per arm, lines are visual guides; starvation terminates at retained tick454, with no zero fill or extrapolation.",
+    "boundaries": {
+      "starvation_terminal": 454,
+      "latest_common": 400,
+      "landmark500": "0/4, null range; not zero"
+    },
+    "run_statuses": {
+      "censored_20000": 20,
+      "extinct_454": 4
+    },
+    "sample_comparison_separation": "Selecting a retained sample does not invent a paired comparison; only existing landmark/latest-common records are displayed. No pooled range across different endpoints.",
+    "ledger": "Genesis checked residual is null/unknown; copied checked residual strings remain exact and are not new checks of unretained transitions.",
+    "histogram": {
+      "current_living_alleles": 2,
+      "historical_richness": 3
+    },
+    "evolution_limits": "Four paired seeds are not 24 independent replicates. Current living kinetics alleles, historical richness, maximum generation and peak cells remain distinct; no full genomes, individual cells, positions, species, fitness or evolutionary discovery is inferred."
+  },
+  "browser_qa_source_review": {
+    "expected_runtime": "Official pinned Playwright 1.61.1, protected sandbox and observed argv guards; exact clean HEAD/tree and actual served byte checks.",
+    "raw_arithmetic": "QA independently recomputes five integer metrics for 140 landmark plus 20 latest-common pairs from retained original results, checking BIO scales before differences.",
+    "dom_paired_records": "QA compares all nine displayed paired metrics and published range min/max/width/count against pinned original comparisons.json. Floating paired differences/ranges are not independently recomputed by the browser oracle.",
+    "svg_math": "Expected domain and coordinates are computed from original exported values without the production adapter: x=68+(sample_time/xmax)*520; y=160-(raw_metric/ymax)*148. M/L path points and observation dots are checked with 1e-5 SVG-unit tolerance for six-decimal path serialization.",
+    "other_contracts": "24 real run matrix, all 24 genesis/terminal details, baseline1800 histogram, mutation-off, starvation454/common400/landmark500, deep URL/back/reload/keyboard, desktop/short/390/320 PNGs, raw response bytes, cleanup and transport-integrity negative control are required.",
+    "integrity_negative": "Same-length raw transport-byte mutation preserves JSON values but changes SHA; fail before displaying data. It is not a changed model trajectory.",
+    "actual_browser_status": "FAIL_ON_EXACT79_HISTOGRAM_CSSOM_ASSERTION; remaining checks unexecuted"
+  },
+  "paused_3d_qa_repair": {
+    "files": {
+      "scripts/check_physical_3d_browser.mjs": {
+        "bytes": 65448,
+        "sha256": "59fab4f9323e240b913a3006584b402ee3586032b98efad2dfa67ca78a908730",
+        "git_object": "731f080aa30e4099265df54ef741ed98533159ac"
+      },
+      "scripts/physical-3d-png.test.mjs": {
+        "bytes": 5177,
+        "sha256": "f9b41461d7d476fc389698cbc4369baf0d6eb2cb9e1e2073b29d3bb8b9203808",
+        "git_object": "a50d3c0db4dc60ab886d8d61a5648614049fd7ae"
+      }
+    },
+    "contract": "Compare exact dimensions and every decoded full compositor RGBA byte. Opaque RGB normalizes alpha to 255. No masks, crops, pixel tolerance or repeated capture until success.",
+    "diagnostics": "One baseline/30/60 original PNG each plus raw/decoded SHA, mismatch pixel count/bounds and actual API, camera, viewport, mode, revision, drawn tick and layer facts before/after every capture are retained before identity assertions.",
+    "independent_synthetic_run": {
+      "command": "node --test scripts/physical-3d-png.test.mjs",
+      "passed": 4,
+      "failed": 0,
+      "browser_executed": false,
+      "controls": "All five PNG filters; alternate opaque RGB/RGBA encodings of known identical pixels; single RGB or alpha-byte difference; dimensions and mismatch bounds; invalid signature/filter/oversized image refusal."
+    },
+    "fps_limit": "30/60 are requested screen cadence settings, not achieved-FPS measurements.",
+    "old_failure": "Main5bea run37241483046 remains FAIL; retained JPEG/API evidence does not resolve the prior encoded-PNG mismatch. The new exact-raster oracle does not retroactively pass that run.",
+    "actual_fixed_gate_status": "Coordinator reports exact79 jobSUCCESS; original large artifact not yet independently reviewed here, so no actual3D acceptance verdict."
+  },
+  "acceptance_qualifications": [
+    "Source-data numerical consistency passes for exact79df352/tree0c9b9a, with one CSSOM oracle issue and actual LAB FAIL. A repaired source and fresh protected actualLAB artifact are required; fixed3D artifact review and overallCI remain separate gates.",
+    "Earlier accepted9d and main5bea public/recorded/regression evidence does not transfer actual browser acceptance to this changed source head.",
+    "LAB public delivery and actual public browser acceptance after deployment remain separate. Previous default10k public playback and all-three-horizon metadata/final-gzip pins do not establish public LAB or public100k/1M rendering.",
+    "No new model, Cargo, native GL/browser, full-million decode or producer run was performed in this review.",
+    "Author/root-reported LAB Node/Python preflight results are not independently rerun browser evidence. The only independently executed new Node controls here are four synthetic PNG-oracle tests.",
+    "No hardware-GPU, achieved FPS, kernel sandbox isolation, cross-platform numerical equivalence or hidden-transition conservation claim is made."
+  ],
+  "actual_lab79_failure": {
+    "workflow_run": "37243706546",
+    "source_head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+    "source_tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+    "status": "FAIL",
+    "checks_passed": 2,
+    "checks_failed": 1,
+    "remaining_mandatory_checks_unexecuted": true,
+    "report_sha256": "ff3d0c18b797e8ae30121b088fcfcebe6b7117675eae3423d560b1f7362dfdc6",
+    "source_pin_records_matched": 13,
+    "unique_source_paths_matched": 12,
+    "actual_page_responses_matched": 8,
+    "raw_static_oracle_pairs": 160,
+    "actual_matrix_rows": 24,
+    "original_failure_png": {
+      "bytes": 487245,
+      "sha256": "655b8dab9e95a913a3dd784185bfb99b33bb21691693a1e3583d01f8d129a1fb",
+      "viewed": true
+    },
+    "review_scope": "Original saved report/source pins and representative failure PNG only; no browser rerun or comprehensive trace/archive/privacy review."
+  }
+}

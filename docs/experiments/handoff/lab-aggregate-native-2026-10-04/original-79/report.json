@@ -1,0 +1,890 @@
+{
+  "status": "FAIL",
+  "startedAt": "2026-10-04T23:29:22.972Z",
+  "limits": {
+    "run": 210000,
+    "operation": 15000,
+    "launch": 20000,
+    "cdp": 5000,
+    "cleanup": 5000,
+    "trace": 15000
+  },
+  "sourceCommit": "21cbe90732128edee61963544e414d29a7420577",
+  "pins": {
+    "results": {
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    "comparisons": {
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    "manifest": {
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    }
+  },
+  "checks": [
+    {
+      "name": "Observed official Chromium sandbox argv with unchanged stock launch",
+      "status": "PASS",
+      "elapsedMs": 8.81381399999998
+    },
+    {
+      "name": "Original 6.5MB JSON is verified before showing the full 6×4 matrix and historical source",
+      "status": "PASS",
+      "elapsedMs": 1804.115377
+    },
+    {
+      "name": "Every real run exposes genesis and terminal samples/counters/environment; all four seed curves match raw observations",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: Living allele histogram actual bar: 96.7391/96.73913043478261\n    at closeNumber (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:90:73)\n    at detail (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:84:471)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:132:233\n    at async check (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:25:110)\n    at async main (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:131:3)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:24:72)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:161:27"
+    }
+  ],
+  "sources": [
+    {
+      "filename": "scripts/check_lab_browser.mjs",
+      "bytes": 49335,
+      "sha256": "2453030e8925afea88a0236ecf8f7ab161f1b4e462157f59963c486de74ff277"
+    },
+    {
+      "filename": "site/data/lab-2/results.json",
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "filename": "docs/experiments/lab-2/results.json",
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "filename": "site/data/lab-2/comparisons.json",
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "filename": "docs/experiments/lab-2/comparisons.json",
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "filename": "site/data/lab-2/manifest.json",
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    },
+    {
+      "filename": "docs/experiments/lab-2/manifest.json",
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    },
+    {
+      "filename": "site/data/lab-2/descriptor.json",
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    },
+    {
+      "filename": "site/lab.html",
+      "bytes": 5393,
+      "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+    },
+    {
+      "filename": "site/lab.js",
+      "bytes": 18486,
+      "sha256": "2cb9938799d7febe066a3f377c1970d5785b09352eec0972752040d5e7c9c8b5"
+    },
+    {
+      "filename": "site/lab.css",
+      "bytes": 5018,
+      "sha256": "89b1e8594e68ad3224621f6c5b139677212cccec8c37806bba1b62c040045b06"
+    },
+    {
+      "filename": "site/lab-data.mjs",
+      "bytes": 20227,
+      "sha256": "68f31a12037c2118c1ab98366b95491b0b23756040bf645515ce2e550381e534"
+    },
+    {
+      "filename": "site/data/lab-2/descriptor.json",
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    }
+  ],
+  "serverRequests": [
+    {
+      "method": "GET",
+      "path": "/lab.html",
+      "time": 1791156563638,
+      "status": 200,
+      "bytes": 5393,
+      "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+    },
+    {
+      "method": "GET",
+      "path": "/lab.css",
+      "time": 1791156563659,
+      "status": 200,
+      "bytes": 5018,
+      "sha256": "89b1e8594e68ad3224621f6c5b139677212cccec8c37806bba1b62c040045b06"
+    },
+    {
+      "method": "GET",
+      "path": "/lab.js",
+      "time": 1791156563663,
+      "status": 200,
+      "bytes": 18486,
+      "sha256": "2cb9938799d7febe066a3f377c1970d5785b09352eec0972752040d5e7c9c8b5"
+    },
+    {
+      "method": "GET",
+      "path": "/lab-data.mjs",
+      "time": 1791156563675,
+      "status": 200,
+      "bytes": 20227,
+      "sha256": "68f31a12037c2118c1ab98366b95491b0b23756040bf645515ce2e550381e534"
+    },
+    {
+      "method": "GET",
+      "path": "/data/lab-2/descriptor.json",
+      "time": 1791156563688,
+      "status": 200,
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    },
+    {
+      "method": "GET",
+      "path": "/data/lab-2/results.json",
+      "time": 1791156563703,
+      "status": 200,
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "method": "GET",
+      "path": "/data/lab-2/comparisons.json",
+      "time": 1791156563717,
+      "status": 200,
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "method": "GET",
+      "path": "/data/lab-2/manifest.json",
+      "time": 1791156563719,
+      "status": 200,
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    }
+  ],
+  "pages": [
+    {
+      "url": "?condition=baseline&seed=1&sample=0",
+      "negative": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:43391/lab.html?condition=baseline&seed=1&sample=0"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:43391/lab.css"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:43391/lab.js"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:43391/lab-data.mjs"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:43391/data/lab-2/descriptor.json"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:43391/data/lab-2/results.json"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:43391/data/lab-2/comparisons.json"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:43391/data/lab-2/manifest.json"
+        }
+      ],
+      "failed": [],
+      "external": [],
+      "responses": [
+        {
+          "path": "/lab.html",
+          "status": 200,
+          "bytes": 5393,
+          "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+          "contentType": "text/html"
+        },
+        {
+          "path": "/lab.css",
+          "status": 200,
+          "bytes": 5018,
+          "sha256": "89b1e8594e68ad3224621f6c5b139677212cccec8c37806bba1b62c040045b06",
+          "contentType": "text/css"
+        },
+        {
+          "path": "/lab.js",
+          "status": 200,
+          "bytes": 18486,
+          "sha256": "2cb9938799d7febe066a3f377c1970d5785b09352eec0972752040d5e7c9c8b5",
+          "contentType": "text/javascript"
+        },
+        {
+          "path": "/lab-data.mjs",
+          "status": 200,
+          "bytes": 20227,
+          "sha256": "68f31a12037c2118c1ab98366b95491b0b23756040bf645515ce2e550381e534",
+          "contentType": "text/javascript"
+        },
+        {
+          "path": "/data/lab-2/descriptor.json",
+          "status": 200,
+          "bytes": 50708,
+          "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+          "contentType": "application/json"
+        },
+        {
+          "path": "/data/lab-2/results.json",
+          "status": 200,
+          "bytes": 5294742,
+          "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+          "contentType": "application/json"
+        },
+        {
+          "path": "/data/lab-2/comparisons.json",
+          "status": 200,
+          "bytes": 1116928,
+          "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+          "contentType": "application/json"
+        },
+        {
+          "path": "/data/lab-2/manifest.json",
+          "status": 200,
+          "bytes": 82880,
+          "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+          "contentType": "application/json"
+        }
+      ],
+      "responseErrors": [],
+      "closed": false,
+      "pending": {}
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "failure.png",
+      "bytes": 487245,
+      "sha256": "655b8dab9e95a913a3dd784185bfb99b33bb21691693a1e3583d01f8d129a1fb"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "nodeUnhandled": [],
+  "cleanupErrors": [],
+  "sandbox": {
+    "status": "PASS",
+    "arguments": [
+      "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+      "--disable-field-trial-config",
+      "--disable-background-networking",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-back-forward-cache",
+      "--disable-breakpad",
+      "--disable-client-side-phishing-detection",
+      "--disable-component-extensions-with-background-pages",
+      "--disable-component-update",
+      "--no-default-browser-check",
+      "--disable-default-apps",
+      "--disable-dev-shm-usage",
+      "--disable-edgeupdater",
+      "--disable-extensions",
+      "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+      "--enable-features=CDPScreenshotNewSurface",
+      "--allow-pre-commit-input",
+      "--disable-hang-monitor",
+      "--disable-ipc-flooding-protection",
+      "--disable-popup-blocking",
+      "--disable-prompt-on-repost",
+      "--disable-renderer-backgrounding",
+      "--force-color-profile=srgb",
+      "--metrics-recording-only",
+      "--no-first-run",
+      "--password-store=basic",
+      "--use-mock-keychain",
+      "--no-service-autorun",
+      "--export-tagged-pdf",
+      "--disable-search-engine-choice-screen",
+      "--unsafely-disable-devtools-self-xss-warnings",
+      "--edge-skip-compat-layer-relaunch",
+      "--disable-infobars",
+      "--disable-search-engine-choice-screen",
+      "--disable-sync",
+      "--enable-unsafe-swiftshader",
+      "--headless",
+      "--hide-scrollbars",
+      "--mute-audio",
+      "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+      "--enable-automation",
+      "--user-data-dir=/tmp/playwright_chromiumdev_profile-Y7Hodt",
+      "--remote-debugging-pipe",
+      "--no-startup-window",
+      "--use-gl=angle",
+      "--use-angle=swiftshader-webgl",
+      "--ozone-platform=headless",
+      "--allow-pre-commit-input"
+    ],
+    "launchSettings": {
+      "headless": true,
+      "chromiumSandbox": true,
+      "args": [
+        "--enable-automation"
+      ]
+    },
+    "qualification": "Pinned official defaults retained, including stock SwiftShader if observed; no custom GPU switch or hardware/kernel-isolation claim."
+  },
+  "trace": {
+    "status": "PASS",
+    "bytes": 1802776,
+    "sha256": "b4a6e72cbfa61acc2d2392e4be980124f6d592dfa920a32aca673e5f04b4a6e2"
+  },
+  "qualifications": [
+    "Original saved aggregate JSON only; no model replay, new experiments/comparisons, generated cells, positions or full genomes.",
+    "Source producer world30/chamber1/dt30 remains separate from the current delivery HEAD/tree.",
+    "Exact integer comparisons use BigInt; mol/J plot values are derived exported displays, not an independent per-tick ledger proof.",
+    "Four Chromium viewport sizes and keyboard/select/history controls; no native touch/full accessibility/achieved FPS or kernel-isolation attestation.",
+    "An explicitly labelled whitespace-byte integrity negative control changes transport bytes only, preserving all JSON observations."
+  ],
+  "workflowRun": "https://github.com/emevart/liminis/actions/runs/37243706546",
+  "runner": {
+    "node": "v24.21.0",
+    "os": "Linux",
+    "image": "ubuntu22"
+  },
+  "sourceHead": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+  "sourceTree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+  "rawArithmetic": {
+    "status": "PASS",
+    "scope": "Static exact-integer differences/missing pairs over exported samples; no browser/model/ledger recomputation",
+    "checkedPairs": 160,
+    "runs": 24,
+    "samples": 4044
+  },
+  "dataIdentity": {
+    "bytes": 6494550,
+    "runs": 24,
+    "samples": 4044,
+    "producer": {
+      "chamber_format": 1,
+      "dt_seconds": 30,
+      "limitations": [
+        "Uncalibrated prototype chemistry and bounded inherited kinetics.",
+        "No temperature dependence, spatial dynamics, GRN or open-ended evolution.",
+        "Finite horizons and resource stops are censored observations, not completed biological histories.",
+        "Samples contain aggregates, not resumable states or event reconstructions."
+      ],
+      "provenance": {
+        "build_attestation": false,
+        "build_requirement": "Use cargo run in this checkout. Runtime rustc and profile are observations, not proof of how a standalone binary was built.",
+        "host_arch": "x86_64",
+        "host_os": "linux",
+        "numerical_mode": "FLOAT/native f32 Q and f64 genome decoding; exact i128 ledgers",
+        "profile": "release",
+        "runner_version": "0.1.0",
+        "runtime_rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+        "source_verification": "git_head_and_clean_provenance_inputs"
+      },
+      "source_commit": "21cbe90732128edee61963544e414d29a7420577",
+      "world_format_version": 30
+    },
+    "capabilities": {
+      "aggregate_samples": true,
+      "event_reconstruction": false,
+      "full_genomes": false,
+      "individual_cells": false,
+      "resumable_states": false,
+      "spatial_positions": false
+    },
+    "descriptorSha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+  },
+  "oracle": {
+    "status": "PASS",
+    "kind": "Synthetic arithmetic/unknown-value controls, not biological observations",
+    "cases": 6
+  },
+  "origin": "http://127.0.0.1:43391",
+  "browser": {
+    "version": "149.0.7827.55",
+    "playwright": "1.61.1"
+  },
+  "samples": [
+    {
+      "runId": "seed-1-baseline",
+      "tick": 0,
+      "living": 8,
+      "currentAlleles": 1,
+      "historicalRichness": 1,
+      "exactCounters": "MATCHED_ORIGINAL_STRINGS"
+    },
+    {
+      "runId": "seed-1-baseline",
+      "tick": 0,
+      "living": 8,
+      "currentAlleles": 1,
+      "historicalRichness": 1,
+      "exactCounters": "MATCHED_ORIGINAL_STRINGS"
+    }
+  ],
+  "provenanceLinks": [
+    {
+      "href": "https://github.com/emevart/liminis/tree/21cbe90732128edee61963544e414d29a7420577",
+      "text": "Historical source tree"
+    },
+    {
+      "href": "http://127.0.0.1:43391/data/lab-2/descriptor.json",
+      "text": "Delivery descriptor"
+    },
+    {
+      "href": "http://127.0.0.1:43391/data/lab-2/results.json",
+      "text": "Original results JSON · SHA-256 6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+      "source": "results",
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "href": "http://127.0.0.1:43391/data/lab-2/comparisons.json",
+      "text": "Original comparisons JSON · SHA-256 e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+      "source": "comparisons",
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "href": "http://127.0.0.1:43391/data/lab-2/manifest.json",
+      "text": "Original manifest JSON · SHA-256 f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+      "source": "manifest",
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    }
+  ],
+  "matrix": [
+    {
+      "condition": "baseline",
+      "seed": "1",
+      "runId": "seed-1-baseline",
+      "lastTick": 20000,
+      "living": 92,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Baseline",
+        "1",
+        "20000",
+        "92",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "baseline",
+      "seed": "7",
+      "runId": "seed-7-baseline",
+      "lastTick": 20000,
+      "living": 90,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Baseline",
+        "7",
+        "20000",
+        "90",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "baseline",
+      "seed": "42",
+      "runId": "seed-42-baseline",
+      "lastTick": 20000,
+      "living": 91,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Baseline",
+        "42",
+        "20000",
+        "91",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "baseline",
+      "seed": "2026",
+      "runId": "seed-2026-baseline",
+      "lastTick": 20000,
+      "living": 101,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Baseline",
+        "2026",
+        "20000",
+        "101",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "mutation_off",
+      "seed": "1",
+      "runId": "seed-1-mutation_off",
+      "lastTick": 20000,
+      "living": 101,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Mutation off",
+        "1",
+        "20000",
+        "101",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "mutation_off",
+      "seed": "7",
+      "runId": "seed-7-mutation_off",
+      "lastTick": 20000,
+      "living": 98,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Mutation off",
+        "7",
+        "20000",
+        "98",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "mutation_off",
+      "seed": "42",
+      "runId": "seed-42-mutation_off",
+      "lastTick": 20000,
+      "living": 96,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Mutation off",
+        "42",
+        "20000",
+        "96",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "mutation_off",
+      "seed": "2026",
+      "runId": "seed-2026-mutation_off",
+      "lastTick": 20000,
+      "living": 100,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Mutation off",
+        "2026",
+        "20000",
+        "100",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "starvation",
+      "seed": "1",
+      "runId": "seed-1-starvation",
+      "lastTick": 454,
+      "living": 0,
+      "status": "extinct",
+      "stop": "extinction",
+      "text": [
+        "Starvation",
+        "1",
+        "454",
+        "0",
+        "extinct",
+        "extinction"
+      ]
+    },
+    {
+      "condition": "starvation",
+      "seed": "7",
+      "runId": "seed-7-starvation",
+      "lastTick": 454,
+      "living": 0,
+      "status": "extinct",
+      "stop": "extinction",
+      "text": [
+        "Starvation",
+        "7",
+        "454",
+        "0",
+        "extinct",
+        "extinction"
+      ]
+    },
+    {
+      "condition": "starvation",
+      "seed": "42",
+      "runId": "seed-42-starvation",
+      "lastTick": 454,
+      "living": 0,
+      "status": "extinct",
+      "stop": "extinction",
+      "text": [
+        "Starvation",
+        "42",
+        "454",
+        "0",
+        "extinct",
+        "extinction"
+      ]
+    },
+    {
+      "condition": "starvation",
+      "seed": "2026",
+      "runId": "seed-2026-starvation",
+      "lastTick": 454,
+      "living": 0,
+      "status": "extinct",
+      "stop": "extinction",
+      "text": [
+        "Starvation",
+        "2026",
+        "454",
+        "0",
+        "extinct",
+        "extinction"
+      ]
+    },
+    {
+      "condition": "oxygen_low",
+      "seed": "1",
+      "runId": "seed-1-oxygen_low",
+      "lastTick": 20000,
+      "living": 96,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Low oxygen",
+        "1",
+        "20000",
+        "96",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "oxygen_low",
+      "seed": "7",
+      "runId": "seed-7-oxygen_low",
+      "lastTick": 20000,
+      "living": 96,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Low oxygen",
+        "7",
+        "20000",
+        "96",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "oxygen_low",
+      "seed": "42",
+      "runId": "seed-42-oxygen_low",
+      "lastTick": 20000,
+      "living": 96,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Low oxygen",
+        "42",
+        "20000",
+        "96",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "oxygen_low",
+      "seed": "2026",
+      "runId": "seed-2026-oxygen_low",
+      "lastTick": 20000,
+      "living": 92,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Low oxygen",
+        "2026",
+        "20000",
+        "92",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "exchange_half",
+      "seed": "1",
+      "runId": "seed-1-exchange_half",
+      "lastTick": 20000,
+      "living": 47,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Half exchange",
+        "1",
+        "20000",
+        "47",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "exchange_half",
+      "seed": "7",
+      "runId": "seed-7-exchange_half",
+      "lastTick": 20000,
+      "living": 50,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Half exchange",
+        "7",
+        "20000",
+        "50",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "exchange_half",
+      "seed": "42",
+      "runId": "seed-42-exchange_half",
+      "lastTick": 20000,
+      "living": 51,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Half exchange",
+        "42",
+        "20000",
+        "51",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "exchange_half",
+      "seed": "2026",
+      "runId": "seed-2026-exchange_half",
+      "lastTick": 20000,
+      "living": 46,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Half exchange",
+        "2026",
+        "20000",
+        "46",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "founder_k2",
+      "seed": "1",
+      "runId": "seed-1-founder_k2",
+      "lastTick": 20000,
+      "living": 93,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Founder kinetics +2",
+        "1",
+        "20000",
+        "93",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "founder_k2",
+      "seed": "7",
+      "runId": "seed-7-founder_k2",
+      "lastTick": 20000,
+      "living": 100,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Founder kinetics +2",
+        "7",
+        "20000",
+        "100",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "founder_k2",
+      "seed": "42",
+      "runId": "seed-42-founder_k2",
+      "lastTick": 20000,
+      "living": 94,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Founder kinetics +2",
+        "42",
+        "20000",
+        "94",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    },
+    {
+      "condition": "founder_k2",
+      "seed": "2026",
+      "runId": "seed-2026-founder_k2",
+      "lastTick": 20000,
+      "living": 96,
+      "status": "censored",
+      "stop": "requested_horizon_reached",
+      "text": [
+        "Founder kinetics +2",
+        "2026",
+        "20000",
+        "96",
+        "censored",
+        "requested_horizon_reached"
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "stage": "run",
+      "error": "AssertionError [ERR_ASSERTION]: Living allele histogram actual bar: 96.7391/96.73913043478261\n    at closeNumber (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:90:73)\n    at detail (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:84:471)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:132:233\n    at async check (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:25:110)\n    at async main (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:131:3)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:24:72)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:161:27"
+    }
+  ],
+  "finishedAt": "2026-10-04T23:29:30.195Z"
+}

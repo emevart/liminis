@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "kind": "LAB initial original failure and independent source follow-up evidence",
+  "source_head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+  "source_tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+  "workflow_run": 37243706546,
+  "actual_lab_status": "FAIL",
+  "followup_candidate": "60015b28a42e222fcdafd33ed80da6c81f57c6db",
+  "followup_actual_status": "PENDING",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 2306375,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1876,
+      "sha256": "a0d75688bdfa4ea13061dfb5581652fefa0e6a2337944012f32fd4c589744b49"
+    },
+    {
+      "path": "independent-code/REVIEW.md",
+      "bytes": 3661,
+      "sha256": "487c0d75b5e90bb03722f76ca9026dd4360030df0c658ea2481230237e304f40"
+    },
+    {
+      "path": "independent-code/histogram-cssom-review.json",
+      "bytes": 1420,
+      "sha256": "116ca146d5b019ffeed7603f2a17f869cb446a433188687206e49b6d6a4c4abd"
+    },
+    {
+      "path": "independent-code/histogram-cssom-review.md",
+      "bytes": 1041,
+      "sha256": "b099960303ebafbae0710c900233f34906eaf5a23b77eb910fce98d7e7f1cbe4"
+    },
+    {
+      "path": "independent-code/lab79-failure-integrity-privacy-review.json",
+      "bytes": 1203,
+      "sha256": "43b9b2d7b0644282a72ce68728bbe8efc9e9939d2d03010382e951a7cfb2f310"
+    },
+    {
+      "path": "independent-code/lab79-failure-integrity-privacy-review.md",
+      "bytes": 974,
+      "sha256": "840919bc20a149895e9b4cd648663d5377fac113a78a6110fb442e934518a5d2"
+    },
+    {
+      "path": "independent-code/responsive-svg-delta-review.json",
+      "bytes": 3076,
+      "sha256": "0dcf62bbb7d9f6ec3245eca9f8353c2c6283c89b0389467f7a34d2bf2975458c"
+    },
+    {
+      "path": "independent-code/responsive-svg-delta-review.md",
+      "bytes": 2238,
+      "sha256": "2a55b9afbb287645ee2904a53e434bfcca41853ff2399251a68716668775d69f"
+    },
+    {
+      "path": "independent-code/source-review.json",
+      "bytes": 6247,
+      "sha256": "e9a263054c67a98090ac61b039cfa5483ce6b75cdd9c5968ca5779e7b2c75ff1"
+    },
+    {
+      "path": "independent-code/transport-79-helper-review.json",
+      "bytes": 2353,
+      "sha256": "0cedd0493574d1ee6cb4515ba8ce7b0e61d0e8b22cf896ad25bc686be8e07424"
+    },
+    {
+      "path": "independent-code/transport-79-helper-review.md",
+      "bytes": 1584,
+      "sha256": "f5512bb31016dc50d7bd12cf291b93bc2058ad3c74d1400f2a1b034cb55d819a"
+    },
+    {
+      "path": "independent-numerics/original-observation-consistency.json",
+      "bytes": 6881,
+      "sha256": "f40745fdfdf4d35b9858a2a2e844d9e0cadd9936f30a528fa129bfbb4a9c5f9e"
+    },
+    {
+      "path": "independent-numerics/review.json",
+      "bytes": 15801,
+      "sha256": "ca8fb36cf7c268694cc6c1a309f3c16eda14f6c4a58d7b4bbdbc263a5b9c7cec"
+    },
+    {
+      "path": "independent-numerics/review.md",
+      "bytes": 11033,
+      "sha256": "3041bae9d2e36c461d20a66c76d0d622069afea75b31fcb355c1a3799b97c6b3"
+    },
+    {
+      "path": "independent-numerics/source-delta-02aeab1.json",
+      "bytes": 5905,
+      "sha256": "6ae8512556e99a1cde5745b922190e4b9349aa6c8ac57cad2a90d2d36b072414"
+    },
+    {
+      "path": "independent-numerics/source-delta-02aeab1.md",
+      "bytes": 3747,
+      "sha256": "b9a83687940043e0172b134801ba5ea6322e83a5ff3d23b700085e1d435f30c1"
+    },
+    {
+      "path": "lab-browser-79df352-original.zip",
+      "bytes": 2210725,
+      "sha256": "bbd3f4dce56469c082be6e61f8d9abdd913d48987af6575620a6493e4bcb3a09"
+    },
+    {
+      "path": "original-79/integrity.json",
+      "bytes": 181,
+      "sha256": "a5c7c1cdad259d79f212be74151680823e10bfba3b680083e23b2d7b321f0c28"
+    },
+    {
+      "path": "original-79/report.json",
+      "bytes": 26429,
+      "sha256": "ff3d0c18b797e8ae30121b088fcfcebe6b7117675eae3423d560b1f7362dfdc6"
+    }
+  ]
+}
