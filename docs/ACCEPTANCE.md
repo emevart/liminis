@@ -1796,3 +1796,17 @@ request/cleanup verdict. Existing recorded/live regressions сохраняютс
 Independent source/numerics и actualartifact review обязательны перед merge;
 existing public LAB bytes/browser delivery принимаются после merge отдельно.
 Scope/pending: `docs/checkpoints/2026-10-04-lab-aggregate-catalog.md`.
+
+### Уточнение paused3D pixel oracle после main5bea FAIL
+
+Original run37241483046 остаётся FAIL: encoded PNG SHA mismatch не объяснён
+сохранёнными JPEG/API данными. Для нового exact source paused30/60 gate
+сравнивает dimensions и каждый decoded RGBA byte всей прежней compositor
+области. Opaque RGB нормализуется с alpha255; raw PNG SHA сохраняется отдельно.
+Любое отличие пикселя/alpha/dimensions — FAIL, без masking/cropping/tolerance
+или повторов до PASS. Все baseline/30/60 originals, encoded/decoded SHA,
+camera/viewport/revision/mode/drawnTick и actual API/все layer settings до и
+после capture сохраняются перед identity assertions; mismatch содержит count
+и bounds. Synthetic PNG filter/encoding/one-byte/alpha/dimension controls
+проверяют сам oracle, не объявляют actual browser PASS. Production3D bytes
+не меняются. Независимый review и свежий protected artifact обязательны.

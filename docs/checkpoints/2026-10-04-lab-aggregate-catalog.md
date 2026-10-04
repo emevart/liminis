@@ -53,3 +53,29 @@
   green acceptance guarded merge и existing public LAB delivery acceptance.
 
 Автопробуждение после завершения active cloud turn не подтверждено.
+
+## Source integration и уточнение QA, 23:23 UTC
+
+Clean published data43356e5, UI fa4ce68 и browserQA3baa2d3 объединены обычными
+cherry-pick; собственные scoped authors завершены.15 Python,12 UI Node,
+160 raw paired-record checks/6 synthetic integer controls прошли у авторов.
+Native browser/model/Cargo не запускались. Root добавляет только Lab navigation
+на existing homepage, LAB gate в unchanged protected recorded job и
+builder freshness/focused checks в existing data job. Official Playwright1.61.1,
+Ubuntu22/sandbox:true/observed argv и остальные mandatory CI gates сохранены.
+
+Main5bea pushCI37241483046 завершился FAILURE только на paused3D check8
+(first7GL PASS; Rust/recorded/dense/public jobs PASS). Original FAIL сохранён.
+Independent diagnostics подтверждают22 неизменных API tick1, но original
+per-canvas PNG/post-FPS audits отсутствуют; причина raster/encoding/timing
+неизвестна. Public artifact независимо qualified PASS для19HTTPS pins всех
+3 horizons и actual default10k playback; это не overallmainGREEN/full2.42GB
+HTTP readback/public100k1M rendering.
+
+Astra явно одобрил отдельный QA-only repair commit в этом integration PR
+и один fresh complete CI для LAB+fixed3D. Strict dimensions/decodedRGBA всей
+прежней области, all3 original PNG и pre/post API/camera/viewport/layers,
+diffcount/bounds сохраняются до assert. Никаких masks/tolerance/retries,
+production3D bytes main5bea-exact.4 meaningful syntheticPNG controls PASS;
+source/numerics/UX independent review идёт, actual fixed3D/LAB браузер ещё
+NOT_RUN. Существующий FAIL не превращается в PASS после смены oracle.
