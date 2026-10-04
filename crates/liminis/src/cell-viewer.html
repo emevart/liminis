@@ -470,9 +470,10 @@
         if(document.activeElement!==$("reset-seed"))$("reset-seed").value=s.seed;if(document.activeElement!==$("speed")&&Number.isFinite(s.pacing?.multiplier))$("speed").value=String(s.pacing.multiplier);$("maximum").setAttribute("aria-pressed",String(s.pacing?.mode==="maximum"));renderSave();renderResources();renderEvents();renderCharts();
       }
       function commitState(state){
-        const priorTick=view.state?.tick;view.state=state;view.pollSerial++;const p=state.persistence,identity=p?.enabled?`${p.run_id}\n${p.session_id}`:null;
-        const changed=identity!==view.identity;if(changed){view.identity=identity;view.history=[];view.historyAt=0;view.historyStatus="loading";view.selected=null;view.layout.clear();view.usedSlots.clear();view.saveRequest=null;view.saveError=null;view.slice.enabled=false;view.sliceAxis=null;}
-        if(changed||priorTick!==state.tick)invalidateGeometry();retireLayout(state.cells||[]);mergeHistory([liveSample(state)]);$("offline").dataset.open="0";
+        const prior=view.state;view.state=state;view.pollSerial++;const p=state.persistence,identity=p?.enabled?`${p.run_id}\n${p.session_id}`:null;
+        // Без persistence другой seed/config тоже меняет run при том же tick 0.
+        const changed=identity!==view.identity||["seed","config_hash","world_format_version","chamber_format"].some(key=>prior?.[key]!==state[key]);if(changed){view.identity=identity;view.history=[];view.historyAt=0;view.historyStatus="loading";view.selected=null;view.layout.clear();view.usedSlots.clear();view.saveRequest=null;view.saveError=null;view.slice.enabled=false;view.sliceAxis=null;}
+        if(changed||prior?.tick!==state.tick)invalidateGeometry();retireLayout(state.cells||[]);mergeHistory([liveSample(state)]);$("offline").dataset.open="0";
         // No await between assigning the sole latest snapshot and committing
         // its readouts, canvas/hits, and inspector. History is independent.
         configureProjection(changed);renderState();drawChamber();renderInspector();renderCandidates();
@@ -529,7 +530,12 @@
         if(view.frameAt===null||now-view.frameAt>=interval-0.1){drawChamber();view.frameAt=now;}
         requestAnimationFrame(screenFrame);
       }
-      $("seed-form").addEventListener("submit",async event=>{event.preventDefault();const seed=$("reset-seed").value.trim();if(!/^\d+$/.test(seed)){$("reset-seed").setCustomValidity("Enter a non-negative integer seed");$("reset-seed").reportValidity();return;}$("reset-seed").setCustomValidity("");try{await control("reset",seed);view.history=[];view.selected=null;$("control-error").textContent="";await poll();}catch(error){$("control-error").textContent=error instanceof Error?error.message:String(error);}});
+      async function resetSimulation(seed){
+        invalidateGeometry();
+        try{await control("reset",seed);view.history=[];view.selected=null;$("control-error").textContent="";await poll();}
+        catch(error){$("control-error").textContent=error instanceof Error?error.message:String(error);}
+      }
+      $("seed-form").addEventListener("submit",event=>{event.preventDefault();const seed=$("reset-seed").value.trim();if(!/^\d+$/.test(seed)){$("reset-seed").setCustomValidity("Enter a non-negative integer seed");$("reset-seed").reportValidity();return;}$("reset-seed").setCustomValidity("");void resetSimulation(seed);});
       $("save").addEventListener("click",async()=>{const p=view.state?.persistence;if(!p?.enabled||p.saving||view.state?.save_pending||view.saveRequest)return;view.saveError=null;view.saveRequest={tick:finite(view.state.tick),serial:view.pollSerial};renderSave();try{await control("save");await poll();}catch(error){view.saveRequest=null;view.saveError=error instanceof Error?error.message:String(error);renderSave();}});
       function hidePage(){view.activationSerial++;view.three?.dispose();}
       function restorePage(event){if(event.persisted)location.reload();}
