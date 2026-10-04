@@ -56,12 +56,15 @@ kernels are accepted rarely — see `docs/COMMUNITY.md` for why the boundary sit
 
 ## Quickstart
 
-The [public observer](https://liminis.dev/) needs no installation. Its first
-curated experiment is `cell-chamber`, seed 42, for 10,000 ticks. The recording
-includes the canonical configuration, engine commit and world version. Every
-tick is checked; cell tables are sampled every 50 ticks. Screen positions are
-presentation only, not physical coordinates. Download the data from the observer
-or reproduce it from the matching source commit:
+The [public catalog](https://liminis.dev/) needs no installation. It contains
+`cell-chamber`, seed 42, at 10,000, 100,000 and 1,000,000 ticks. These are longer
+horizons of the same deterministic trajectory, not independent replicates.
+Each recording includes the canonical configuration, engine commit and world
+version. Every tick is checked; the 201 cell tables are sampled every 50, 500
+or 5,000 ticks respectively. Playback has a manual frame rate and single-frame
+controls; it does not reconstruct unsampled events. Screen positions are
+presentation only, not physical coordinates. Download the selected data from
+the observer or reproduce it from the matching source commit:
 
 ```sh
 cargo run --release -p liminis --example export_cell_replay -- \
