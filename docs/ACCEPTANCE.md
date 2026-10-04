@@ -1699,6 +1699,16 @@ endpoints всех трёх horizons, requested/validated tick separation, held 
 PNG/trace и final cleanup/error verdict. Никакие ответы/states не фабрикуются.
 BFCache wiring unit check именуется synthetic; native BFCache PASS не заявляется.
 
+Cancellation proof связывает native AbortSignal/reason/order с точным CDP
+requestId и завершением actual body; deadline/late cleanup после ошибки и
+ambiguous identities не проходят. Отдельная signal-only фаза сохраняет native
+Promise rejection semantics без observer handlers/Reader wrappers: real
+pre-abort и held original mid-body abort обязаны не создавать orphan errors.
+Один synthetic native orphan positive control допускается только по exact
+reason identity, сохраняется raw и явно обозначает чувствительность error
+channel, не recording evidence. Unknown/repeated events запрещены. Итоговый
+request/error aggregate повторяется после bounded cleanup, sticky FAIL.
+
 Существующий public browser gate отдельно проверяет deployed catalog/index/
 manifest/module/gzip SHA, реальные browser response bytes и dense Next0→1,
 1×/held state. Известная фиксированная Cloudflare analytics insertion проверяется

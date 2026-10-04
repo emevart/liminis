@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "method": "fresh_network_fetch_separate_git_object_database_all_file_size_sha256",
+  "candidate_head": "97aed6f1c0c0dba7886fb34d0febf4c189eedf29",
+  "candidate_tree": "f6feff861be3da22c6166264fcdde65e9c11c362",
+  "dataset_files": 3919,
+  "gzip_chunks": 3909,
+  "artifact_bytes": 2424602694,
+  "publication_sha256": "48cf7367c19e3fed7669e0a26473f6ceb02b720d6d0e70d19f140a672aa6368b",
+  "published_index_sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+  "limitations": "Confirms saved Git bytes and inventory; no new model/decode/browser/provider deployment claim."
+}

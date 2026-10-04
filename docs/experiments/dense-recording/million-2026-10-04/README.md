@@ -64,3 +64,10 @@ Native source checks и file hashing не доказывают browser/deploymen
 trace и проверка существующего Cloudflare deployment с raw gzip bytes.
 Документированные provider limits сами по себе не подтверждают фактическую
 загрузку2.42GB. Новая инфраструктура, секреты и платные ресурсы не создаются.
+
+После обеих bounded Git pushes полный dataset скачан по сети в отдельную
+Git object database. `network-readback.json` закрепляет опубликованный
+candidate97/tree, closed inventory3919files и exact size/SHA256 каждого
+файла:2424602694bytes PASS. Последующие QA-only изменения сохраняют dataset.
+Existing Workers Build этого candidate SUCCESS; actual public dense served
+bytes/playback требуют отдельной приёмки после green CI и merge.

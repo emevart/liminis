@@ -66,3 +66,39 @@ Pending: second network push, fresh independent-objectDB readback и точны�
 candidate CI/protected browser/independent artifacts. Native checks не заменяют
 browser/provider capacity acceptance. Следующий шаг — закончить bounded push,
 создать PR с полным набором, принять exact-head11checks и реальные artifacts.
+
+## Network readback и узкий QA follow-up, 20:10 UTC
+
+Complete candidate опубликован как `97aed6f1c0c0dba7886fb34d0febf4c189eedf29`,
+tree `f6feff861be3da22c6166264fcdde65e9c11c362`, draft PR19. Свежий network
+fetch в отдельную Git object database завершён: closed inventory всех3919
+файлов, sizes/SHA256 каждого файла и total2424602694bytes PASS. Report:
+`docs/experiments/dense-recording/million-2026-10-04/network-readback.json`.
+Это проверка сохранённых Git bytes; не public deployment/повторный model run.
+
+Run37228121227 на exact97 завершился:10 из11 checks SUCCESS, включая Rust,
+старый recorded browser и live/physical/projection. Existing Workers Build
+SUCCESS. Новый dense gate overall FAIL:3 request failures не получили точного
+доказательства intentional cancellation. Все11 внутренних subchecks и5PNG
+сохранены; общий FAIL остаётся FAIL. Original ZIP16581557bytes/SHA256
+`0fdff34b12e5304ad718980061e10ddeb9cffedc097cdc0add3176c0fc8f3b6a`
+опубликован без перепаковки в evidence-only `codex/dense-recording-browser-evidence`,
+commit `51323628a2e8cb0b2ab1ce29b8e4d070c7227c81`. Fresh network archive
+readback подтвердил size/SHA/ZIP CRC. Независимый reviewer просмотрел5PNG,
+report/trace/source bytes и qualified privacy scan; это диагностический FAIL.
+
+QA follow-up привязывает каждый abort к actual native signal/reason/времени,
+CDP request identity и native body EOF. Deadline, ambiguous identity и failure
+до cleanup abort запрещены; blanket ERR_ABORTED allow отсутствует. Reviewer
+выявил masking orphan rejection наблюдателями и отсутствие aggregate после
+cleanup. Оба source blockers закрыты в author798f604/root82b58e8: отдельная
+signal-only фаза не присоединяет rejection handlers и не оборачивает Reader;
+real pre-abort/16-byte mid-body cancellation плюс exact-identity synthetic
+native orphan control проверяют чувствительность. Raw ожидаемое событие
+сохранено; неизвестные/повторные ошибки запрещены. Final aggregate повторяется
+после cleanup. Independent source review0; маленький Node sensitivity repro
+и18 classifier self-checks не объявляются Chromium PASS.
+
+Данные, producer, decoder/UI и frozen/LAB/старые JSON не менялись. Следующий
+шаг: fresh exact-head full CI и protected browser, независимая приёмка новых
+artifacts; только после green — guarded merge и existing public dense gate.
