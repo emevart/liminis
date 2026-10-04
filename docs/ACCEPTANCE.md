@@ -1753,5 +1753,12 @@ resources, explicit current2D fallback при unavailable/loss входят в g
 Synthetic GPU-loss control подписан отдельно; software GPU не hardware FPS.
 Desktop/short/390/320 PNG, trace/report и итоговые cleanup/errors публикуются
 на exact candidate, source/artifacts принимает независимый reviewer.
+Official Playwright1.61.1 baseline уже содержит штатный
+`--enable-unsafe-swiftshader`/ANGLE SwiftShader switches: они фиксируются в
+observed argv/backend как qualification прежней конфигурации. Новый запуск
+строго `headless:true, chromiumSandbox:true, args:['--enable-automation']`,
+без добавленных GPU flags; прежние sandbox запреты и запреты отключения
+web security/GPU blocklist сохраняются. Software geometry acceptance не
+означает hardwareFPS или аттестацию изоляции ядра.
 Существующие chamber1/livephysical/2D projection gates сохраняются.
 Scope/pending: `docs/checkpoints/2026-10-04-live-physical-observer-3d.md`.

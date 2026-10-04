@@ -52,3 +52,29 @@ Native syntax/local metadata+finalgzipSHA проверка PASS:7uniquefiles,
 gate выполнит новые чтения после green3Dmerge; independent source review
 pending вместе с3D integration. Полный REC-2 accepted scope не расширяется
 задним числом; предыдущие qualifiers и evidence остаются неизменны.
+
+## Source freeze и native host, 21:35 UTC
+
+Source author clean/published `e9feb9aa7bc045f572d5155e2b8813eae5a78aa9`,
+tree `c836ffbc7057c6507493e82bc23955a72d115ca6`:11ownedpaths,28/28Node
+(16viewer+12new3D), syntax/fmt/diff PASS. Root normal cherry-pick
+`d773598c3eb892947a201fb2a7e16bf0565f2832`,
+tree `2873b83a65189d14c4de371bc5506800084be9e0`; provisioned pinned
+`cargo test --locked -p liminis cells_host`:32PASS/0FAIL,63unit+16integration
+filtered, compile12.85s/tests3.88s. New literal display routes serve exact
+local bytes without changing state. Cargo sole root, now idle; никаких
+новых production experiments, native browser или пересчёта dataset.
+
+Astra independently проверил original accepted e245 CDP report: stock
+Playwright1.61.1/Chromium149.0.7827.55 уже имел
+`--enable-unsafe-swiftshader`, `--use-gl=angle`,
+`--use-angle=swiftshader-webgl` при chromiumSandbox:true/oldguardPASS.
+Новая draft blanket unsafe prohibition ошибочно отвергала тот же accepted
+runtime; разрешено сохранить точный stock launch,8sandbox prohibitions,
+`--disable-.*sandbox` и запреты ignore-gpu-blocklist/disable-web-security.
+GPU flags/defaults не добавляются/меняются. Evidence явно запишет observed
+flags и actualbackend; software geometry не hardwareFPS/kernelattestation.
+Это решение о неизменной конфигурации, не новый WebGL/browser PASS.
+
+Pending: clean QA freeze, independent exactcombinedsource/numerics review,
+один fresh protected fullCI и actual3D artifacts; no merge до green gates.
