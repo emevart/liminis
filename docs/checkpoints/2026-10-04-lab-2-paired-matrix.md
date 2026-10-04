@@ -1,16 +1,19 @@
 # LAB-2: сохранение парной матрицы chamber1
 
-- Дата: 2026-10-04. Цель: отдельные данные, методика и приёмка существующей
-  модели; затем сравнительный LAB-3 после принятия LAB-2.
+- Дата: 2026-10-04. Цель этой границы: сохранить законченные LAB-2 данные,
+  bounded validator/review fixes и передать coherent WIP без новых этапов.
 - Ветка: `codex/lab-paired-cell-matrix-1`; численный source/base
   `21cbe90732128edee61963544e414d29a7420577`, world30/chamber1,
   Rust1.97.1/release/native FLOAT. Это принятый LAB-1 из PR #14.
 - LAB-1 ACCEPTED (code+CI), queued, без самостоятельного merge:
   https://github.com/emevart/liminis/issues/11#issuecomment-5980403029 .
-- Владелец интеграции остаётся основная CLOUD LIVE-сессия. Возможная миграция
-  координатора человеком не выполнена. Автор LAB не выполняет merge/reset/clean.
-- Прямое уточнение человека: сохранить scoped code/docs и законченные публичные
-  scientific artifacts перед возможной передачей, затем продолжать очередь.
+- Человек создал Native Codex Cloud liminis для передачи; новый координатор
+  пока read-only, прежний LIVE прекращает новые dispatch/merge/deploy.
+  Это migration pause, не отмена проекта. Автор LAB не выполняет merge/reset/clean.
+- Последнее прямое поручение человека: закончить только текущие bounded fixes,
+  опубликовать PR #15/checkpoint/issue #11 и остановить новые stage/LAB-3
+  assignments до продолжения sole native coordinator. Ранее согласованное
+  автономное продолжение после ACCEPTED этой паузой приостановлено.
 - Владение LAB-2: только новые docs/experiments/lab-2/* и этот checkpoint.
   Engine, configs, formats, replay, site, shared/frozen paths не меняются.
 - Среда: generic Work Cloud VM; ПК не является зависимостью. Новые интеграции,
@@ -21,6 +24,10 @@
   для отдельного data diff; после интеграции #14 целевая база main.
 - Safe snapshot `ff402c988b5d4db79566b2c43d621d0b99892613` сохранил все результаты
   и scoped drafts перед продолжением final guards. Файлы не потеряны.
+- Финальные validator/review fixes опубликованы отдельным commit
+  `ae7802bd0c04535bd1974fe0e93253ee0eb08473`, tree
+  `7aef9bc80768e11594d1b47e4ad1a660339b9aa6`. Последующий handoff commit
+  меняет только этот checkpoint; его full HEAD/tree фиксируются в PR/issue #11.
 
 ## Предрегистрация и законченные результаты
 
@@ -91,7 +98,9 @@ PASS:
 
 - Candidate CI и явный ACCEPTED/MERGED финального exact head LAB-2 у интегратора.
   Snapshot CI не подменяет CI следующего commit.
-- Последовательный merge LIVE→RECORDED→LAB остаётся у soleowner.
+- Retarget PR #15 на main после интеграции #14 и принятие LAB-2 выполняет
+  sole native coordinator по его дальнейшим полномочиям. Автор не меняет base,
+  не делает ready/merge/deploy в рамках migration pause.
 - Browser QA N/A: этот этап не содержит UI. LAB-3 потребует реального browser gate.
 
 Итоговая приёмка/commands/наблюдения/ограничения —
@@ -106,7 +115,7 @@ state или ledger stream из aggregate samples. Raw file SHA256, структ
 независимый sampled numerical review и actual repeat разделены явно.
 Native FLOAT не аттестуется между hardware; runtime rustc не является build attestation.
 
-## Storage и следующая очередь
+## Storage и HANDOFF AUTHOR STOPPED ACK
 
 Законченный оригинальный scientific artifact находится в assigned
 docs/experiments/lab-2/results.json и закрепляется snapshot commit в GitHub.
@@ -119,6 +128,44 @@ Ignored target/qa/lab-2/repeat-results.json остаётся локальным 
 не stage автоматически. Незавершённой simulation или unsaved original data нет.
 Открыты только candidate CI/integration gates, перечисленные выше.
 
+Полный preregistration tree — `dc87309556364177f580b8787d4aaa0d57181502`;
+safe snapshot tree — `9adc915203256915bc3c427ee5cf29e828275190`;
+численный source tree — `713751fb97b2f53206fc0a86c368e63c28d1da65`.
+Stock `configs/scenarios/cell-chamber.toml` SHA256 —
+`d6a2d667317b0eca9837e96f4d8234d8be7e55e67927cd95ab67042b3906d526`.
+Original LAB-1 base — `f7c74a263bd1976bc31a35a440b19006546656eb`;
+свежий fetched main при подготовке передачи —
+`c5be8fc8652433c67378a689fbb151ea4bad510a`. Данные не пересчитаны на новом main:
+их source остаётся `21cbe90732128edee61963544e414d29a7420577`.
+
+Неопубликованные полезные QA files находятся только в собственном ignored
+`target/qa/`; они сохранены локально, не stage автоматически:
+
+| Relative path | Bytes | SHA256 |
+|---|---:|---|
+| `lab-1/final-head-results.json` | 462411 | `47adeda64912b61e76e89f8ba61c286ce56cc1e71c78d3f8d6941377e09091a2` |
+| `lab-1/old-reservation-negative-control.log` | 1244 | `e10b330f0e14806f4f43d1164f40cc19cfa280bb85de19eb2e6369e1e0174ead` |
+| `lab-1/smoke-manifest.json` | 20814 | `f8331b83e0b9cafbe14d92de2597263fcbe822176992e0d6cc3bc8a36011f380` |
+| `lab-1/smoke-repeat.json` | 462411 | `525fac91b7608b4e7ce2420082a665ae67d91ba0c43fbee8eb63980f3d6e622a` |
+| `lab-1/smoke-results.json` | 462411 | `525fac91b7608b4e7ce2420082a665ae67d91ba0c43fbee8eb63980f3d6e622a` |
+| `lab-2/repeat-results.json` | 5294742 | `6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a` |
+
+Unsaved-to-Git gap: точные bytes старых LAB-1 QA inputs/results/log остаются
+локальными и не доступны из published refs; команды/evidence описаны в
+[LAB-1 checkpoint](2026-10-04-lab-1-bounded-runner.md). LAB-2 repeat — лишь
+побайтный duplicate опубликованного original; unsaved scientific outputs нет.
+Build caches воспроизводимы и не являются scientific artifacts. Ничего не удалено.
+
+На границе передачи пять LAB subagents завершены: Astra, runner, coverage,
+independent code review, independent numerics review. Running/queued subagents: 0/0.
+Собственных simulation/Cargo/test/server/browser процессов нет; root завершает
+только публикацию этого handoff. Внешний GitHub CI может продолжаться независимо.
+У parent `ae7802bd0c04535bd1974fe0e93253ee0eb08473` run
+[37208508946](https://github.com/emevart/liminis/actions/runs/37208508946)
+при наблюдении имел 7 completed/success jobs и `build, lint, test` in_progress;
+это не PASS нового handoff head. Exact final-head CI/status и clean/dirty inventory
+фиксируются в issue #11 после публикации. CI не ждём tight polling.
+
 Фактически вызван Astra до метода и после результатов: рекомендует зафиксировать
 эти 24 опыта, завершить review/приёмку и перейти к LAB-3 после ACCEPTED.
 Нет статистического discovery, победителя allele или доказанной открытой эволюции.
@@ -126,8 +173,9 @@ Ignored target/qa/lab-2/repeat-results.json остаётся локальным 
 смешанные знаки. Итоговый extent одинаков у baseline/mutation_off/oxygen_low/
 founder_k2, поэтому низкий O2 не называется подавлением суммарного20k роста.
 
-Следующий шаг: опубликовать финальный exact head в явно dependent PR #15,
-проверить candidate CI и получить интеграционную приёмку без собственного merge.
-После его ACCEPTED/MERGED — отдельные site/lab* и site/data/lab/**, actual browser
-QA через existing Actions у интегратора при cloud sandbox gap. Автоматический
-новый turn/create_goal недоступен; активное cloud продолжение не зависит от ПК.
+После публикации HANDOFF AUTHOR STOPPED ACK автор останавливает новые назначения.
+LAB-3 не начат: нет новых site files, UI assignments или browser QA заявления.
+Следующая очередь для sole native coordinator: exact-head CI/acceptance LAB-2,
+интеграция/retarget после LAB-1, затем отдельно согласованный LAB-3 с настоящим
+browser QA через existing Actions при sandbox gap. Автоматический новый
+turn/create_goal/get_goal недоступен; автор не обещает самопроизвольное продолжение.
