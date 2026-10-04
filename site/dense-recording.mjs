@@ -96,7 +96,7 @@ function identity(value) {
 }
 function provenance(value) {
   fields(value, ["producer_commit", "producer_tree", "engine_ref", "legacy_recording_ref", "frozen_git_objects", "source_verification", "runtime_rustc", "host_os", "host_arch", "profile", "build_attestation", "build_requirement"]);
-  requireThat(SHA1.test(value.producer_commit) && SHA1.test(value.producer_tree) && value.engine_ref === ENGINE && value.legacy_recording_ref === LEGACY && exact(value.frozen_git_objects, FROZEN) && value.profile === "release" && value.build_attestation === false && value.source_verification === "clean_HEAD_and_archived_Git_object_equality" && typeof value.runtime_rustc === "string" && value.runtime_rustc.startsWith("rustc 1.97.1 ") && ["host_os", "host_arch", "build_requirement"].every((key) => typeof value[key] === "string" && value[key].length > 0), "wrong producer/archived/compiler anchors");
+  requireThat(typeof value.producer_commit === "string" && SHA1.test(value.producer_commit) && typeof value.producer_tree === "string" && SHA1.test(value.producer_tree) && value.engine_ref === ENGINE && value.legacy_recording_ref === LEGACY && exact(value.frozen_git_objects, FROZEN) && value.profile === "release" && value.build_attestation === false && value.source_verification === "clean_HEAD_and_archived_Git_object_equality" && typeof value.runtime_rustc === "string" && value.runtime_rustc.startsWith("rustc 1.97.1 ") && ["host_os", "host_arch", "build_requirement"].every((key) => typeof value[key] === "string" && value[key].length > 0), "wrong producer/archived/compiler anchors");
 }
 function genomes(value) {
   requireThat(object(value) && Object.keys(value).length >= 1 && Object.keys(value).length <= 1024, "invalid genome dictionary");
@@ -114,7 +114,7 @@ function descriptor(value, ordinal) {
   const flat = `chunk-${String(first).padStart(7, "0")}-${String(last).padStart(7, "0")}.jsonl.gz`;
   const sharded = ordinal !== undefined && Number.isSafeInteger(ordinal) && ordinal >= 0 && ordinal < DENSE_LIMITS.chunks ? `chunks/${String(Math.floor(ordinal / 256)).padStart(2, "0")}/${flat}` : null;
   requireThat((value.path === flat || (sharded !== null && value.path === sharded)) && last >= first && natural(value.frames, DENSE_LIMITS.frames, value, "frames") === last - first + 1, "unsafe chunk path/range/shard ordinal");
-  requireThat(natural(value.gzip_bytes, DENSE_LIMITS.gzip, value, "gzip_bytes") > 0 && natural(value.decoded_bytes, DENSE_LIMITS.decoded, value, "decoded_bytes") > 0 && HEX.test(value.gzip_sha256) && HEX.test(value.decoded_sha256), "invalid chunk lengths/digests");
+  requireThat(natural(value.gzip_bytes, DENSE_LIMITS.gzip, value, "gzip_bytes") > 0 && natural(value.decoded_bytes, DENSE_LIMITS.decoded, value, "decoded_bytes") > 0 && typeof value.gzip_sha256 === "string" && HEX.test(value.gzip_sha256) && typeof value.decoded_sha256 === "string" && HEX.test(value.decoded_sha256), "invalid chunk lengths/digests");
 }
 function cap(horizon) { return horizon <= 10_000 ? 64 * 1024 * 1024 : horizon <= 100_000 ? 512 * 1024 * 1024 : 3_000_000_000; }
 function validateIndex(value) {
@@ -123,7 +123,7 @@ function validateIndex(value) {
   let prior = 0;
   for (const entry of value.manifests) {
     fields(entry, ["path", "bytes", "sha256", "first_tick", "last_tick", "frames"]); const last = natural(entry.last_tick, 1_000_000, entry, "last_tick");
-    requireThat(last > prior && entry.path === `horizon-${last}.json` && natural(entry.first_tick, 0, entry, "first_tick") === 0 && natural(entry.frames, 1_000_001, entry, "frames") === last + 1 && natural(entry.bytes, DENSE_LIMITS.manifest, entry, "bytes") > 0 && HEX.test(entry.sha256), "invalid manifest descriptor"); prior = last;
+    requireThat(last > prior && entry.path === `horizon-${last}.json` && natural(entry.first_tick, 0, entry, "first_tick") === 0 && natural(entry.frames, 1_000_001, entry, "frames") === last + 1 && natural(entry.bytes, DENSE_LIMITS.manifest, entry, "bytes") > 0 && typeof entry.sha256 === "string" && HEX.test(entry.sha256), "invalid manifest descriptor"); prior = last;
   }
   requireThat(natural(value.unique_chunks, DENSE_LIMITS.chunks, value, "unique_chunks") > 0 && natural(value.unique_gzip_bytes, cap(prior), value, "unique_gzip_bytes") > 0 && natural(value.decoded_chunk_bytes, DENSE_LIMITS.chunks * DENSE_LIMITS.decoded, value, "decoded_chunk_bytes") > 0, "invalid index counts");
 }
@@ -210,15 +210,21 @@ function gzipBoundary(input) {
 }
 function abortError() { return new DOMException("Dense recording request superseded or aborted", "AbortError"); }
 function interrupted(signal) { if (signal?.aborted) throw signal.reason || abortError(); }
-async function withSignal(promise, signal) {
-  interrupted(signal); if (!signal) return promise; let listener;
-  try { return await Promise.race([promise, new Promise((_, reject) => { listener = () => reject(signal.reason || abortError()); signal.addEventListener("abort", listener, { once: true }); })]); }
+async function withSignal(operation, signal) {
+  interrupted(signal); if (!signal) return operation(); let listener;
+  try {
+    const canceled = new Promise((_, reject) => { listener = () => reject(signal.reason || abortError()); signal.addEventListener("abort", listener, { once: true }); });
+    // Attach race handlers before invoking the thunk. An already-aborted read
+    // is never created; a synchronous abort/rejection inside fetch stays caught.
+    const pending = Promise.resolve().then(() => { interrupted(signal); return operation(); });
+    return await Promise.race([pending, canceled]);
+  }
   finally { signal.removeEventListener("abort", listener); }
 }
 async function collect(stream, maximum, signal) {
   requireThat(stream?.getReader, "bounded response body is required"); const reader = stream.getReader(), parts = []; let length = 0;
   try {
-    for (;;) { const part = await withSignal(reader.read(), signal); if (part.done) break; requireThat(part.value instanceof Uint8Array && part.value.byteLength <= maximum - length, "response/inflated byte cap exceeded"); parts.push(part.value); length += part.value.byteLength; }
+    for (;;) { const part = await withSignal(() => reader.read(), signal); if (part.done) break; requireThat(part.value instanceof Uint8Array && part.value.byteLength <= maximum - length, "response/inflated byte cap exceeded"); parts.push(part.value); length += part.value.byteLength; }
     const result = new Uint8Array(length); let offset = 0; for (const part of parts) { result.set(part, offset); offset += part.byteLength; } return result;
   } catch (error) { void reader.cancel(error).catch(() => {}); throw error; }
   finally { reader.releaseLock(); }
@@ -307,7 +313,7 @@ export async function createDenseRecordingLoader({ indexUrl, indexSha256, manife
     requireThat(target.origin === base.origin && !target.username && !target.password && !target.search && !target.hash, "cross-origin or unsafe asset URL");
     const controller = new AbortController(), deadline = AbortSignal.timeout(DENSE_LIMITS.requestMs), combined = AbortSignal.any([controller.signal, deadline, ...(signal ? [signal] : [])]); interrupted(combined);
     try {
-      const response = await withSignal(fetcher(target.href, { method: "GET", mode: "same-origin", credentials: "omit", redirect: "error", cache: "no-store", signal: combined }), combined);
+      const response = await withSignal(() => fetcher(target.href, { method: "GET", mode: "same-origin", credentials: "omit", redirect: "error", cache: "no-store", signal: combined }), combined);
       requireThat(response.status === 200 && (!response.url || response.url === target.href), "asset response status/URL mismatch");
       const declared = response.headers?.get("content-length");
       if (declared !== null && declared !== undefined) requireThat(/^(0|[1-9][0-9]*)$/.test(declared) && Number(declared) <= maximum && (expected === undefined || Number(declared) === expected), "asset Content-Length mismatch/cap");
@@ -315,7 +321,7 @@ export async function createDenseRecordingLoader({ indexUrl, indexSha256, manife
     } finally { controller.abort(); }
   }
   const indexBytes = await get(url, DENSE_LIMITS.index, undefined, lifetimeSignal);
-  requireThat(HEX.test(indexSha256) && await sha(indexBytes, cryptoProvider) === indexSha256, "externally pinned index SHA-256 mismatch");
+  requireThat(typeof indexSha256 === "string" && HEX.test(indexSha256) && await sha(indexBytes, cryptoProvider) === indexSha256, "externally pinned index SHA-256 mismatch");
   const initialIndex = parseDenseJson(indexBytes); validateIndex(initialIndex); const manifestEntry = initialIndex.manifests.find((entry) => entry.path === manifestPath); requireThat(manifestEntry, "manifest must be index-allowlisted");
   const manifestBytes = await get(new URL(manifestEntry.path, url), DENSE_LIMITS.manifest, manifestEntry.bytes, lifetimeSignal);
   const admitted = await admitDenseRecording(indexBytes, manifestBytes, { indexSha256, manifestPath, cryptoProvider }); interrupted(lifetimeSignal);
@@ -347,7 +353,7 @@ export async function createDenseRecordingLoader({ indexUrl, indexSha256, manife
       const index = low; for (const old of [...entries.keys()]) if (old !== index && (!prefetch || old !== index + 1)) evict(old);
       const entry = obtain(index), signals = [activeSeek.signal, ...(lifetimeSignal ? [lifetimeSignal] : []), ...(signal ? [signal] : [])], combined = AbortSignal.any(signals);
       try {
-        const payload = await withSignal(entry.promise, combined); interrupted(combined); requireThat(requested === serial && !closed && !failure, "stale seek must not emit");
+        const payload = await withSignal(() => entry.promise, combined); interrupted(combined); requireThat(requested === serial && !closed && !failure, "stale seek must not emit");
         current = payload.frameAt(tick);
         if (prefetch && index + 1 < admitted.manifest.chunks.length) obtain(index + 1);
         return current;

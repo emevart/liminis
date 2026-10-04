@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createHash, webcrypto } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { gunzipSync, gzipSync, constants } from "node:zlib";
 import { admitDenseRecording, compareDenseCellIds, createDenseRecordingLoader, decodeDenseChunk, DENSE_LIMITS, parseDenseJson } from "./dense-recording.mjs";
 
@@ -186,6 +187,27 @@ test("admission refuses identity, provenance, bounds, unread descriptor, index c
   await assert.rejects(() => admitDenseRecording(indexBytes, manifestBytes, { manifestPath: "horizon-100.json", cryptoProvider: webcrypto }), /pinned index/);
 });
 
+test("digest/commit fields reject coherent one-element arrays, including unread descriptors", async () => {
+  await admit(metadata());
+  for (const key of ["producer_commit", "producer_tree"]) {
+    const value = metadata((manifest, index) => { const coerced = [manifest.provenance[key]]; manifest.provenance[key] = coerced; index.provenance[key] = clone(coerced); });
+    await assert.rejects(() => admit(value), /anchors/, key);
+  }
+  for (const key of ["gzip_sha256", "decoded_sha256"]) {
+    const value = metadata((manifest) => { manifest.chunks[0][key] = [manifest.chunks[0][key]]; });
+    await assert.rejects(() => admit(value), /digests/, key);
+    const { files, meta } = threeChunks(); meta.manifest.chunks[2][key] = [meta.manifest.chunks[2][key]];
+    const mb = Buffer.from(encode(meta.manifest)); meta.index.manifests[0].bytes = mb.length; meta.index.manifests[0].sha256 = digest(mb); const ib = Buffer.from(encode(meta.index)); files.set("horizon-100.json", mb); files.set("index.json", ib);
+    const requests = [];
+    await assert.rejects(() => createDenseRecordingLoader(loaderOptions(files, async (url) => { const name = new URL(url).pathname.split("/").at(-1); requests.push(name); return response(files.get(name)); })), /digests/);
+    assert.deepStrictEqual(requests, ["index.json", "horizon-100.json"], `unread ${key} rejected before any chunk GET`);
+  }
+  const unread = metadata((_, index) => { index.manifests.push({ path: "horizon-10000.json", bytes: 1, sha256: ["1".repeat(64)], first_tick: 0, last_tick: 10_000, frames: 10_001 }); });
+  await assert.rejects(() => admit(unread), /manifest descriptor/);
+  await assert.rejects(() => admit({ ...metadata(), indexSha256: [digest(metadata().indexBytes)] }), /pinned index/);
+  await assert.rejects(() => createDenseRecordingLoader({ ...loaderOptions(originalFiles()), indexSha256: [INDEX_SHA] }), /pinned index/);
+});
+
 test("prefix cap uses full horizon: 64MiB / 512MiB / decimal 3GB and smaller existing caps", async () => {
   for (const [horizon, total] of [[10_000, 64 * 1024 * 1024], [100_000, 512 * 1024 * 1024], [1_000_000, 3_000_000_000]]) {
     const value = metadata((manifest, index) => { index.manifests.push({ path: `horizon-${horizon}.json`, bytes: 1, sha256: "1".repeat(64), first_tick: 0, last_tick: horizon, frames: horizon + 1 }); manifest.bounds.total_artifact_bytes_cap = total; });
@@ -299,6 +321,39 @@ test("caller/lifetime abort clears in-flight state and corrupt active prefetch f
   lifetime.abort(); assert.equal(loader.stats.closed, true);
   const bad = threeChunks(); bad.files.set(bad.chunks[1].descriptor.path, Buffer.from(bad.chunks[1].data).fill(0));
   const failed = await createDenseRecordingLoader(loaderOptions(bad.files)); await failed.seek(0); await until(() => failed.stats.failed); assert.equal(failed.current, null); await assert.rejects(() => failed.seek(1), /integrity/); failed.close();
+});
+
+test("mid-body abort and synchronous fetch abort produce only caught errors, never unhandled rejections", () => {
+  // Isolate process-level rejection observation from node:test's own listener.
+  // Native Response/ReadableStream models a fetch body errored by AbortSignal.
+  const source = `
+    import { createDenseRecordingLoader } from ${JSON.stringify(new URL("./dense-recording.mjs", import.meta.url).href)};
+    import { webcrypto } from "node:crypto";
+    const input = Uint8Array.from(${JSON.stringify(Array.from(indexBytes))}), unhandled = [], caught = [];
+    process.on("unhandledRejection", (error) => unhandled.push(error.name));
+    for (const turns of [0, 1, 2, "synchronous"]) {
+      const lifetime = new AbortController(); let count = 0;
+      const stream = new ReadableStream({
+        start(controller) { lifetime.signal.addEventListener("abort", () => controller.error(lifetime.signal.reason)); },
+        pull(controller) {
+          if (count++ === 0) {
+            controller.enqueue(input.subarray(0, 16));
+            const after = (left) => queueMicrotask(() => left ? after(left - 1) : lifetime.abort()); after(Number(turns));
+          }
+        },
+      }, { highWaterMark: 0 });
+      const fetcher = turns === "synchronous" ? () => { lifetime.abort(); return Promise.reject(lifetime.signal.reason); } : async () => new Response(stream);
+      try {
+        await createDenseRecordingLoader({ indexUrl: "https://example.test/dense/index.json", indexSha256: ${JSON.stringify(INDEX_SHA)}, manifestPath: "horizon-100.json", baseUrl: "https://example.test/", cryptoProvider: webcrypto, signal: lifetime.signal, fetcher });
+        caught.push("unexpected success");
+      } catch (error) { caught.push(error.name); }
+      await new Promise((done) => setTimeout(done, 15));
+    }
+    console.log(JSON.stringify({ caught, unhandled }));
+  `;
+  const child = spawnSync(process.execPath, ["--input-type=module", "-e", source], { encoding: "utf8", timeout: 5000, maxBuffer: 64 * 1024 });
+  assert.equal(child.status, 0, child.stderr || child.error?.message);
+  assert.deepStrictEqual(JSON.parse(child.stdout.trim()), { caught: ["AbortError", "AbortError", "AbortError", "AbortError"], unhandled: [] });
 });
 
 test("transport refuses cross-origin/redirected paths, oversize declared and streamed bodies, and wrong byte lengths", async () => {
