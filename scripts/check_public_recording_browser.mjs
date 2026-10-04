@@ -219,7 +219,8 @@ try {
   for (const filename of ["trace.zip", "desktop-default.png", "mobile-default.png"]) await rm(resolve(evidenceDir, filename), { force: true });
   evidence.sourceCommit = execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).trim();
   evidence.sourceTree = execFileSync("git", ["rev-parse", "HEAD^{tree}"], { cwd: repoRoot, encoding: "utf8" }).trim();
-  if (process.env.LIMINIS_EXPECTED_HEAD) assert.equal(evidence.sourceCommit, process.env.LIMINIS_EXPECTED_HEAD, "Public smoke checkout must match expected HEAD");
+  assert.ok(process.env.LIMINIS_EXPECTED_HEAD, "LIMINIS_EXPECTED_HEAD must identify the reviewed checkout");
+  assert.equal(evidence.sourceCommit, process.env.LIMINIS_EXPECTED_HEAD, "Public smoke checkout must match expected HEAD");
   evidence.trackedWorkingTreeStatus = execFileSync("git", ["status", "--porcelain", "--untracked-files=no"], { cwd: repoRoot, encoding: "utf8" }).trim();
   assert.equal(evidence.trackedWorkingTreeStatus, "", "Public smoke requires a clean tracked checkout");
   const scriptBytes = await readFile(fileURLToPath(import.meta.url));
