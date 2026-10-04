@@ -36,6 +36,9 @@
       .stage { position:relative; min-width:0; min-height:500px; overflow:hidden; background:#080d0b; }
       .stage[data-physical="true"] { min-height:560px; }
       #chamber { display:block; width:100%; height:100%; touch-action:none; }
+      #chamber-3d { position:absolute; inset:0; display:block; width:100%; height:100%; touch-action:none; }
+      .axis-labels { position:absolute; inset:0; pointer-events:none; z-index:2; }
+      .axis-labels span { position:absolute; font-size:10px; color:#d1dfd6; background:#080d0bcc; padding:1px 3px; white-space:nowrap; }
       .stage-head { position:absolute; z-index:2; top:15px; left:17px; pointer-events:none; }
       .stage-head h1 { margin:1px 0 0; font-size:22px; font-weight:550; }
       .stage-head strong { color:var(--mint); font-size:28px; font-weight:600; }
@@ -49,6 +52,10 @@
       .projection-controls input[type="number"] { width:76px; min-width:0; }
       .projection-controls select, .projection-controls input[type="number"], .id-search input { padding:4px 6px; border:1px solid var(--rule); background:#141b17; }
       .projection-controls .slice-fields { display:flex; gap:8px; flex-wrap:wrap; }
+      .view-3d-controls { display:flex; align-items:center; flex-wrap:wrap; gap:7px 12px; flex-basis:100%; }
+      .view-3d-controls button { padding:4px 7px; }
+      .view-3d-controls input[type="range"] { width:90px; }
+      .view-3d-status { flex-basis:100%; margin:0; color:var(--muted); }
       .projection-error { flex-basis:100%; margin:0; color:var(--coral); }
       .id-search { display:flex; gap:6px; margin-bottom:10px; }
       .id-search input { flex:1; min-width:0; width:100%; }
@@ -137,6 +144,7 @@
         .seed input { flex:1; min-width:80px; }
       }
     </style>
+    <script type="importmap">{"imports":{"three":"/assets/vendor/three-r180/three.module.js"}}</script>
   </head>
   <body>
     <div class="shell">
@@ -149,13 +157,18 @@
       <main class="workspace">
         <section class="stage" id="cell-stage" aria-label="Cell culture inventory schematic">
           <canvas id="chamber" tabindex="0" aria-label="Schematic inventory of living cells, not physical coordinates. Select a cell to inspect it."></canvas>
+          <canvas id="chamber-3d" tabindex="0" aria-label="Orthographic three-dimensional physical centers" hidden></canvas>
+          <div class="axis-labels" id="axis-labels" hidden><span></span><span></span><span></span></div>
           <div class="stage-head"><span class="micro" id="stage-title">Culture inventory</span><h1><strong id="cell-count">0</strong> <span id="population-label">living cells</span></h1><p class="stage-range num" id="projection-range" hidden></p></div>
           <div class="stage-caption"><p id="schematic-caption">Culture inventory schematic. Icon placement does not represent physical coordinates.</p><p id="physical-state-note" hidden>Physical centers from saved coordinates. Marker size is visual, not cell body radius. Chemical resources remain shared and well mixed.</p></div>
           <div class="projection-controls" id="projection-controls" hidden>
+            <label>View <select id="view-mode"><option value="2d">2D</option><option value="3d">3D</option></select></label>
             <label for="projection-plane">Plane <select id="projection-plane"><option value="xy">XY</option><option value="xz">XZ</option><option value="yz">YZ</option></select></label>
             <span class="num" id="projection-axes">x → · y ↑</span>
             <label><input type="checkbox" id="slice-enabled"/>Slice <span id="slice-axis">z</span></label>
             <div class="slice-fields" id="slice-fields" hidden><label>Center µm <input type="number" id="slice-center" min="0" step="any" required/></label><label>Thickness µm <input type="number" id="slice-thickness" min="0" step="any" required/></label></div>
+            <div class="view-3d-controls" id="view-3d-controls" hidden><button id="camera-reset" type="button">Reset view</button><label><input id="layer-centers" type="checkbox" checked/>Centers</label><label><input id="layer-box" type="checkbox" checked/>Box / axes</label><label><input id="layer-slice" type="checkbox" checked/>Slice boundaries</label><label>Opacity <input id="centers-opacity" type="range" min="0" max="1" step="0.05" value="1"/></label></div>
+            <p class="view-3d-status" id="view-3d-status" role="status" hidden></p>
             <p class="projection-error" id="slice-error" role="alert" hidden></p>
             <p class="projection-error" id="projection-error" role="alert" hidden></p>
           </div>
@@ -192,7 +205,7 @@
     <script type="module">
       const $ = (id) => document.getElementById(id);
       const finite = (value, fallback=0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
-      const view = { state:null, drawnTick:null, visibleIds:[], candidates:[], candidateTick:null, projectionError:null, plane:"xy", slice:{enabled:false,center:0,thickness:0}, sliceAxis:null, history:[], identity:null, historyAt:0, historyBusy:false, historyStatus:"loading", selected:null, hits:[], layout:new Map(), usedSlots:new Set(), pollBusy:false, pollSerial:0, saveRequest:null, saveError:null, screenFps:30, frameAt:null };
+      const view = { state:null, drawnTick:null, visibleIds:[], candidates:[], candidateTick:null, candidateRevision:null, geometryRevision:0, drawnRevision:null, mode:"2d", requestedMode:"2d", three:null, dependencies:null, activationSerial:0, contextCreations:0, unavailable:null, tap:null, layers:{centers:true,box:true,slice:true,opacity:1}, projectionError:null, plane:"xy", slice:{enabled:false,center:0,thickness:0}, sliceAxis:null, history:[], identity:null, historyAt:0, historyBusy:false, historyStatus:"loading", selected:null, hits:[], layout:new Map(), usedSlots:new Set(), pollBusy:false, pollSerial:0, saveRequest:null, saveError:null, screenFps:30, frameAt:null };
       const palette = ["#86dfb7","#72d5df","#ff8f83","#e69fce","#e7c66f","#94b9ff","#b9df78","#d99b78"];
 
       async function json(url) {
@@ -283,9 +296,11 @@
         const s=view.state,physical=s?.chamber_format===2;$("projection-controls").hidden=!physical;$("schematic-caption").hidden=physical;$("physical-state-note").hidden=!physical;
         $("stage-title").textContent=physical?"Physical centers":"Culture inventory";$("population-label").textContent=physical?"visible / total":"living cells";
         $("cell-stage").dataset.physical=String(physical);$("cell-stage").setAttribute("aria-label",physical?"Physical cell centers in an orthographic projection":"Cell culture inventory schematic");$("projection-range").hidden=!physical;
-        if(!physical){document.querySelector(".stage-caption").style.top="";return;}
+        if(!physical){if(view.requestedMode!=="2d")deactivate3D();document.querySelector(".stage-caption").style.top="";return;}
         const axes=projectionAxes(view.plane),names=["x","y","z"],dimension=s.model?.dimensions_m?.[axes[2]];
-        $("projection-axes").textContent=`${names[axes[0]]} → · ${names[axes[1]]} ↑`;$("slice-axis").textContent=names[axes[2]];
+        $("projection-axes").textContent=view.mode==="3d"?"Orthographic XYZ":`${names[axes[0]]} → · ${names[axes[1]]} ↑`;$("slice-axis").textContent=names[axes[2]];
+        $("cell-stage").dataset.view=view.mode;$("view-3d-controls").hidden=view.mode!=="3d";
+        $("physical-state-note").textContent=view.mode==="3d"?"Saved physical centers. Glyph size is visual, not body radius; overlap brightness is not a measurement. Shared well-mixed chemistry. Drag to rotate, wheel/pinch to zoom, right-drag/two fingers to pan; arrows select IDs.":"Physical centers from saved coordinates. Marker size is visual, not cell body radius. Chemical resources remain shared and well mixed.";
         if(Number.isFinite(dimension)&&dimension>0&&(reset||view.sliceAxis!==axes[2])){view.slice.center=dimension/2;view.slice.thickness=dimension/10;view.sliceAxis=axes[2];$("slice-center").value=String(view.slice.center*1e6);$("slice-thickness").value=String(view.slice.thickness*1e6);$("slice-error").hidden=true;}
         $("slice-enabled").checked=view.slice.enabled;$("slice-fields").hidden=!view.slice.enabled;
         $("slice-center").max=Number.isFinite(dimension)?String(dimension*1e6):"";
@@ -315,14 +330,61 @@
         for(const [id,slot] of view.layout){if(!living.has(id)){view.layout.delete(id);view.usedSlots.delete(slot);}}
       }
 
+      function invalidateGeometry(){
+        view.geometryRevision++;view.candidates=[];view.candidateTick=null;view.candidateRevision=null;view.hits=[];view.tap?.changed();renderCandidates();
+      }
+      function deactivate3D(message=null){
+        view.activationSerial++;view.mode=view.requestedMode="2d";view.tap?.cancel();view.three?.clear();$("view-mode").value="2d";
+        $("chamber-3d").hidden=true;$("chamber").hidden=false;$("axis-labels").hidden=true;$("view-3d-controls").hidden=true;
+        $("view-3d-status").hidden=!message;$("view-3d-status").textContent=message??"";invalidateGeometry();
+      }
+      function fallback3D(error){
+        view.unavailable=error instanceof Error?error.message:String(error);view.three?.dispose();
+        deactivate3D(`3D unavailable: ${view.unavailable} · showing 2D`);$("view-mode").querySelector('option[value="3d"]').disabled=true;
+        configureProjection();drawChamber();renderInspector();renderCandidates();
+      }
+      function load3DDependencies(){
+        return view.dependencies??=Promise.all([import("/assets/cell-viewer-3d.mjs"),import("/assets/vendor/three-r180/three.module.js"),import("/assets/vendor/three-r180/OrbitControls.js")]);
+      }
+      async function activate3D(){
+        if(view.unavailable||view.state?.chamber_format!==2)return;
+        const serial=++view.activationSerial;view.requestedMode="3d";$("view-3d-status").hidden=false;$("view-3d-status").textContent="Loading 3D · 2D remains shown";invalidateGeometry();
+        try{
+          const [module,THREE,{OrbitControls}]=await load3DDependencies();
+          if(serial!==view.activationSerial||view.requestedMode!=="3d"||view.state?.chamber_format!==2)return;
+          if(!view.three){view.three=module.createPhysical3D({THREE,OrbitControls,canvas:$("chamber-3d"),palette,colorIndex:key=>hash(key)%palette.length,onChange:invalidateGeometry,onLost:fallback3D});view.contextCreations++;view.tap=module.tapGesture();}
+          view.mode="3d";$("chamber-3d").hidden=false;$("chamber").hidden=true;$("view-3d-status").textContent="Orthographic 3D · centers only";
+          configureProjection();invalidateGeometry();drawChamber();renderInspector();renderCandidates();$("chamber-3d").focus({preventScroll:true});
+        }catch(error){if(serial===view.activationSerial)fallback3D(error);}
+      }
+      function draw3D(){
+        const canvas=$("chamber-3d"),rect=canvas.getBoundingClientRect(),head=document.querySelector(".stage-head"),caption=document.querySelector(".stage-caption"),controls=$("projection-controls"),meta=document.querySelector(".stage-meta");
+        const dimensions=view.state.model.dimensions_m,axis=projectionAxes(view.plane)[2],names=["x","y","z"],[lower,upper]=sliceInterval(dimensions[axis],view.slice),mode=!view.slice.enabled?"full centers":view.slice.thickness===0?"exact center plane":"inclusive center slice";
+        $("projection-range").textContent=`Box ${dimensions.map((length,index)=>`${names[index]} ${micrometers(length)} µm`).join(" · ")} · ${names[axis]} ∈ [${micrometers(lower,17)}, ${micrometers(upper,17)}] µm · ${mode}`;
+        caption.style.top=`${Math.max(82,head.offsetTop+head.offsetHeight+12)}px`;controls.style.top=`${Math.max(139,caption.offsetTop+caption.offsetHeight+12)}px`;
+        const top=controls.offsetTop+controls.offsetHeight+24,bottom=meta.offsetHeight+34,viewport={left:24,top,width:Math.max(1,rect.width-48),height:Math.max(1,rect.height-top-bottom),canvasWidth:rect.width,canvasHeight:rect.height,pixelRatio:Math.min(devicePixelRatio||1,2)};
+        view.hits=view.three.draw(view.state,{axis,slice:view.slice,layers:view.layers,selected:view.selected},viewport);view.visibleIds=view.hits.map(hit=>hit.id);view.drawnTick=view.state.tick;
+        const changed=view.drawnRevision!==view.geometryRevision;view.drawnRevision=view.geometryRevision;
+        $("cell-count").textContent=`${view.hits.length.toLocaleString("en-US")} / ${view.state.cells.length.toLocaleString("en-US")}`;$("projection-error").hidden=true;view.projectionError=null;
+        canvas.setAttribute("aria-label",`Orthographic XYZ physical centers. ${view.hits.length} visible of ${view.state.cells.length} living cells at shown snapshot tick ${view.drawnTick}. Arrow keys select exact IDs.`);
+        const labels=$("axis-labels");labels.hidden=!view.layers.box;view.three.axisLabels().forEach((point,index)=>{const label=labels.children[index];label.hidden=!point.inView;label.style.left=`${point.x+5}px`;label.style.top=`${point.y-16}px`;label.textContent=`${names[index]} · ${micrometers(dimensions[index])} µm`;});
+        if(changed){renderInspector();renderCandidates();}
+      }
+      function freezeAudit(value){if(value&&typeof value==="object"){Object.values(value).forEach(freezeAudit);Object.freeze(value);}return value;}
+      Object.defineProperty(globalThis,"getCellViewAudit",{value:()=>{
+        const audit=view.three?.audit(),active=view.mode==="3d";
+        return freezeAudit({mode:view.mode,requestedMode:view.requestedMode,revision:view.geometryRevision,drawnRevision:view.drawnRevision,drawnTick:view.drawnTick,dimensions_m:view.state?.model?.dimensions_m?[...view.state.model.dimensions_m]:null,sceneScale:active?audit.sceneScale:null,camera:active?audit.camera:null,viewport:active?audit.viewport:null,resources:{...(audit?.resources??{}),contextCreations:view.contextCreations},backend:audit?.backend??null});
+      }});
+
       function drawChamber() {
+        if(view.mode==="3d"&&view.state?.chamber_format===2){try{draw3D();return;}catch(error){fallback3D(error);return;}}
         const {ctx,w,h}=prepare($("chamber"));ctx.clearRect(0,0,w,h);ctx.fillStyle="#080d0b";ctx.fillRect(0,0,w,h);
         const cells=view.state?.cells||[], pad=34, head=document.querySelector(".stage-head"), meta=document.querySelector(".stage-meta");
         view.hits=[];view.projectionError=null;
         if(view.state?.chamber_format===2){
           try{drawPhysical(ctx,w,h,cells);}catch(error){view.hits=[];view.projectionError=error.message;$("cell-count").textContent=`0 / ${cells.length}`;$("projection-range").textContent="Slice interval unavailable";$("chamber").setAttribute("aria-label",`Physical projection unavailable at shown snapshot tick ${view.state.tick}: ${error.message}`);}
           $("projection-error").hidden=!view.projectionError;$("projection-error").textContent=view.projectionError?`Cannot show physical centers: ${view.projectionError}`:"";
-          view.visibleIds=view.hits.map(hit=>hit.id);view.drawnTick=view.state.tick;return;
+          view.visibleIds=view.hits.map(hit=>hit.id);view.drawnTick=view.state.tick;view.drawnRevision=view.geometryRevision;return;
         }
         const top=head.offsetTop+head.offsetHeight+24, bottom=meta.offsetHeight+32;
         const usableW=Math.max(1,w-pad*2), usableH=Math.max(1,h-top-bottom);
@@ -342,7 +404,7 @@
           roundRect(ctx,-length/2-3,-thickness/2-3,length+6,thickness+6,(thickness+6)/2);ctx.stroke();ctx.restore();
           view.hits.push({id:cell.id,x,y,r:Math.max(8,length*.62)});
         }
-        view.visibleIds=view.hits.map(hit=>hit.id);view.drawnTick=view.state?.tick??null;
+        view.visibleIds=view.hits.map(hit=>hit.id);view.drawnTick=view.state?.tick??null;view.drawnRevision=view.geometryRevision;
         $("chamber").setAttribute("aria-label",`${cells.length} living cells in a schematic inventory, not physical coordinates. Select a cell to inspect it.`);
       }
 
@@ -361,17 +423,17 @@
       function objectPairs(host,title,object){if(!object||typeof object!=="object"||!Object.keys(object).length)return;const wrap=document.createElement("div");wrap.className="object";const label=document.createElement("div");label.className="micro";label.textContent=title;const dl=document.createElement("dl");dl.className="kv object-grid";for(const [key,value] of Object.entries(object))addPair(dl,key,inspectValue(value));wrap.append(label,dl);host.append(wrap);}
       function renderInspector(){
         const cell=(view.state?.cells||[]).find((item)=>item.id===view.selected), host=$("cell-detail");host.replaceChildren();
-        const tick=view.drawnTick??"—",physical=view.state?.chamber_format===2,outside=physical&&!view.visibleIds.includes(view.selected);
+        const tick=view.drawnTick??"—",physical=view.state?.chamber_format===2,status=physical?(view.mode==="3d"?view.three.visibility(view.selected):view.visibleIds.includes(view.selected)?"visible":"outside slice"):"visible",outside=status!=="visible";
         if(!cell){host.className="empty";host.textContent=view.selected?`ID ${view.selected} is not present in the shown snapshot at tick ${tick}.`:`Select a living cell or enter its exact ID. Shown snapshot tick ${tick}.`;$("selection-state").textContent=view.selected?"not present":"none selected";return;}
-        host.className="";$("selection-state").textContent=view.projectionError?"position unavailable":outside?"outside slice":`generation ${cell.generation}`;
+        host.className="";$("selection-state").textContent=view.projectionError?"position unavailable":outside?status:`generation ${cell.generation}`;
         const code=document.createElement("div");code.className="selected-code";const dot=document.createElement("span");dot.className="swatch";dot.style.background=color(cell.genome_key);const name=document.createElement("b");name.textContent=cell.genome_key;code.append(dot,name);host.append(code);
-        if(view.projectionError||outside){const note=document.createElement("p");note.className="selection-note";note.textContent=view.projectionError?"The physical projection is unavailable; coordinates are not replaced.":"Selected cell is outside the current slice; its saved center is shown below.";host.append(note);}
+        if(view.projectionError||outside){const note=document.createElement("p");note.className="selection-note";note.textContent=view.projectionError?"The physical projection is unavailable; coordinates are not replaced.":view.mode==="3d"?`Selected cell: ${status}; its saved center is shown below.`:"Selected cell is outside the current slice; its saved center is shown below.";host.append(note);}
         const dl=document.createElement("dl");dl.className="kv object-grid";addPair(dl,"id",cell.id);addPair(dl,"shown snapshot tick",String(tick));addPair(dl,"parent",cell.parent_id??"founder");addPair(dl,"birth tick",String(cell.birth_tick));addPair(dl,"age",`${format(cell.age_s)} s`);addPair(dl,"mass",`${format(cell.mass_mol)} mol`);addPair(dl,"division mass",`${format(cell.division_mass_mol)} mol`);addPair(dl,"energy",`${format(cell.energy_j)} J`);
         if(physical){try{validateDimensions(view.state.model?.dimensions_m);validatePosition(cell.position_m,view.state.model.dimensions_m);for(const [axis,name] of ["x","y","z"].entries())addPair(dl,`${name} center`,`${micrometers(cell.position_m[axis])} µm`);}catch(error){addPair(dl,"position",error.message);}}
         host.append(dl);objectPairs(host,"Genome",cell.genome);objectPairs(host,"Phenotype",cell.phenotype);
       }
       function renderCandidates(){
-        const host=$("hit-candidates"),list=$("candidate-list");list.replaceChildren();host.hidden=view.candidates.length<2||view.candidateTick!==view.drawnTick;
+        const host=$("hit-candidates"),list=$("candidate-list");list.replaceChildren();host.hidden=view.candidates.length<2||view.candidateTick!==view.drawnTick||view.candidateRevision!==view.drawnRevision;
         if(host.hidden)return;$("hit-label").textContent=`${view.candidates.length} hits · snapshot tick ${view.candidateTick}`;list.size=Math.min(4,view.candidates.length);
         for(const candidate of view.candidates){const option=document.createElement("option");option.value=candidate.id;option.textContent=candidate.id;option.selected=candidate.id===view.selected;list.append(option);}
       }
@@ -408,9 +470,10 @@
         if(document.activeElement!==$("reset-seed"))$("reset-seed").value=s.seed;if(document.activeElement!==$("speed")&&Number.isFinite(s.pacing?.multiplier))$("speed").value=String(s.pacing.multiplier);$("maximum").setAttribute("aria-pressed",String(s.pacing?.mode==="maximum"));renderSave();renderResources();renderEvents();renderCharts();
       }
       function commitState(state){
-        const priorTick=view.state?.tick;view.state=state;view.pollSerial++;const p=state.persistence,identity=p?.enabled?`${p.run_id}\n${p.session_id}`:null;
-        const changed=identity!==view.identity;if(changed){view.identity=identity;view.history=[];view.historyAt=0;view.historyStatus="loading";view.selected=null;view.layout.clear();view.usedSlots.clear();view.saveRequest=null;view.saveError=null;view.slice.enabled=false;view.sliceAxis=null;}
-        if(changed||priorTick!==state.tick){view.candidates=[];view.candidateTick=null;}retireLayout(state.cells||[]);mergeHistory([liveSample(state)]);$("offline").dataset.open="0";
+        const prior=view.state;view.state=state;view.pollSerial++;const p=state.persistence,identity=p?.enabled?`${p.run_id}\n${p.session_id}`:null;
+        // Без persistence другой seed/config тоже меняет run при том же tick 0.
+        const changed=identity!==view.identity||["seed","config_hash","world_format_version","chamber_format"].some(key=>prior?.[key]!==state[key]);if(changed){view.identity=identity;view.history=[];view.historyAt=0;view.historyStatus="loading";view.selected=null;view.layout.clear();view.usedSlots.clear();view.saveRequest=null;view.saveError=null;view.slice.enabled=false;view.sliceAxis=null;}
+        if(changed||prior?.tick!==state.tick)invalidateGeometry();retireLayout(state.cells||[]);mergeHistory([liveSample(state)]);$("offline").dataset.open="0";
         // No await between assigning the sole latest snapshot and committing
         // its readouts, canvas/hits, and inspector. History is independent.
         configureProjection(changed);renderState();drawChamber();renderInspector();renderCandidates();
@@ -422,12 +485,20 @@
         finally{view.pollBusy=false;}
       }
 
-      $("chamber").addEventListener("pointerdown",event=>{if(view.drawnTick!==view.state?.tick)return;const rect=event.currentTarget.getBoundingClientRect();view.candidates=hitCandidates(view.hits,event.clientX-rect.left,event.clientY-rect.top);view.candidateTick=view.drawnTick;selectCell(view.candidates[0]?.id??null);});
-      $("chamber").addEventListener("keydown",event=>{if(view.drawnTick!==view.state?.tick||!["ArrowLeft","ArrowRight"].includes(event.key))return;const id=navigateVisibleIds(view.visibleIds,view.selected,event.key==="ArrowRight"?1:-1);if(id===null)return;event.preventDefault();selectCell(id);});
-      $("candidate-list").addEventListener("change",event=>{if(view.candidateTick===view.drawnTick&&view.candidates.some(hit=>hit.id===event.target.value))selectCell(event.target.value);});
+      $("chamber").addEventListener("pointerdown",event=>{if(view.drawnTick!==view.state?.tick)return;const rect=event.currentTarget.getBoundingClientRect();view.candidates=hitCandidates(view.hits,event.clientX-rect.left,event.clientY-rect.top);view.candidateTick=view.drawnTick;view.candidateRevision=view.drawnRevision;selectCell(view.candidates[0]?.id??null);});
+      function navigateCell(event){if(!["ArrowLeft","ArrowRight"].includes(event.key))return;if(view.mode==="3d")drawChamber();if(view.drawnTick!==view.state?.tick)return;const id=navigateVisibleIds(view.visibleIds,view.selected,event.key==="ArrowRight"?1:-1);if(id===null)return;event.preventDefault();selectCell(id);}
+      for(const id of ["chamber","chamber-3d"])$(id).addEventListener("keydown",navigateCell);
+      $("chamber-3d").addEventListener("pointerdown",event=>{$("chamber-3d").focus({preventScroll:true});view.tap?.down(event,performance.now(),view.geometryRevision);});
+      $("chamber-3d").addEventListener("pointermove",event=>view.tap?.move(event));$("chamber-3d").addEventListener("pointercancel",()=>view.tap?.cancel());
+      $("chamber-3d").addEventListener("pointerup",event=>{if(view.mode!=="3d"||!view.tap?.up(event,performance.now(),view.geometryRevision))return;drawChamber();if(view.drawnTick!==view.state?.tick||view.drawnRevision!==view.geometryRevision)return;const rect=event.currentTarget.getBoundingClientRect();view.candidates=hitCandidates(view.hits,event.clientX-rect.left,event.clientY-rect.top);view.candidateTick=view.drawnTick;view.candidateRevision=view.drawnRevision;selectCell(view.candidates[0]?.id??null);});
+      $("candidate-list").addEventListener("change",event=>{if(view.candidateTick===view.drawnTick&&view.candidateRevision===view.drawnRevision&&view.candidates.some(hit=>hit.id===event.target.value))selectCell(event.target.value);});
       $("cell-search").addEventListener("submit",event=>{event.preventDefault();const id=$("cell-id").value.trim();if(!/^\d+$/.test(id)){$("cell-id").setCustomValidity("Enter the exact decimal cell ID");$("cell-id").reportValidity();return;}$("cell-id").setCustomValidity("");view.candidates=[];selectCell(id);});
       $("cell-id").addEventListener("input",()=>$("cell-id").setCustomValidity(""));
-      function redrawProjection(){view.candidates=[];drawChamber();renderInspector();renderCandidates();}
+      function redrawProjection(){invalidateGeometry();drawChamber();renderInspector();renderCandidates();}
+      $("view-mode").addEventListener("change",event=>{if(event.target.value==="3d")void activate3D();else{deactivate3D();configureProjection();redrawProjection();}});
+      $("camera-reset").addEventListener("click",()=>{view.three?.reset();redrawProjection();});
+      for(const [id,key] of [["layer-centers","centers"],["layer-box","box"],["layer-slice","slice"]])$(id).addEventListener("change",event=>{view.layers[key]=event.target.checked;redrawProjection();});
+      $("centers-opacity").addEventListener("input",event=>{view.layers.opacity=Number(event.target.value);redrawProjection();});
       $("projection-plane").addEventListener("change",event=>{view.plane=event.target.value;configureProjection(true);redrawProjection();});
       function updateSlice(){
         const center=$("slice-center"),thickness=$("slice-thickness"),error=$("slice-error"),c=center.valueAsNumber/1e6,t=thickness.valueAsNumber/1e6;
@@ -459,9 +530,16 @@
         if(view.frameAt===null||now-view.frameAt>=interval-0.1){drawChamber();view.frameAt=now;}
         requestAnimationFrame(screenFrame);
       }
-      $("seed-form").addEventListener("submit",async event=>{event.preventDefault();const seed=$("reset-seed").value.trim();if(!/^\d+$/.test(seed)){$("reset-seed").setCustomValidity("Enter a non-negative integer seed");$("reset-seed").reportValidity();return;}$("reset-seed").setCustomValidity("");try{await control("reset",seed);view.history=[];view.selected=null;$("control-error").textContent="";await poll();}catch(error){$("control-error").textContent=error instanceof Error?error.message:String(error);}});
+      async function resetSimulation(seed){
+        invalidateGeometry();
+        try{await control("reset",seed);view.history=[];view.selected=null;$("control-error").textContent="";await poll();}
+        catch(error){$("control-error").textContent=error instanceof Error?error.message:String(error);}
+      }
+      $("seed-form").addEventListener("submit",event=>{event.preventDefault();const seed=$("reset-seed").value.trim();if(!/^\d+$/.test(seed)){$("reset-seed").setCustomValidity("Enter a non-negative integer seed");$("reset-seed").reportValidity();return;}$("reset-seed").setCustomValidity("");void resetSimulation(seed);});
       $("save").addEventListener("click",async()=>{const p=view.state?.persistence;if(!p?.enabled||p.saving||view.state?.save_pending||view.saveRequest)return;view.saveError=null;view.saveRequest={tick:finite(view.state.tick),serial:view.pollSerial};renderSave();try{await control("save");await poll();}catch(error){view.saveRequest=null;view.saveError=error instanceof Error?error.message:String(error);renderSave();}});
-      addEventListener("resize",()=>{drawChamber();renderCharts();});poll();setInterval(poll,650);requestAnimationFrame(screenFrame);
+      function hidePage(){view.activationSerial++;view.three?.dispose();}
+      function restorePage(event){if(event.persisted)location.reload();}
+      addEventListener("resize",()=>{redrawProjection();renderCharts();});addEventListener("pagehide",hidePage);addEventListener("pageshow",restorePage);poll();setInterval(poll,650);requestAnimationFrame(screenFrame);
     </script>
   </body>
 </html>

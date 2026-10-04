@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Validate recordings, catalog freshness, and download integrity
-        run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs
+        run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs scripts/cell-viewer-3d.test.mjs
       - name: Validate exact dense codec and Linux publication boundaries
         run: |
           git fetch --no-tags --depth=1 origin bd2a7f25e61abd713109171fc25b7c3de86003ab
@@ -64,6 +64,11 @@ jobs:
           LIMINIS_PLAYWRIGHT_MODULE: ${{ runner.temp }}/liminis-browser/node_modules/playwright
           LIMINIS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: node scripts/check_physical_projection_browser.mjs
+      - name: Real Three.js centers, camera, layers and snapshot acceptance
+        env:
+          LIMINIS_PLAYWRIGHT_MODULE: ${{ runner.temp }}/liminis-browser/node_modules/playwright
+          LIMINIS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: LIMINIS_EXPECTED_TREE="$(git rev-parse 'HEAD^{tree}')" node scripts/check_physical_3d_browser.mjs
       - name: Attach screenshots and exact-head browser evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -88,6 +93,15 @@ jobs:
         with:
           name: physical-projection-browser-${{ github.event.pull_request.head.sha || github.sha }}
           path: target/qa/physical-projection-browser/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Attach exact-head Three.js browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: physical-3d-browser-${{ github.event.pull_request.head.sha || github.sha }}
+          path: target/qa/physical-3d-browser/
           if-no-files-found: warn
           retention-days: 7
 

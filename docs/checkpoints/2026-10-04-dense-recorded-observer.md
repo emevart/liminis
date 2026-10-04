@@ -102,3 +102,34 @@ native orphan control проверяют чувствительность. Raw �
 Данные, producer, decoder/UI и frozen/LAB/старые JSON не менялись. Следующий
 шаг: fresh exact-head full CI и protected browser, независимая приёмка новых
 artifacts; только после green — guarded merge и existing public dense gate.
+
+## Принято и опубликовано, 21:00 UTC
+
+PR19 final exact HEAD `e2451e3142def791eb44aba4fcb19ada1aa1ed78`,
+tree `27c506c9b4aed0fbdaaa576f36bb1b768af8ae3a`: run37231067824 все11checks
+SUCCESS, independent combined source/doc/numerics и actual artifact review0
+blockers. Guarded merge выполнен в main
+`239ec8bde3d2f15e2aa5b50e9294e65eab5c0926`, тот же tree. Main run37232682967
+все executing mandatory jobs SUCCESS; PR-only frozen/world checks штатно
+SKIPPED на push, на exact PR были SUCCESS. Existing Workers Build SUCCESS.
+
+Actual public artifact независимым reviewer принят:4checks,2PNG,0blockers.
+Scope: deployed default10k catalog/index/manifest/module/first+prefetched
+gzip bytes, actual dense Step0→1 и1×/held state. Полный2.42GB public download,
+public100k/1M endpoints, analytics execution и achieved hardwareFPS не
+заявляются. Full3919-file Git network readback и existing provider build
+accepted whole payload — отдельные доказательства. Нет новых model runs.
+
+Original diagnostic FAIL97 и fresh accepted e245 dense/legacy ZIP сохранены
+без перепаковки в `codex/dense-recording-browser-evidence`,
+`4a4ee92fd1bf0abe4dcfa3f1f9469a0e8719e537`;
+LIVE/physical/projection и main239 public original ZIP/reviews —
+`codex/dense-recording-regression-evidence`,
+`3b433f5d68ad024a6e0ff8a0c03c8d7f71387ccc`.
+Fresh independent Git database readback: SHA/size closed inventories и CRC
+всех7original ZIP PASS. Full receipts и public incremental byte-readback
+сохранены в coordinator `0373fec1ef391aabc4aef6f2ef856984f0859273`.
+Initial97 FAIL остаётся FAIL. Старые3JSON/SHA и scientific sources неизменны.
+
+REC-2 CLOSED. Следующий согласованный этап LIVE-3b: real Three.js chamber2
+observer, отдельные source/QA ветки, ADR111 и новые exact-head gates.
