@@ -129,6 +129,13 @@ pub struct Config {
     /// `config::materialise` before the hash rather than assumed by a reader.
     #[serde(default)]
     pub initial: Initial,
+    /// Optional bounded two-locus population-genetics compiler input.
+    ///
+    /// The section is retained in the canonical form alongside the ordinary
+    /// substances and reactions it materialises. Absence is omitted so adding
+    /// this compiler does not move the hash of scenarios that do not use it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub genetics: Option<Genetics>,
     /// Calibration coordinates. The one section outside `config_hash`
     /// (ADR-038); see `NOT_HASHED` in `config/hash.rs`.
     ///
@@ -740,6 +747,68 @@ pub struct Initial {
     /// one out loud rather than inheriting it.
     #[serde(default)]
     pub layer: BTreeMap<String, Layer>,
+    /// Uniform concentration overrides, mol/m^3, applied after the stochastic
+    /// background has been generated.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub concentration: BTreeMap<String, f64>,
+    /// Deterministic spherical inocula, applied after uniform overrides.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inoculum: Vec<Inoculum>,
+}
+
+/// One deterministic spherical overwrite of an initial substance field.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Inoculum {
+    pub substance: String,
+    /// Sphere centre in metres from the domain origin.
+    pub center: [f64; 3],
+    /// Sphere radius in metres.
+    pub radius: f64,
+    /// Concentration written inside the sphere, mol/m^3.
+    pub concentration: f64,
+}
+
+/// A bounded two-locus genetics program compiled into ordinary chemistry.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Genetics {
+    /// Prefix of the four generated ids: `<prefix>00` through `<prefix>11`.
+    pub prefix: String,
+    /// Probability that newborn biomass flips one of the two loci.
+    pub mutation_probability: f64,
+    /// Allocation to the first pathway for allocation-bit zero.
+    pub preferred_fraction: f64,
+    /// Multiplicative Vmax advantage of speed-bit one.
+    pub fast_vmax_factor: f64,
+    /// Multiplicative Km cost of speed-bit one.
+    pub fast_km_factor: f64,
+    /// Substance template. Its id is a placeholder and is not itself emitted.
+    pub biomass: Substance,
+    /// Exactly two resource pathways, in allocation-bit order.
+    pub growth: Vec<GeneticPathway>,
+    /// Death template. The biomass placeholder must be an input.
+    pub turnover: Reaction,
+}
+
+/// One of the two resource pathways controlled by the allocation locus.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct GeneticPathway {
+    /// The nominated substrate whose Km carries the speed tradeoff.
+    pub resource: String,
+    /// Growth reaction template.
+    pub reaction: Reaction,
+}
+
+/// Public, decoded metadata for one generated genotype.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Genotype {
+    pub code: u8,
+    pub id: String,
+    pub rate_factor: f64,
+    pub km_factor: f64,
+    pub resource_allocation: [f64; 2],
 }
 
 /// Which side of the sediment/water boundary a substance is enriched on.

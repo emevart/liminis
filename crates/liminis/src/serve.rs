@@ -37,10 +37,12 @@
 //! green zero, and nothing else in the corpus would catch it — `assert_closed`
 //! walks substances one at a time and lives in another build.
 //!
-//! # No path reaches the filesystem
+//! # No URL chooses a filesystem path
 //!
 //! Inherited from `http.rs` and worth restating where the names come in: the
-//! substance name in a URL addresses the registry, never a path. An unknown name
+//! substance name in a URL addresses the registry, never a path. Storage uses
+//! only the experiment root selected at startup and host-generated identifiers.
+//! An unknown name
 //! is a 404 that says which name, and never a volume of zeros of the right
 //! length — that picture is indistinguishable from a dead world.
 
@@ -50,7 +52,7 @@ use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result};
 use liminis_core::config::{self, Config, Derived};
-use liminis_core::ledger::{DomainSums, Ledger, Nu};
+use liminis_core::ledger::{DomainSums, Ledger};
 use liminis_core::numeric::{M32, M64, run_key};
 use liminis_core::process::{Footprint, ProcessId, ROSTER_LEN, RosterEntry, Scratch, Tick};
 use liminis_core::version::WORLD_FORMAT_VERSION;
@@ -58,6 +60,11 @@ use liminis_core::world::{Boundary, Face, Grid, LaneRef, Registry, World, WorldL
 use liminis_core::worldgen;
 
 use crate::http::{Request, Response};
+
+#[path = "ecology.rs"]
+mod ecology;
+#[path = "persistence.rs"]
+mod persistence;
 
 /// The magic of the volume payload: "LMNV", little-endian, as the viewer reads
 /// it.
@@ -100,6 +107,9 @@ const RATE_WINDOW: Duration = Duration::from_millis(250);
 ///
 /// Held for exactly one tick or exactly one answer, never across `advance`.
 pub struct Sim {
+    scenario: Config,
+    ecology: ecology::Ecology,
+    error: Option<String>,
     world: World,
     tick: Tick,
     ledger: Ledger,
@@ -130,6 +140,10 @@ pub struct Sim {
     last: Option<Residual>,
     /// Whether the simulation thread is still alive. See [`SimAlive`].
     alive: bool,
+    persistence: Option<persistence::Persistence>,
+    transitioning: bool,
+    last_tick_nanos: u64,
+    save_requested: bool,
 }
 
 /// Everything a route knows about one substance.
@@ -172,10 +186,29 @@ struct Residual {
 ///
 /// Returns an error if the scenario cannot be read, validated or built into a
 /// world, or if the port cannot be bound.
-pub fn run(port: u16, config: &Path, seed: u64) -> Result<()> {
-    let scenario = config::load(config)?;
-    let sim = build(&scenario, seed)
-        .with_context(|| format!("building a world out of {}", config.display()))?;
+pub fn run(
+    port: u16,
+    config: &Path,
+    seed: u64,
+    data_dir: &Path,
+    resume: Option<&str>,
+    checkpoint: Option<&str>,
+) -> Result<()> {
+    // Bind first: a failed port must not create an experiment or hold its lock.
+    let listener = std::net::TcpListener::bind(("127.0.0.1", port))?;
+    let mut sim = if let Some(run) = resume {
+        persistence::resume(data_dir, run, checkpoint)?
+    } else {
+        let scenario = config::load(config)?;
+        let mut sim = build(&scenario, seed)
+            .with_context(|| format!("building a world out of {}", config.display()))?;
+        sim.persistence = Some(persistence::Persistence::create(data_dir, &sim)?);
+        sim
+    };
+    sim.persistence
+        .as_mut()
+        .expect("serve always persists")
+        .wait_for_save()?;
 
     let identity = format!(
         "seed={} config_hash={} world_format_version={}",
@@ -183,7 +216,6 @@ pub fn run(port: u16, config: &Path, seed: u64) -> Result<()> {
     );
     let shared = Arc::new(Mutex::new(sim));
 
-    let listener = std::net::TcpListener::bind(("127.0.0.1", port))?;
     println!("liminis viewer on http://127.0.0.1:{port}/");
     println!("{identity}");
 
@@ -276,12 +308,19 @@ fn build(scenario: &Config, seed: u64) -> Result<Sim> {
     );
 
     let scratch = Scratch::new(&world, &tick).context("the scratch buffers")?;
+    let fields = fields_of(&world, &derived);
+    let mut ecology = ecology::Ecology::new(scenario);
+    ecology.observe(&world, &fields, 0);
 
     Ok(Sim {
-        fields: fields_of(&world, &derived),
+        scenario: scenario.clone(),
+        ecology,
+        error: None,
+        fields,
         world,
         tick,
-        ledger: Ledger::new(n_substances).context("the ledger")?,
+        ledger: Ledger::with_reactions(n_substances, scenario.reaction.len() as u32)
+            .context("the ledger")?,
         scratch,
         before: DomainSums::new(n_substances).context("the domain sums before a tick")?,
         after: DomainSums::new(n_substances).context("the domain sums after a tick")?,
@@ -299,6 +338,10 @@ fn build(scenario: &Config, seed: u64) -> Result<Sim> {
         measured_tps: 0.0,
         last: None,
         alive: true,
+        persistence: None,
+        transitioning: false,
+        last_tick_nanos: 0,
+        save_requested: false,
     })
 }
 
@@ -425,7 +468,8 @@ fn run_loop(shared: &Arc<Mutex<Sim>>) {
         let started = Instant::now();
         let period = {
             let mut sim = lock(shared);
-            if !sim.running || !sim.alive {
+            service_storage(&mut sim);
+            if !sim.running || !sim.alive || sim.transitioning {
                 sim.measured_tps = 0.0;
                 drop(sim);
                 mark = Instant::now();
@@ -433,7 +477,9 @@ fn run_loop(shared: &Arc<Mutex<Sim>>) {
                 std::thread::sleep(IDLE);
                 continue;
             }
-            advance_one(&mut sim);
+            if !safe_advance(&mut sim) {
+                continue;
+            }
             since += 1;
             let elapsed = mark.elapsed();
             if elapsed >= RATE_WINDOW {
@@ -512,55 +558,181 @@ fn advance_one(sim: &mut Sim) {
     // counter would disagree with the phase of `every_n_ticks` at 2^32 and say
     // nothing about it.
     sim.ticks = sim.ticks.wrapping_add(1);
+    sim.ecology.observe(&sim.world, &sim.fields, sim.ticks);
 }
 
-/// The residual published for the tick that just finished: the aggregate of
-/// ADR-071 over matter, and the `None` the energy half is owed.
-///
-/// # Why this is a function and not three lines inside `advance_one`
-///
-/// ADR-037 asks for a written zero because a written zero is proof the check
-/// ran — so the corpus has to be able to tell one from a constant. On this
-/// world it cannot: every process S0 dispatches conserves each substance
-/// exactly, and `Ledger::assert_closed` fires *inside* `Tick::advance` in the
-/// debug build the tests run in, so a real tick that arrived here with a hole
-/// would have panicked before it. Which is to say every residual any test can
-/// obtain through `advance_one` is structurally zero, and `matter: 0` written
-/// in place of the computation would stay green through all of them.
-///
-/// Split out, the computation takes accumulators a test can fill itself, and
-/// `the_published_residual_is_computed_and_not_written` fills them with a hole.
-/// Taking the whole `Sim` rather than the three parts is the other half of it:
-/// there is then no call site at which `before` and `after` can be passed the
-/// wrong way round, and a swap inside here changes the sign of that test.
-///
-/// The aggregate is the largest residual by magnitude with its sign, never the
-/// sum: `+5` on one substance and `-5` on another add up to a green zero, and
-/// `assert_closed` walks the substances one at a time and lives in another
-/// build.
+/// Keep a failed world stopped and observable until an explicit reset.
+fn safe_advance(sim: &mut Sim) -> bool {
+    if sim
+        .persistence
+        .as_ref()
+        .is_some_and(|p| p.error().is_some())
+    {
+        sim.running = false;
+        sim.measured_tps = 0.0;
+        return false;
+    }
+    let started = Instant::now();
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| advance_one(sim))) {
+        Ok(()) => {
+            if sim
+                .last
+                .as_ref()
+                .is_some_and(|r| r.matter != 0 || r.energy.is_some_and(|e| e != 0))
+            {
+                sim.error = Some("the conservation ledger did not close".into());
+            }
+        }
+        Err(error) => {
+            sim.error = Some(
+                error
+                    .downcast_ref::<String>()
+                    .cloned()
+                    .or_else(|| error.downcast_ref::<&str>().map(|s| s.to_string()))
+                    .unwrap_or_else(|| "the simulation stopped during a tick".into()),
+            );
+            sim.last = None;
+        }
+    }
+    if sim.error.is_some() {
+        sim.running = false;
+        sim.alive = false;
+        sim.measured_tps = 0.0;
+    }
+    sim.last_tick_nanos = started.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64;
+    if sim.alive
+        && let Some(mut storage) = sim.persistence.take()
+    {
+        let result = storage.after_tick(sim);
+        sim.persistence = Some(storage);
+        if result.is_err() {
+            sim.running = false;
+            sim.measured_tps = 0.0;
+            return false;
+        }
+    }
+    sim.alive
+}
+
+fn service_storage(sim: &mut Sim) {
+    if let Some(storage) = &sim.persistence {
+        if storage.error().is_some() {
+            sim.running = false;
+            sim.measured_tps = 0.0;
+        } else if sim.save_requested && !storage.busy() && sim.alive && !sim.transitioning {
+            sim.save_requested = false;
+            if request_save(sim).is_err() {
+                sim.running = false;
+            }
+        }
+    }
+}
+
+fn request_save(sim: &mut Sim) -> Result<()> {
+    anyhow::ensure!(
+        sim.alive && sim.error.is_none(),
+        "cannot checkpoint an incomplete or failed tick"
+    );
+    let mut storage = sim
+        .persistence
+        .take()
+        .context("local storage is not enabled")?;
+    let result = storage.save(sim, true);
+    sim.persistence = Some(storage);
+    result
+}
+
+fn reset_persistent(shared: &Arc<Mutex<Sim>>, command: &serde_json::Value) -> Response {
+    let (scenario, seed, tps, running, root, wait) = {
+        let mut sim = lock(shared);
+        if sim.transitioning || sim.persistence.as_ref().is_some_and(|p| p.busy()) {
+            return Response::error(
+                409,
+                "wait for the pending checkpoint before starting a new experiment",
+            );
+        }
+        let seed = match reset_seed(command, sim.identity.seed) {
+            Ok(seed) => seed,
+            Err(error) => return Response::error(400, &error),
+        };
+        let running = sim.running;
+        let root = sim.persistence.as_ref().unwrap().root().to_path_buf();
+        sim.running = false;
+        sim.measured_tps = 0.0;
+        if sim.alive
+            && let Err(error) = request_save(&mut sim)
+        {
+            return Response::error(503, &format!("saving the previous experiment: {error:#}"));
+        }
+        let wait = sim.persistence.as_ref().unwrap().waiter();
+        sim.transitioning = true;
+        (
+            sim.scenario.clone(),
+            seed,
+            sim.target_tps,
+            running,
+            root,
+            wait,
+        )
+    };
+    // Building, waiting for the old checkpoint and writing the new baseline
+    // happen outside the active world's lock. Other controls refuse during it.
+    let replacement = (|| -> Result<Sim> {
+        wait()?;
+        let mut fresh = build(&scenario, seed)?;
+        fresh.running = running;
+        fresh.target_tps = tps;
+        let mut storage = persistence::Persistence::create(&root, &fresh)?;
+        storage.wait_for_save()?;
+        fresh.persistence = Some(storage);
+        Ok(fresh)
+    })();
+    let mut sim = lock(shared);
+    match replacement {
+        Ok(fresh) => {
+            *sim = fresh;
+            Response::json(state_json(&sim))
+        }
+        Err(error) => {
+            sim.transitioning = false;
+            Response::error(
+                503,
+                &format!("new experiment failed; previous world is retained on pause: {error:#}"),
+            )
+        }
+    }
+}
+
+fn reset_seed(command: &serde_json::Value, previous: u64) -> std::result::Result<u64, String> {
+    match command.get("seed") {
+        None => Ok(previous),
+        Some(serde_json::Value::String(seed)) => seed
+            .parse::<u64>()
+            .map_err(|_| "seed must be a decimal unsigned 64-bit integer".into()),
+        _ => Err("seed must be a string to preserve its exact value".into()),
+    }
+}
+
+/// The largest signed matter residual, not a sum that could cancel errors.
+/// Actual scheduled reaction extents and stoichiometry participate in release
+/// builds too. The synthetic-hole test distinguishes a checked zero from a
+/// hardcoded one; abiotic transport-only worlds retain ADR-071's energy `None`.
 fn residual_of(sim: &Sim) -> Residual {
     let matter = (0..sim.before.n_substances())
         .map(|s| {
-            // `Nu::EMPTY` because no roster this binary can build dispatches step
-            // `h` — `Tick::new` refuses an enabled `reactions` — so every `Xi_r`
-            // of every tick is zero and the second term of ADR-080 is absent by
-            // construction. It is not a shortcut that could rot quietly: the day
-            // chemistry runs, `residual_matter` refuses a reduced extent it has no
-            // stoichiometry for, and this line goes red rather than under-reporting.
             sim.ledger
-                .residual_matter(Nu::EMPTY, s, &sim.before, &sim.after)
+                .residual_matter(sim.tick.reaction_nu(sim.ticks), s, &sim.before, &sim.after)
         })
         .max_by_key(|residual| residual.unsigned_abs())
         .unwrap_or(0);
 
     Residual {
         matter,
-        // `None` and never a zero: in S0 the energy half has no source at all,
-        // so a zero here would be produced by a check that cannot fail
-        // (ADR-071). The day `energy_ledger_residual_is_zero_over_10k_ticks`
-        // loses its `#[ignore]` is the day this becomes
-        // `Some(sim.ledger.residual_energy(&sim.before, &sim.after))`.
-        energy: None,
+        energy: if sim.tick.enabled(ProcessId::Reactions) {
+            Some(sim.ledger.residual_energy(&sim.before, &sim.after))
+        } else {
+            None
+        },
     }
 }
 
@@ -572,13 +744,41 @@ pub fn route(shared: &Arc<Mutex<Sim>>, request: &Request) -> Response {
     let path = request.path.as_str();
 
     if path == "/api/control" {
+        if let Ok(command) = serde_json::from_slice::<serde_json::Value>(&request.body)
+            && command["action"] == "reset"
+            && lock(shared).persistence.is_some()
+        {
+            return reset_persistent(shared, &command);
+        }
         let mut sim = lock(shared);
         return apply_control(&mut sim, &request.body);
+    }
+
+    if path == "/api/history" {
+        let sim = lock(shared);
+        return match &sim.persistence {
+            Some(storage) => Response::json(storage.history().to_string()),
+            None => Response::json("{\"run_id\":null,\"session_id\":null,\"samples\":[],\"total_samples\":0,\"truncated\":false}".into()),
+        };
     }
 
     if path == "/api/state" {
         let sim = lock(shared);
         return Response::json(state_json(&sim));
+    }
+
+    if path == "/api/ecology" {
+        let sim = lock(shared);
+        let z = request
+            .query
+            .split('&')
+            .find_map(|part| part.strip_prefix("z="));
+        let z = match z.map(str::parse::<u32>).transpose() {
+            Ok(Some(z)) if z < sim.world.grid().nz() => z,
+            Ok(None) => sim.world.grid().nz() / 2,
+            _ => return Response::error(400, "z must name a layer inside the grid"),
+        };
+        return Response::json(sim.ecology.frame(&sim, z).to_string());
     }
 
     if let Some(field) = path.strip_prefix("/api/volume/") {
@@ -642,6 +842,28 @@ fn state_json(sim: &Sim) -> String {
     push_real(&mut out, if running { sim.measured_tps } else { 0.0 });
     out.push_str(",\"running\":");
     out.push_str(if running { "true" } else { "false" });
+    out.push_str(",\"alive\":");
+    out.push_str(if sim.alive { "true" } else { "false" });
+    out.push_str(",\"target_tps\":");
+    push_real(&mut out, sim.target_tps);
+    out.push_str(",\"sim_time\":");
+    push_real(&mut out, f64::from(sim.ticks) * sim.scenario.dt);
+    out.push_str(",\"error\":");
+    match &sim.error {
+        Some(error) => push_json_string(&mut out, error),
+        None => out.push_str("null"),
+    }
+    out.push_str(",\"persistence\":");
+    out.push_str(
+        &sim.persistence
+            .as_ref()
+            .map_or_else(|| serde_json::json!({"enabled":false}), |p| p.status())
+            .to_string(),
+    );
+    out.push_str(",\"transitioning\":");
+    out.push_str(if sim.transitioning { "true" } else { "false" });
+    out.push_str(",\"ecology\":");
+    out.push_str(&sim.ecology.summary(sim).to_string());
 
     out.push_str(",\"grid\":{\"nx\":");
     push_int(&mut out, i128::from(grid.nx()));
@@ -805,35 +1027,53 @@ fn profile_json(sim: &Sim, field: &str) -> Option<String> {
     Some(out)
 }
 
-/// `play`, `pause`, `step`, `speed` — and a refusal for anything else.
+/// `play`, `pause`, `step`, `speed`, `reset` and a refusal for anything else.
 ///
 /// A command swallowed in silence looks exactly like a simulator that has hung,
 /// so every action this does not understand is answered 400 and named back.
 fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
-    let Ok(text) = std::str::from_utf8(body) else {
-        return Response::error(400, "the control body is not UTF-8");
+    if sim.transitioning {
+        return Response::error(409, "a new experiment is being prepared");
+    }
+    let Ok(command) = serde_json::from_slice::<serde_json::Value>(body) else {
+        return Response::error(400, "the control body must be valid JSON");
     };
-    let Some(action) = json_str(text, "action") else {
+    let Some(action) = command.get("action").and_then(serde_json::Value::as_str) else {
         return Response::error(
             400,
-            "the control body names no action. The four are play, pause, step, speed",
+            "the control body names no action. Use play, pause, step, speed or reset",
         );
     };
 
-    match action.as_str() {
-        "play" => sim.running = true,
+    match action {
+        "play" | "run" => {
+            if let Some(error) = sim.persistence.as_ref().and_then(|p| p.error()) {
+                return Response::error(503, &error);
+            }
+            if !sim.alive {
+                return Response::error(
+                    503,
+                    "the simulation has stopped; reset to start a new run",
+                );
+            }
+            sim.running = true;
+        }
         "pause" => {
             sim.running = false;
             // Reported at once rather than left to the loop to notice: the page
             // polls immediately after the POST, and a rate that lingers for one
             // frame is a paused simulation claiming to be running.
             sim.measured_tps = 0.0;
+            if sim.persistence.is_some() {
+                sim.save_requested = true;
+                service_storage(sim);
+            }
         }
         "step" => {
             if !sim.alive {
                 return Response::error(
                     503,
-                    "the simulation thread is gone; there is nothing left to step",
+                    "the simulation has stopped; reset to start a new run",
                 );
             }
             sim.running = false;
@@ -841,10 +1081,28 @@ fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
             // Performed here and not queued. `pending_steps += 1` races the
             // poll the page makes immediately after this response, and the
             // button looks unpressed every other time.
-            advance_one(sim);
+            if !safe_advance(sim) {
+                let error = sim
+                    .error
+                    .clone()
+                    .or_else(|| sim.persistence.as_ref().and_then(|p| p.error()));
+                return Response::error(
+                    503,
+                    error
+                        .as_deref()
+                        .unwrap_or("the tick or history write failed"),
+                );
+            }
+            if let Some(mut storage) = sim.persistence.take() {
+                let result = storage.sample(sim);
+                sim.persistence = Some(storage);
+                if let Err(error) = result {
+                    return Response::error(503, &format!("history write: {error:#}"));
+                }
+            }
         }
         "speed" => {
-            let Some(value) = json_num(text, "value") else {
+            let Some(value) = command.get("value").and_then(serde_json::Value::as_f64) else {
                 return Response::error(400, "speed without a value");
             };
             if !value.is_finite() || !(MIN_TPS..=MAX_TPS).contains(&value) {
@@ -858,11 +1116,33 @@ fn apply_control(sim: &mut Sim, body: &[u8]) -> Response {
             }
             sim.target_tps = value;
         }
+        "reset" => {
+            let seed = match reset_seed(&command, sim.identity.seed) {
+                Ok(seed) => seed,
+                Err(error) => return Response::error(400, &error),
+            };
+            match build(&sim.scenario, seed) {
+                Ok(mut reset) => {
+                    reset.target_tps = sim.target_tps;
+                    reset.running = sim.running;
+                    *sim = reset;
+                }
+                Err(error) => return Response::error(400, &format!("reset failed: {error:#}")),
+            }
+        }
+        "save" => {
+            if sim.persistence.as_ref().is_some_and(|p| p.busy()) {
+                return Response::error(409, "a checkpoint is already being saved");
+            }
+            if let Err(error) = request_save(sim) {
+                return Response::error(503, &format!("checkpoint: {error:#}"));
+            }
+        }
         other => {
             return Response::error(
                 400,
                 &format!(
-                    "`{other}` is not a control action. The four are play, pause, step, speed"
+                    "`{other}` is not a control action. Use play, pause, step, speed or reset"
                 ),
             );
         }
@@ -976,46 +1256,6 @@ fn push_real(out: &mut String, value: f64) {
     } else {
         out.push_str("null");
     }
-}
-
-/// The string under a key of the control body.
-///
-/// Not a JSON parser: the only writer on the other side is one
-/// `JSON.stringify({action, value})` in `viewer.html`, and a second JSON
-/// implementation in a binary that deliberately has none would be a worse trade
-/// than this. Anything it cannot read is refused rather than guessed at, which
-/// is why every caller answers 400 on `None`.
-fn json_str(text: &str, key: &str) -> Option<String> {
-    let rest = after_key(text, key)?.strip_prefix('"')?;
-    let mut out = String::new();
-    let mut chars = rest.chars();
-    while let Some(c) = chars.next() {
-        match c {
-            '"' => return Some(out),
-            // The escape is kept as written. No action name contains one, so an
-            // escaped name simply matches nothing and is answered 400 by name.
-            '\\' => out.push(chars.next()?),
-            c => out.push(c),
-        }
-    }
-    None
-}
-
-/// The number under a key of the control body. See [`json_str`].
-fn json_num(text: &str, key: &str) -> Option<f64> {
-    let rest = after_key(text, key)?;
-    let end = rest
-        .find(|c: char| !matches!(c, '0'..='9' | '-' | '+' | '.' | 'e' | 'E'))
-        .unwrap_or(rest.len());
-    rest[..end].parse().ok()
-}
-
-/// What follows `"key":` in the control body, whitespace skipped.
-fn after_key<'a>(text: &'a str, key: &str) -> Option<&'a str> {
-    let quoted = format!("\"{key}\"");
-    let at = text.find(&quoted)? + quoted.len();
-    let rest = text[at..].trim_start().strip_prefix(':')?;
-    Some(rest.trim_start())
 }
 
 #[cfg(test)]
@@ -1636,7 +1876,14 @@ mod tests {
             advance_one(&mut guard);
             guard.tick.domain_sums(&guard.world, &mut after);
             let want: Vec<i128> = (0..n)
-                .map(|s| guard.ledger.residual_matter(Nu::EMPTY, s, &before, &after))
+                .map(|s| {
+                    guard.ledger.residual_matter(
+                        guard.tick.reaction_nu(guard.ticks.wrapping_sub(1)),
+                        s,
+                        &before,
+                        &after,
+                    )
+                })
                 .collect();
             let published = guard.last.as_ref().expect("a tick was completed").matter;
             (want, published)
@@ -1908,6 +2155,225 @@ mod tests {
         assert_eq!(guard.target_tps, DEFAULT_TARGET_TPS);
     }
 
+    #[test]
+    fn control_parses_json_and_preserves_an_exact_reset_seed() {
+        let shared = sim();
+        assert_eq!(
+            post(&shared, "/api/control", "{\"action\":\"pause\"}garbage").status,
+            400
+        );
+        assert_eq!(
+            post(
+                &shared,
+                "/api/control",
+                "{\"action\":\"reset\",\"seed\":42}"
+            )
+            .status,
+            400
+        );
+        assert_eq!(
+            post(
+                &shared,
+                "/api/control",
+                "{\"action\":\"reset\",\"seed\":\"18446744073709551615\"}"
+            )
+            .status,
+            200
+        );
+        assert_eq!(
+            state(&shared).get("seed").and_then(Json::as_str),
+            Some("18446744073709551615")
+        );
+        assert_eq!(tick_of(&shared), 0);
+        assert!(lock(&shared).running, "a running reset continues the run");
+        assert_eq!(
+            post(
+                &shared,
+                "/api/control",
+                "{\"action\":\"reset\",\"seed\":\"18446744073709551616\"}"
+            )
+            .status,
+            400
+        );
+    }
+
+    #[test]
+    fn a_ceiling_failure_is_visible_and_a_reset_recovers() {
+        let shared = sim();
+        {
+            let mut guard = lock(&shared);
+            let above = i64::try_from(meta(&guard, "O2").amount_at_max).unwrap() + 1;
+            paint(&mut guard, |_, _| above);
+        }
+        let response = post(&shared, "/api/control", "{\"action\":\"step\"}");
+        assert_eq!(response.status, 503);
+        assert!(
+            String::from_utf8(response.body)
+                .unwrap()
+                .contains("ceiling")
+        );
+        let guard = lock(&shared);
+        assert!(!guard.alive && !guard.running && guard.last.is_none());
+        drop(guard);
+        assert_eq!(
+            post(&shared, "/api/control", "{\"action\":\"reset\"}").status,
+            200
+        );
+        assert_eq!(
+            post(&shared, "/api/control", "{\"action\":\"step\"}").status,
+            200
+        );
+        assert_eq!(tick_of(&shared), 1);
+    }
+
+    #[test]
+    fn the_ecology_frame_reports_registry_biomass_and_growth_only_traits() {
+        let mut scenario =
+            config::parse(include_str!("../../../configs/scenarios/living-world.toml")).unwrap();
+        scenario.grid.nx = 8;
+        scenario.grid.ny = 8;
+        scenario.grid.nz = 8;
+        let mut sim = build(&scenario, 42).unwrap();
+        let frame = sim.ecology.frame(&sim, 3);
+        assert_eq!(frame["scenario"], scenario.name);
+        assert_eq!(frame["config_hash"], sim.identity.config_hash.to_string());
+        assert_eq!(frame["world_format_version"], WORLD_FORMAT_VERSION);
+        assert_eq!(frame["seed"], "42");
+        assert_eq!(frame["cells"].as_array().unwrap().len(), 64);
+        let types = frame["ecotypes"].as_array().unwrap();
+        assert_eq!(types.len(), 5);
+        let shares: f64 = types.iter().map(|t| t["share"].as_f64().unwrap()).sum();
+        assert!((shares - 1.0).abs() < 1e-12);
+        let harvester = types.iter().find(|t| t["id"] == "HARVESTER").unwrap();
+        assert!((harvester["vmax"].as_f64().unwrap() - 0.0012).abs() < 1e-12);
+        advance_one(&mut sim);
+        let last = sim.last.as_ref().unwrap();
+        assert_eq!(last.matter, 0);
+        assert_eq!(last.energy, Some(0));
+        assert!(frame["genetics"].is_null());
+        assert!(types.iter().all(|t| t["genome"].is_null()));
+        assert!(types.iter().all(|t| t["first_seen_tick"] == 0));
+        assert_eq!(
+            frame["cells"][0]["resources"]["FOOD"],
+            frame["cells"][0]["resource"]
+        );
+    }
+
+    fn small_genetic_scenario() -> Config {
+        let mut scenario = config::parse(include_str!(
+            "../../../configs/scenarios/genetic-colony.toml"
+        ))
+        .unwrap();
+        scenario.grid.nx = 8;
+        scenario.grid.ny = 8;
+        scenario.grid.nz = 8;
+        scenario.initial.inoculum[0].center = [0.0004; 3];
+        scenario.initial.inoculum[0].radius = 0.00015;
+        scenario
+    }
+
+    #[test]
+    fn genetic_observation_uses_the_decoder_and_actual_first_appearance() {
+        let scenario = small_genetic_scenario();
+        let genotypes = config::decode_genotypes(scenario.genetics.as_ref().unwrap());
+        let mut sim = build(&scenario, 42).unwrap();
+        let frame = sim.ecology.frame(&sim, 3);
+        assert_eq!(frame["genetics"]["mutation_probability"], 0.02);
+        assert_eq!(
+            frame["genetics"]["resources"],
+            serde_json::json!(["FOOD", "DET"])
+        );
+        let types = frame["ecotypes"].as_array().unwrap();
+        assert_eq!(types.len(), 4);
+        for genotype in genotypes {
+            let t = types.iter().find(|t| t["id"] == genotype.id).unwrap();
+            assert_eq!(t["genome"]["code"], genotype.code);
+            assert_eq!(t["genome"]["bits"], format!("{:02b}", genotype.code));
+            assert_eq!(t["genome"]["rate_factor"], genotype.rate_factor);
+            assert_eq!(t["genome"]["km_factor"], genotype.km_factor);
+            for (i, expected) in genotype.resource_allocation.iter().enumerate() {
+                assert_eq!(t["genome"]["allocation"][i]["fraction"], *expected);
+            }
+            if genotype.code == 0 {
+                assert_eq!(t["first_seen_tick"], 0);
+                assert!(t["total_mol"].as_f64().unwrap() > 0.0);
+            } else {
+                assert!(t["first_seen_tick"].is_null());
+                assert_eq!(t["total_mol"], 0.0);
+            }
+        }
+        for cell in frame["cells"].as_array().unwrap() {
+            assert_eq!(cell["resources"]["DET"], 0.0);
+            assert_eq!(cell["resources"]["FOOD"], cell["resource"]);
+            assert_eq!(cell["resources"]["O2"], cell["oxygen"]);
+            assert!(cell["resources"].get("WATER").is_none());
+        }
+
+        advance_one(&mut sim);
+        let frame = sim.ecology.frame(&sim, 3);
+        let types = frame["ecotypes"].as_array().unwrap();
+        let double_mutant = types.iter().find(|t| t["genome"]["code"] == 3).unwrap();
+        assert!(double_mutant["first_seen_tick"].is_null());
+        for _ in 1..100 {
+            advance_one(&mut sim);
+        }
+        let frame = sim.ecology.frame(&sim, 3);
+        for t in frame["ecotypes"].as_array().unwrap() {
+            if t["total_mol"].as_f64().unwrap() > 0.0 {
+                assert!(t["first_seen_tick"].as_u64().unwrap() <= u64::from(sim.ticks));
+            }
+        }
+        assert_eq!(sim.last.as_ref().unwrap().matter, 0);
+        assert_eq!(sim.last.as_ref().unwrap().energy, Some(0));
+    }
+
+    #[test]
+    fn a_genetic_reset_clears_first_appearance_history() {
+        let scenario = small_genetic_scenario();
+        let shared = Arc::new(Mutex::new(build(&scenario, 42).unwrap()));
+        {
+            let mut sim = lock(&shared);
+            sim.running = false;
+            for _ in 0..100 {
+                advance_one(&mut sim);
+            }
+            assert!(
+                sim.ecology.frame(&sim, 3)["ecotypes"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|t| t["genome"]["code"] != 0 && !t["first_seen_tick"].is_null())
+            );
+        }
+        assert_eq!(
+            post(
+                &shared,
+                "/api/control",
+                "{\"action\":\"reset\",\"seed\":\"42\"}"
+            )
+            .status,
+            200
+        );
+        let sim = lock(&shared);
+        assert!(
+            !sim.running,
+            "a paused reset exposes the actual initial state"
+        );
+        assert_eq!(sim.ticks, 0);
+        let frame = sim.ecology.frame(&sim, 3);
+        assert_eq!(frame["scenario"], scenario.name);
+        assert_eq!(frame["config_hash"], sim.identity.config_hash.to_string());
+        assert_eq!(frame["world_format_version"], WORLD_FORMAT_VERSION);
+        assert_eq!(frame["seed"], "42");
+        for t in frame["ecotypes"].as_array().unwrap() {
+            if t["genome"]["code"] == 0 {
+                assert_eq!(t["first_seen_tick"], 0);
+            } else {
+                assert!(t["first_seen_tick"].is_null());
+            }
+        }
+    }
+
     // --- the identity -----------------------------------------------------
 
     #[test]
@@ -2021,7 +2487,8 @@ mod tests {
             sim.tick.domain_sums(&sim.world, &mut before);
             advance_one(&mut sim);
             sim.tick.domain_sums(&sim.world, &mut after);
-            sim.ledger.assert_closed(Nu::EMPTY, &before, &after);
+            sim.ledger
+                .assert_closed(sim.tick.reaction_nu(tick), &before, &after);
             assert_eq!(sim.ticks, tick + 1, "the tick counter skipped");
         }
 

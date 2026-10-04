@@ -16,11 +16,10 @@
 //!
 //! # What it deliberately cannot do
 //!
-//! There is no path that reaches the filesystem. The viewer is compiled into the
-//! binary with `include_str!`, and every other route answers from memory. A
-//! simulator that also serves files from disk is a simulator with a directory
-//! traversal bug in it, and there is no reason for this one to have the
-//! capability at all.
+//! No URL maps to a filesystem path. The viewer is compiled into the binary
+//! with `include_str!`, and this transport serves no static files from disk.
+//! Experiment storage belongs to the host and its startup-selected directory,
+//! never to a path or filename supplied by an HTTP request.
 
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
@@ -103,6 +102,7 @@ fn reason(status: u16) -> &'static str {
         400 => "Bad Request",
         404 => "Not Found",
         405 => "Method Not Allowed",
+        409 => "Conflict",
         413 => "Payload Too Large",
         503 => "Service Unavailable",
         _ => "Unknown",

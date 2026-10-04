@@ -75,12 +75,9 @@
 //!
 //! # What is deliberately still missing
 //!
-// TODO(snapshot-offthread): ADR-037 requires the write to happen off the main
-// thread and prices it: "either a copy of the buffers or double buffering of the
-// write. 449 MB of copy is noticeable memory, and that has to be measured rather
-// than assumed". Both halves of this file are in-process and synchronous. The
-// choice between the two schemes is a measurement nobody has taken, and picking
-// one here would settle it by accident.
+// ADR-096 resolves off-thread writing in the host: capture this synchronous
+// codec into one measured in-memory copy at a tick boundary, then send it to a
+// bounded disk writer. This codec remains independent of files and threads.
 // TODO(snapshot-layout): the format version below has no rule for when it moves,
 // the file is uncompressed, and the grid and registry are checked against the
 // reloaded config rather than embedded. Endianness is little, chosen and written

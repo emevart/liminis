@@ -14,12 +14,9 @@
 //! a restart appending to an existing stream produces exactly that, and every
 //! reader that trusts the first record attributes the second run's numbers to
 //! the first run's identity.
-// TODO(metrics-restart): whether a restart appends to the existing NDJSON or
-// opens a new file is undecided — no record, no CLI flag, no `CONFIG_SCHEMA.md`
-// key. The answer decides whether "the first record is the header" is a property
-// of the file or only of a writer object, and the acceptance test's meaning
-// changes with it. It belongs in `DECISIONS.md` with the wave that gives the
-// stream a path.
+// ADR-097 resolves restart in the host: each session gets a new file/header,
+// linked to its parent session and checkpoint tick. Old future records remain
+// on disk but are not part of the resumed history branch.
 //!
 //! # Every column is an integer
 //!
@@ -84,10 +81,8 @@ pub const TIMING_COLUMNS: [&str; 1] = ["tick_nanos"];
 /// pair is exact and the division is the reader's; a float would be inexact for
 /// precisely the fields that matter, and would be the only number in the stream
 /// with nothing to check it against.
-// TODO(mean-as-pair): whether a mean may be recorded as (sum, count) instead of
-// as a number is not decided anywhere. ADR-037 says "means" and permits no
-// substitution in as many words; the substitution is made here because the
-// alternative violates a rule that *is* written down. A record settles which.
+// ADR-097 explicitly permits the exact (sum, count) representation of the mean;
+// only a display consumer performs a floating-point division.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FieldStat<'a> {
     /// The field's name, as the columns will spell it.
@@ -168,15 +163,8 @@ pub struct TickMetrics<'a> {
     pub n_organisms: u64,
     /// Extrema and means of the key fields.
     pub field: &'a [FieldStat<'a>],
-    /// Wall time of the tick. See [`TIMING_COLUMNS`].
-    // TODO(tick-time-unit): `QUANTITIES.md` has no row for tick time and no
-    // record names one — wall-clock nanoseconds as an integer, seconds as a
-    // float, whole tick or per phase are all undeclared. Integer nanoseconds is
-    // the narrowest of them and the only one that can be re-expressed as any of
-    // the others without loss, which is why it is what the field is called; a
-    // number in a stream whose header exists to make numbers interpretable
-    // deserves a row in `QUANTITIES.md`, and that is a document change, not a
-    // guess to be made here.
+    /// Whole completed tick wall time in integer nanoseconds (ADR-097).
+    /// This is not simulation time. See [`TIMING_COLUMNS`].
     pub tick_nanos: u64,
 }
 

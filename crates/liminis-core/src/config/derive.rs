@@ -96,8 +96,11 @@
 use anyhow::{Context, Result, bail};
 
 use super::{Config, Field as FieldRecord, Layer, Reaction, Substance};
+use crate::kernels::noise::{NOISE_BASE, NOISE_OCTAVE_MAX};
+use crate::numeric::name_key;
 use crate::process::{N_MAX, ProcessId, substeps_and_alpha};
 use crate::world::{MAX_SUBSTANCES, R_MAX, SubstanceDecl, Width};
+use crate::worldgen::{WORLDGEN_BASE, WORLDGEN_OCTAVE_MAX, WORLDGEN_SLOTS};
 
 /// Relative tolerance of the mass balance, and of the significance of `nu_E`.
 ///
@@ -244,6 +247,29 @@ pub struct Derived {
     /// `None` on a scenario whose settling process is off, or on which is on and
     /// declares no `physics.mu` — the second of which the validator refuses.
     medium: Option<DerivedMedium>,
+    initial: DerivedInitial,
+}
+
+/// Initial-state declarations resolved to lanes and integer storage units.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DerivedInitial {
+    pub dx: f64,
+    pub concentration: Vec<DerivedConcentration>,
+    pub inocula: Vec<DerivedInoculum>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DerivedConcentration {
+    pub substance: u32,
+    pub amount: i128,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct DerivedInoculum {
+    pub substance: u32,
+    pub center: [f64; 3],
+    pub radius: f64,
+    pub amount: i128,
 }
 
 /// The outside reservoir, folded once at load (ADR-059).
@@ -441,6 +467,18 @@ pub struct DerivedSubstance {
 pub struct DerivedReaction {
     /// The id as written in TOML, and the source of `reaction_id` (ADR-027).
     pub id: String,
+    /// `reaction_id`: the third counter of `rand`, folded from [`Self::id`] by
+    /// [`numeric::name_key`](crate::numeric::name_key) (ADR-027, ADR-090).
+    ///
+    /// Folded here and nowhere else, once per reaction per run. The two checks
+    /// that stand on it read this column rather than calling the fold again:
+    /// two call sites would mean two strings — the record's `id` and this one —
+    /// and the day they drift the refusals guard a number no kernel receives.
+    ///
+    /// The name enters exactly as TOML wrote it: no trim, no case folding, no
+    /// Unicode normalisation. `name_key` folds UTF-8 bytes, so any of the three
+    /// would move this reaction's every draw in every run, past and future.
+    pub rid: u32,
     /// Exponent of the extent quantum: one quantum is `2^-e_r` turnovers.
     pub e_r: u8,
     /// Index of the substance that set `e_r` — the scarcest participant.
@@ -936,6 +974,13 @@ impl Derived {
         self.medium.as_ref()
     }
 
+    /// Initial concentration overrides and inocula, resolved once at load.
+    #[inline]
+    #[must_use]
+    pub fn initial(&self) -> &DerivedInitial {
+        &self.initial
+    }
+
     /// The one record every scenario has: the enthalpy field (ADR-062).
     ///
     /// A named door rather than a search at the call site, because the host that
@@ -1296,6 +1341,10 @@ pub fn derive(config: &Config) -> Result<Derived> {
         }
         reactions.push(DerivedReaction {
             id: p.id.clone(),
+            // The single fold site: exactly `R` calls per run (ADR-090). Put
+            // into `check_bounds` beside the uniqueness loop instead, it would
+            // be `2R` and would compute a number that never reaches `Derived`.
+            rid: name_key(&p.id),
             e_r: p.e_r,
             scarcest: p.scarcest,
             nu,
@@ -1311,6 +1360,13 @@ pub fn derive(config: &Config) -> Result<Derived> {
             mass_tolerance: MASS_EPSILON * p.turnover_mass,
         });
     }
+    // Before the tolerance and not after, on the module header's own argument:
+    // a registry with a colliding pair *and* a loose tolerance should be
+    // refused by the message about the collision, because that is the one the
+    // author can act on. Refused for the tolerance instead, the rename never
+    // happens and the collision is still there on the next load.
+    check_reaction_id_collisions(&reactions)?;
+    check_reaction_ids_against_purpose_windows(&reactions)?;
     check_mass_tolerance(config, &reactions)?;
 
     // 6. and 7. The energy scale, the chemical weight of every substance on it,
@@ -1382,6 +1438,7 @@ pub fn derive(config: &Config) -> Result<Derived> {
     //     `r -> k -> rho_bar -> w -> c` lives in `process/settle.rs` and is
     //     folded against the grid a world actually has.
     let medium = resolve_medium(config);
+    let initial = resolve_initial(config, &substances, v_voxel)?;
 
     Ok(Derived {
         v_voxel,
@@ -1394,6 +1451,54 @@ pub fn derive(config: &Config) -> Result<Derived> {
         velocity,
         pressure,
         medium,
+        initial,
+    })
+}
+
+fn resolve_initial(
+    config: &Config,
+    substances: &[DerivedSubstance],
+    v_voxel: f64,
+) -> Result<DerivedInitial> {
+    let substance_index = |id: &str| {
+        substances
+            .iter()
+            .position(|substance| substance.id == id)
+            .map(|index| index as u32)
+    };
+    let mut concentration = Vec::with_capacity(config.initial.concentration.len());
+    for (id, value) in &config.initial.concentration {
+        let substance = substance_index(id).ok_or_else(|| {
+            anyhow::anyhow!("initial concentration names unknown substance `{id}`")
+        })?;
+        let k = substances[substance as usize].k;
+        concentration.push(DerivedConcentration {
+            substance,
+            amount: amount_in_units(*value, v_voxel, k)
+                .with_context(|| format!("initial.concentration.{id}"))?,
+        });
+    }
+    let mut inocula = Vec::with_capacity(config.initial.inoculum.len());
+    for (index, declared) in config.initial.inoculum.iter().enumerate() {
+        let substance = substance_index(&declared.substance).ok_or_else(|| {
+            anyhow::anyhow!(
+                "initial.inoculum[{index}] names unknown substance `{}`",
+                declared.substance
+            )
+        })?;
+        let k = substances[substance as usize].k;
+        inocula.push(DerivedInoculum {
+            substance,
+            center: declared.center,
+            radius: declared.radius,
+            amount: amount_in_units(declared.concentration, v_voxel, k)
+                .with_context(|| format!("initial.inoculum[{index}].concentration"))?,
+        });
+    }
+    Ok(DerivedInitial {
+        dx: config.grid.dx,
+        concentration,
+        inocula,
     })
 }
 
@@ -2334,6 +2439,88 @@ fn check_nu_against_the_pool(
     Ok(())
 }
 
+/// ADR-090's first refusal: two reaction names that fold to one `rid`.
+///
+/// `rid` is the third counter of `rand`, so two reactions sharing one draw on
+/// the same `(voxel, tick)` stop rounding their extent independently — and
+/// nothing goes red for it. Both ledgers close either way: the matter side
+/// carries the extent as `Sum_r nu_{r,s}*Xi_r` (ADR-080) and the energy side
+/// carries the chemical form on the left (ADR-081), so conservation is a
+/// property of `nu` and not of `xi`. What is left is a world that is a little
+/// more correlated than it says it is, for the whole of a run.
+///
+/// At the `R_MAX = 64` ceiling this is `1 - exp(-2016/2^32) = 4.69e-7`, one
+/// registry in 2.13 million. Small is the argument *for* the refusal, not
+/// against it: the event leaves no trace at all, so an accepted collision can
+/// never be diagnosed afterwards.
+///
+/// A nested loop over the derived column, in declaration order, and neither a
+/// `HashSet` nor a sort. Both are faster and both destroy the two things the
+/// message needs — the indices of the pair, and a deterministic answer to
+/// *which* pair is reported when there is more than one. A derivation whose
+/// answer depends on iteration order is the one construct that can make two runs
+/// of the same config differ with nothing here noticing (module header).
+fn check_reaction_id_collisions(reactions: &[DerivedReaction]) -> Result<()> {
+    for (r, right) in reactions.iter().enumerate() {
+        if let Some(l) = reactions[..r].iter().position(|left| left.rid == right.rid) {
+            bail!(
+                "reactions `{}` at index {l} and `{}` at index {r} both fold to \
+                 reaction_id {}: `rid` is the fold of the name and only of the \
+                 name (ADR-027, ADR-090), so the two would draw \
+                 rand(voxel, tick, {}, run_key) from one stream and their \
+                 stochastic rounding of extent would stop being independent — \
+                 with both ledgers closing, because rounding moves whole quanta. \
+                 The only cure is to rename one of the two reactions, and the \
+                 rename moves that reaction's `rid`, so every draw it makes in \
+                 every run, past and future, moves with it",
+                reactions[l].id,
+                right.id,
+                right.rid,
+                right.rid
+            );
+        }
+    }
+    Ok(())
+}
+
+/// ADR-090's second refusal: a `rid` inside a slice of the `purpose` counter
+/// that some other kernel has already reserved.
+///
+/// The graver of the two and the likelier: `64*280/2^32 = 4.17e-6` at the
+/// registry ceiling, 8.9 times the `4.69e-7` of a collision between two
+/// reactions, and on the shipped scenario — one reaction, no pairs at all — it
+/// is the only residual risk there is.
+///
+/// One pass over the already-folded column, refusing on the first hit in
+/// declaration order. It closes the second half of `OPEN_QUESTIONS.md` A-17, but
+/// only for the windows declared today: a future kernel that takes a `purpose`
+/// counter without declaring a constant for its window is checkable by nothing,
+/// because there is still no registry of `purpose`.
+fn check_reaction_ids_against_purpose_windows(reactions: &[DerivedReaction]) -> Result<()> {
+    for reaction in reactions {
+        if let Some((owner, lo, width)) = reserved_purpose_window(reaction.rid) {
+            // In `u64` so the printed bound is the true one. In `u32` a base
+            // near the top of the range would wrap it, and the message would
+            // name a window narrower than the one it just refused against.
+            let hi = u64::from(lo) + u64::from(width);
+            bail!(
+                "reaction `{}` folds to reaction_id {}, inside [{lo}, {hi}), the \
+                 reserved window of {owner}: chemistry and that field would draw \
+                 rand(node, tick, {}, run_key) from one stream on every tick they \
+                 share. At the registry ceiling this is 8.9 times likelier than \
+                 two reactions colliding with each other (ADR-090), which is why \
+                 it is checked at all. The only cure is to rename the reaction, \
+                 and the rename moves its `rid`, so every draw it makes in every \
+                 run, past and future, moves with it",
+                reaction.id,
+                reaction.rid,
+                reaction.rid
+            );
+        }
+    }
+    Ok(())
+}
+
 /// ADR-043's second half: the derived tolerance has to stay under the lightest
 /// molar mass among the substances with an empty `composition`.
 ///
@@ -2365,6 +2552,45 @@ fn check_mass_tolerance(config: &Config, reactions: &[DerivedReaction]) -> Resul
         }
     }
     Ok(())
+}
+
+/// The reserved slice of the `purpose` counter a `rid` fell into, if any.
+///
+/// Returns the owner, the low bound and the width of whichever declared window
+/// contains `rid`. Both windows are half-open, `[base, base + width)`, and both
+/// bases and widths are imported rather than retyped: they are TODO constants
+/// on the far side of the ADR-020 guard (`kernels/noise.rs`, `worldgen/mod.rs`),
+/// so a base that moves moves the set of legal reaction names with it, and a
+/// stale copy here would ride along silently while `WORLD_FORMAT_VERSION` was
+/// being bumped for the move.
+///
+/// `rid.wrapping_sub(base) < width` and not `base <= rid && rid < base + width`.
+/// Both bases sit far from `u32::MAX` today, but a future base above
+/// `u32::MAX - width` makes the sum panic in debug and *wrap* in release — and a
+/// wrapped upper bound makes the window empty, so the refusal would stop
+/// refusing precisely in the build where the ledger phase is compiled out. The
+/// wrapping form is total and needs no bound at all.
+///
+/// A function of its own rather than an `if` inside the check, for one reason: a
+/// name landing exactly on a bound has probability `2/2^32`, so a half-open
+/// window written closed is invisible to every fixture that will ever exist.
+/// Only a test calling this directly can pin the four boundary values.
+const fn reserved_purpose_window(rid: u32) -> Option<(&'static str, u32, u32)> {
+    if rid.wrapping_sub(NOISE_BASE) < 3 * NOISE_OCTAVE_MAX {
+        return Some((
+            "the velocity noise, NOISE_BASE .. NOISE_BASE + 3*NOISE_OCTAVE_MAX",
+            NOISE_BASE,
+            3 * NOISE_OCTAVE_MAX,
+        ));
+    }
+    if rid.wrapping_sub(WORLDGEN_BASE) < WORLDGEN_SLOTS * WORLDGEN_OCTAVE_MAX {
+        return Some((
+            "world generation, WORLDGEN_BASE .. WORLDGEN_BASE + WORLDGEN_SLOTS*WORLDGEN_OCTAVE_MAX",
+            WORLDGEN_BASE,
+            WORLDGEN_SLOTS * WORLDGEN_OCTAVE_MAX,
+        ));
+    }
+    None
 }
 
 /// The `[[field]]` record that carries the temperature range (ADR-062).
@@ -4644,6 +4870,20 @@ t_max = 3.2315e2
             "the price is a shared stream of random numbers, and the message \
              has to say so: {err}"
         );
+        // A phrase no other refusal carries, and it is here to witness an
+        // ordering guarantee rather than a message. Since ADR-090 two names
+        // that fold to one `rid` are refused too, and that refusal also names
+        // `h2s_oxidation` and also cites ADR-027 — so both assertions above
+        // would survive the day somebody moves either check and the coarser
+        // message starts answering for the duplicate. The uniqueness loop wins
+        // today only because it lives inside `check_bounds`, which runs before
+        // the reaction table exists; this line is what turns that from true
+        // into checked.
+        assert!(
+            err.contains("declared twice"),
+            "identical names must keep being caught by the precise message of \
+             the uniqueness loop and not by the fold refusal (ADR-090): {err}"
+        );
 
         // The same two records with the second one renamed derive, so the
         // refusal is about the id and not about two reactions over one set of
@@ -4695,6 +4935,172 @@ t_max = 3.2315e2
 
         let field_twice = format!("{}{}", spec_12(), enthalpy_record(2, 1.4e-7));
         assert!(refusal(&field_twice).contains("enthalpy"));
+    }
+
+    #[test]
+    fn two_reaction_names_folding_to_one_id_are_rejected() {
+        // The pair is not found by eye and is not invented: ADR-090 enumerates
+        // names of the form `rxn_N` and reports the first collision at the
+        // 158_462nd name, `name_key("rxn_138249") == name_key("rxn_158462") ==
+        // 148_503_722`. From this commit the pair is the second anchor of the
+        // mixer, next to the numbers of `the_name_fold_is_the_same_fold_it_was`
+        // — and it is the more fragile of the two, because a changed `mix`
+        // shows up there as a wrong number and here as a refusal that quietly
+        // stops firing. A green test on a dead refusal is the most deceptive
+        // form of red, which is why the number is asserted beside the failure.
+        let collide = format!(
+            "{HEADER}{}{}{}{}",
+            spec_12_substances(100.0),
+            reaction(
+                "rxn_138249",
+                -8.46e5,
+                "{ H2S = 1, O2 = 2 }",
+                "{ SO4 = 1, H_ION = 2 }"
+            ),
+            reaction(
+                "rxn_158462",
+                -8.46e5,
+                "{ H2S = 1, O2 = 2 }",
+                "{ SO4 = 1, H_ION = 2 }"
+            ),
+            enthalpy_record(2, 1.4e-7)
+        );
+        let err = refusal(&collide);
+        assert!(err.contains("rxn_138249"), "{err}");
+        assert!(
+            err.contains("rxn_158462"),
+            "the cure is a rename, so both sides have to be named or the \
+             author is left guessing which record to touch: {err}"
+        );
+        assert!(err.contains("148503722"), "the shared `rid`: {err}");
+        assert!(
+            err.contains("rename"),
+            "the way out has to be printed: {err}"
+        );
+
+        // The same registry with the second reaction renamed derives, and the
+        // survivor keeps the `rid` its name folds to. This half is what makes
+        // the test a witness for the fold and not only for the refusal: a `rid`
+        // taken from the loop index, from the position or from a normalised
+        // name compiles, keeps every other test green, and silently reinstates
+        // what ADR-027 forbids — small positional integers collide with nothing
+        // and sit nowhere near either reserved window, so neither new refusal
+        // would ever fire again. Until
+        // `reaction_id_is_stable_under_reordering_in_toml` is written (ADR-090
+        // budgets it into `crates/liminis-core/tests/`), this assertion is the
+        // only thing standing between that defect and a green build.
+        let renamed = format!(
+            "{HEADER}{}{}{}{}",
+            spec_12_substances(100.0),
+            reaction(
+                "rxn_138249",
+                -8.46e5,
+                "{ H2S = 1, O2 = 2 }",
+                "{ SO4 = 1, H_ION = 2 }"
+            ),
+            reaction(
+                "h2s_oxidation",
+                -8.46e5,
+                "{ H2S = 1, O2 = 2 }",
+                "{ SO4 = 1, H_ION = 2 }"
+            ),
+            enthalpy_record(2, 1.4e-7)
+        );
+        let d = derived(&renamed);
+        assert_eq!(reaction_named(&d, "rxn_138249").rid, 148_503_722);
+        assert_eq!(reaction_named(&d, "h2s_oxidation").rid, 603_427_705);
+    }
+
+    #[test]
+    fn a_reaction_id_landing_in_a_reserved_purpose_window_is_rejected() {
+        // (a) The four boundary values of each half-open window, taken on the
+        // predicate itself and with no fixture at all. Nothing else can see an
+        // off-by-one here: a name landing exactly on a bound has probability
+        // 2/2^32, so `<=` written for `<` would refuse one legal registry and
+        // accept one colliding one, invisibly, forever. That is the whole
+        // reason `reserved_purpose_window` is a function and not an `if`.
+        assert!(reserved_purpose_window(NOISE_BASE - 1).is_none());
+        assert!(reserved_purpose_window(NOISE_BASE).is_some());
+        assert!(reserved_purpose_window(NOISE_BASE + 3 * NOISE_OCTAVE_MAX - 1).is_some());
+        assert!(reserved_purpose_window(NOISE_BASE + 3 * NOISE_OCTAVE_MAX).is_none());
+        let worldgen_width = WORLDGEN_SLOTS * WORLDGEN_OCTAVE_MAX;
+        assert!(reserved_purpose_window(WORLDGEN_BASE - 1).is_none());
+        assert!(reserved_purpose_window(WORLDGEN_BASE).is_some());
+        assert!(reserved_purpose_window(WORLDGEN_BASE + worldgen_width - 1).is_some());
+        assert!(reserved_purpose_window(WORLDGEN_BASE + worldgen_width).is_none());
+
+        // (b) One registry per window. Neither name is invented: both were
+        // found the way ADR-090 found the collision pair, by enumeration over
+        // `rxn_N`, and both are anchors of the mixer with the same standing as
+        // 148_503_722. `name_key("rxn_222253549") == 1_313_818_977` is fourteen
+        // counters into the velocity noise window; `name_key("rxn_34843856")
+        // == 1_464_288_648` is fifty-eight into the worldgen one.
+        //
+        // Both windows are covered and not one. The untested branch would
+        // otherwise be the noise window, and it is the graver of the two: a
+        // `rid` there gives chemistry and the velocity noise one draw on a
+        // shared `(node, tick)` *every* tick, where worldgen shares only on
+        // `WORLDGEN_TICK = 0`.
+        //
+        // The message is asserted and not merely `is_err()`. `refusal` hands
+        // back whichever error came first, so a fixture refused for its mass
+        // tolerance or its `k_E` window would keep a failure-only test green
+        // forever while this check never ran at all.
+        let fixture = |id: &str| {
+            format!(
+                "{HEADER}{}{}{}",
+                spec_12_substances(100.0),
+                reaction(id, -8.46e5, "{ H2S = 1, O2 = 2 }", "{ SO4 = 1, H_ION = 2 }"),
+                enthalpy_record(2, 1.4e-7)
+            )
+        };
+
+        let err = refusal(&fixture("rxn_222253549"));
+        assert!(err.contains("rxn_222253549"), "{err}");
+        assert!(err.contains("1313818977"), "the `rid`: {err}");
+        assert!(
+            err.contains("1313818963"),
+            "the low bound of the window: {err}"
+        );
+        assert!(
+            err.contains("1313818987"),
+            "the high bound of the window: {err}"
+        );
+        assert!(
+            err.contains("NOISE_BASE"),
+            "the constant that owns the window, so the reader can find it: {err}"
+        );
+        assert!(
+            err.contains("rename"),
+            "the way out has to be printed: {err}"
+        );
+
+        let err = refusal(&fixture("rxn_34843856"));
+        assert!(err.contains("rxn_34843856"), "{err}");
+        assert!(err.contains("1464288648"), "the `rid`: {err}");
+        assert!(
+            err.contains("1464288590"),
+            "the low bound of the window: {err}"
+        );
+        assert!(
+            err.contains("1464288846"),
+            "the high bound of the window: {err}"
+        );
+        assert!(
+            err.contains("WORLDGEN_BASE"),
+            "the constant that owns the window, so the reader can find it: {err}"
+        );
+        assert!(
+            err.contains("rename"),
+            "the way out has to be printed: {err}"
+        );
+
+        // (c) The same registry under a name that folds outside both windows
+        // derives, and its `rid` is that name fold — so what the two refusals
+        // above are about is the window and not the chemistry of the fixture,
+        // which is identical in all three.
+        let d = derived(&fixture("h2s_oxidation"));
+        assert_eq!(reaction_named(&d, "h2s_oxidation").rid, 603_427_705);
     }
 
     #[test]

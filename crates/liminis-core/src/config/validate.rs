@@ -82,6 +82,7 @@ use crate::ledger::Channel;
 use crate::numeric::{Q, qsub};
 use crate::process::ProcessId;
 use crate::process::settle::{Grain, Medium, settling_courant, settling_velocity};
+use crate::worldgen::voxel_centre_in_closed_sphere;
 
 /// The field id whose `lod` fixes the grid the wide temperature difference is
 /// taken on (ADR-062, ADR-069).
@@ -260,6 +261,24 @@ fn referential_integrity(config: &Config) -> Result<()> {
                  scenario would load, the canonical form would look right, and \
                  the substance the author meant to lift into the water column \
                  would stay in the sediment with both ledgers closing (ADR-077)",
+                names(config.substance.iter().map(|s| &s.id))
+            );
+        }
+    }
+
+    for id in config.initial.concentration.keys() {
+        if !config.substance.iter().any(|s| s.id == *id) {
+            bail!(
+                "`[initial.concentration]` names `{id}`, which is not a declared substance (declared: {})",
+                names(config.substance.iter().map(|s| &s.id))
+            );
+        }
+    }
+    for (index, inoculum) in config.initial.inoculum.iter().enumerate() {
+        if !config.substance.iter().any(|s| s.id == inoculum.substance) {
+            bail!(
+                "initial.inoculum[{index}] names substance `{}`, which is not declared (declared: {})",
+                inoculum.substance,
                 names(config.substance.iter().map(|s| &s.id))
             );
         }
@@ -540,6 +559,93 @@ fn domains(config: &Config) -> Result<()> {
         }
     }
 
+    for (id, concentration) in &config.initial.concentration {
+        initial_concentration(
+            config,
+            id,
+            *concentration,
+            &format!("initial.concentration.{id}"),
+        )?;
+    }
+    let lengths = [
+        f64::from(config.grid.nx) * config.grid.dx,
+        f64::from(config.grid.ny) * config.grid.dx,
+        f64::from(config.grid.nz) * config.grid.dx,
+    ];
+    for (index, inoculum) in config.initial.inoculum.iter().enumerate() {
+        let owner = format!("initial.inoculum[{index}]");
+        initial_concentration(
+            config,
+            &inoculum.substance,
+            inoculum.concentration,
+            &format!("{owner}.concentration"),
+        )?;
+        demand_positive(inoculum.radius, "radius", &owner)?;
+        for (axis, (&center, &length)) in inoculum.center.iter().zip(&lengths).enumerate() {
+            if !(center.is_finite()
+                && center - inoculum.radius >= 0.0
+                && center + inoculum.radius <= length)
+            {
+                bail!(
+                    "{owner} sphere is not entirely inside grid axis {axis}: center = {center} m, radius = {} m, domain = [0, {length}] m",
+                    inoculum.radius
+                );
+            }
+        }
+        let nearest = std::array::from_fn::<_, 3, _>(|axis| {
+            let coordinate = (inoculum.center[axis] / config.grid.dx - 0.5).round();
+            coordinate.clamp(
+                0.0,
+                f64::from([config.grid.nx, config.grid.ny, config.grid.nz][axis] - 1),
+            ) as u32
+        });
+        if !voxel_centre_in_closed_sphere(nearest, config.grid.dx, inoculum.center, inoculum.radius)
+        {
+            bail!(
+                "{owner} sphere contains no voxel centre: center = {:?} m, radius = {} m, dx = {} m",
+                inoculum.center,
+                inoculum.radius,
+                config.grid.dx
+            );
+        }
+    }
+    for right in 0..config.initial.inoculum.len() {
+        for left in 0..right {
+            let a = &config.initial.inoculum[left];
+            let b = &config.initial.inoculum[right];
+            if a.substance != b.substance {
+                continue;
+            }
+            let centre_a = a.center.map(|coordinate| coordinate / config.grid.dx);
+            let centre_b = b.center.map(|coordinate| coordinate / config.grid.dx);
+            let distance_squared: f64 = centre_a
+                .iter()
+                .zip(centre_b)
+                .map(|(a, b)| {
+                    let delta = *a - b;
+                    delta * delta
+                })
+                .sum();
+            // Bound the generator's closed-sphere tolerance in the same voxel
+            // units, so nominally disjoint declarations cannot overwrite one
+            // shared boundary voxel through floating-point expansion.
+            let epsilon = 16.0 * f64::EPSILON;
+            let effective_radius = |radius: f64| {
+                let radius = radius / config.grid.dx;
+                ((radius * radius + epsilon) / (1.0 - epsilon)).sqrt()
+            };
+            let radii = effective_radius(a.radius) + effective_radius(b.radius);
+            let radii_squared = radii * radii;
+            let allowance = epsilon * distance_squared.max(radii_squared).max(1.0);
+            if distance_squared <= radii_squared + allowance {
+                bail!(
+                    "initial.inoculum[{left}] and initial.inoculum[{right}] overlap for substance `{}`; same-substance sphere overwrites must be disjoint",
+                    a.substance
+                );
+            }
+        }
+    }
+
     for reaction in &config.reaction {
         let owner = format!("reaction `{}`", reaction.id);
         demand_positive(reaction.rate.q10, "rate.q10", &owner)?;
@@ -672,6 +778,19 @@ fn domains(config: &Config) -> Result<()> {
         demand_finite(entry.max, "max", &owner)?;
     }
 
+    Ok(())
+}
+
+fn initial_concentration(config: &Config, id: &str, value: f64, key: &str) -> Result<()> {
+    let Some(substance) = config.substance.iter().find(|substance| substance.id == id) else {
+        return Ok(()); // Referential integrity reports the more useful error first.
+    };
+    if !(value.is_finite() && value >= 0.0 && value <= substance.max_conc) {
+        bail!(
+            "{key} = {value} mol/m^3 must be finite and in [0, {}], the declared max_conc of `{id}`",
+            substance.max_conc
+        );
+    }
     Ok(())
 }
 
@@ -4013,6 +4132,67 @@ composition = { P = 1 }
         // oxycline in it.
         let spelled_right = format!("{WORKED_EXAMPLE}\n[initial.layer]\nO2 = \"water\"\n");
         validated(&spelled_right);
+    }
+
+    #[test]
+    fn initial_concentrations_are_known_finite_and_bounded() {
+        let unknown = format!("{WORKED_EXAMPLE}\n[initial.concentration]\nNOPE = 0.1\n");
+        assert_names(&refusal(&unknown), &["initial.concentration", "NOPE"]);
+
+        let excessive = format!("{WORKED_EXAMPLE}\n[initial.concentration]\nH2S = 11.0\n");
+        assert_names(
+            &refusal(&excessive),
+            &["initial.concentration.H2S", "11", "10"],
+        );
+
+        let legal = format!("{WORKED_EXAMPLE}\n[initial.concentration]\nH2S = 0.2\n");
+        let derived = validated(&legal);
+        assert_eq!(derived.initial().concentration.len(), 1);
+        assert!(derived.initial().concentration[0].amount > 0);
+    }
+
+    #[test]
+    fn inocula_are_contained_hit_a_voxel_and_do_not_overlap() {
+        let outside = format!(
+            "{WORKED_EXAMPLE}\n[[initial.inoculum]]\nsubstance = \"H2S\"\ncenter = [1e-5, 1e-3, 1e-3]\nradius = 2e-5\nconcentration = 0.2\n"
+        );
+        assert_names(
+            &refusal(&outside),
+            &["initial.inoculum[0]", "entirely inside"],
+        );
+
+        let misses = format!(
+            "{WORKED_EXAMPLE}\n[[initial.inoculum]]\nsubstance = \"H2S\"\ncenter = [1e-4, 1e-4, 1e-4]\nradius = 1e-5\nconcentration = 0.2\n"
+        );
+        assert_names(
+            &refusal(&misses),
+            &["initial.inoculum[0]", "no voxel centre"],
+        );
+
+        let overlap = format!(
+            "{WORKED_EXAMPLE}\n[[initial.inoculum]]\nsubstance = \"H2S\"\ncenter = [1e-3, 1e-3, 1e-3]\nradius = 2e-4\nconcentration = 0.2\n\n[[initial.inoculum]]\nsubstance = \"H2S\"\ncenter = [1.3e-3, 1e-3, 1e-3]\nradius = 2e-4\nconcentration = 0.3\n"
+        );
+        assert_names(
+            &refusal(&overlap),
+            &["inoculum[0]", "inoculum[1]", "overlap", "H2S"],
+        );
+
+        let legal = format!(
+            "{WORKED_EXAMPLE}\n[[initial.inoculum]]\nsubstance = \"H2S\"\ncenter = [1.05e-3, 1.05e-3, 1.05e-3]\nradius = 1e-4\nconcentration = 0.2\n"
+        );
+        let derived = validated(&legal);
+        assert_eq!(derived.initial().inocula.len(), 1);
+        assert!(derived.initial().inocula[0].amount > 0);
+
+        // The nearest voxel centre is exactly tangent in all three axes. This
+        // used to be judged by metre-square arithmetic here and voxel-unit
+        // arithmetic in worldgen, so the validator could reject a founder that
+        // generation's closed-sphere predicate included.
+        let tangent = format!(
+            "{WORKED_EXAMPLE}\n[[initial.inoculum]]\nsubstance = \"H2S\"\ncenter = [1e-4, 1e-4, 1e-4]\nradius = 8.660254037844386e-5\nconcentration = 0.2\n"
+        );
+        let derived = validated(&tangent);
+        assert_eq!(derived.initial().inocula.len(), 1);
     }
 
     #[test]

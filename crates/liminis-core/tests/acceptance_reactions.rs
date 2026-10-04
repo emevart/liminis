@@ -1843,3 +1843,139 @@ fn a_reacting_tick_closes_the_energy_ledger_with_no_channel() {
          (ADR-080)"
     );
 }
+
+/// `ACCEPTANCE.md`, section "Детерминизм" (ADR-027, ADR-090).
+///
+/// The name it carries belongs to a different section of the document than the
+/// thirteen at the head of this file, for the same reason the energy tests above
+/// do: this is where the only fixture in `tests/` that puts a real reaction
+/// registry through `parse` -> `validate` already lives.
+///
+/// **It has to go through `validate`, not through `load`.** `config::load` is
+/// `read_to_string` plus `parse` and never calls the derivation, so
+/// `every_scenario_in_the_repository_loads` sees neither `rid` nor either
+/// refusal of ADR-090 — `config/validate.rs` says so in its own head comment,
+/// and says it is a decision rather than an omission.
+///
+/// **Why four assertions and not one.** Each kills a defect the other three let
+/// through, and every one of them leaves both residuals closing: `rid` is only
+/// the third counter of `rand`, conservation is a property of the vector `nu`
+/// and not of the extent `xi` (ADR-027), so a world drawing the wrong stream
+/// goes on balancing exactly as well as a correct one.
+///
+/// - (1) the two derivations disagree on `reactions()[0].id`. Without it the day
+///   `derive` starts normalising the order of the registry — a sort by name is
+///   the obvious way to do it — both sides become the same registry and the test
+///   compares a config against itself forever. `config_hash.rs` keeps a `swap`
+///   helper asserting "exactly one occurrence" against the same failure;
+/// - (2) `rid` is looked up **by name**, never by index. Comparing
+///   `reactions()[0].rid` across the two would be green under a positional
+///   `rid`, which is the one defect the name is about;
+/// - (3) the two `rid` differ from each other. A constant `rid` — zero for every
+///   reaction — is stable under reordering and is not taken from the position,
+///   so it passes (1) and (2); what it does to a world is give two reactions in
+///   one voxel on one tick a single draw. Today the collision refusal of ADR-090
+///   fires first and this fixture never reaches (3), which is exactly why (3) is
+///   written down: the two arrived in one record, and a later author relaxing
+///   the refusal must not also be the author who removes its last witness;
+/// - (4) the two numbers are written out as literals. A dense index assigned
+///   after sorting the names lexicographically — the variant ADR-090 rejected —
+///   would give 0 and 1 and pass (1) through (3). Calling `numeric::name_key`
+///   here instead would fold the name on both sides of the equality and stay
+///   green against a `derive` that folded a **normalised** name (trim, case,
+///   NFC), which the doc comment of `DerivedReaction::rid` forbids by name.
+///
+/// **What it cannot see, and ADR-090 leaves open.** It permutes rows, it does
+/// not add them, so a `rid` that depended on the whole registry — `name_key(id)
+/// ^ mix(n_reactions)` — is stable here and drifts the day a scenario gains a
+/// reaction. The literals close the dense index and most rebasings, not the
+/// class.
+///
+/// **If it goes red, suspect the scales first.** `k_E`, `e_r` and the mass
+/// tolerance are functions of the whole registry; both texts declare the same
+/// *set* of reactions, so a min/max accumulation gives the same numbers, but an
+/// accumulation sensitive to traversal order would split the two derivations and
+/// report it here as a wrong identifier. Compare `e_r`, `scarcest` and
+/// `nu_energy` of the two before suspecting the fold — and do not weaken these
+/// assertions if they differ, because scales that depend on the order of TOML
+/// rows violate ADR-027 in the same way `rid` would.
+#[test]
+fn reaction_id_is_stable_under_reordering_in_toml() {
+    // Two `split_once` cut [`EXOTHERMIC_SCENARIO`] into head, the whole reaction
+    // record, and the tail. The second reaction is that same record under a
+    // second name: identical chemistry means the element, mass and energy
+    // balances hold by construction and not one number is invented here. The
+    // pair is the one `config/derive.rs` already derives — neither key lands in
+    // a reserved `purpose` window, and neither collides with the other.
+    let (head, rest) = EXOTHERMIC_SCENARIO
+        .split_once("\n[[reaction]]")
+        .expect("the fixture declares a reaction");
+    let (body, rest) = rest
+        .split_once("\n[[field]]")
+        .expect("the reaction record is followed by the enthalpy field");
+    let first = format!("\n[[reaction]]{body}");
+    let tail = format!("\n[[field]]{rest}");
+    assert_eq!(
+        first.matches("h2s_oxidation").count(),
+        1,
+        "the rename below has nothing to rename, so both texts would be the \
+         same registry and this test would never be able to go red"
+    );
+    let second = first.replace("h2s_oxidation", "rxn_138249");
+
+    // The same three pieces in the two orders — a permutation, not two editions.
+    let ab = format!("{head}{first}{second}{tail}");
+    let ba = format!("{head}{second}{first}{tail}");
+
+    let derive = |text: &str| {
+        let config = config::parse(text).expect("the permutation must parse");
+        config::validate(&config).expect("the permutation must validate")
+    };
+    let d_ab = derive(&ab);
+    let d_ba = derive(&ba);
+
+    let rid_of = |d: &config::Derived, id: &str| {
+        d.reactions()
+            .iter()
+            .find(|r| r.id == id)
+            .unwrap_or_else(|| panic!("the registry declares {id}"))
+            .rid
+    };
+
+    // (1) The permutation reached the derivation at all.
+    assert_eq!(d_ab.reactions()[0].id, "h2s_oxidation");
+    assert_eq!(
+        d_ba.reactions()[0].id,
+        "rxn_138249",
+        "the two derivations agree on the first row, so nothing was permuted"
+    );
+
+    // (2) The identifier follows the name across the swap, not the row.
+    assert_eq!(
+        rid_of(&d_ab, "h2s_oxidation"),
+        rid_of(&d_ba, "h2s_oxidation"),
+        "moving a reaction down the file moved its `rid` (ADR-027)"
+    );
+    assert_eq!(
+        rid_of(&d_ba, "rxn_138249"),
+        rid_of(&d_ab, "rxn_138249"),
+        "moving a reaction up the file moved its `rid` (ADR-027)"
+    );
+
+    // (3) Two names, two counters.
+    assert_ne!(
+        rid_of(&d_ab, "h2s_oxidation"),
+        rid_of(&d_ab, "rxn_138249"),
+        "one `rid` for two reactions is one draw for two reactions in a voxel, \
+         and both residuals close through it (ADR-090)"
+    );
+
+    // (4) The counters are the fold of the names and of nothing else.
+    assert_eq!(rid_of(&d_ab, "h2s_oxidation"), 603_427_705);
+    assert_eq!(
+        rid_of(&d_ab, "rxn_138249"),
+        148_503_722,
+        "`rid` is `name_key` of the name as TOML wrote it, so a canonicalised \
+         position or a normalised name is a different number (ADR-090)"
+    );
+}

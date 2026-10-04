@@ -299,7 +299,7 @@ pub fn fold_energy(
     // voxel for one tick is `3.08e16` units (ADR-062), fifty-five significant bits
     // against the twenty-four of `Q`. Passing them through `qadd` "to match the
     // light" would erase thirty-one low bits and look like harmless rounding.
-    let mut reactions = M64::ZERO;
+    let mut reactions = 0i64;
     let mut absorbed = Q::ZERO;
 
     // A triple `for` over the axes, not `for fine in fine_cells_of(p, coarse)` as
@@ -313,7 +313,9 @@ pub fn fold_energy(
                 let y = y0 + dy;
                 let z = z0 + dz;
 
-                reactions += energy_delta[index(p, x, y, z) as usize];
+                reactions = reactions
+                    .checked_add(energy_delta[index(p, x, y, z) as usize].to_i64())
+                    .expect("coarse reaction energy sum must fit i64");
                 absorbed = qadd(absorbed, absorbed_here(light, p, x, y, z));
             }
         }
@@ -349,7 +351,14 @@ pub fn fold_energy(
     // enthalpy and this line cooled the water when sulfide burned — which nothing
     // could see until a temperature existed (ADR-079). The sign lives in
     // `config/derive.rs` and in one place only; this line was not touched.
-    dst_h[coarse as usize] = src_h[coarse as usize] + reactions + from_light;
+    let after_reactions = src_h[coarse as usize]
+        .to_i64()
+        .checked_add(reactions)
+        .expect("source enthalpy plus reaction energy must fit i64");
+    let after = after_reactions
+        .checked_add(from_light.to_i64())
+        .expect("source enthalpy plus reaction and light energy must fit i64");
+    dst_h[coarse as usize] = M64::new(after);
 }
 
 /// What one fine voxel absorbed, in `Q` and unrounded.
@@ -618,6 +627,29 @@ mod tests {
         } else {
             (x + 0.5).floor() as i64
         }
+    }
+
+    #[test]
+    #[should_panic(expected = "coarse reaction energy sum must fit i64")]
+    fn coarse_reaction_energy_overflow_is_refused_in_every_build() {
+        let p = params();
+        let mut energy_delta = vec![M64::ZERO; N_FINE as usize];
+        energy_delta[index(&p, 0, 0, 0) as usize] = M64::new(i64::MAX);
+        energy_delta[index(&p, 1, 0, 0) as usize] = M64::new(1);
+        let src_h = vec![M64::ZERO; N_COARSE as usize];
+
+        let _ = dispatch(&energy_delta, &transparent(N_FINE), &src_h, &p, 1);
+    }
+
+    #[test]
+    #[should_panic(expected = "source enthalpy plus reaction and light energy must fit i64")]
+    fn final_source_reaction_light_overflow_is_refused_in_every_build() {
+        let p = params();
+        let energy_delta = vec![M64::ZERO; N_FINE as usize];
+        let mut src_h = vec![M64::ZERO; N_COARSE as usize];
+        src_h[0] = M64::new(i64::MAX - LIGHT_PER_COARSE + 1);
+
+        let _ = dispatch(&energy_delta, &stepped(&p), &src_h, &p, 1);
     }
 
     #[test]

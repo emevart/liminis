@@ -1185,4 +1185,44 @@
 /// `process/settle.rs` stays where it is: what step `f` owes the ledger when
 /// sediment leaves through a built lid is ADR-080 and ADR-081's, not this
 /// record's.
-pub const WORLD_FORMAT_VERSION: u32 = 25;
+///
+/// # Version 26: the reaction identifier is the fold of its name
+///
+/// ADR-090, and the absolute number is settled here for the reason versions 22
+/// through 25 give: the record refuses to name it, because the guard of ADR-020
+/// judges commits rather than the final tree.
+///
+/// `reaction_id` — the third counter of `rand(voxel, tick, rid, run_key)` — is
+/// `numeric::name_key(id)`: `mix(START)`, then one round of the same `mix` per
+/// UTF-8 byte of the name. It lives in `numeric/rng.rs` beside `run_key` and
+/// under the same guard, because a mixer that decides every draw of every run is
+/// world semantics of exactly the rank of the generator, and `config/derive.rs`
+/// — where the obvious four-line hash would have gone — is outside the pattern
+/// of ADR-020. `process/**` moves with it: `Undeclared` is gone, `React::new`
+/// reads the column out of `Derived`, and the two refusals that named `rid` as
+/// the last lock of step `h` are rewritten rather than deleted.
+///
+/// The third edited file, `numeric/mod.rs`, re-exports the name and does **not**
+/// match the guard's pattern (`numeric/rng\.rs$`). It could not have carried this
+/// increment on its own, and nothing about it should be read as a witness that
+/// the increment happened.
+///
+/// **Today it does not move one run by one bit,** and saying so is more honest
+/// than dressing the increment up as a change of dynamics: no scenario in the
+/// repository reaches step `h`, so there is no draw for a new `rid` to shift.
+/// Version 9 paid the same price for the same reason and wrote it down. What is
+/// bought is not the past but the future: from this commit `rid` is world
+/// semantics, and the guard is what keeps the next edit of the fold visible.
+/// Version 27 enables counted chemistry, runtime ceilings and eco catalysis
+/// from registry biomass (ADR-088, ADR-091). Previous run semantics remain
+/// reproducible on version 26.
+/// Version 28 compiles two-locus genotypes into checked chemistry and permits
+/// declared inocula over explicit initial concentrations (ADR-093, ADR-094).
+/// Version 29 adds a separate, well-mixed individual-cell chamber (ADR-099,
+/// ADR-101). Eco tick semantics are unchanged; ADR-100 permits only eco28
+/// resume with its original identity preserved, never cross-kind loading.
+/// Version 30 replaces floating shared reaction competition with conservative
+/// integer Q31 scaling and rejects unsafe accumulator bounds (ADR-102).
+/// Eco trajectories change: eco28/29 resume is refused (ADR-103). The separate
+/// cell engine is unchanged, so cells29 may resume preserving identity 29.
+pub const WORLD_FORMAT_VERSION: u32 = 30;

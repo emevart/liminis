@@ -490,6 +490,7 @@ fn world_snapshot(world: &World) -> Vec<u8> {
 /// is why the type came first and the helper second.
 fn scratch_snapshot(scratch: &Scratch) -> Vec<u8> {
     let ScratchBuffers {
+        catalyst,
         face_courant,
         enthalpy_courant,
         energy_delta,
@@ -513,6 +514,7 @@ fn scratch_snapshot(scratch: &Scratch) -> Vec<u8> {
     }
     for value in face_courant
         .iter()
+        .chain(catalyst)
         .chain(enthalpy_courant)
         .chain(light)
         .chain(velocity)
@@ -1302,6 +1304,7 @@ fn every_buffer_the_scratch_owns_is_absent_from_the_snapshot() {
     // into "decided, in a visible diff line", and not into "impossible".
     let scratch = Scratch::new(&world, &tick).expect("the scratch buffers");
     let ScratchBuffers {
+        catalyst: _, // This abiotic fixture has no catalysis columns.
         face_courant,
         enthalpy_courant,
         energy_delta,
@@ -1400,6 +1403,7 @@ fn load_reports_the_per_voxel_footprint_of_the_world_and_the_scratch() {
     let scratch = Scratch::new(&world, &tick).expect("the scratch buffers");
 
     let ScratchBuffers {
+        catalyst,
         face_courant,
         enthalpy_courant,
         energy_delta,
@@ -1414,6 +1418,7 @@ fn load_reports_the_per_voxel_footprint_of_the_world_and_the_scratch() {
         temperature,
     } = scratch.buffers();
     let allocated = size_of_val(face_courant)
+        + size_of_val(catalyst)
         + size_of_val(enthalpy_courant)
         + size_of_val(energy_delta)
         + size_of_val(xi_out)
@@ -1939,7 +1944,7 @@ fn an_enabled_process_without_an_operator_is_refused() {
     let world = world(&derived);
     for id in ProcessId::ALL {
         let result = Tick::new(&world, &derived, &config(), &roster(&[id]), DT, DX, 42);
-        if DISPATCHABLE.contains(&id) {
+        if DISPATCHABLE.contains(&id) || id == ProcessId::Reactions {
             assert!(result.is_ok(), "`{}` should fold", id.id());
         } else {
             let message = format!("{:#}", result.expect_err("should refuse"));
