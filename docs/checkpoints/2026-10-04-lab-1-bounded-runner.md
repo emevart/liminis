@@ -61,8 +61,57 @@ sample bytes. Reviewer не запускал Cargo; результаты выш�
 Reviewed runner SHA-256:
 `b29648bd14de4128e0e56af5512f42cce311835c03543ae0b72db123a65e4bb2`.
 
-CLI source-guard acceptance/evidence выполняются на committed clean source;
-результат будет добавлен перед окончательной передачей PR. Browser QA:
+CLI release acceptance на clean published source
+`dd0ce4df1c00b51a2412952c9cd37f68591309c6` — PASS. Два вызова `cargo run`
+дали побайтно одинаковый artifact, 462411 bytes, SHA-256
+`525fac91b7608b4e7ce2420082a665ae67d91ba0c43fbee8eb63980f3d6e622a`.
+Wrong HEAD и временно dirty собственный runner отвергнуты до записи output;
+источник восстановлен и его reviewed digest не изменился.
+
+| Smoke run (seed = max u64) | Outcome / stop | Checked ticks | Living end |
+|---|---|---:|---:|
+| repeat-a / repeat-b | censored / requested_horizon_reached | 1000 / 1000 | 215 / 215 |
+| no-mutation | censored / requested_horizon_reached | 1000 | 216 |
+| no-food | extinct / extinction | 454 | 0 |
+| capacity | censored / cell_capacity_limit | 46 | 8 |
+| bad-temperature | refused / input_or_admission_refused | 0 | unavailable |
+
+Repeat summary, final-state digest и everytick report digest совпали.
+Mutation-off имеет настоящие fissions и ровно один observed allele. FOOD-only
+starvation даёт zero growth extent; capacity attempt сохраняет последний
+подтверждённый tick и unknown failed residual. Все доступные lifecycle residual
+равны нулю, tick_reports_hashed == checked_ticks.
+
+Воспроизведение inputs (только ignored `target/qa`, не изменение configs):
+
+```sh
+mkdir -p target/qa/lab-1
+python3 - <<'PYINPUT'
+import json, pathlib
+source = pathlib.Path('configs/scenarios/cell-chamber.toml').read_text()
+def row(i, c, t):
+    return dict(run_id=i, condition=c, scenario_toml=t,
+                seed='18446744073709551615', steps=1000, sample_every=10)
+runs = [row('repeat-a', 'baseline', source),
+        row('repeat-b', 'baseline', source),
+        row('no-mutation', 'mutation_off', source.replace('mutation_probability = 0.02', 'mutation_probability = 0.0')),
+        row('no-food', 'starvation', source.replace('FOOD = 10.0', 'FOOD = 0.0')),
+        row('capacity', 'resource_guard', source.replace('max_cells = 512', 'max_cells = 8')),
+        row('bad-temperature', 'invalid_scenario', source.replace('temperature_k = 298.15', 'temperature_k = -1.0'))]
+pathlib.Path('target/qa/lab-1/smoke-manifest.json').write_text(json.dumps(
+    dict(schema_version=1, batch_id='lab-1-controls', runs=runs)))
+PYINPUT
+cargo run --locked --release -p liminis --example compare_cell_experiments -- \
+  --manifest target/qa/lab-1/smoke-manifest.json --source-commit "$(git rev-parse HEAD)" \
+  --output target/qa/lab-1/smoke-results.json
+```
+
+Artifact byte digest выше принадлежит указанному acceptance commit; новый
+commit меняет source provenance и digest всего JSON закономерно. Команда на
+новом head должна сохранять scientific summary/state/report digests, если
+engine/runner inputs не изменились. Final remote head и CI фиксируются в PR/issue.
+
+Browser QA:
 N/A, UI в LAB-1 отсутствует. CI candidate ещё NOT RUN до создания PR.
 Checkpoint не подменяет проверку exact remote head перед merge.
 
