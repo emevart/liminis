@@ -4,7 +4,7 @@
   "candidate_commit": "09f3c64af37c9037aa291b9efeb249c4508eba91",
   "candidate_tree": "77dd4de7d268523036bf09049eb30cd20bb26e4d",
   "workflow_run": 37237631167,
-  "status": "SOURCE_REVIEW_PASS_ACTUAL_BROWSER_PENDING",
+  "status": "SOURCE_REVIEW_QUALIFIED_PASS_2D_REGRESSION_FAIL_3D_NOT_RUN",
   "files": [
     {
       "path": "code/REVIEW.md",
@@ -68,17 +68,39 @@
     },
     {
       "path": "README.md",
-      "bytes": 1020,
-      "sha256": "648b2abbf81e867c274fc8452a973a6aabc82ed7c885dbd69c96c228f00bdd8b",
+      "bytes": 1814,
+      "sha256": "44b91206dc47a683836b240637be55a769180b2944eb8d68dc30e1c6cece4e85",
       "scope": "coordinator qualification"
+    },
+    {
+      "path": "physical-projection-09-report.json",
+      "bytes": 40058,
+      "sha256": "4581b1e0e6a0e591b62fddaab74562f74815d02e0e3a369991bbe940f8b98a03",
+      "scope": "exact original diagnostic report bytes"
+    },
+    {
+      "path": "physical-projection-09f3c64-failure-original.zip",
+      "bytes": 4254907,
+      "sha256": "7afc4b88db78a9a32d83f99534ee13e463e18fd48411003e7b31b6cb29d56ffd",
+      "scope": "original GH artifact ZIP, no repacking; overall FAIL"
     }
   ],
-  "unique_bytes": 35847,
+  "unique_bytes": 4331606,
   "archive_group_cap_bytes": 67108864,
-  "original_zip_count": 0,
+  "original_zip_count": 1,
   "qualifications": [
     "pre-browser independent reviews only",
     "no transferred actual WebGL/fullCI/public endpoint PASS",
     "historical e9 review superseded by861 identity fix"
-  ]
+  ],
+  "diagnostic": {
+    "artifact_id": 11316008695,
+    "status": "FAIL",
+    "actual_3d": "NOT_RUN",
+    "passed_subchecks": 6,
+    "failed_subchecks": 1,
+    "page_errors": 0,
+    "console_errors": 0,
+    "cleanup_errors": 0
+  }
 }

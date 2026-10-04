@@ -1,0 +1,1869 @@
+{
+  "status": "FAIL",
+  "startedAt": "2026-10-04T21:53:34.585Z",
+  "timeouts": {
+    "run": 240000,
+    "operation": 15000,
+    "api": 5000,
+    "launch": 20000,
+    "cdp": 5000,
+    "division": 90000,
+    "historyHold": 20000,
+    "trace": 15000,
+    "cleanup": 5000
+  },
+  "scope": "Bounded real-host 2D projection acceptance; point-center markers are not bodies, collisions, spatial chemistry or science findings.",
+  "nodeVersion": "v24.21.0",
+  "workflowRun": "https://github.com/emevart/liminis/actions/runs/37237631167",
+  "workflowAttempt": "1",
+  "runner": {
+    "os": "Linux",
+    "arch": "X64",
+    "imageOS": "ubuntu22",
+    "imageVersion": "20260927.309.1"
+  },
+  "checks": [
+    {
+      "name": "Actual CDP argv retains the protected sandbox process model",
+      "status": "PASS",
+      "elapsedMs": 9
+    },
+    {
+      "name": "Unmodified source physical scenario has real SI centers and matching cube projection",
+      "status": "PASS",
+      "elapsedMs": 320
+    },
+    {
+      "name": "State/readouts/paint/inspector commit before an unchanged delayed real history response",
+      "status": "PASS",
+      "elapsedMs": 296
+    },
+    {
+      "name": "All nonsquare planes map actual SI positions to marker pixels and pointer-selected exact IDs",
+      "status": "PASS",
+      "elapsedMs": 346
+    },
+    {
+      "name": "Exact unknown ID is not-present, not a fabricated death",
+      "status": "PASS",
+      "elapsedMs": 48
+    },
+    {
+      "name": "Actual focused arrow keys navigate exact visible IDs and wrap independently in every plane",
+      "status": "PASS",
+      "elapsedMs": 1442
+    },
+    {
+      "name": "Inclusive upper/lower boundaries, zero-width center slices and retained outside-slice selection",
+      "status": "FAIL",
+      "elapsedMs": 295,
+      "error": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /outside the current slice/. Input:\n\n'K+0Selected cell: outside slice; its saved center is shown below.id0shown snapshot tick1parentfounderbirth tick0age30 smass3.04e-14 moldivision mass6.00e-14 molenergy5.19e-12 Jx center139.021 µmy center50.7932 µmz center28.7198 µmGenomebase_growth_per_s0.0005base_km_mol_m30.05capture_fraction0.001division_cost_j1.000e-12division_mass_mol6.000e-14kinetics0maintenance_w5.000e-16spatial{ mobility_scale: 1, radius_at_division_m: 1.000e-6 }starvation_tolerance_s3600Phenotypegrowth_per_s0.0005km_mol_m30.05'\n\n    at file:///home/runner/work/liminis/liminis/scripts/check_physical_projection_browser.mjs:421:97\n    at async check (file:///home/runner/work/liminis/liminis/scripts/check_physical_projection_browser.mjs:47:75)\n    at async run (file:///home/runner/work/liminis/liminis/scripts/check_physical_projection_browser.mjs:411:3)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_physical_projection_browser.mjs:42:16)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_physical_projection_browser.mjs:503:20"
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "source-cube.png",
+      "bytes": 83102,
+      "sha256": "ef612c21bcaf99dab046290127d7af6cdff8234dbfaa5e49744803772b87793b"
+    },
+    {
+      "filename": "failure.png",
+      "bytes": 109485,
+      "sha256": "6604a1db419a180d7434f79a502c1b24de9da1c9f01a4ca83fff45c5925dd771"
+    }
+  ],
+  "geometries": [
+    {
+      "label": "source-cube",
+      "tick": 0,
+      "plane": "xy",
+      "box": [
+        344.5,
+        206,
+        465,
+        465
+      ],
+      "scalePixelsPerMeter": 4650000,
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "markerArcs": [
+        [
+          665.4788449782254,
+          406.63861540071065,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          445.38700897819,
+          659.4198595295582,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          370.84518543938776,
+          262.6401615873415,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          638.0991888238341,
+          564.5063880431217,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          773.1052835208692,
+          259.0148727700406,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          780.3834411687073,
+          532.0248426818853,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          703.8507209950633,
+          255.48918199724756,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          648.5025937156589,
+          567.310417077797,
+          3.5,
+          0,
+          6.283185307179586
+        ]
+      ],
+      "rulerMeters": 0.00002,
+      "markerPixels": [
+        {
+          "id": "0",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "1",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "2",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "3",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "4",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "5",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "6",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "7",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        }
+      ],
+      "slice": {
+        "enabled": false,
+        "center": 0.00005,
+        "thickness": 0.00001,
+        "lower": 0,
+        "upper": 0.0001,
+        "displayedRange": "z ∈ [0, 100] µm · full projection"
+      }
+    },
+    {
+      "label": "atomic-before-history-release",
+      "tick": 1,
+      "plane": "xy",
+      "box": [
+        112,
+        206,
+        930,
+        465
+      ],
+      "scalePixelsPerMeter": 4650000,
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "markerArcs": [
+        [
+          758.4472316499647,
+          434.8114487251541,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          306.44323931791223,
+          667.11720227037,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          184.2867717433769,
+          294.8030466866056,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          684.3234294002491,
+          572.3755771180167,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          969.820382198841,
+          251.4643137270818,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          999.4778092994374,
+          559.5341886113273,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          813.1775169772002,
+          231.44192458986203,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          720.5863582784879,
+          564.0552920793173,
+          3.5,
+          0,
+          6.283185307179586
+        ]
+      ],
+      "rulerMeters": 0.00005,
+      "markerPixels": [
+        {
+          "id": "0",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "1",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "2",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "3",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "4",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "5",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "6",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "7",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        }
+      ],
+      "slice": {
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "lower": 0,
+        "upper": 0.00005,
+        "displayedRange": "z ∈ [0, 50] µm · full projection"
+      }
+    },
+    {
+      "label": "xy",
+      "tick": 1,
+      "plane": "xy",
+      "box": [
+        112,
+        206,
+        930,
+        465
+      ],
+      "scalePixelsPerMeter": 4650000,
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "markerArcs": [
+        [
+          758.4472316499647,
+          434.8114487251541,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          306.44323931791223,
+          667.11720227037,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          184.2867717433769,
+          294.8030466866056,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          684.3234294002491,
+          572.3755771180167,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          969.820382198841,
+          251.4643137270818,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          999.4778092994374,
+          559.5341886113273,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          813.1775169772002,
+          231.44192458986203,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          720.5863582784879,
+          564.0552920793173,
+          3.5,
+          0,
+          6.283185307179586
+        ]
+      ],
+      "rulerMeters": 0.00005,
+      "markerPixels": [
+        {
+          "id": "0",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "1",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "2",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "3",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "4",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "5",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "6",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "7",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        }
+      ],
+      "slice": {
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "lower": 0,
+        "upper": 0.00005,
+        "displayedRange": "z ∈ [0, 50] µm · full projection"
+      }
+    },
+    {
+      "label": "xz",
+      "tick": 1,
+      "plane": "xz",
+      "box": [
+        54,
+        307.75,
+        1046,
+        261.5
+      ],
+      "scalePixelsPerMeter": 5230000,
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "markerArcs": [
+        [
+          781.07935946867,
+          419.0455031520993,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          272.6963745446626,
+          383.50874125744673,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          135.30318628341104,
+          438.8562387299619,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          697.7100076910328,
+          495.22778758320635,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          1018.817333096761,
+          474.59817006284555,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          1052.173966158292,
+          438.18735742698584,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          842.6362180195176,
+          521.1879026288867,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          738.4960545798906,
+          560.8568169423892,
+          3.5,
+          0,
+          6.283185307179586
+        ]
+      ],
+      "rulerMeters": 0.00005,
+      "markerPixels": [
+        {
+          "id": "0",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "1",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "2",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "3",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "4",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "5",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "6",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "7",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        }
+      ],
+      "slice": {
+        "enabled": false,
+        "center": 0.00005,
+        "thickness": 0.00001,
+        "lower": 0,
+        "upper": 0.0001,
+        "displayedRange": "y ∈ [0, 100] µm · full projection"
+      }
+    },
+    {
+      "label": "yz",
+      "tick": 1,
+      "plane": "yz",
+      "box": [
+        112,
+        206,
+        930,
+        465
+      ],
+      "scalePixelsPerMeter": 9300000,
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "markerArcs": [
+        [
+          584.3771025496918,
+          403.90596162801586,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          119.76559545926014,
+          340.71439649985746,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          864.3939066267887,
+          439.13346466322093,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          309.24884576396653,
+          539.3735037330439,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          951.0713725458364,
+          502.68986263565273,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          334.9316227773455,
+          437.94405813976454,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          991.116150820276,
+          585.5358497989763,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          325.88941584136546,
+          656.0752194195449,
+          3.5,
+          0,
+          6.283185307179586
+        ]
+      ],
+      "rulerMeters": 0.00002,
+      "markerPixels": [
+        {
+          "id": "0",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "1",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "2",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "3",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "4",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "5",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "6",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "7",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        }
+      ],
+      "slice": {
+        "enabled": false,
+        "center": 0.0001,
+        "thickness": 0.00002,
+        "lower": 0,
+        "upper": 0.0002,
+        "displayedRange": "x ∈ [0, 200] µm · full projection"
+      }
+    },
+    {
+      "label": "xy",
+      "tick": 1,
+      "plane": "xy",
+      "box": [
+        112,
+        206,
+        930,
+        465
+      ],
+      "scalePixelsPerMeter": 4650000,
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "markerArcs": [
+        [
+          758.4472316499647,
+          434.8114487251541,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          306.44323931791223,
+          667.11720227037,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          184.2867717433769,
+          294.8030466866056,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          684.3234294002491,
+          572.3755771180167,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          969.820382198841,
+          251.4643137270818,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          999.4778092994374,
+          559.5341886113273,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          813.1775169772002,
+          231.44192458986203,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          720.5863582784879,
+          564.0552920793173,
+          3.5,
+          0,
+          6.283185307179586
+        ]
+      ],
+      "rulerMeters": 0.00005,
+      "markerPixels": [
+        {
+          "id": "0",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "1",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "2",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "3",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "4",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "5",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "6",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "7",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        }
+      ],
+      "slice": {
+        "enabled": false,
+        "center": 0.000025,
+        "thickness": 0.000005,
+        "lower": 0,
+        "upper": 0.00005,
+        "displayedRange": "z ∈ [0, 50] µm · full projection"
+      }
+    },
+    {
+      "label": "xz",
+      "tick": 1,
+      "plane": "xz",
+      "box": [
+        54,
+        307.75,
+        1046,
+        261.5
+      ],
+      "scalePixelsPerMeter": 5230000,
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "markerArcs": [
+        [
+          781.07935946867,
+          419.0455031520993,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          272.6963745446626,
+          383.50874125744673,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          135.30318628341104,
+          438.8562387299619,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          697.7100076910328,
+          495.22778758320635,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          1018.817333096761,
+          474.59817006284555,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          1052.173966158292,
+          438.18735742698584,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          842.6362180195176,
+          521.1879026288867,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          738.4960545798906,
+          560.8568169423892,
+          3.5,
+          0,
+          6.283185307179586
+        ]
+      ],
+      "rulerMeters": 0.00005,
+      "markerPixels": [
+        {
+          "id": "0",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "1",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "2",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "3",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "4",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "5",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "6",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "7",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        }
+      ],
+      "slice": {
+        "enabled": false,
+        "center": 0.00005,
+        "thickness": 0.00001,
+        "lower": 0,
+        "upper": 0.0001,
+        "displayedRange": "y ∈ [0, 100] µm · full projection"
+      }
+    },
+    {
+      "label": "yz",
+      "tick": 1,
+      "plane": "yz",
+      "box": [
+        112,
+        206,
+        930,
+        465
+      ],
+      "scalePixelsPerMeter": 9300000,
+      "visibleIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "markerArcs": [
+        [
+          584.3771025496918,
+          403.90596162801586,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          119.76559545926014,
+          340.71439649985746,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          864.3939066267887,
+          439.13346466322093,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          309.24884576396653,
+          539.3735037330439,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          951.0713725458364,
+          502.68986263565273,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          334.9316227773455,
+          437.94405813976454,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          991.116150820276,
+          585.5358497989763,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          325.88941584136546,
+          656.0752194195449,
+          3.5,
+          0,
+          6.283185307179586
+        ]
+      ],
+      "rulerMeters": 0.00002,
+      "markerPixels": [
+        {
+          "id": "0",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "1",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "2",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "3",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "4",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "5",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "6",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "7",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        }
+      ],
+      "slice": {
+        "enabled": false,
+        "center": 0.0001,
+        "thickness": 0.00002,
+        "lower": 0,
+        "upper": 0.0002,
+        "displayedRange": "x ∈ [0, 200] µm · full projection"
+      }
+    },
+    {
+      "label": "inclusive-upper",
+      "tick": 1,
+      "plane": "yz",
+      "box": [
+        112,
+        206,
+        930,
+        465
+      ],
+      "scalePixelsPerMeter": 9300000,
+      "visibleIds": [
+        "1",
+        "2"
+      ],
+      "markerArcs": [
+        [
+          119.76559545926014,
+          340.71439649985746,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          864.3939066267887,
+          439.13346466322093,
+          3.5,
+          0,
+          6.283185307179586
+        ]
+      ],
+      "rulerMeters": 0.00002,
+      "markerPixels": [
+        {
+          "id": "1",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "2",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        }
+      ],
+      "slice": {
+        "enabled": true,
+        "center": 0,
+        "thickness": 0.00008363150078189773,
+        "lower": 0,
+        "upper": 0.00004181575039094887,
+        "displayedRange": "x ∈ [0, 41.815750390948864] µm · inclusive center slice"
+      }
+    },
+    {
+      "label": "inclusive-lower",
+      "tick": 1,
+      "plane": "yz",
+      "box": [
+        112,
+        206,
+        930,
+        465
+      ],
+      "scalePixelsPerMeter": 9300000,
+      "visibleIds": [
+        "1",
+        "3"
+      ],
+      "markerArcs": [
+        [
+          119.76559545926014,
+          340.71439649985746,
+          3.5,
+          0,
+          6.283185307179586
+        ],
+        [
+          309.24884576396653,
+          539.3735037330439,
+          3.5,
+          0,
+          6.283185307179586
+        ]
+      ],
+      "rulerMeters": 0.00002,
+      "markerPixels": [
+        {
+          "id": "1",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        },
+        {
+          "id": "3",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        }
+      ],
+      "slice": {
+        "enabled": true,
+        "center": 0.00008363150078189773,
+        "thickness": 0.00008363150078189773,
+        "lower": 0.00004181575039094887,
+        "upper": 0.0001254472511728466,
+        "displayedRange": "x ∈ [41.815750390948864, 125.44725117284659] µm · inclusive center slice"
+      }
+    },
+    {
+      "label": "zero-width",
+      "tick": 1,
+      "plane": "yz",
+      "box": [
+        112,
+        206,
+        930,
+        465
+      ],
+      "scalePixelsPerMeter": 9300000,
+      "visibleIds": [
+        "1"
+      ],
+      "markerArcs": [
+        [
+          119.76559545926014,
+          340.71439649985746,
+          3.5,
+          0,
+          6.283185307179586
+        ]
+      ],
+      "rulerMeters": 0.00002,
+      "markerPixels": [
+        {
+          "id": "1",
+          "pixel": [
+            114,
+            213,
+            223,
+            255
+          ]
+        }
+      ],
+      "slice": {
+        "enabled": true,
+        "center": 0.00004181575039094887,
+        "thickness": 0,
+        "lower": 0.00004181575039094887,
+        "upper": 0.00004181575039094887,
+        "displayedRange": "x ∈ [41.815750390948864, 41.815750390948864] µm · exact center plane"
+      }
+    }
+  ],
+  "hosts": [
+    {
+      "label": "source-cube",
+      "binary": "/home/runner/work/liminis/liminis/target/release/liminis",
+      "args": [
+        "cells",
+        "--seed",
+        "42",
+        "--port",
+        "45869",
+        "--data-dir",
+        "/tmp/liminis-projection-browser-eXytRC/source-cube",
+        "--config",
+        "/home/runner/work/liminis/liminis/configs/scenarios/cell-chamber-physical.toml"
+      ],
+      "origin": "http://127.0.0.1:45869",
+      "viewerBytes": 62370,
+      "viewerSha256": "a4679212a3f74ab01881e631a977bc42809d78f9508f39c0e1e70d7e1199f73f",
+      "identity": {
+        "seed": "42",
+        "dt_seconds": 30,
+        "config_hash": "blake3:f59bd3e5709fc316",
+        "world_format_version": 31,
+        "chamber_format": 2,
+        "model": {
+          "boundaries": "reflecting",
+          "dimensions_m": [
+            0.0001,
+            0.0001,
+            0.0001
+          ],
+          "environment": "well_mixed",
+          "excluded_volume": false,
+          "spatial_positions": true,
+          "temperature_k": 298.15,
+          "transport": "passive_dilute_brownian",
+          "viscosity_pa_s": 0.001,
+          "volume_m3": 1e-12
+        }
+      },
+      "initialTick": 0
+    },
+    {
+      "label": "nonsquare",
+      "binary": "/home/runner/work/liminis/liminis/target/release/liminis",
+      "args": [
+        "cells",
+        "--seed",
+        "42",
+        "--port",
+        "40119",
+        "--data-dir",
+        "/tmp/liminis-projection-browser-eXytRC/nonsquare",
+        "--config",
+        "/tmp/liminis-projection-browser-eXytRC/physical-nonsquare.toml"
+      ],
+      "origin": "http://127.0.0.1:40119",
+      "viewerBytes": 62370,
+      "viewerSha256": "a4679212a3f74ab01881e631a977bc42809d78f9508f39c0e1e70d7e1199f73f",
+      "identity": {
+        "seed": "42",
+        "dt_seconds": 30,
+        "config_hash": "blake3:d574aca2423617d8",
+        "world_format_version": 31,
+        "chamber_format": 2,
+        "model": {
+          "boundaries": "reflecting",
+          "dimensions_m": [
+            0.0002,
+            0.0001,
+            0.00005
+          ],
+          "environment": "well_mixed",
+          "excluded_volume": false,
+          "spatial_positions": true,
+          "temperature_k": 298.15,
+          "transport": "passive_dilute_brownian",
+          "viscosity_pa_s": 0.001,
+          "volume_m3": 1e-12
+        }
+      },
+      "initialTick": 0
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "resourceWarnings": [],
+  "cleanupErrors": [],
+  "launchArgumentCheck": {
+    "status": "PASS",
+    "method": "CDP Browser.getBrowserCommandLine",
+    "arguments": [
+      "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+      "--disable-field-trial-config",
+      "--disable-background-networking",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-back-forward-cache",
+      "--disable-breakpad",
+      "--disable-client-side-phishing-detection",
+      "--disable-component-extensions-with-background-pages",
+      "--disable-component-update",
+      "--no-default-browser-check",
+      "--disable-default-apps",
+      "--disable-dev-shm-usage",
+      "--disable-edgeupdater",
+      "--disable-extensions",
+      "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+      "--enable-features=CDPScreenshotNewSurface",
+      "--allow-pre-commit-input",
+      "--disable-hang-monitor",
+      "--disable-ipc-flooding-protection",
+      "--disable-popup-blocking",
+      "--disable-prompt-on-repost",
+      "--disable-renderer-backgrounding",
+      "--force-color-profile=srgb",
+      "--metrics-recording-only",
+      "--no-first-run",
+      "--password-store=basic",
+      "--use-mock-keychain",
+      "--no-service-autorun",
+      "--export-tagged-pdf",
+      "--disable-search-engine-choice-screen",
+      "--unsafely-disable-devtools-self-xss-warnings",
+      "--edge-skip-compat-layer-relaunch",
+      "--disable-infobars",
+      "--disable-search-engine-choice-screen",
+      "--disable-sync",
+      "--enable-unsafe-swiftshader",
+      "--headless",
+      "--hide-scrollbars",
+      "--mute-audio",
+      "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+      "--enable-automation",
+      "--user-data-dir=/tmp/playwright_chromiumdev_profile-XrrnNy",
+      "--remote-debugging-pipe",
+      "--no-startup-window",
+      "--use-gl=angle",
+      "--use-angle=swiftshader-webgl",
+      "--ozone-platform=headless",
+      "--allow-pre-commit-input"
+    ],
+    "forbiddenSwitches": []
+  },
+  "trace": {
+    "status": "PASS",
+    "filename": "trace.zip",
+    "bytes": 4349165,
+    "sha256": "3cace531fff40469d021193fadc989c10592ec904000edb28cd91b1e87de32b8"
+  },
+  "limits": [
+    "Chromium/Linux; desktop and 390/320px mobile viewports, not a full accessibility or device audit.",
+    "30/60 are display targets; achieved FPS and native background scheduling are not asserted.",
+    "Canvas methods observe paint arguments unchanged; geometry expectations use actual API coordinates and observed box edges, never production helpers or internal view.hits.",
+    "Public-server counters, long-run motion/statistics and new science claims are outside this local real-host gate.",
+    "An absent division parent is retained as an absent selection; absence is not a death assertion."
+  ],
+  "sourceHead": "09f3c64af37c9037aa291b9efeb249c4508eba91",
+  "sourceTree": "77dd4de7d268523036bf09049eb30cd20bb26e4d",
+  "scriptSha256": "58bd4a87e85756ffcd214bea35fa3ce6d1224445ee4861eedd03c51b24384edf",
+  "hostBinary": {
+    "bytes": 7390360,
+    "sha256": "407149981125b05535fc339e9c62c71d6d01b44be78b326e8774491865e326f7",
+    "buildProvenance": "Existing CI cargo build --locked --release -p liminis; digest is not standalone cryptographic source attestation."
+  },
+  "configs": {
+    "source": {
+      "filename": "configs/scenarios/cell-chamber-physical.toml",
+      "bytes": 3538,
+      "sha256": "867b52c37b6160bb6a9076f13cac9378fc49e226ae96753596d0c5d01fe90245",
+      "dimensions_m": [
+        0.0001,
+        0.0001,
+        0.0001
+      ]
+    },
+    "nonsquare": {
+      "filename": "physical-nonsquare.toml",
+      "bytes": 3538,
+      "sha256": "3da686962b4c14e54d82b11559805a96d4abba4da84532dbbb291850096630f7",
+      "dimensions_m": [
+        0.0002,
+        0.0001,
+        0.00005
+      ],
+      "onlyChange": "dimensions_m; volume unchanged"
+    },
+    "volumes": {
+      "mathematicallyEqual": true,
+      "sourceHost": 1e-12,
+      "nonsquareHost": 1e-12,
+      "nonsquareCalculated": 1e-12,
+      "byteEqualityNotAsserted": true
+    }
+  },
+  "playwrightVersion": "1.61.1",
+  "browser": {
+    "engine": "Chromium",
+    "version": "149.0.7827.55",
+    "chromiumSandbox": true
+  },
+  "delayedHistory": {
+    "status": "RELEASED",
+    "bytes": 130,
+    "sha256": "73486a99129d37b8fdd0e75e3dbcad6619a01f1687c6928782c945b1372d5522",
+    "originalStatus": 200,
+    "originalHeaders": {
+      "content-type": "application/json",
+      "content-length": "130",
+      "cache-control": "no-store",
+      "connection": "close"
+    },
+    "source": "route.fetch actual host response; fulfillment uses exactly these original bytes"
+  },
+  "traffic": {
+    "stateRequests": 6,
+    "inFlight": 0,
+    "maxInFlight": 1,
+    "posts": [
+      {
+        "url": "http://127.0.0.1:40119/api/control",
+        "body": "{\"action\":\"step\"}"
+      }
+    ],
+    "requestFailures": []
+  },
+  "atomicStep": {
+    "fromTick": 0,
+    "toTick": 1,
+    "selectedId": "0",
+    "historyReleasedAtAssertion": false
+  },
+  "keyboard": [
+    {
+      "label": "full-xy",
+      "tick": 1,
+      "missingId": "18446744073709551615",
+      "orderedIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "rightVisitedIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "0"
+      ],
+      "leftFromMissingId": "7"
+    },
+    {
+      "label": "full-xz",
+      "tick": 1,
+      "missingId": "18446744073709551615",
+      "orderedIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "rightVisitedIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "0"
+      ],
+      "leftFromMissingId": "7"
+    },
+    {
+      "label": "full-yz",
+      "tick": 1,
+      "missingId": "18446744073709551615",
+      "orderedIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "rightVisitedIds": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "0"
+      ],
+      "leftFromMissingId": "7"
+    }
+  ],
+  "failures": [
+    {
+      "stage": "run",
+      "error": "AssertionError [ERR_ASSERTION]: The input did not match the regular expression /outside the current slice/. Input:\n\n'K+0Selected cell: outside slice; its saved center is shown below.id0shown snapshot tick1parentfounderbirth tick0age30 smass3.04e-14 moldivision mass6.00e-14 molenergy5.19e-12 Jx center139.021 µmy center50.7932 µmz center28.7198 µmGenomebase_growth_per_s0.0005base_km_mol_m30.05capture_fraction0.001division_cost_j1.000e-12division_mass_mol6.000e-14kinetics0maintenance_w5.000e-16spatial{ mobility_scale: 1, radius_at_division_m: 1.000e-6 }starvation_tolerance_s3600Phenotypegrowth_per_s0.0005km_mol_m30.05'\n\n    at file:///home/runner/work/liminis/liminis/scripts/check_physical_projection_browser.mjs:421:97\n    at async check (file:///home/runner/work/liminis/liminis/scripts/check_physical_projection_browser.mjs:47:75)\n    at async run (file:///home/runner/work/liminis/liminis/scripts/check_physical_projection_browser.mjs:411:3)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_physical_projection_browser.mjs:42:16)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_physical_projection_browser.mjs:503:20"
+    }
+  ],
+  "finishedAt": "2026-10-04T21:53:38.086Z"
+}

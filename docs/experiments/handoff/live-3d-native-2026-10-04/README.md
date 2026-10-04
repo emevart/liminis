@@ -7,3 +7,9 @@ Independent source/code/geometry/QA reviews:0blockers after86175ef snapshotident
 Original protected browser ZIPs and actual independent acceptance will be added after this exact run. Actual browser/fullCI still PENDING. Official pinned Playwright1.61.1 stock SwiftShader/ANGLE baseline unchanged; observed sandbox guards mandatory, software backend not hardwareFPS/kernel attestation.
 
 Evidence-only branch; no merge/productrelease/deploy. Source/LAB/raw/dense/oldJSON bytes are inherited unchanged. Archive group remains below64MiB; originals will be stored without repacking and network-read back for exact sizes/SHA/CRC. No credentials/private chat IDs stored.
+
+## Actual diagnostic09: regression FAIL / 3D NOT_RUN
+
+Original physical-projection artifact11316008695, run37237631167:4254907bytes/SHA7afc4b88db78a9a32d83f99534ee13e463e18fd48411003e7b31b6cb29d56ffd,9members/CRC PASS. First6checks passed; seventh failed solely because accepted2D caption changed from outside the current slice to outside slice. Page/console/cleanup errors0. New3D workflow step skipped; no actual3D/GPU acceptance. Full run may be cancelled by normal newer-candidate concurrency; this original report remains FAIL.
+
+Authorbea8cdc restores one2D caption line, preserving3D statuses; independent source review0, new rootcandidate9d9f709 awaits exactfreshCI. Original diagnostic ZIP/report bytes remain unchanged. Independent diagnostic review and network readback are pending.
