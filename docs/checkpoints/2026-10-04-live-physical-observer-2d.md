@@ -12,8 +12,9 @@ https://github.com/emevart/liminis/issues/11#issuecomment-5981221010 .
 Frozen SPEC/NORTH_STAR, core biology, version/config, LAB24runs/source и прежние
 publicJSON/SHA не меняются. Новые infra/secrets/расходы не разрешены.
 
-Base физического runtime: LIVE2 a72f3f05a1861b4be026f1a24068af70e8a09df1,
-acceptedmainLAB2 de2b52cd08dc3772800725a5eca64619f6bb33c6. LIVE2 ещё pending CI.
+Base физического runtime: LIVE2 PR17 exact33272bc452aca6a7e8716483da5d66941213cebf,
+run37219223184 все11checksSUCCESS, independent code/numerics/artifact0blockers;
+guarded mergedmain703085e76760924436396030dfd6f0a404daaadd.
 Scopedviewer source d975bf224140f48728a3946e60e71517546d4390 плюс
 955bb885d561e5d2535f379a786e542b02fb4434. Rootintegration normalcherry-picks,
 никакого force/reset/clean чужой работы. Отдельный браузерный QA автор владеет
@@ -33,13 +34,20 @@ Chamber1 остаётся schematic. Нет Brownian/biologyinterpolation, до�
 Independent sourcegeometryreview d975:0sourceblockers; factual absentIDfinding
 исправлен955. Astra одобрил fullADR109draft+точные исправленияпрозы; rootappend
 после108. Не менять старыеADR. NativeNode15PASS на955/rootintegration,
-gitdiffcheckPASS. Actualbrowser/codefinaldelta/fullCI ещё pending.
+gitdiffcheckPASS; rootintegration Node59PASS. Actual final source/QA/CI review:
+0 blockers; независимая проверка keyboard дополнения и final cleanup gates0.
+Новый protected QA проверяет real SI coordinates/observed canvas paint/pixels,
+pointer и реальные focus/arrow events с независимо отсортированными exact IDs;
+unknown/outside/empty slice, delayed original history response/atomic snapshot,
+реальные paused Steps до division и coincident daughters, семь screenshot.
+Existing official pinned Chromium sandbox/CDP argv guard сохраняется; третий
+вызов последовательный в существующем job, отдельный evidence artifact.
+Actual browser/full CI на final HEAD пока pending; Node не browser PASS.
 
 ## Следующий шаг
 
-Дописать/независимо проверить actualprotectedbrowserQA, интегрировать принятый
-freshmainLIVE2, актуализировать existingcaptionassertions/report meaning,
-onefinalhead CI/PNG/trace acceptance и guardedmerge. Нельзя считать VMNodefixture
+Fresh main LIVE2 интегрирован без force/reset. Следующий шаг — onefinalhead
+CI/PNG/trace acceptance и guardedmerge. Нельзя считать VMNodefixture
 доказательством фактического renderedcanvas или повторять staleheadPASS.
 После этого следующийприоритет по прямомууказаниюпользователя — каждыйтик
 во всех трёх publicrecordings; сначала storageestimate, immutableoldarchive.
