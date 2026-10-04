@@ -114,6 +114,14 @@
         .section { min-width:0; }
         .readout { position:sticky; bottom:0; z-index:8; flex-wrap:wrap; }
         .controls { width:100%; margin:0; flex-wrap:wrap; }
+        /* Отдельная строка offline не занимает места, пока уведомление скрыто. */
+        .shell:has(.stage[data-physical="true"]) { grid-template-columns:minmax(0,1fr); grid-template-rows:repeat(5,auto); align-content:start; }
+        .shell:has(.stage[data-physical="true"]) > .masthead { grid-row:1; }
+        .shell:has(.stage[data-physical="true"]) > .offline { grid-row:2; }
+        .shell:has(.stage[data-physical="true"]) > .workspace { display:contents; }
+        .shell:has(.stage[data-physical="true"]) .stage { grid-row:3; }
+        .shell:has(.stage[data-physical="true"]) > .readout { grid-row:4; position:static; }
+        .shell:has(.stage[data-physical="true"]) .side { grid-row:5; }
       }
       @media (max-width:520px) {
         .masthead { padding:8px 10px; }
