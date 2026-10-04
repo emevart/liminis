@@ -42,6 +42,11 @@ export async function attachDenseRecordings(entries, location = new URL("../site
     manifests.set(descriptor.path, admitted.manifest);
   }
   const full = manifests.get(index.manifests.at(-1).path);
+  for (const manifest of manifests.values()) {
+    same(manifest.chunks, full.chunks.slice(0, manifest.chunks.length), "horizon chunks are not a shared full-trajectory prefix");
+    for (const key of ["identity", "provenance", "model", "canonical_config", "limitations", "bounds", "packer"]) same(manifest[key], full[key], `horizon ${key} differs from full trajectory`);
+    for (const [key, definition] of Object.entries(manifest.genomes)) same(definition, full.genomes[key], "prefix genome definition differs from full trajectory");
+  }
   same(publication.identity, index.identity, "publication identity mismatch");
   same(publication.provenance, index.provenance, "publication provenance mismatch");
   const validation = publication.source_validation;
