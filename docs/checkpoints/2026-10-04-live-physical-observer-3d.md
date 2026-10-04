@@ -104,3 +104,21 @@ Published24runs/4044samples не содержат индивидуальных �
 genomes; их не реконструировать.20horizon-censored/4extinction454, missing
 landmarks не нули/carry-forward. Новый этап пока не открыт для coding;
 raw/source21cbe907 и все прежние scientific bytes сохраняются.
+
+## Narrow snapshot identity follow-up, 21:45 UTC
+
+Independent code review выявил retained overlap candidates при смене seed
+на том же tick0 с disabled persistence. Текущий native host запрещает reset
+без storage, но viewer contract обязан инвалидировать новую snapshot
+identity и при совпадающем tick (например, после reconnect). Protected CI
+ещё не стартовал; e9 не объявлялся browser/full source ACCEPTED.
+
+Author fix clean/published `86175ef7a2ff1ac93bbcf7afbf602bfac16bd8ca`,
+tree `9d90638b16a092fdd23a7f990975c0212406b43e`, только HTML/focused Node
+tests. Seed/config/world/chamber проверяются дополнительно к run/session;
+reset intent отменяет gesture/candidates до await control. Regression
+покрывает same-tick identity changes, enabled→disabled storage, unchanged
+paused polls и delayed same-seed reset.30/30Node/syntax/diffPASS; no Cargo/
+browser/model run. Projector/vendor/resources/QA source byte-identical,
+1440math proof не пересчитывается. Final independent fix/combined source
+verdict pending; fresh exact-head browser/fullCI и artifacts обязательны.
