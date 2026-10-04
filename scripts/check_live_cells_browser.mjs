@@ -143,7 +143,7 @@ async function run() {
   report.chamberFormat = initial.chamber_format;
   report.scenarioConfig = scenarioConfig || 'default';
   report.model = initial.model;
-  report.canvasMeaning = 'inventory schematic; glyph placement is not physical coordinates';
+  report.canvasMeaning = scenarioConfig ? 'orthographic physical point centers from saved coordinates; marker size is visual, not body radius' : 'inventory schematic; glyph placement is not physical coordinates';
   if (scenarioConfig) check('format-2 API reports finite in-box persisted coordinates; seed/dt/model identity unchanged');
   else check('default format-1 API has no fabricated physical coordinates');
   check('real Rust cells response rendered in Chromium');
@@ -261,17 +261,22 @@ async function run() {
     await page.setViewportSize({ width, height: 1000 });
     await delay(150);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `horizontal overflow at ${width}px`);
-    const disclaimer = page.locator('.stage-caption p').first();
-    assert.equal(await disclaimer.isVisible(), true, `inventory disclaimer must remain visible at ${width}px`);
-    assert.match(await disclaimer.textContent(), /Icon placement does not represent physical coordinates/);
+    const disclaimer = page.locator('#schematic-caption');
+    assert.equal(await disclaimer.isVisible(), !scenarioConfig, `schematic caption visibility at ${width}px`);
+    if (!scenarioConfig) assert.match(await disclaimer.textContent(), /Icon placement does not represent physical coordinates/);
     const physicalNote = page.locator('#physical-state-note');
     assert.equal(await physicalNote.isVisible(), Boolean(scenarioConfig), `physical-position note visibility at ${width}px`);
-    if (scenarioConfig) assert.match(await physicalNote.textContent(), /Physical positions are saved; chemical resources remain shared and well mixed/);
+    if (scenarioConfig) {
+      assert.match(await physicalNote.textContent(), /Physical centers from saved coordinates/);
+      assert.match(await physicalNote.textContent(), /Marker size is visual, not cell body radius/);
+      assert.match(await physicalNote.textContent(), /Chemical resources remain shared and well mixed/);
+      assert.equal(await page.locator('#projection-controls').isVisible(), true);
+    }
     const filename = `viewer-${width}.png`;
     await page.screenshot({ path: resolve(output, filename), fullPage: true });
     report.screenshots.push(filename);
   }
-  check('desktop/mobile captions distinguish schematic inventory from persisted physical state');
+  check('desktop/mobile captions distinguish legacy schematic inventory from physical point-center projection');
   check('real desktop/mobile screenshots and no horizontal overflow at 1440/590/420/320');
   assert.deepEqual(report.pageErrors, []);
   assert.deepEqual(report.consoleErrors, []);

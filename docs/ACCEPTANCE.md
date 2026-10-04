@@ -1644,3 +1644,32 @@ captions; inventory layout остаётся schematic. Final CI/head/review/evid
 фиксируются в `docs/checkpoints/2026-10-04-live-physical-transport.md`.
 Resume и exact future проверяют отдельные actual disk tests; браузерный runner
 не перезапускает host и не заявляет browser resume.
+
+## LIVE-3a: physical2D projection без нового model solver (ADR-109)
+
+Это dependent observer этап после LIVE2; final-head browser/CI gates обязательны.
+`node --test scripts/cell-viewer.test.mjs` проверяет nonsquare dimensions/equal
+scale во всехplanes, reflected right/up projection, µm/closedclippedslice/
+zero-thicknessplane, exactdecimalID/BigIntsorting/coincidenthits, absentselection
+без death inference и synchronous snapshot commit до независимогоhistory.
+Эти Node checks не доказывают actualrendered browsergeometry.
+
+`node scripts/check_physical_projection_browser.mjs` требует защищённый pinned
+Chromium с actualreleasehost и clean expectedhead. Repositoryphysicalscenario
+не изменяется: temporarynonsquarefixture сохраняет volumeproduct и имеет свой
+byte/hash provenance. Gate независимо вычисляет ожидаемые markercenters из
+actualAPI и наблюдённой canvasbox, сверяет actualpaint/pixels и pointer/keyboard
+inspector, allplanes/equalunit/aspect/µm, clippedinclusive/zero-widthslice,
+unknown/vanishedID и retainedoutside selection. ActualpausedSteps до настоящего
+division ограничены; coincidence daughters и выбор каждого проверяются по
+actualstate/event, без fakeAPI или разделения центров. Delayed actualhistory
+проверяет согласованность новогоtick/readouts/canvas/inspector до его доставки;
+никакое новоеmodelstate не фабрикуется. Pausedprojectioncontrols не создают
+modelcontrol/ticks и не повышают polling; 30/60display остаётся отдельной целью.
+
+Defaultchamber1 regression сохраняет inventoryschematic и старые controls;
+opt-inchamber2 captions описывают centers/visualmarker/sharedchemistry.
+Desktop/mobile/shortviewport реальныеPNG, trace и report публикуются отдельно,
+после cleanup verdict; code/geometry review независимо от authors. Срез только
+фильтрует центры в изображении; он не меняет volumes, biology, numericbudget
+или savedpositions. Everytick publicrecording является другим отдельным этапом.
