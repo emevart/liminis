@@ -197,3 +197,113 @@ turn после финального ответа. GitHub PR/checkpoint/issue я
   PR13, exact-head CI/browser rerun, inspect artifact + independent review.
   Зелёные старые checks не переносятся на новый HEAD. Затем handoff в issue11;
   merge только интегратор. Продолжение согласованной очереди не отменено.
+
+
+## Подтверждённая Приёмка HTTP Исправления
+
+- Сохранённый follow-up HEAD `f72fe98e50b4e6dca216421998213ff978d6b35a`,
+  tree `f75d48bce5870565483e96f049ce64c364456dad`, parent f9fb7a2 выше.
+  Local/remote совпали; clean checkout, untracked/ignored отсутствуют. Git ref
+  принят только после равенства index/worktree/remote tree, без reset/clean
+  или замены файлов. Этот последующий commit меняет только checkpoint;
+  финальный HEAD и его отдельные checks публикуются в PR13/issue11.
+- [Exact CI run37207963950](https://github.com/emevart/liminis/actions/runs/37207963950):
+  recorded browser job111453040333 SUCCESS, actual22/22 browser checks,
+  17/17 HTTP checks PASS. До этой записи остальные10checks SUCCESS, кроме
+  build/lint/test, ещё выполняющего Test; итог всего run не объявлен успешным.
+- [Artifact11305057269](https://github.com/emevart/liminis/actions/runs/37207963950/artifacts/11305057269)
+  archive12,770,516bytes SHA256
+  `02d17a246c7c2568770d1c96e0fafd75026945c0b0a67a534db794eedee6759b`.
+  Trace13,117,307bytes SHA256
+  `80005e44c2a05d55a32f31e8818572cfb9583aded4a6c3dcbbbb51468016acac`,
+  213 ZIP entries, CRC verified. Real actions/snapshots/network/source14pages,
+  no API/trace/cleanup errors. Source HEAD/tree and all source/served/runner/
+  PNG/download digests verified. Native download сервер видит как третий GET,
+  даже когда Page request events остаются2; assertion не ослаблен.
+  Все пять post-ready controls/hold/FPS/replay/visibility windows не создают
+  server HTTP ко всем путям и Page requests. Unknown ID запрашивает лишь catalog.
+- Actual Chromium149 protected launch +CDP guard PASS. Реально просмотрены
+  восемь новых PNG (три desktop1440, desktop1366×600, mobile390/320, held30/60).
+  Canvas nonblank:3823paintedPixels для каждого dataset; held pixels идентичны.
+  Отдельные независимые technical artifact и UX/product reviews:0blockers,
+  falsePASS не найден. Новый runtime reviewer launch не приписывается этим reviews.
+- Limits: Chromium/Linux; mobile default10k; native background scheduling,
+  native typing/range/touch, achievedFPS benchmark и полныйa11y audit NOTASSERTED.
+  Syntheticvisibility +actual adapter Node wiring проверены, 30/60 duration,
+  endpoints и heldpixels проверены. Sandbox argv не аттестует kernel isolation.
+- Новые ZIP/evidence/8PNG/trace сохранены вне checkout в qa-recorded-f72fe98 и
+  attachments, предыдущие F9 failure copies не удалены. Git-ignored artifacts
+  внутри checkout по-прежнему отсутствуют. Actions retention до2026-10-11;
+  сверх7days exactbytes долговременно не сохранены, scenarios воспроизводимы.
+- Final gate: зелёный полный CI именно финального PR HEAD после этой docs-only
+  записи, actual exact-head browser artifact и independent source/hash review;
+  статус обновляется в issue11 без переноса старого green на новую ревизию.
+  RECORDED2 по-прежнему требует назначения exporter/schema/delivery ownership;
+  merge/release интегрирует только действующий CLOUD LIVE после приёмки.
+
+
+## Migration Pause — ACK HANDOFF AUTHOR STOPPED
+
+Прямое уточнение пользователя 2026-10-04 supersedes continuation выше:
+Native Codex Cloud создан пользователем для передачи, пока read-only;
+старый LIVE coordinator прекращает dispatch/merge/deploy. После сохранения
+этой bounded HTTP instrumentation границы RECORDED author прекращает новые
+coding/stage assignments, включая R2. Project не отменён. Merge/deploy здесь
+не выполняются; никакой новой сессии/интеграции/ownership самостоятельно нет.
+
+- HTTP runtime исправление уже опубликовано и реально проверено на f72fe98
+  выше. Этот handoff commit меняет только уникальный checkpoint; source/runtime
+  tree files остаются побайтно теми же. Его full HEAD/tree и автоматический CI
+  run/status публикуются в PR13/issue11; новый head не объявляется green по
+  старому run. Последний snapshot f72 CI:10checks SUCCESS, build/lint/test
+  job111453040393 IN_PROGRESS/Test, exporter test step PENDING.
+- Все шесть существующих subagents COMPLETED, running/queued0: Astra clock,
+  clock module, browser bootstrap, independent review, UI event/UX review,
+  RECORDED2 readonly inventory. Их полезный код включён в PR13, решения/reviews/
+  measurements отражены здесь и в issue11; unpublished agent code отсутствует.
+- Собственных persistent Node/Cargo/browser/HTTP8765 процессов нет. Только
+  GitHub Actions текущего/следующего commit могут оставаться running/queued;
+  точный статус передаётся без ложногоPASS, нового local long run нет.
+- До сохранения dirty только этот checkpoint. После commit/publish ожидается
+  clean exact local/remote checkout; status/untracked/ignored проверяется и
+  публикуется. Generated evidence лежит вне repo и не удаляется/не добавляется
+  в PR. Reset/clean/newclone/merge/deploy не выполняются.
+- Остаток для единственного native coordinator: импортировать PR13 head,
+  дождаться его exact-head CI/сверить runtime hashes с принятой QA f72,
+  закрыть acceptance/release gate и сохранить permanent binary archive через
+  существующий GitHub до Actions expiry. R2 только readonly inventory, ownership
+  exporter/schema/delivery не назначен; никаких R2 coding assignments.
+
+### Archive Inventory Для Existing GitHub
+
+Готовые ZIP уже доступны через существующий Actions, не требуют повторной QA:
+
+| Evidence | Run / artifact | Bytes | SHA256 |
+|---|---|---:|---|
+| HTTP corrected PASS f72fe98 | 37207963950 / 11305057269 | 12770516 | `02d17a246c7c2568770d1c96e0fafd75026945c0b0a67a534db794eedee6759b` |
+| Original FAIL f9fb7a2 | 37206398277 / 11305036205 | 12845994 | `afd63134677736adc4cd9e15aa4b9ac43715117e367538bc25b64914c0f5aa07` |
+
+Оба ZIP сохранить целиком: evidence.json, trace.zip и восемь PNG ниже.
+PNGs побайтно одинаковы между двумя runs; reports/traces отличаются и нужны
+оба для проверяемой истории исправления. SHA256 corrected members:
+
+| Member | Bytes | SHA256 |
+| cell-chamber-100k-desktop.png | 112446 | `4ff6ce5769022874a7ea63aa5e46a4b07608af8215e55037ffa5cf4ade64b2c2` |
+| cell-chamber-10k-desktop.png | 104093 | `c60788f5cc1a7a4e8b2316b2411c5f5e0d37702380ddac3cb39f437c01bee829` |
+| cell-chamber-1m-desktop.png | 113466 | `fe272dcd2b43b23e1a3a881c3260400f4a1ccb9894aa7c09b3c1a69e1a3c1525` |
+| desktop-short.png | 85115 | `a9a8cc28be87e224f6f98dc50bcb9b7aca955f2dcdf75178d8a4b2d424245ed5` |
+| evidence.json | 19796 | `6187a3a92d6c9a5931ce9e10560ff2e22c30a7db9bf1377f9ca0cc4a37552735` |
+| held-30fps.png | 25742 | `6441785dc924ad2d74ce1ca7dfc60d3fe4f81af1473ee268bb3d077d2b7f0484` |
+| held-60fps.png | 25742 | `6441785dc924ad2d74ce1ca7dfc60d3fe4f81af1473ee268bb3d077d2b7f0484` |
+| mobile-narrow.png | 130536 | `4c449822845169b0f63915f3eddb4e91ce2b9cf7d12a8b8b44cbd0321e34a76a` |
+| mobile.png | 134087 | `788dc75f08244430e8d7b9c3fe5ac73e9f60f0c6449363f16b33cd72483ec0de` |
+| trace.zip | 13117307 | `80005e44c2a05d55a32f31e8818572cfb9583aded4a6c3dcbbbb51468016acac` |
+
+Failure evidence.json SHA256
+`6d8af5bf36b29febf18aa3c1e4e05ad3338017313f34a58ec10fac8f38a47c5c`;
+failure trace SHA указан выше. Локальные QA dirs/ZIPs сохранены нетронутыми.
+Actions retention7days/expiry2026-10-11 — это НЕ permanent archive. В callable
+existing GitHub доступны artifact read/download, upload/release asset capability
+не предоставлена; permanent binary archive этим author не создан. Durable Git
+checkpoint/issue сохраняют точные ссылки/состав/digests для archive coordinator.
+Пакеты/browser caches воспроизводимы, raw timestamps/trace bytes — нет.
