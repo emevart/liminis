@@ -63,3 +63,30 @@ actual argv guard, trace/PNG/report. Node checks не являются browser P
 Следующий шаг: независимая code/artifact приёмка exact #13 c79 + all-checks/main guard,
 ready/merge existing PR, проверить existing site. Затем fresh-main #14 и retarget/rebase #15
 без rerun/переписывания raw24; далее завершить LIVE-2 physics/legacy eco30/numerics/browser/ADR gates.
+
+## Вехи после принятия ownership
+
+### REC-1 и архив LAB-1
+
+PR #13 ACCEPTED/MERGED: head c79a5a4678e1950429d749fb4c950ab304377776,
+CI run37208566873 и 11 checks PASS; независимые code/evidence/8 PNG review — 0 blockers.
+Merge main 3b66c2cb680870568e54573fc85df477ef978e28, tree6bd6989b75285eae5de4f22900a0480524301339,
+parents c5be8fc + c79a5a4. Native readback проверил original REC ZIP размер/SHA и manifest SHA.
+Публичный liminis.dev ещё NOT VERIFIED: native shell policy CONNECT403; проверка через existing Actions pending.
+
+Исторический LAB-1 архив принят отдельно от scientific source:
+ref codex/cloud-handoff-lab-evidence; commit522b8cee4629316d9f1d68a80dae114bcde040c4;
+tree69970ab4dd8de704764c4e0b57d6c519f7b7a7ea; source parent21cbe907 unchanged.
+docs/experiments/handoff/lab-1/lab-1-qa-evidence.zip:169880 bytes,
+SHA256 e37d3364efcdc1c63fe6c026902c6554a80565652aa34c4e118824480d43db75.
+Manifest прочитан из опубликованного ref. Четыре JSON оригинала побайтно сохранены;
+публичный negative-control log содержит одну redacted compile-path строку.
+Исходный 1244-byte log не опубликован и не удалён; byte-exact сохранность всех пяти originals НЕ заявляется.
+ACK https://github.com/emevart/liminis/issues/11#issuecomment-5981282024; old LAB снова STOPPED.
+
+LIVE-2 baseline d536234: native focused micro43PASS/0FAIL/1ignored, host31PASS/0FAIL.
+Полная приёмка pending. Автор добавил только независимый SI oracle и second-save/resume eco30 fixture;
+они ещё требуют root serial tests и independent final numerics review.
+
+Текущий следующий шаг: интеграция fresh main в существующую LAB-1 ветку без force overwrite,
+новый exact-head CI/review; затем LAB-2 retarget и 23 Python tests без пересчёта 24 runs.
