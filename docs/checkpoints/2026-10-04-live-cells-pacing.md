@@ -159,3 +159,23 @@ cleanup, trace/screenshots и итоговый failedreport при cleanupfailur
 Прежние viewer/Astra/review субагенты возобновлены через existing tasks.
 RECORDED PR13 и LAB PR14 ожидают LIVE1→RECORDED1→LAB1; исполнители неmerge.
 Protected browser evidence нового exacthead и зелёныйCI обязательны.
+
+
+## Protected Chromium: Подтверждённый FAIL И Ограниченный Trial
+
+Candidate3c6a72ca42463217b98fff986032ede988960d96 protectedlaunch завершился
+FAIL доUI: Ubuntu24.04.5/officialheadlessshell сообщает No usable sandbox,
+указывает возможный AppArmor/usernamespace restriction. Report с exacthead/tree
+и hostlog сохранён: Actions37203922065/artifact11303797425. Скриншоты/trace
+невозможны до launch; QA неPASS, merge закрыт. Защиты/права не отключались.
+
+Astra фактически вызван: одобрил один bounded trial существующего browserjob
+на стандартном официальном ubuntu-22.04, поддерживаемом Playwright; сохраняются
+chromiumSandbox:true/CDPflags/perms/timeout/evidence. Kernel/AppArmor/sysctl не
+меняются; новыеinfra/secrets не создаются. Это временная compatibilityimage,
+не обещание успеха или большей безопасности. Runner22.04 уже deprecated,
+поэтому требует последующего supportedimage review. Primaryreferences:
+https://playwright.dev/docs/intro#system-requirements
+https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+https://github.com/actions/runner-images/issues/14254
+Только actualPASS нового exacthead может закрыть gate; предыдущийFAIL сохраняется.

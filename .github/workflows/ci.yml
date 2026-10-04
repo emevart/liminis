@@ -23,7 +23,9 @@ jobs:
 
   live-browser:
     name: live cells browser acceptance
-    runs-on: ubuntu-latest
+    # Compatibility image for protected Chromium; never disable its sandbox.
+    # Ubuntu 24's runner refused user namespaces (see LIVE checkpoint).
+    runs-on: ubuntu-22.04
     timeout-minutes: 15
     permissions:
       contents: read
