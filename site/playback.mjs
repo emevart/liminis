@@ -153,11 +153,17 @@ export class DensePlaybackSession {
   constructor(clock, seekFrame, { now = () => performance.now(), commit = () => {}, status = () => {} } = {}) {
     this.clock = clock; this.seekFrame = seekFrame; this.now = now; this.commit = commit; this.status = status;
     this.current = null; this.snapshot = clock.advance(now()); this.buffering = false; this.failure = null;
-    this._serial = 0; this._controller = null; this._resume = false;
+    this._serial = 0; this._controller = null; this._resume = false; this._closed = false;
   }
   get playing() { return this.clock.playing || (this.buffering && this._resume); }
   _emit(snapshot) { this.snapshot = snapshot; if (this.current) this.commit(this.current, snapshot); }
   _cancel() { this._serial++; this._controller?.abort(); this._controller = null; this.buffering = false; this._resume = false; }
+  fail(error) {
+    if (this.failure || this._closed) return;
+    this.failure = error; this._cancel();
+    this.snapshot = this.clock.seek(this.snapshot.playhead, this.now());
+    this.status("error", error);
+  }
   async _request(target, resume) {
     this._cancel(); const serial = this._serial, controller = new AbortController(); this._controller = controller;
     this.buffering = true; this._resume = resume && !target.ended;
@@ -171,25 +177,25 @@ export class DensePlaybackSession {
       this.current = decoded.frame; this._emit(this.clock.advance(now)); this.status(this.snapshot.ended ? "ended" : this.playing ? "playing" : "paused"); return true;
     } catch (error) {
       if (serial !== this._serial || controller.signal.aborted) return false;
-      this.buffering = false; this._resume = false; this._controller = null; this.failure = error;
-      this.clock.seek(this.snapshot.playhead, this.now()); this.status("error", error); return false;
+      this.fail(error); return false;
     }
   }
-  seek(time) { if (this.failure) return Promise.resolve(false); return this._request(this.clock.seek(time, this.now()), false); }
+  seek(time) { if (this.failure || this._closed) return Promise.resolve(false); return this._request(this.clock.seek(time, this.now()), false); }
   step(offset) { if (!Number.isSafeInteger(offset)) throw new RangeError("Sample step must be an integer."); return this.seek(this.clock.timeAt(Math.max(0, Math.min(this.clock.count - 1, this.snapshot.index + offset)))); }
   start() {
-    if (this.failure || this.buffering) return;
+    if (this.failure || this._closed || this.buffering) return;
     const target = this.clock.start(this.now());
     if (!this.current || target.index !== this.snapshot.index) { void this._request(target, target.playing); return; }
     this._emit(target); this.status(target.ended ? "ended" : "playing");
   }
   advance(now) {
-    if (this.failure || this.buffering || !this.clock.playing) return;
+    if (this.failure || this._closed || this.buffering || !this.clock.playing) return;
     const target = this.clock.advance(now);
     if (target.index !== this.snapshot.index) { void this._request(target, target.playing); return; }
     this._emit(target); if (target.ended) this.status("ended");
   }
   pause(message = "paused") {
+    if (this.failure || this._closed) return;
     const wasBuffering = this.buffering; this._cancel();
     if (wasBuffering) this.clock.seek(this.snapshot.playhead, this.now());
     else {
@@ -200,9 +206,10 @@ export class DensePlaybackSession {
     this._emit(this.clock.advance(this.now())); this.status(message);
   }
   setRate(rate) {
+    if (this.failure || this._closed) return;
     if (!validPlaybackRate(rate)) throw new RangeError("Playback rate must be positive and finite.");
     const playing = this.playing; this.pause(); this.clock.setRate(rate, this.now());
     if (playing) this.start(); else this._emit(this.clock.advance(this.now()));
   }
-  close() { this._cancel(); this.clock.seek(this.snapshot.playhead, this.now()); }
+  close() { this._closed = true; this._cancel(); this.snapshot = this.clock.seek(this.snapshot.playhead, this.now()); }
 }

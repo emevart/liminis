@@ -101,3 +101,14 @@ test("смена скорости во время загрузки отменя�
   task.at(2100); session.advance(2100); assert.equal(session.snapshot.playhead, 2);
   session.close(); assert.equal(session.playing, false);
 });
+
+test("fatal failure отменяет pending seek, остаётся sticky и не принимает поздний кадр", async () => {
+  const task = await initialized(), { session } = task; const shown = session.current;
+  session.start(); task.at(1100); session.advance(1100); assert.equal(session.buffering, true);
+  const error = new Error("Background chunk integrity failure"); session.fail(error);
+  assert.equal(task.requests[1].signal.aborted, true); assert.equal(session.current, shown); assert.equal(session.snapshot.playhead, 0); assert.equal(session.playing, false);
+  task.resolve(1); await settle(); assert.equal(session.current, shown);
+  session.pause(); session.start(); session.setRate(10); session.advance(600_000); assert.equal(await session.seek(60), false);
+  session.fail(new Error("later error")); assert.equal(session.failure, error); assert.equal(task.statuses.at(-1)[0], "error"); assert.equal(task.requests.length, 2);
+  assert.equal(task.statuses.filter(([status]) => status === "error").length, 1);
+});

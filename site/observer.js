@@ -1,5 +1,5 @@
-import { loadRecording } from "./recording-loader.mjs?v=dense-1";
-import { PlaybackClock, DensePlaybackSession, defaultPlaybackRate, validPlaybackRate } from "./playback.mjs?v=dense-1";
+import { loadRecording } from "./recording-loader.mjs?v=dense-2";
+import { PlaybackClock, DensePlaybackSession, defaultPlaybackRate, validPlaybackRate } from "./playback.mjs?v=dense-2";
 
 const $ = (id) => document.getElementById(id);
 const finite = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
@@ -9,7 +9,15 @@ const icons = {
   pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg>',
   replay: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
 };
-const view = { data: null, metadata: null, dense: null, session: null, ready: false, index: 0, clock: null, drawFps: 30, lastDraw: 0, selected: null, hits: [], layout: new Map(), raf: 0 };
+const view = { data: null, metadata: null, dense: null, session: null, unsubscribeFailure: null, ready: false, index: 0, clock: null, drawFps: 30, lastDraw: 0, selected: null, hits: [], layout: new Map(), raf: 0 };
+const playbackControls = ["play", "previous", "next", "scrub", "speed", "speed-preset", "draw-fps"];
+
+function closeDense() {
+  view.ready = false; cancelAnimationFrame(view.raf); view.raf = 0;
+  playbackControls.forEach((id) => $(id).disabled = true);
+  view.unsubscribeFailure?.(); view.unsubscribeFailure = null;
+  view.session?.close(); view.dense?.close();
+}
 
 function hash(text) { let value = 2166136261; for (const char of String(text)) { value ^= char.charCodeAt(0); value = Math.imul(value, 16777619); } return value >>> 0; }
 function color(key) { return palette[hash(key) % palette.length]; }
@@ -165,16 +173,20 @@ function bind() {
   $("chamber").addEventListener("pointerdown", (event) => { const rect = event.currentTarget.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top, hit = [...view.hits].reverse().find((item) => Math.hypot(x - item.x, y - item.y) <= item.radius); view.selected = hit?.id ?? null; drawChamber(); renderInspector(); });
   $("chamber").addEventListener("keydown", (event) => { if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return; const cells = frame().cells; if (!cells.length) return; event.preventDefault(); const current = Math.max(0, cells.findIndex((cell) => cell.id === view.selected)), offset = event.key === "ArrowRight" ? 1 : -1; view.selected = cells[(current + offset + cells.length) % cells.length].id; drawChamber(); renderInspector(); });
   addEventListener("resize", () => { drawChamber(); renderCharts(); });
-  if (view.session) addEventListener("pagehide", () => { cancelAnimationFrame(view.raf); view.raf = 0; view.session.close(); view.dense.close(); });
+  if (view.session) {
+    addEventListener("pagehide", closeDense);
+    // BFCache возвращает тот же DOM с уже закрытым reader: нужен свежий load.
+    addEventListener("pageshow", (event) => { if (event.persisted) { closeDense(); location.reload(); } });
+  }
 }
 
 function denseStatus(status, detail) {
   cancelAnimationFrame(view.raf); view.raf = 0;
   $("workspace").setAttribute("aria-busy", status === "buffering" ? "true" : "false");
   if (status === "error") {
-    view.ready = false; view.dense.close(); $("error").hidden = false;
+    view.ready = false; view.unsubscribeFailure?.(); view.unsubscribeFailure = null; view.dense.close(); $("error").hidden = false;
     $("error").textContent = `Dense recording stopped: ${detail instanceof Error ? detail.message : String(detail)}. The last validated state remains shown. Use recording=archive to choose the sparse archive.`;
-    ["play", "previous", "next", "scrub", "speed", "speed-preset", "draw-fps"].forEach((id) => $(id).disabled = true);
+    playbackControls.forEach((id) => $(id).disabled = true);
     $("playback-status").textContent = "Recording error · last validated state held";
   } else {
     $("playback-status").textContent = status === "buffering" ? `Buffering recorded tick ${detail} · shown tick ${frame()?.tick ?? "none"}` : status === "ended" ? "Recording ended · Replay available" : status === "playing" ? "Playing" : status === "paused" ? "Paused at validated recorded tick" : status;
@@ -207,7 +219,8 @@ async function load() {
           renderClock(snapshot); updatePlayButton();
         },
       });
-      if (!await view.session.seek(0)) throw view.session.failure ?? new Error("The initial dense state could not be loaded.");
+      view.unsubscribeFailure = dense.subscribeFailure((error) => view.session.fail(error));
+      if (!await view.session.seek(0) || view.session.failure) throw view.session.failure ?? new Error("The initial dense state could not be loaded.");
     } else {
       const times = timeline(), gaps = times.slice(1).map((time, index) => time - times[index]);
       const shortest = Math.min(...gaps), longest = Math.max(...gaps);
@@ -218,6 +231,6 @@ async function load() {
     const download = document.querySelector(".download"); download.href = entry.recording; download.hidden = false;
     if (view.dense) download.textContent = `Download sparse archive (${data.frames.length} frames)`;
     view.ready = true; ["scrub", "speed", "speed-preset", "draw-fps"].forEach((id) => $(id).disabled = false); updatePlayButton(); $("loading").hidden = true; $("workspace").setAttribute("aria-busy", "false");
-  } catch (error) { view.session?.close(); view.dense?.close(); const download = document.querySelector(".download"); download.removeAttribute("href"); download.hidden = true; ["play", "previous", "next", "scrub", "speed", "speed-preset", "draw-fps"].forEach((id) => $(id).disabled = true); $("loading").hidden = true; $("error").hidden = false; $("error").textContent = error instanceof Error ? error.message : String(error); $("workspace").setAttribute("aria-busy", "false"); }
+  } catch (error) { closeDense(); const download = document.querySelector(".download"); download.removeAttribute("href"); download.hidden = true; $("loading").hidden = true; $("error").hidden = false; $("error").textContent = error instanceof Error ? error.message : String(error); $("workspace").setAttribute("aria-busy", "false"); }
 }
 load();

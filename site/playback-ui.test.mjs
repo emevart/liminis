@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { createHash, webcrypto } from "node:crypto";
+import { gunzipSync, gzipSync } from "node:zlib";
 import test from "node:test";
 import { Script, createContext } from "node:vm";
 import { DensePlaybackSession, PlaybackClock, defaultPlaybackRate, validPlaybackRate } from "./playback.mjs";
 import { validateRecording } from "./recording.mjs";
+import { createDenseRecordingLoader, decodeDenseChunk } from "./dense-recording.mjs";
 
 // Node event-wiring coverage only: this DOM/canvas/RAF harness is not a browser
 // and does not claim layout, native input validity, canvas pixels, or browser QA.
@@ -74,7 +77,7 @@ class Element extends EventTarget {
   getContext(type) { assert.equal(type, "2d"); return this.context; }
 }
 
-function harness({ data = fixture(), dense, loadError, deferred = false, hidden = false } = {}) {
+function harness({ data = fixture(), dense, sessionClass = DensePlaybackSession, loadError, deferred = false, hidden = false } = {}) {
   const nodes = new Map();
   for (const match of html.matchAll(/<([a-z]+)\b([^>]*\bid="([^"]+)"[^>]*)>/g)) {
     nodes.set(match[3], new Element(match[1], match[2]));
@@ -94,11 +97,11 @@ function harness({ data = fixture(), dense, loadError, deferred = false, hidden 
     assert.equal(selector, ".download"); return nodes.get("download");
   };
   const window = new EventTarget(), rafs = new Map();
-  let now = 0, nextRaf = 1, requested = 0, loadCalls = 0, fetchCalls = 0, release;
+  let now = 0, nextRaf = 1, requested = 0, loadCalls = 0, fetchCalls = 0, reloads = 0, release;
   const barrier = deferred ? new Promise((resolve) => { release = resolve; }) : Promise.resolve();
   const context = createContext({
-    document, location: { search: "?experiment=fixture" }, devicePixelRatio: 1,
-    performance: { now: () => now }, PlaybackClock, DensePlaybackSession, defaultPlaybackRate, validPlaybackRate,
+    document, location: { search: "?experiment=fixture", reload: () => { reloads++; } }, devicePixelRatio: 1,
+    performance: { now: () => now }, PlaybackClock, DensePlaybackSession: sessionClass, defaultPlaybackRate, validPlaybackRate,
     loadRecording: async (search) => {
       assert.equal(search, "?experiment=fixture"); loadCalls++;
       await barrier;
@@ -127,10 +130,12 @@ function harness({ data = fixture(), dense, loadError, deferred = false, hidden 
       for (const [, callback] of pending) callback(time);
     },
     visibility: (value) => { document.hidden = value; document.dispatch("visibilitychange"); },
-    pagehide: () => window.dispatch("pagehide"),
+    pagehide: (persisted = false) => window.dispatch("pagehide", { persisted }),
+    pageshow: (persisted = false) => window.dispatch("pageshow", { persisted }),
     get layoutCount() { return new Script("view.layout.size").runInContext(context); },
     get pending() { return rafs.size; }, get requested() { return requested; },
     get loadCalls() { return loadCalls; }, get fetchCalls() { return fetchCalls; },
+    get reloads() { return reloads; },
     get playhead() { return Number(element("scrub").value); },
     get stateTime() { return Number(element("time").textContent.replaceAll(",", "")); },
   };
@@ -283,10 +288,12 @@ function denseUIFixture({ delayed = false } = {}) {
   const requests = [], dense = {
     manifest, closed: false,
     seek: (tick, { signal }) => {
+      if (dense.closed) return Promise.reject(new Error("loader is closed"));
       if (!delayed || tick === 0) { requests.push({ tick, signal }); return Promise.resolve({ frame: sampleAt(tick), genomes: manifest.genomes }); }
       return new Promise((resolve, reject) => requests.push({ tick, signal, resolve: () => resolve({ frame: sampleAt(tick), genomes: manifest.genomes }), reject }));
     },
-    close() { this.closed = true; },
+    subscribeFailure(callback) { this.subscriber = callback; return () => { if (this.subscriber === callback) this.subscriber = null; }; },
+    close() { this.closed = true; this.subscriber = null; },
   };
   return { data, dense, requests };
 }
@@ -373,4 +380,100 @@ test("dense newborn highlight относится только к birth_tick === 
     assert.equal(commands.slice(start).some(([operation, key, value]) => operation === "set" && key === "strokeStyle" && value === "#efbc77"), expected, `shown tick ${tick}`);
     assert.match(ui.element("frame-change").textContent, /Cumulative counters/);
   }
+});
+
+// Синтетический lifecycle event: не проверка native BFCache в браузере.
+test("persisted pagehide закрывает reader; persisted pageshow reload не даёт Play использовать старый reader", async () => {
+  const source = denseUIFixture(), ui = harness(source); await ui.loaded;
+  ui.click(); assert.equal(ui.pending, 1); ui.pagehide(true);
+  assert.equal(source.dense.closed, true); assert.equal(source.dense.subscriber, null); assert.equal(ui.pending, 0);
+  await assert.rejects(source.dense.seek(1, { signal: new AbortController().signal }), /closed/);
+  for (const id of controls) assert.equal(ui.element(id).disabled, true, id);
+  ui.pageshow(true); assert.equal(ui.reloads, 1); assert.equal(ui.pending, 0);
+  for (const id of controls) assert.equal(ui.element(id).disabled, true, id);
+  const seeks = source.requests.length; ui.element("play").dispatch("click"); ui.frame(600_000);
+  assert.equal(source.requests.length, seeks); assert.equal(ui.pending, 0);
+  ui.pageshow(false); assert.equal(ui.reloads, 1);
+});
+
+// Два chunks из настоящих Rust frames 0..100. Первый содержит неизменённые
+// строки исходного fixture; keyframe50 берётся из совпадающего старого архива.
+// Повреждается только транспорт второго chunk, не биология или metadata.
+async function realCorruptPrefetch() {
+  const directory = new URL("../scripts/fixtures/dense-recording/smoke-100/", import.meta.url);
+  const manifest = JSON.parse(await readFile(new URL("horizon-100.json", directory), "utf8"));
+  const index = JSON.parse(await readFile(new URL("index.json", directory), "utf8"));
+  const lines = gunzipSync(await readFile(new URL("chunk-0000000-0000100.jsonl.gz", directory))).toString().trimEnd().split("\n");
+  const data = JSON.parse(await readFile(new URL("./data/cell-chamber-seed-42.json", import.meta.url), "utf8"));
+  data.frames = data.frames.slice(0, 3); data.experiment = { ...data.experiment, steps: 100, checked_ticks: 100 }; validateRecording(data);
+  const { cells, ...rest } = data.frames[1], genomes = {};
+  for (const line of lines.slice(0, 51)) Object.assign(genomes, JSON.parse(line).genomes);
+  const fixed = ["id", "parent_id", "generation", "birth_tick", "genome_key", "division_mass_mol"], varying = ["age_s", "mass_mol", "energy_j", "mass_units", "energy_units", "starvation_s"];
+  const keyframe = { type: "keyframe", schema_version: 1, frame: rest, definitions: cells.map((cell) => fixed.map((key) => cell[key])), values: cells.map((cell) => varying.map((key) => cell[key])), genomes };
+  const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
+  const chunks = [[0, 49, lines.slice(0, 50)], [50, 100, [JSON.stringify(keyframe), ...lines.slice(51)]]].map(([first, last, records]) => {
+    const raw = Buffer.from(records.join("\n") + "\n"), bytes = gzipSync(raw, { level: 9 }); bytes[8] = 2; bytes[9] = 255;
+    return { bytes, descriptor: { path: `chunk-${String(first).padStart(7, "0")}-${String(last).padStart(7, "0")}.jsonl.gz`, first_tick: first, last_tick: last, frames: last - first + 1, gzip_bytes: bytes.length, decoded_bytes: raw.length, gzip_sha256: digest(bytes), decoded_sha256: digest(raw) } };
+  });
+  manifest.chunks = chunks.map((chunk) => chunk.descriptor);
+  const validSecond = await decodeDenseChunk(chunks[1].bytes, chunks[1].descriptor, manifest.genomes, { cryptoProvider: webcrypto });
+  assert.deepEqual(validSecond.frameAt(50).frame, data.frames[1], "second fixture chunk starts at the real retained Rust frame50");
+  assert.deepEqual(validSecond.frameAt(100).frame, data.frames[2], "second fixture chunk ends at the real retained Rust frame100");
+  const manifestBytes = Buffer.from(JSON.stringify(manifest)); index.manifests[0].bytes = manifestBytes.length; index.manifests[0].sha256 = digest(manifestBytes);
+  index.unique_chunks = 2; index.unique_gzip_bytes = chunks.reduce((sum, chunk) => sum + chunk.bytes.length, 0); index.decoded_chunk_bytes = chunks.reduce((sum, chunk) => sum + chunk.descriptor.decoded_bytes, 0);
+  const indexBytes = Buffer.from(JSON.stringify(index)), requests = []; let release, started = false;
+  const held = new Promise((resolve) => { release = resolve; });
+  const dense = await createDenseRecordingLoader({ indexUrl: "https://example.test/dense/index.json", indexSha256: digest(indexBytes), manifestPath: "horizon-100.json", baseUrl: "https://example.test/observe.html", cryptoProvider: webcrypto,
+    fetcher: async (url) => {
+      const path = new URL(url).pathname.split("/").at(-1); requests.push(path);
+      if (path === "index.json") return new Response(indexBytes);
+      if (path === "horizon-100.json") return new Response(manifestBytes);
+      if (path === chunks[0].descriptor.path) return new Response(chunks[0].bytes);
+      assert.equal(path, chunks[1].descriptor.path); started = true; await held;
+      return new Response(Buffer.from(chunks[1].bytes).fill(0));
+    },
+  });
+  return { data, dense, requests, release, started: () => started };
+}
+async function untilUI(predicate) {
+  for (let attempt = 0; attempt < 100; attempt++) { if (predicate()) return; await new Promise((resolve) => setTimeout(resolve, 5)); }
+  assert.fail("bounded async UI fixture did not settle");
+}
+
+test("real corrupt prefetch при Paused сразу показывает fatal UI и сохраняет подтверждённый frame без Next", async () => {
+  const source = await realCorruptPrefetch(), ui = harness(source);
+  try {
+    await ui.loaded; await untilUI(source.started); assertTime(ui, 0, 0); assert.equal(ui.pending, 0);
+    assert.equal(ui.element("play").disabled, false); assert.match(ui.element("playback-status").textContent, /Paused/);
+    ui.element("chamber").dispatch("keydown", { key: "ArrowRight" });
+    const inspector = treeText(ui.element("cell-detail")), canvas = ui.element("chamber").canvasCalls.length;
+    const living = ui.element("living").textContent; source.release(); await untilUI(() => !ui.element("error").hidden);
+    assert.match(ui.element("error").textContent, /gzip integrity.*last validated state/i);
+    assert.match(ui.element("playback-status").textContent, /Recording error/);
+    for (const id of controls) assert.equal(ui.element(id).disabled, true, id);
+    assertTime(ui, 0, 0); assert.equal(ui.element("living").textContent, living); assert.equal(treeText(ui.element("cell-detail")), inspector);
+    assert.equal(ui.element("chamber").canvasCalls.length, canvas); assert.equal(source.dense.stats.failed, true); assert.equal(source.dense.stats.closed, true);
+    assert.equal(source.requests.filter((path) => path.endsWith(".gz")).length, 2); assert.equal(ui.pending, 0); assert.equal(ui.loadCalls, 1);
+  } finally { source.dense.close(); }
+});
+
+test("real prefetch failure между initial seek commit и await continuation не включает ready заново", async () => {
+  const source = await realCorruptPrefetch();
+  // Задержка только continuation initial seek: реальный frame уже committed,
+  // реальный corrupt prefetch должен успеть уведомить до final ready gate.
+  class DelayedInitialContinuation extends DensePlaybackSession {
+    async seek(time) {
+      const result = await super.seek(time);
+      if (time === 0) { source.release(); await untilUI(() => source.dense.stats.failed); }
+      return result;
+    }
+  }
+  const ui = harness({ ...source, sessionClass: DelayedInitialContinuation });
+  try {
+    await ui.loaded; assertTime(ui, 0, 0); assert.equal(ui.element("error").hidden, false);
+    assert.match(ui.element("error").textContent, /gzip integrity/);
+    for (const id of controls) assert.equal(ui.element(id).disabled, true, id);
+    assert.equal(ui.element("download").hidden, true); assert.equal(ui.pending, 0); assert.equal(source.dense.stats.closed, true);
+    assert.equal(ui.element("play").listeners.size, 0, "fatal initial load must not bind ready controls");
+  } finally { source.dense.close(); }
 });
