@@ -1,0 +1,1276 @@
+{
+  "schema": "independent-actual-regression-review/v1",
+  "reviewer": "/root/live2_code_review",
+  "reviewedAtUtc": "2026-10-05T04:02:52.265338+00:00",
+  "verdict": "QUALIFIED_ACTUAL_REGRESSION_PASS_ZERO_BLOCKERS",
+  "blockers": [],
+  "sourceHead": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+  "sourceTree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "workflowRun": 37260833244,
+  "recordedJob": 111607516475,
+  "scope": [
+    "legacy recorded loopback browser regression",
+    "dense loopback browser regression"
+  ],
+  "artifacts": {
+    "recorded": {
+      "artifactId": 11324298525,
+      "originalZip": "/workspace/attachments/c4dbbb50-9995-4193-b3e1-d43cd47f4725/recorded-browser-83fa1e5-original.zip",
+      "zipBytes": 12519814,
+      "sha256": "97564a5031f8488f8f2b5a6bf7412489d42d7dd16ff5251dca8584529a13e3c5",
+      "originalPreserved": true,
+      "outerCrc": "PASS",
+      "closedOuterMembers": 10,
+      "outerExpandedBytes": 13903559,
+      "outerInventory": [
+        {
+          "name": "cell-chamber-10k-desktop.png",
+          "bytes": 106211,
+          "sha256": "ffb1eada5d0310b3c4de687a8a12b42ca035adbf9cf10283f9effc59550e65e4"
+        },
+        {
+          "name": "cell-chamber-100k-desktop.png",
+          "bytes": 114558,
+          "sha256": "736056bd50439519fdfbef8a29962c44e8843b28d4ed300a6fed168a9017c2c2"
+        },
+        {
+          "name": "cell-chamber-1m-desktop.png",
+          "bytes": 115603,
+          "sha256": "62fb47d3b5518dd8adb6c0f503adfec46c039b04b1ea056da18cd7a083fe657f"
+        },
+        {
+          "name": "desktop-short.png",
+          "bytes": 85576,
+          "sha256": "3231b145d2b9b7e216552754d859d98fc3e0761fb8c3235e3bed2af8e8c6ae59"
+        },
+        {
+          "name": "evidence.json",
+          "bytes": 19803,
+          "sha256": "704b46931074c1cf75778f98a75db91254614dde167151e89f81666985140b19"
+        },
+        {
+          "name": "held-30fps.png",
+          "bytes": 27470,
+          "sha256": "b7803f89d00ba65682e658394f14a8cd8e527a0bc84cd279c67623cf6ed56aca"
+        },
+        {
+          "name": "held-60fps.png",
+          "bytes": 27470,
+          "sha256": "b7803f89d00ba65682e658394f14a8cd8e527a0bc84cd279c67623cf6ed56aca"
+        },
+        {
+          "name": "mobile-narrow.png",
+          "bytes": 131177,
+          "sha256": "fe4d179c441df1c702774ae844648d91b3b50d830aab17906a471b46b22fb8fa"
+        },
+        {
+          "name": "mobile.png",
+          "bytes": 134675,
+          "sha256": "35d77f5fd6f1885cab285e0fcbd8f8884e2402b54005571cd760b18bc7354aec"
+        },
+        {
+          "name": "trace.zip",
+          "bytes": 13141016,
+          "sha256": "ef42d5d8c6729f5f187d4a5df9414301ddc54e3e3155f292ede8f3490769d517"
+        }
+      ],
+      "nestedTrace": {
+        "bytes": 13141016,
+        "sha256": "ef42d5d8c6729f5f187d4a5df9414301ddc54e3e3155f292ede8f3490769d517",
+        "crc": "PASS",
+        "closedMembers": 218,
+        "expandedBytes": 54392736,
+        "inventorySha256": "898eb699e6ff5a942c70321d5d76d180ea62c329b853c8cd2e80b5f5d6606d07",
+        "inventoryEncoding": "canonical compact sorted-key JSON + LF in original ZIP member order",
+        "suffixCounts": {
+          ".trace": 1,
+          ".network": 1,
+          ".jpeg": 205,
+          ".css": 1,
+          ".html": 1,
+          ".json": 7,
+          ".stacks": 1,
+          ".txt": 1
+        },
+        "actionsBefore": 421,
+        "actionsAfter": 421,
+        "actionErrors": 0,
+        "pagesCreated": 14,
+        "pageCloseAcks": 14,
+        "networkEntries": 139,
+        "onlyLoopbackGet": true,
+        "originalBodyPinsVerified": {
+          "/observer.css": {
+            "bytes": 7408,
+            "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+          },
+          "/observe.html": {
+            "bytes": 6894,
+            "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d"
+          },
+          "/data/catalog.json": {
+            "bytes": 116490,
+            "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+          },
+          "/data/cell-chamber-seed-42.json": {
+            "bytes": 6047570,
+            "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+          },
+          "/data/cell-chamber-seed-42-100k.json": {
+            "bytes": 5356325,
+            "sha256": "b8db46c1dc83f8cd642ee2a3bd7913890e6868e265c61a8d390797399b37a4c9"
+          },
+          "/data/cell-chamber-seed-42-1m.json": {
+            "bytes": 5312311,
+            "sha256": "ee236189e9b6891599bc428aefb0e4b892c7397e712bcf045f7db14a5bc4061d"
+          }
+        },
+        "negativeControlBodies": [
+          {
+            "path": "/data/cell-chamber-seed-42.json",
+            "bytes": 6047570,
+            "sha256": "dea784e95d1fb692796ad8c99b164b4354ff47455ecb7a0955fc6dc6c1a47e64",
+            "qualification": "Explicit legacy SHA/schema negative-control bytes; not production original"
+          },
+          {
+            "path": "/data/catalog.json",
+            "bytes": 68320,
+            "sha256": "e7bd8bf6c0d3da6920b9a015abc2246f12c31de80a32374b09ed05570276ce5c",
+            "qualification": "Explicit legacy SHA/schema negative-control bytes; not production original"
+          },
+          {
+            "path": "/data/cell-chamber-seed-42.json",
+            "bytes": 5950327,
+            "sha256": "84ea1c879f7c8fb123cd1484565ba9611fd77996bdea59bd9795b53beeb9192b",
+            "qualification": "Explicit legacy SHA/schema negative-control bytes; not production original"
+          }
+        ],
+        "entriesWithoutRetainedBody": 84,
+        "traceQaSourceBytesExact": true,
+        "qaScript": {
+          "filename": "site/playback.browser.mjs",
+          "bytes": 30320,
+          "sha256": "4ea59640417ecde91154a68bd5189e035bb0d937f9ade06d04241c8e85ddab21"
+        }
+      },
+      "report": {
+        "filename": "evidence.json",
+        "sha256": "704b46931074c1cf75778f98a75db91254614dde167151e89f81666985140b19",
+        "status": "PASS",
+        "sourceHead": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+        "sourceTree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+        "checkCount": 22,
+        "checks": [
+          {
+            "name": "Protected launch has actual CDP arguments without sandbox opt-out switches",
+            "status": "PASS"
+          },
+          {
+            "name": "canvas pixels: cell-chamber-10k",
+            "status": "PASS",
+            "paintedPixels": 3809
+          },
+          {
+            "name": "actual download integrity: cell-chamber-10k",
+            "status": "PASS",
+            "bytes": 6047570,
+            "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+          },
+          {
+            "name": "default physical overview, cadence, verified download: cell-chamber-10k",
+            "status": "PASS",
+            "elapsedMs": 1232
+          },
+          {
+            "name": "canvas pixels: cell-chamber-100k",
+            "status": "PASS",
+            "paintedPixels": 3809
+          },
+          {
+            "name": "actual download integrity: cell-chamber-100k",
+            "status": "PASS",
+            "bytes": 5356325,
+            "sha256": "b8db46c1dc83f8cd642ee2a3bd7913890e6868e265c61a8d390797399b37a4c9"
+          },
+          {
+            "name": "default physical overview, cadence, verified download: cell-chamber-100k",
+            "status": "PASS",
+            "elapsedMs": 760
+          },
+          {
+            "name": "canvas pixels: cell-chamber-1m",
+            "status": "PASS",
+            "paintedPixels": 3809
+          },
+          {
+            "name": "actual download integrity: cell-chamber-1m",
+            "status": "PASS",
+            "bytes": 5312311,
+            "sha256": "ee236189e9b6891599bc428aefb0e4b892c7397e712bcf045f7db14a5bc4061d"
+          },
+          {
+            "name": "default physical overview, cadence, verified download: cell-chamber-1m",
+            "status": "PASS",
+            "elapsedMs": 770
+          },
+          {
+            "name": "responsive controls and real canvas: desktop-short",
+            "status": "PASS",
+            "elapsedMs": 680
+          },
+          {
+            "name": "responsive controls and real canvas: mobile",
+            "status": "PASS",
+            "elapsedMs": 946
+          },
+          {
+            "name": "responsive controls and real canvas: mobile-narrow",
+            "status": "PASS",
+            "elapsedMs": 947
+          },
+          {
+            "name": "real wall-time 1× hold, pause/resume, rate change, invalid input, seek and sample stepping",
+            "status": "PASS",
+            "elapsedMs": 3059
+          },
+          {
+            "name": "held sample canvas pixel SHA-256",
+            "status": "PASS",
+            "sha256": "7b2d91e129b3caae433ffc012d46ed579d4ab0ec89e8ee04ef50b3942b5bb2ca"
+          },
+          {
+            "name": "held real sample pixels remain identical through RAF at draw30/60",
+            "status": "PASS",
+            "elapsedMs": 1541
+          },
+          {
+            "name": "draw target 30 FPS preserves duration, reaches real endpoint, explicit replay",
+            "status": "PASS",
+            "elapsedMs": 1879
+          },
+          {
+            "name": "draw target 60 FPS preserves duration, reaches real endpoint, explicit replay",
+            "status": "PASS",
+            "elapsedMs": 1943
+          },
+          {
+            "name": "synthetic visibility event cancels playback without auto-resume or hidden backlog (native scheduling NOT ASSERTED)",
+            "status": "PASS",
+            "elapsedMs": 1629
+          },
+          {
+            "name": "unknown experiment fails closed without a dataset request",
+            "status": "PASS",
+            "elapsedMs": 193
+          },
+          {
+            "name": "same-size corrupted recording fails digest before controls/download activate",
+            "status": "PASS",
+            "elapsedMs": 635
+          },
+          {
+            "name": "integrity-valid unsupported recording schema keeps every control/download disabled",
+            "status": "PASS",
+            "elapsedMs": 671
+          }
+        ],
+        "sourcePinsVerified": [
+          {
+            "filename": "observe.html",
+            "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+            "servedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d"
+          },
+          {
+            "filename": "observer.js",
+            "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422",
+            "servedSha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+          },
+          {
+            "filename": "observer.css",
+            "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347",
+            "servedSha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+          },
+          {
+            "filename": "playback.mjs",
+            "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37",
+            "servedSha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+          },
+          {
+            "filename": "recording-loader.mjs",
+            "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241",
+            "servedSha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+          },
+          {
+            "filename": "recording.mjs",
+            "sha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334",
+            "servedSha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334"
+          },
+          {
+            "filename": "catalog.mjs",
+            "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602",
+            "servedSha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+          },
+          {
+            "filename": "data/catalog.json",
+            "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3",
+            "servedSha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+          }
+        ],
+        "browser": {
+          "engine": "Chromium",
+          "version": "149.0.7827.55",
+          "chromiumSandbox": true
+        },
+        "nodeVersion": "v24.21.0",
+        "launchArgumentCheckStatus": "PASS",
+        "sandboxOptOuts": [],
+        "traceStatus": "PASS",
+        "cleanupErrors": [],
+        "screenshots": [
+          {
+            "filename": "cell-chamber-10k-desktop.png",
+            "bytes": 106211,
+            "sha256": "ffb1eada5d0310b3c4de687a8a12b42ca035adbf9cf10283f9effc59550e65e4",
+            "width": 1440,
+            "height": 900,
+            "rgbaSha256": "718017dc3b59a84cb14dbe5a4d0a00a7138d27cd91160a9143980ead5d44dc7b",
+            "viewImageObserved": true
+          },
+          {
+            "filename": "cell-chamber-100k-desktop.png",
+            "bytes": 114558,
+            "sha256": "736056bd50439519fdfbef8a29962c44e8843b28d4ed300a6fed168a9017c2c2",
+            "width": 1440,
+            "height": 900,
+            "rgbaSha256": "df4216f7942dd57f80e67f0f27ac5cbde0b31714638740b274e6e3e9e1c5e4e8",
+            "viewImageObserved": true
+          },
+          {
+            "filename": "cell-chamber-1m-desktop.png",
+            "bytes": 115603,
+            "sha256": "62fb47d3b5518dd8adb6c0f503adfec46c039b04b1ea056da18cd7a083fe657f",
+            "width": 1440,
+            "height": 900,
+            "rgbaSha256": "c1d014718bebc7c7e00a7102905bd64e50a1252a115f8083d8360949ed6ba732",
+            "viewImageObserved": true
+          },
+          {
+            "filename": "desktop-short.png",
+            "bytes": 85576,
+            "sha256": "3231b145d2b9b7e216552754d859d98fc3e0761fb8c3235e3bed2af8e8c6ae59",
+            "width": 1366,
+            "height": 600,
+            "rgbaSha256": "74e21ae14076598c792df9ef8cd842a9817489b1ce934eae1e2362fd76a10ecd",
+            "viewImageObserved": true
+          },
+          {
+            "filename": "mobile.png",
+            "bytes": 134675,
+            "sha256": "35d77f5fd6f1885cab285e0fcbd8f8884e2402b54005571cd760b18bc7354aec",
+            "width": 390,
+            "height": 2150,
+            "rgbaSha256": "d35d005a03b83b3a21e7dee86937387b2a4aeb67a763a4ac8012164b22e98bb9",
+            "viewImageObserved": true
+          },
+          {
+            "filename": "mobile-narrow.png",
+            "bytes": 131177,
+            "sha256": "fe4d179c441df1c702774ae844648d91b3b50d830aab17906a471b46b22fb8fa",
+            "width": 320,
+            "height": 2250,
+            "rgbaSha256": "bf5f2eaebf7a1d47351913766e6372622e6d9f1700f17621263c53f79b79fc91",
+            "viewImageObserved": true
+          },
+          {
+            "filename": "held-30fps.png",
+            "bytes": 27470,
+            "sha256": "b7803f89d00ba65682e658394f14a8cd8e527a0bc84cd279c67623cf6ed56aca",
+            "width": 1114,
+            "height": 678,
+            "rgbaSha256": "fa97cfb15a1e082f0879000243be8d06e0fc17ae8f9beb5d3bc5f8680af1225f",
+            "viewImageObserved": true
+          },
+          {
+            "filename": "held-60fps.png",
+            "bytes": 27470,
+            "sha256": "b7803f89d00ba65682e658394f14a8cd8e527a0bc84cd279c67623cf6ed56aca",
+            "width": 1114,
+            "height": 678,
+            "rgbaSha256": "fa97cfb15a1e082f0879000243be8d06e0fc17ae8f9beb5d3bc5f8680af1225f",
+            "viewImageObserved": true
+          }
+        ]
+      },
+      "acceptance": {
+        "httpChecks": 17,
+        "httpStatus": "PASS",
+        "actualDownloads": [
+          {
+            "id": "cell-chamber-10k",
+            "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+            "bytes": 6047570
+          },
+          {
+            "id": "cell-chamber-100k",
+            "sha256": "b8db46c1dc83f8cd642ee2a3bd7913890e6868e265c61a8d390797399b37a4c9",
+            "bytes": 5356325
+          },
+          {
+            "id": "cell-chamber-1m",
+            "sha256": "ee236189e9b6891599bc428aefb0e4b892c7397e712bcf045f7db14a5bc4061d",
+            "bytes": 5312311
+          }
+        ],
+        "held30And60RawBytesExact": true,
+        "heldWholeRgbaSha256": "fa97cfb15a1e082f0879000243be8d06e0fc17ae8f9beb5d3bc5f8680af1225f",
+        "observedPageConsoleErrors": 0,
+        "explicitBrowserUnhandledArray": "Not instrumented/reported by this legacy gate; do not infer a separate raw zero count",
+        "negativeControls": [
+          "unknown experiment no recording request",
+          "same-size digest corruption refused",
+          "integrity-valid unsupported schema refused"
+        ],
+        "visualScope": "Eight actual PNG viewed: three horizon overviews, short desktop, 390/320 mobile and held30/60. Schematic well-mixed saved observations; spatial projection is not claimed."
+      },
+      "privacy": {
+        "utf8FilesScanned": 14,
+        "utf8BytesScanned": 46618687,
+        "gzipResourcesDecoded": 0,
+        "obviousCredentialPrivateContextSignedUrlPatterns": 0,
+        "privateIpUrls": 0,
+        "negativeChatIdPattern": 0,
+        "networkCookies": 0,
+        "authorizationOrCookieHeaders": 0,
+        "limit": "Bounded explicit pattern/header scan, not an exhaustive secret guarantee; trace JPEG frames not individually viewed."
+      }
+    },
+    "dense": {
+      "artifactId": 11324254156,
+      "originalZip": "/workspace/attachments/a978a0ca-55dd-4fbc-aef3-ab769856fcbe/dense-browser-83fa1e5-original.zip",
+      "zipBytes": 16594545,
+      "sha256": "f46a89196890f683d771d6310fd4e12c411993dd190b3a6fb681f588944e4bbc",
+      "originalPreserved": true,
+      "outerCrc": "PASS",
+      "closedOuterMembers": 7,
+      "outerExpandedBytes": 16805531,
+      "outerInventory": [
+        {
+          "name": "dense-desktop-short.png",
+          "bytes": 288541,
+          "sha256": "3f69fdb32be5249ff92ddb28157c22af727ebd8f9841bc57a382c3e0b9a01fc9"
+        },
+        {
+          "name": "dense-desktop.png",
+          "bytes": 331326,
+          "sha256": "4d6047bc79826fc19c95f9f50f4d828007b51c938d93b029bb23d944c3395d2f"
+        },
+        {
+          "name": "dense-million-end.png",
+          "bytes": 230938,
+          "sha256": "cfbbfe29d4ba980f29589ead36ccac170684e413e03bec76d5ac38b781885c9e"
+        },
+        {
+          "name": "dense-mobile-narrow.png",
+          "bytes": 236253,
+          "sha256": "1efd9b040877b44c5bdb6fd2473f30ee5ee6782dc558262f36eeb417c0a02c9c"
+        },
+        {
+          "name": "dense-mobile.png",
+          "bytes": 251638,
+          "sha256": "edbb3ea1b8fd168750d5076fd2b4ec526a9810b926a281270686e58092aa905a"
+        },
+        {
+          "name": "report.json",
+          "bytes": 157216,
+          "sha256": "53957a88fda06a5e1b26bdd69cbae071dca68eba1d454e7e367aa24174c649d7"
+        },
+        {
+          "name": "trace.zip",
+          "bytes": 15309619,
+          "sha256": "837947c46743a9b57444312191bfb8e6823845a914bd3e6604aa76e4c67bd0a3"
+        }
+      ],
+      "nestedTrace": {
+        "bytes": 15309619,
+        "sha256": "837947c46743a9b57444312191bfb8e6823845a914bd3e6604aa76e4c67bd0a3",
+        "crc": "PASS",
+        "closedMembers": 135,
+        "expandedBytes": 34295778,
+        "inventorySha256": "cf7d7b2fab2bbf5ae3f4d0b4931097bdcb15011acd1a142228269073178ed994",
+        "inventoryEncoding": "canonical compact sorted-key JSON + LF in original ZIP member order",
+        "suffixCounts": {
+          ".trace": 1,
+          ".network": 1,
+          ".jpeg": 108,
+          ".html": 2,
+          ".json": 12,
+          ".gz": 8,
+          ".css": 1,
+          ".stacks": 1,
+          ".txt": 1
+        },
+        "actionsBefore": 574,
+        "actionsAfter": 574,
+        "actionErrors": 0,
+        "pagesCreated": 5,
+        "pageCloseAcks": 5,
+        "networkEntries": 73,
+        "onlyLoopbackGet": true,
+        "originalBodyPinsVerified": {
+          "/observe.html": {
+            "bytes": 6894,
+            "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d"
+          },
+          "/observer.css": {
+            "bytes": 7408,
+            "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+          },
+          "/data/catalog.json": {
+            "bytes": 116490,
+            "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+          },
+          "/data/cell-chamber-seed-42.json": {
+            "bytes": 6047570,
+            "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+          },
+          "/data/dense-cell-chamber/index.json": {
+            "bytes": 1977,
+            "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+          },
+          "/data/dense-cell-chamber/horizon-10000.json": {
+            "bytes": 18860,
+            "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+          },
+          "/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz": {
+            "bytes": 917524,
+            "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+          },
+          "/data/dense-cell-chamber/chunks/00/chunk-0000512-0000767.jsonl.gz": {
+            "bytes": 979714,
+            "sha256": "0a4ccbe232ef0eb8a9c50dfb3a29cc2c4055c1d442e9960fa519ba6d4f64bc36"
+          },
+          "/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz": {
+            "bytes": 312818,
+            "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+          },
+          "/data/dense-cell-chamber/chunks/00/chunk-0000768-0000992.jsonl.gz": {
+            "bytes": 1046390,
+            "sha256": "8acb535328f123b618f0d9d86044a8d3a0c0cac66c85143b0bcfa5aeed468f4c"
+          },
+          "/data/dense-cell-chamber/chunks/00/chunk-0000993-0001187.jsonl.gz": {
+            "bytes": 1046715,
+            "sha256": "70849dc030f40eb6d25e7abe7009c337cc6f810a829e8c418427946babd9b5a3"
+          },
+          "/data/cell-chamber-seed-42-100k.json": {
+            "bytes": 5356325,
+            "sha256": "b8db46c1dc83f8cd642ee2a3bd7913890e6868e265c61a8d390797399b37a4c9"
+          },
+          "/data/dense-cell-chamber/horizon-100000.json": {
+            "bytes": 128695,
+            "sha256": "10813cdd0fb88921fd62d4db7701d068e00135ae01dcc8213dff3f0d6d627858"
+          },
+          "/data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz": {
+            "bytes": 275423,
+            "sha256": "906f92d9637b83e5b8cd2893c1ba7520049581618b2922abf1011f985d3e3e43"
+          },
+          "/data/cell-chamber-seed-42-1m.json": {
+            "bytes": 5312311,
+            "sha256": "ee236189e9b6891599bc428aefb0e4b892c7397e712bcf045f7db14a5bc4061d"
+          },
+          "/data/dense-cell-chamber/horizon-1000000.json": {
+            "bytes": 1229207,
+            "sha256": "ab3849199d73f8d535fdc48dba299000efb64b3433491ff3e260a51fd729ea74"
+          },
+          "/data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz": {
+            "bytes": 414483,
+            "sha256": "fb31b92d9e8590a69655fb76f2de6ffa82018e973ef3c6aca8af8ffbf1be455b"
+          }
+        },
+        "negativeControlBodies": [],
+        "entriesWithoutRetainedBody": 29,
+        "traceQaSourceBytesExact": true,
+        "qaScript": {
+          "filename": "scripts/check_dense_recording_browser.mjs",
+          "bytes": 65135,
+          "sha256": "2458878a2db655f5e9d6c396d11dd683ce4f7f384c3692abf358795c1609e1a1"
+        }
+      },
+      "report": {
+        "filename": "report.json",
+        "sha256": "53957a88fda06a5e1b26bdd69cbae071dca68eba1d454e7e367aa24174c649d7",
+        "status": "PASS",
+        "sourceHead": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+        "sourceTree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+        "checkCount": 14,
+        "checks": [
+          {
+            "name": "Cancellation proof classifier rejects deadline, late cleanup and mismatched identities",
+            "status": "PASS",
+            "elapsedMs": 2
+          },
+          {
+            "name": "Actual Chromium argv preserves every protected sandbox layer",
+            "status": "PASS",
+            "elapsedMs": 6
+          },
+          {
+            "name": "Browser native gzip and retained-value seeks match all 101 original real frames",
+            "status": "PASS",
+            "elapsedMs": 860
+          },
+          {
+            "name": "Browser SHA/CRC/truncated/trailing-member corruptions refuse before frame emission",
+            "status": "PASS",
+            "elapsedMs": 64
+          },
+          {
+            "name": "Actual first and largest saved 100k chunks seek independently with a one-payload cache",
+            "status": "PASS",
+            "elapsedMs": 3678
+          },
+          {
+            "name": "Mid-body real fetch abort is caught with no browser unhandled rejection",
+            "status": "PASS",
+            "elapsedMs": 141
+          },
+          {
+            "name": "Superseded and closed real loader fetches cannot commit a late frame or failure",
+            "status": "PASS",
+            "elapsedMs": 1158
+          },
+          {
+            "name": "Uninstrumented native promises preserve caught pre-abort and real mid-body abort without orphan rejection",
+            "status": "PASS",
+            "elapsedMs": 292
+          },
+          {
+            "name": "Uninstrumented browser error-channel control detects one exact abandoned native stream rejection",
+            "status": "PASS",
+            "elapsedMs": 58
+          },
+          {
+            "name": "Actual dense 10k UI commits one-tick Next atomically after unchanged buffering",
+            "status": "PASS",
+            "elapsedMs": 8103
+          },
+          {
+            "name": "Actual dense pixels/counters are held at 1x; draw targets do not add HTTP or samples",
+            "status": "PASS",
+            "elapsedMs": 2971
+          },
+          {
+            "name": "Actual dense controls fit desktop, short desktop and 390/320px mobile",
+            "status": "PASS",
+            "elapsedMs": 2156
+          },
+          {
+            "name": "Actual dense 100000 UI uses real endpoints without a full recording fetch",
+            "status": "PASS",
+            "elapsedMs": 2220
+          },
+          {
+            "name": "Actual dense 1000000 UI uses real endpoints without a full recording fetch",
+            "status": "PASS",
+            "elapsedMs": 2498
+          }
+        ],
+        "sourcePinsVerified": [
+          {
+            "filename": "scripts/check_dense_recording_browser.mjs",
+            "bytes": 65135,
+            "sha256": "2458878a2db655f5e9d6c396d11dd683ce4f7f384c3692abf358795c1609e1a1"
+          },
+          {
+            "filename": "site/dense-recording.mjs",
+            "bytes": 41209,
+            "sha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f"
+          },
+          {
+            "filename": "site/observer.js",
+            "bytes": 30075,
+            "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+          },
+          {
+            "filename": "site/recording-loader.mjs",
+            "bytes": 3190,
+            "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+          },
+          {
+            "filename": "site/playback.mjs",
+            "bytes": 10351,
+            "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+          },
+          {
+            "filename": "site/observe.html",
+            "bytes": 6894,
+            "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d"
+          },
+          {
+            "filename": "site/observer.css",
+            "bytes": 7408,
+            "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+          },
+          {
+            "filename": "site/catalog.mjs",
+            "bytes": 4345,
+            "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+          },
+          {
+            "filename": "scripts/dense-recording-decode.py",
+            "bytes": 8218,
+            "sha256": "d44febfcfef583e45a33fce0c188c350b4baf48742b840b690ea49a08d501a0e"
+          },
+          {
+            "filename": "scripts/dense-recording-codec.py",
+            "bytes": 20481,
+            "sha256": "321bb7f02b21ff0a7696ba0a88acd4dd72a87bbf76ed927f468ff585f78797c7"
+          },
+          {
+            "filename": "scripts/fixtures/dense-recording/smoke-100/index.json",
+            "bytes": 1610,
+            "sha256": "d3d102bcb4233900416ba0532c9cdd83b41b353963b15c47a9c66e4852b260aa"
+          },
+          {
+            "filename": "scripts/fixtures/dense-recording/smoke-100/horizon-100.json",
+            "bytes": 6138,
+            "sha256": "e237a9f1f44e1838139caa4b5202151e63c2f6ee48c9ac1a99f2e8310e4d4373"
+          },
+          {
+            "filename": "scripts/fixtures/dense-recording/smoke-100/chunk-0000000-0000100.jsonl.gz",
+            "bytes": 53607,
+            "sha256": "4eb60f6866110a40314247613779e5a38308b2d240836f79040bf548525e9821"
+          },
+          {
+            "filename": "scripts/fixtures/dense-recording/pilot-100000/fixture-pins.json",
+            "bytes": 1175,
+            "sha256": "b353070f8b420b5ea30ef0173e1b641da2718126ddb7555c135da12ba446e8e9"
+          },
+          {
+            "filename": "scripts/fixtures/dense-recording/pilot-100000/index.json",
+            "bytes": 1798,
+            "sha256": "603b6f3b62448c2dc6cd6abe976c77ffbb9aad83f9c143813785137e4f71a370"
+          },
+          {
+            "filename": "scripts/fixtures/dense-recording/pilot-100000/horizon-10000.json",
+            "bytes": 18449,
+            "sha256": "a08ecd054f85fbeb06c52b868ef604d39c1d8563231cec76dc33420a5e611c8d"
+          },
+          {
+            "filename": "scripts/fixtures/dense-recording/pilot-100000/horizon-100000.json",
+            "bytes": 124764,
+            "sha256": "7da1efd07473e15af331c060341fcb75fdcc911e60a5be9347423f9791442bcd"
+          },
+          {
+            "filename": "scripts/fixtures/dense-recording/pilot-100000/chunk-0000000-0000255.jsonl.gz",
+            "bytes": 312818,
+            "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+          },
+          {
+            "filename": "scripts/fixtures/dense-recording/pilot-100000/chunk-0000768-0000992.jsonl.gz",
+            "bytes": 1046390,
+            "sha256": "8acb535328f123b618f0d9d86044a8d3a0c0cac66c85143b0bcfa5aeed468f4c"
+          },
+          {
+            "filename": "site/data/catalog.json",
+            "bytes": 116490,
+            "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+          }
+        ],
+        "browser": {
+          "version": "149.0.7827.55",
+          "playwright": "1.61.1",
+          "chromiumSandbox": true
+        },
+        "nodeVersion": "v24.21.0",
+        "launchArgumentCheckStatus": "PASS",
+        "sandboxOptOuts": [],
+        "traceStatus": "PASS",
+        "cleanupErrors": [],
+        "screenshots": [
+          {
+            "filename": "dense-desktop.png",
+            "bytes": 331326,
+            "sha256": "4d6047bc79826fc19c95f9f50f4d828007b51c938d93b029bb23d944c3395d2f",
+            "width": 1440,
+            "height": 900,
+            "rgbaSha256": "18d7bebf394f099fe867aae727bc327d3d0410a46aa6e23a25e39c2c6e2df4ee",
+            "viewImageObserved": true
+          },
+          {
+            "filename": "dense-desktop-short.png",
+            "bytes": 288541,
+            "sha256": "3f69fdb32be5249ff92ddb28157c22af727ebd8f9841bc57a382c3e0b9a01fc9",
+            "width": 1440,
+            "height": 720,
+            "rgbaSha256": "97ff691e1fcc75f414c7bb00cd755dee729ec2f99e9743aa80c2a207510bfa5c",
+            "viewImageObserved": true
+          },
+          {
+            "filename": "dense-mobile.png",
+            "bytes": 251638,
+            "sha256": "edbb3ea1b8fd168750d5076fd2b4ec526a9810b926a281270686e58092aa905a",
+            "width": 390,
+            "height": 2393,
+            "rgbaSha256": "b1fe4164e3bc212d44ece3ef5ab8cdd33e5fc9d73d9b2a24b28cfecc4ab7dc9d",
+            "viewImageObserved": true
+          },
+          {
+            "filename": "dense-mobile-narrow.png",
+            "bytes": 236253,
+            "sha256": "1efd9b040877b44c5bdb6fd2473f30ee5ee6782dc558262f36eeb417c0a02c9c",
+            "width": 320,
+            "height": 2564,
+            "rgbaSha256": "fdc3bf2b4c9275042f38f9a2e973596047c368c259194b0ca07cc00dc494011b",
+            "viewImageObserved": true
+          },
+          {
+            "filename": "dense-million-end.png",
+            "bytes": 230938,
+            "sha256": "cfbbfe29d4ba980f29589ead36ccac170684e413e03bec76d5ac38b781885c9e",
+            "width": 1440,
+            "height": 900,
+            "rgbaSha256": "6319d5f92ad72fc17e352621e79595f4d2c3d4c2525848292e9cc081c1067cb6",
+            "viewImageObserved": true
+          }
+        ]
+      },
+      "acceptance": {
+        "decoder": {
+          "status": "PASS",
+          "tiny": {
+            "matchedRealFrames": 101,
+            "archivalControlTicks": [
+              0,
+              50,
+              100
+            ],
+            "indexSha256": "d3d102bcb4233900416ba0532c9cdd83b41b353963b15c47a9c66e4852b260aa",
+            "stats": {
+              "retainedChunks": 1,
+              "cachedChunks": 1,
+              "loadingChunks": 0,
+              "maxRetainedChunks": 1,
+              "retainedFrames": 1,
+              "currentTick": 100,
+              "closed": false,
+              "failed": false,
+              "notificationFailed": false
+            }
+          },
+          "corruption": {
+            "rawGzipBytes": 53607,
+            "rawGzipSha256": "4eb60f6866110a40314247613779e5a38308b2d240836f79040bf548525e9821",
+            "contentEncoding": null,
+            "results": [
+              {
+                "name": "sha",
+                "refused": true,
+                "error": "Dense recording: gzip integrity mismatch"
+              },
+              {
+                "name": "crc",
+                "refused": true,
+                "error": "The compressed data was not valid: incorrect data check."
+              },
+              {
+                "name": "truncated",
+                "refused": true,
+                "error": "Dense recording: truncated deflate"
+              },
+              {
+                "name": "trailing-member",
+                "refused": true,
+                "error": "Dense recording: trailing bytes or multiple gzip members"
+              }
+            ]
+          },
+          "largest": {
+            "elapsedMs": 3653,
+            "gzipBytes": 1046390,
+            "decodedBytes": 4135813,
+            "records": 225,
+            "controlTicks": [
+              0,
+              50,
+              100,
+              768,
+              992
+            ],
+            "heapObservation": {
+              "usedSize": 14284736,
+              "totalSize": 47710208,
+              "embedderHeapUsedSize": 843968,
+              "backingStorageSize": 42434
+            },
+            "heapQualification": "One CDP snapshot, not peak or universal device memory",
+            "timer": {
+              "intervalMs": 10,
+              "samples": 362,
+              "maxGapMs": 441.30000000004657
+            },
+            "stats": {
+              "retainedChunks": 1,
+              "cachedChunks": 1,
+              "loadingChunks": 0,
+              "maxRetainedChunks": 1,
+              "retainedFrames": 1,
+              "currentTick": 768,
+              "closed": false,
+              "failed": false,
+              "notificationFailed": false
+            }
+          },
+          "bodyAbort": {
+            "error": "AbortError",
+            "unhandled": []
+          },
+          "uninstrumented": {
+            "status": "PASS",
+            "nativePromiseObservers": false,
+            "nativeReaderWrappers": false,
+            "preAbortedDataRequests": 0,
+            "caughtMidBody": "AbortError",
+            "productionUnhandled": 0,
+            "responseBytes": "Actual first 16 original saved index bytes, unchanged",
+            "sensitivityControl": {
+              "expectedEvents": 1,
+              "actualEvents": 1,
+              "exactReasonIdentity": true,
+              "unexpectedEvents": 0,
+              "label": "Synthetic native ReadableStream error-channel sensitivity control"
+            }
+          }
+        },
+        "ui": {
+          "status": "PASS",
+          "requiredHorizons": [
+            10000,
+            100000,
+            1000000
+          ],
+          "attachments": [
+            {
+              "id": "cell-chamber-10k",
+              "horizon": 10000,
+              "indexSha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+              "publicationSha256": "48cf7367c19e3fed7669e0a26473f6ceb02b720d6d0e70d19f140a672aa6368b",
+              "identity": {
+                "chamber_format": 1,
+                "config_hash": "blake3:1802c0f129855749",
+                "scenario": "cell-chamber",
+                "seed": "42",
+                "source_commit": "b2024cef08f0aa910a711a41c6a37fbc7b2ba35a",
+                "world_format_version": 30
+              },
+              "frames": 10001,
+              "chunks": 41
+            },
+            {
+              "id": "cell-chamber-100k",
+              "horizon": 100000,
+              "indexSha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+              "publicationSha256": "48cf7367c19e3fed7669e0a26473f6ceb02b720d6d0e70d19f140a672aa6368b",
+              "identity": {
+                "chamber_format": 1,
+                "config_hash": "blake3:1802c0f129855749",
+                "scenario": "cell-chamber",
+                "seed": "42",
+                "source_commit": "b2024cef08f0aa910a711a41c6a37fbc7b2ba35a",
+                "world_format_version": 30
+              },
+              "frames": 100001,
+              "chunks": 393
+            },
+            {
+              "id": "cell-chamber-1m",
+              "horizon": 1000000,
+              "indexSha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+              "publicationSha256": "48cf7367c19e3fed7669e0a26473f6ceb02b720d6d0e70d19f140a672aa6368b",
+              "identity": {
+                "chamber_format": 1,
+                "config_hash": "blake3:1802c0f129855749",
+                "scenario": "cell-chamber",
+                "seed": "42",
+                "source_commit": "b2024cef08f0aa910a711a41c6a37fbc7b2ba35a",
+                "world_format_version": 30
+              },
+              "frames": 1000001,
+              "chunks": 3909
+            }
+          ],
+          "delayedOriginal": {
+            "url": "http://127.0.0.1:42963/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+            "status": "RELEASED",
+            "bytes": 917524,
+            "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1",
+            "fabricatedBytes": false
+          },
+          "atomicBoundary": {
+            "fromTick": 255,
+            "toTick": 256,
+            "oldPixelSha256": "27bcead9b5246c82e52f3f63cebd9eac2fb37605dcf91a647debebd1a2a2d45e",
+            "oldInspectorId": "57",
+            "heldDuringBuffer": true,
+            "delayExcludedFromPlayhead": true
+          },
+          "hold": {
+            "tick": 992,
+            "rate": 1,
+            "targets": [
+              30,
+              60
+            ],
+            "requestedHoldMs": 1400,
+            "measuredWallMs": 1523.3000000000466,
+            "wallMeasurement": "Browser performance.now() at actual Play and Pause click events; includes intervening commands",
+            "browserClickTimesMs": [
+              9522,
+              11045.300000000047
+            ],
+            "modelSecondsAdvanced": 1.5230000000010477,
+            "toleranceSeconds": 0.1,
+            "fromPlayhead": 29760,
+            "toPlayhead": 29761.523,
+            "pixelSha256": "079a9e811bf75e7b62da7a186cb7dbbe17472bf95cb3954e50468da056165404",
+            "httpRequests": 0
+          },
+          "tenKChunkRequests": 10,
+          "endpoints": [
+            {
+              "horizon": 100000,
+              "shownTick": 100000,
+              "chunkRequests": 3,
+              "method": "actual DOM/canvas and original archival endpoint values"
+            },
+            {
+              "horizon": 1000000,
+              "shownTick": 1000000,
+              "chunkRequests": 3,
+              "method": "actual DOM/canvas and original archival endpoint values"
+            }
+          ]
+        },
+        "independent1xDeltaSeconds": -0.00029999999899876784,
+        "nativeFailures": {
+          "total": 9,
+          "explicitSignal": 4,
+          "verifiedCompleteBody": 5,
+          "blanketErrorAllowance": false,
+          "independentMetadataBijectionAndTimingChecked": true,
+          "clockAllowanceMs": 1,
+          "rows": [
+            {
+              "page": 1,
+              "cdpRequestId": "3347.11",
+              "nativeFetchId": 9,
+              "occurrence": 1,
+              "classification": "Native full body EOF/count observed before successful finally cleanup abort",
+              "bodyBytes": 1046390,
+              "bodyDoneBeforeAbort": true,
+              "abortMinusFailureMs": 0.718018
+            },
+            {
+              "page": 1,
+              "cdpRequestId": "3347.12",
+              "nativeFetchId": 10,
+              "occurrence": 1,
+              "classification": "Exact explicit module/test signal cancellation",
+              "bodyBytes": 16,
+              "bodyDoneBeforeAbort": false,
+              "abortMinusFailureMs": -0.656982
+            },
+            {
+              "page": 1,
+              "cdpRequestId": "3347.14",
+              "nativeFetchId": 12,
+              "occurrence": 1,
+              "classification": "Native full body EOF/count observed before successful finally cleanup abort",
+              "bodyBytes": 124764,
+              "bodyDoneBeforeAbort": true,
+              "abortMinusFailureMs": 0.036865
+            },
+            {
+              "page": 1,
+              "cdpRequestId": "3347.15",
+              "nativeFetchId": 13,
+              "occurrence": 1,
+              "classification": "Exact explicit module/test signal cancellation",
+              "bodyBytes": 16,
+              "bodyDoneBeforeAbort": false,
+              "abortMinusFailureMs": -0.968262
+            },
+            {
+              "page": 1,
+              "cdpRequestId": "3347.17",
+              "nativeFetchId": 15,
+              "occurrence": 2,
+              "classification": "Exact explicit module/test signal cancellation",
+              "bodyBytes": 16,
+              "bodyDoneBeforeAbort": false,
+              "abortMinusFailureMs": -0.435303
+            },
+            {
+              "page": 2,
+              "cdpRequestId": "3365.3",
+              "nativeFetchId": 1,
+              "occurrence": 1,
+              "classification": "Exact explicit module/test signal cancellation",
+              "bodyBytes": 0,
+              "bodyDoneBeforeAbort": false,
+              "abortMinusFailureMs": -0.654053
+            },
+            {
+              "page": 3,
+              "cdpRequestId": "3375.15",
+              "nativeFetchId": 5,
+              "occurrence": 1,
+              "classification": "Native full body EOF/count observed before successful finally cleanup abort",
+              "bodyBytes": 312818,
+              "bodyDoneBeforeAbort": true,
+              "abortMinusFailureMs": 0.363037
+            },
+            {
+              "page": 3,
+              "cdpRequestId": "3375.19",
+              "nativeFetchId": 9,
+              "occurrence": 2,
+              "classification": "Native full body EOF/count observed before successful finally cleanup abort",
+              "bodyBytes": 979714,
+              "bodyDoneBeforeAbort": true,
+              "abortMinusFailureMs": 0.918945
+            },
+            {
+              "page": 3,
+              "cdpRequestId": "3375.22",
+              "nativeFetchId": 12,
+              "occurrence": 1,
+              "classification": "Native full body EOF/count observed before successful finally cleanup abort",
+              "bodyBytes": 288747,
+              "bodyDoneBeforeAbort": true,
+              "abortMinusFailureMs": 0.322998
+            }
+          ]
+        },
+        "finalRequestClassification": {
+          "status": "PASS",
+          "phase": "after bounded cleanup and settlement",
+          "pages": 5
+        },
+        "pageMeasurements": [
+          {
+            "unhandled": [],
+            "expectedControls": [],
+            "errors": [],
+            "timer": {
+              "intervalMs": 10,
+              "samples": 420,
+              "maxGapMs": 545.8999999999069
+            }
+          },
+          {
+            "unhandled": [
+              "AbortError: Dense QA expected native orphan sensitivity control"
+            ],
+            "expectedControls": [
+              {
+                "index": 0,
+                "label": "Synthetic native ReadableStream error-channel sensitivity control",
+                "name": "AbortError",
+                "message": "Dense QA expected native orphan sensitivity control"
+              }
+            ],
+            "errors": [],
+            "timer": {
+              "intervalMs": 10,
+              "samples": 75,
+              "maxGapMs": 10.900000000023283
+            }
+          },
+          {
+            "unhandled": [],
+            "expectedControls": [],
+            "errors": [],
+            "timer": {
+              "intervalMs": 10,
+              "samples": 738,
+              "maxGapMs": 643.8000000000466
+            }
+          },
+          {
+            "unhandled": [],
+            "expectedControls": [],
+            "errors": [],
+            "timer": {
+              "intervalMs": 10,
+              "samples": 82,
+              "maxGapMs": 336.30000000004657
+            }
+          },
+          {
+            "unhandled": [],
+            "expectedControls": [],
+            "errors": [],
+            "timer": {
+              "intervalMs": 10,
+              "samples": 104,
+              "maxGapMs": 324.5
+            }
+          }
+        ],
+        "delayedOriginalFulfillBytesExact": {
+          "bytes": 917524,
+          "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+        },
+        "servedBytes": 33393079,
+        "limits": [
+          "The 100k fixture is PARTIAL original metadata plus only two saved chunks, never a complete 100k recording.",
+          "Chromium/Linux and four viewport sizes; no achieved-FPS, full accessibility, native background or universal performance claim.",
+          "Elapsed time, a 10ms timer gap and heap observations describe this bounded workload/runner, not peak heap or every device.",
+          "The actual final catalog/UI/data are mandatory; their absence fails this gate, without substituting a catalog or frames.",
+          "No browser biology, interpolated states, full million-frame array or full 3GB browser download. High rates may skip displayed states."
+        ],
+        "visualScope": "All five actual PNG viewed: desktop, short desktop, 390/320 mobile at actual tick992 plus actual million endpoint tick1000000. Schematic saved inventory, sparse201 overview and explicit missing cell ID retained."
+      },
+      "privacy": {
+        "utf8FilesScanned": 28,
+        "utf8BytesScanned": 39922293,
+        "gzipResourcesDecoded": 8,
+        "gzipDecodedPerResourceCapBytes": 16777216,
+        "obviousCredentialPrivateContextSignedUrlPatterns": 0,
+        "privateIpUrls": 0,
+        "negativeChatIdPattern": 0,
+        "networkCookies": 0,
+        "authorizationOrCookieHeaders": 0,
+        "limit": "Bounded explicit pattern/header scan, not an exhaustive secret guarantee; trace JPEG frames not individually viewed."
+      }
+    }
+  },
+  "qualifications": [
+    "Приняты только два exact-head loopback regression artifacts; общий83fa fullCI и отдельная actual3D/LIVE приёмка не объявляются зелёными.",
+    "Legacy actual downloads — три сохранённых sparse JSON; dense101 original frames/частичный100k fixture и реальные endpoints100k/1M — bounded workload, не full2.42GB/public delivery acceptance.",
+    "Никаких achieved/hardware FPS, universal/peak heap, native background scheduling, новой биологии или spatial projection claim.",
+    "Dense page2 raw unhandled содержит ровно один явно labelled, object-identical synthetic error-channel sentinel; productionUnhandled0 подтверждён в uninstrumented phase, raw positive-control event сохранён.",
+    "Девять ERR_ABORTED не скрыты: отдельно доказаны explicit cancellation либо EOF+ContentLength-before-default-abort, с disclosed1ms clock precision allowance и final aggregate. Это не причина прежних LAB/main failures.",
+    "Legacy source не имеет отдельного raw browser-unhandled массива; отмечены его фактические page/console error checks и trace."
+  ],
+  "reviewerActions": {
+    "viewImageAllThirteenActualPng": true,
+    "shaAndOuterNestedCrc": true,
+    "sourceAndRetainedBodyGitPins": true,
+    "privacyBoundedTraceUtf8AndEightGzipResources": true,
+    "browserRuntimeRuns": 0,
+    "httpRequests": 0,
+    "modelOrCargoRuns": 0,
+    "testsRerun": 0,
+    "originalOrRepoEdits": false,
+    "writesOnly": [
+      "review.json",
+      "review.md"
+    ]
+  },
+  "requiredRemainingGates": [
+    "Fresh exact-head Rust/fullCI и remaining LIVE/actual13GL gates plus independent original artifact acceptance.",
+    "Durable original/review archive и readback before guarded merge.",
+    "LAB PR21/publicLAB/models HOLD сохраняется; historical main5bea FAIL cause UNKNOWN."
+  ]
+}
