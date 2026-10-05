@@ -341,29 +341,56 @@ async function run() {
   };
   // Only real browser rectangles and native hit tests are observed. No CSS,
   // production state, layout helpers, or hit maps are installed by this gate.
-  const visibleTarget = async locator => {
+  const visibleTarget = async (locator, inspectorField = null) => {
     const beforeScroll = await page.evaluate(() => ({ scrollY, sideScrollTop: document.querySelector('.side').scrollTop }));
     await locator.scrollIntoViewIfNeeded();
-    const evidence = await locator.evaluate(element => {
+    // Inspector descendants are replaced on ordinary polls. Scroll their
+    // persistent host, then observe the current field and snapshot together in
+    // one synchronous read. The field, not the host, must pass every hit/bound.
+    const evidence = await locator.evaluate((host, inspectorField) => {
+      let element = host, currentInspector = null, field = null;
+      if (inspectorField) {
+        const primary = host.querySelector(':scope > dl');
+        if (!primary) throw new Error('Current inspector primary fields are absent');
+        if (inspectorField === 'upper') element = primary;
+        else if (inspectorField === 'lower') {
+          const fields = host.querySelectorAll('.object-grid dd');
+          element = fields[fields.length - 1];
+        } else throw new Error('Unknown inspector field target');
+        if (!element) throw new Error(`Current ${inspectorField} inspector field is absent`);
+        currentInspector = {
+          fields: Object.fromEntries([...primary.querySelectorAll('dt')].map(label => [label.textContent, label.nextElementSibling.textContent])),
+          genomeKey: host.querySelector('.selected-code b').textContent, selection: document.querySelector('#selection-state').textContent,
+        };
+        field = { target: inspectorField, text: element.textContent, group: element.closest('.object')?.querySelector('.micro')?.textContent ?? null,
+          key: inspectorField === 'lower' ? element.previousElementSibling.textContent : null, value: element.textContent };
+      }
       const box = element.getBoundingClientRect(), css = getComputedStyle(element);
       const x = (box.left + box.right) / 2, y = (box.top + box.bottom) / 2;
       const target = document.elementFromPoint(x, y);
       let clipped = false;
+      const ancestorClipping = [];
       for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
         const style = getComputedStyle(ancestor), boundary = ancestor.getBoundingClientRect();
-        if (['auto', 'scroll', 'hidden', 'clip'].includes(style.overflowX) && (box.left < boundary.left || box.right > boundary.right)) clipped = true;
-        if (['auto', 'scroll', 'hidden', 'clip'].includes(style.overflowY) && (box.top < boundary.top || box.bottom > boundary.bottom)) clipped = true;
+        const clipsX = ['auto', 'scroll', 'hidden', 'clip'].includes(style.overflowX) && (box.left < boundary.left || box.right > boundary.right);
+        const clipsY = ['auto', 'scroll', 'hidden', 'clip'].includes(style.overflowY) && (box.top < boundary.top || box.bottom > boundary.bottom);
+        if (clipsX || clipsY) clipped = true;
+        if (inspectorField) ancestorClipping.push({ tagName: ancestor.tagName, id: ancestor.id, overflowX: style.overflowX, overflowY: style.overflowY,
+          left: boundary.left, top: boundary.top, right: boundary.right, bottom: boundary.bottom, clipsX, clipsY });
       }
       return { left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height,
         viewport: { width: innerWidth, height: innerHeight }, scrollY, sideScrollTop: document.querySelector('.side').scrollTop,
         visible: css.display !== 'none' && css.visibility === 'visible' && box.width > 0 && box.height > 0,
-        disabled: Boolean(element.disabled), unobscured: target === element || element.contains(target), clipped };
-    });
+        disabled: Boolean(element.disabled), unobscured: target === element || element.contains(target), clipped,
+        ...(inspectorField ? { field, currentInspector, ancestorClipping, style: { display: css.display, visibility: css.visibility, position: css.position, overflowX: css.overflowX, overflowY: css.overflowY },
+          hit: { tagName: target?.tagName ?? null, id: target?.id ?? null } } : {}) };
+    }, inspectorField);
     assert.equal(evidence.visible, true, 'scroll target must be rendered');
     assert.equal(evidence.disabled, false, 'scroll target must remain usable');
     assert.equal(evidence.unobscured, true, 'native hit test must reach the requested control or content');
     assert.equal(evidence.clipped, false, 'scroll target must not be clipped by an ancestor');
     assert.ok(evidence.left >= 0 && evidence.right <= evidence.viewport.width && evidence.top >= 0 && evidence.bottom <= evidence.viewport.height, 'complete scroll target must fit in the real viewport');
+    if (inspectorField) assertInspector(evidence.currentInspector);
     evidence.beforeScroll = beforeScroll;
     return evidence;
   };
@@ -414,11 +441,10 @@ async function run() {
     await page.waitForFunction(id => document.querySelector('#cell-detail dl dt')?.nextElementSibling?.textContent === id, selectedCell.id);
     evidence.findPresent = await inspector();
     assertInspector(evidence.findPresent);
-    evidence.targets.upperInspector = await visibleTarget(page.locator('#cell-detail > dl'));
+    evidence.targets.upperInspector = await visibleTarget(page.locator('#cell-detail'), 'upper');
     evidence.screenshots.push(await captureViewport(width, 'inspector-upper'));
-    const lowerInspector = page.locator('#cell-detail .object-grid dd').last();
-    evidence.targets.lowerInspector = await visibleTarget(lowerInspector);
-    evidence.lowerInspector = await lowerInspector.evaluate(field => ({ key: field.previousElementSibling.textContent, value: field.textContent, group: field.closest('.object').querySelector('.micro').textContent }));
+    evidence.targets.lowerInspector = await visibleTarget(page.locator('#cell-detail'), 'lower');
+    evidence.lowerInspector = evidence.targets.lowerInspector.field;
     assert.equal(evidence.lowerInspector.group, 'Phenotype');
     const rawPhenotypeValue = selectedCell.phenotype[evidence.lowerInspector.key];
     assert.equal(typeof rawPhenotypeValue, 'number');
