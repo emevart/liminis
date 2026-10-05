@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "kind": "Original bounded evidence-only LAB transport diagnostic FAIL",
+  "diagnostic_head": "edca9b9fa16a11bb24317dead67362515b9d1e00",
+  "diagnostic_tree": "5e2d67d3c43cbdb2e3f9992b7114f99a97f25cf5",
+  "candidate_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "candidate_tree": "64bdb5f4794f48907f99886c540f6391571b1914",
+  "workflow_run": 37250700549,
+  "workflow_job": 111577533759,
+  "artifact_id": 11320133411,
+  "actual_diagnostic_status": "FAIL",
+  "product_acceptance": "NOT_ACCEPTED",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 477283,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2913,
+      "sha256": "2c8beb6ee2347011e64e575762faf47c308299e9fb9634b2f8128f9cc95f375f"
+    },
+    {
+      "path": "lab-transport-diagnostic-combined-source-review.json",
+      "bytes": 4896,
+      "sha256": "020bff5b0a8d76d41f83e34814ff7f79db56ecd056ae5df629b8d3c0c55993bd"
+    },
+    {
+      "path": "lab-transport-diagnostic-combined-source-review.md",
+      "bytes": 1978,
+      "sha256": "bc0198ceae0bf3ae28d65bebfa8305dcd865606c2105247c9d171d56dfa41e6c"
+    },
+    {
+      "path": "lab-transport-diagnostic-edca9b9-actual-review.json",
+      "bytes": 16516,
+      "sha256": "11fbdb83e1dd6def2e983516b622963192a67b953cf1327630079b0245c7b930"
+    },
+    {
+      "path": "lab-transport-diagnostic-edca9b9-actual-review.md",
+      "bytes": 4289,
+      "sha256": "270abb249de63fe3c938e030489b72380bb0f7aca2b7a7e8cc2fd72ccab782e6"
+    },
+    {
+      "path": "lab-transport-diagnostic-edca9b9-original.zip",
+      "bytes": 397681,
+      "sha256": "b4a3fdb5ca151f839f7f8fc87adefae6cb1aa8fd1bf0c85b9aaff1faa8dd7036"
+    },
+    {
+      "path": "lab-transport-diagnostic-source-review.json",
+      "bytes": 8834,
+      "sha256": "4ec08661bf297abc6578491e903a3a3effb408874a328433a4ca93850604b938"
+    },
+    {
+      "path": "lab-transport-diagnostic-source-review.md",
+      "bytes": 4145,
+      "sha256": "8d462782658141a7ef9b277a7d1273fba33e6e51252d08c7a751f722f455a0d2"
+    },
+    {
+      "path": "report.json",
+      "bytes": 36031,
+      "sha256": "8ea803d8223663f2c5c9a6e542c672af132a9cd57b21b7d67c29d140d836b759"
+    }
+  ]
+}

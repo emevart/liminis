@@ -1,0 +1,429 @@
+{
+  "review_kind": "Independent actual evidence-only diagnostic artifact review",
+  "verdict": "CONFIRMED_DIAGNOSTIC_FAIL_NOT_PRODUCT_ACCEPTANCE",
+  "reviewed_at_utc": "2026-10-05T01:23:42.762016+00:00",
+  "blockers_to_acceptance": [
+    "Native results.json Network.loadingFailed canceled:true/net::ERR_ABORTED remains unclassified; diagnostic and product acceptance cannot be declared PASS."
+  ],
+  "additional_evidence_integrity_or_privacy_blockers": [],
+  "coordinator_delivery_pins": {
+    "run": "37250700549",
+    "job": "111577533759",
+    "artifact": "11320133411",
+    "provenance_note": "Run is also recorded in browser report; job/artifact identity supplied by coordinator, no independent HTTP/API query."
+  },
+  "integrity": {
+    "original_zip_bytes": 397681,
+    "original_zip_sha256": "b4a3fdb5ca151f839f7f8fc87adefae6cb1aa8fd1bf0c85b9aaff1faa8dd7036",
+    "closed_inventory_exact": [
+      "page.png",
+      "report.json"
+    ],
+    "outer_crc": "PASS",
+    "duplicate_traversal_symlink_members": 0,
+    "nested_zip_count": 0,
+    "expanded_bytes": 465704,
+    "extracted_files_byte_equal_original": true,
+    "original_not_modified_or_repacked": true,
+    "inventory": [
+      {
+        "filename": "page.png",
+        "bytes": 429673,
+        "compressed_bytes": 391093,
+        "crc32": "2638fd4e",
+        "sha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014"
+      },
+      {
+        "filename": "report.json",
+        "bytes": 36031,
+        "compressed_bytes": 6344,
+        "crc32": "d5f3c5b2",
+        "sha256": "8ea803d8223663f2c5c9a6e542c672af132a9cd57b21b7d67c29d140d836b759"
+      }
+    ]
+  },
+  "source_identity": {
+    "candidate_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+    "candidate_tree": "64bdb5f4794f48907f99886c540f6391571b1914",
+    "diagnostic_head": "edca9b9fa16a11bb24317dead67362515b9d1e00",
+    "diagnostic_tree": "5e2d67d3c43cbdb2e3f9992b7114f99a97f25cf5",
+    "script_sha256": "9f3dc0206de9d8e1371b19d10373a73b1ab6fb94889d6ddaa29992c625f7a33a",
+    "manifest_sha256": "ab6b564ad4656d21ea21360d073db76b905caebfc7f74b28031a47e5d072c67e",
+    "workflow_sha256": "ade77f54266c73cef921fd198554fab1f469252b139bbabcdbda50e0dd5ed199",
+    "method": "Checked exact diagnostic Git source digests and all eight source/candidate Git byte pins; source remains separate from historical producer.",
+    "status": "PASS"
+  },
+  "partial_original_body_evidence": {
+    "assets": [
+      {
+        "filename": "lab.html",
+        "bytes": 5393,
+        "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+        "network_id": "161A41921265F4EB3A4C5A3089339350",
+        "fetch_body_pin_exact": true,
+        "original_continue_arguments": [
+          "requestId"
+        ],
+        "body_completed_before_continuation_ack": true,
+        "decoded_data_count": 5393,
+        "native_terminal": "loadingFinished",
+        "server_finished_and_closed_after_finish": true,
+        "server_aborted": false
+      },
+      {
+        "filename": "lab.js",
+        "bytes": 22571,
+        "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+        "network_id": "3019.3",
+        "fetch_body_pin_exact": true,
+        "original_continue_arguments": [
+          "requestId"
+        ],
+        "body_completed_before_continuation_ack": true,
+        "decoded_data_count": 22571,
+        "native_terminal": "loadingFinished",
+        "server_finished_and_closed_after_finish": true,
+        "server_aborted": false
+      },
+      {
+        "filename": "lab.css",
+        "bytes": 5019,
+        "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+        "network_id": "3019.2",
+        "fetch_body_pin_exact": true,
+        "original_continue_arguments": [
+          "requestId"
+        ],
+        "body_completed_before_continuation_ack": true,
+        "decoded_data_count": 5019,
+        "native_terminal": "loadingFinished",
+        "server_finished_and_closed_after_finish": true,
+        "server_aborted": false
+      },
+      {
+        "filename": "lab-data.mjs",
+        "bytes": 20808,
+        "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+        "network_id": "3019.6",
+        "fetch_body_pin_exact": true,
+        "original_continue_arguments": [
+          "requestId"
+        ],
+        "body_completed_before_continuation_ack": true,
+        "decoded_data_count": 20808,
+        "native_terminal": "loadingFinished",
+        "server_finished_and_closed_after_finish": true,
+        "server_aborted": false
+      },
+      {
+        "filename": "data/lab-2/descriptor.json",
+        "bytes": 50708,
+        "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+        "network_id": "3019.7",
+        "fetch_body_pin_exact": true,
+        "original_continue_arguments": [
+          "requestId"
+        ],
+        "body_completed_before_continuation_ack": true,
+        "decoded_data_count": 50708,
+        "native_terminal": "loadingFinished",
+        "server_finished_and_closed_after_finish": true,
+        "server_aborted": false
+      },
+      {
+        "filename": "data/lab-2/results.json",
+        "bytes": 5294742,
+        "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+        "network_id": "3019.8",
+        "fetch_body_pin_exact": true,
+        "original_continue_arguments": [
+          "requestId"
+        ],
+        "body_completed_before_continuation_ack": true,
+        "decoded_data_count": 5294742,
+        "native_terminal": "loadingFailed",
+        "server_finished_and_closed_after_finish": true,
+        "server_aborted": false
+      },
+      {
+        "filename": "data/lab-2/comparisons.json",
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+        "network_id": "3019.9",
+        "fetch_body_pin_exact": true,
+        "original_continue_arguments": [
+          "requestId"
+        ],
+        "body_completed_before_continuation_ack": true,
+        "decoded_data_count": 1116928,
+        "native_terminal": "loadingFinished",
+        "server_finished_and_closed_after_finish": true,
+        "server_aborted": false
+      },
+      {
+        "filename": "data/lab-2/manifest.json",
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+        "network_id": "3019.10",
+        "fetch_body_pin_exact": true,
+        "original_continue_arguments": [
+          "requestId"
+        ],
+        "body_completed_before_continuation_ack": true,
+        "decoded_data_count": 82880,
+        "native_terminal": "loadingFinished",
+        "server_finished_and_closed_after_finish": true,
+        "server_aborted": false
+      }
+    ],
+    "total_bytes": 6599049,
+    "exact_eight_way_inventory": "8 unique Network IDs, Fetch network IDs and Fetch interception IDs; exactly one matching server request/asset",
+    "network_events": 35,
+    "http200_unencoded": true,
+    "requests": "Eight exact loopback GET; fixed initial query only; no redirects/retries/external blocks or extra requests",
+    "pins": "All eight original Response-stage getResponseBody size/SHA and unchanged continueResponse ACK reported and independently matched against frozen sources. Raw captured response body files are not retained by this bounded diagnostic design.",
+    "server": "Eight finish and close-after-finish, no request aborted; server event/bytes evidence is separate from browser consumption.",
+    "native_terminals": {
+      "loadingFinished": 7,
+      "loadingFailed": 1
+    }
+  },
+  "failure_timeline": {
+    "asset": "data/lab-2/results.json",
+    "network_id": "3019.8",
+    "fetch_get_body_started_node_ms": 2230.774711,
+    "fetch_get_body_completed_node_ms": 2323.335059,
+    "fetch_continue_response_ack_node_ms": 2363.60296,
+    "network_events": [
+      {
+        "event": "requestWillBeSent",
+        "observedMonotonicMs": 2224.263997,
+        "timestamp": 75.615496,
+        "wallTime": 1791162951.479799,
+        "method": "GET",
+        "location": {
+          "origin": "http://127.0.0.1:42747",
+          "path": "/data/lab-2/results.json",
+          "initialQuery": false
+        },
+        "type": "Fetch"
+      },
+      {
+        "event": "responseReceived",
+        "observedMonotonicMs": 2363.641963,
+        "timestamp": 75.750487,
+        "status": 200,
+        "mimeType": "application/json",
+        "encodedDataLength": 185,
+        "fromDiskCache": false,
+        "fromServiceWorker": false
+      },
+      {
+        "event": "dataReceived",
+        "observedMonotonicMs": 2371.132501,
+        "timestamp": 75.758739,
+        "dataLength": 5294742,
+        "encodedDataLength": 0
+      },
+      {
+        "event": "loadingFailed",
+        "observedMonotonicMs": 2502.64582,
+        "timestamp": 75.763942,
+        "errorText": "net::ERR_ABORTED",
+        "canceled": true,
+        "blockedReason": null,
+        "type": "Fetch"
+      }
+    ],
+    "playwright_failure": {
+      "method": "GET",
+      "location": {
+        "origin": "http://127.0.0.1:42747",
+        "path": "/data/lab-2/results.json",
+        "initialQuery": false
+      },
+      "errorText": "net::ERR_ABORTED",
+      "observedMonotonicMs": 2502.358752
+    },
+    "chrome_data_to_failed_ms": 5.202999999994518,
+    "node_arrival_data_to_failed_ms": 131.51331900000014,
+    "clock_qualification": "Chrome timestamps and Node observed arrival times are different clock domains. Response interception also delays event delivery; no cross-domain causal timing claim.",
+    "failure_before_png": "Source main fails before finally screenshot, supported by actionsPassed:false and native failure records. Exact screenshot-start timestamp was not retained.",
+    "recorded_failure_stages": [
+      "Playwright requestfailed",
+      "Network loadingFailed",
+      "main",
+      "main settlement",
+      "post-cleanup aggregate"
+    ],
+    "failure_stage_qualification": "One underlying request has both native/PW error observations plus derived main/main-settlement/aggregate assertion failures; no independent extra UI failure inferred."
+  },
+  "ui_and_png": {
+    "view_image_actual_count": 1,
+    "filename": "page.png",
+    "dimensions": [
+      1440,
+      2443
+    ],
+    "png_sha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014",
+    "rgba_sha256": "d8bfac48aa3c1986425bfe8e6299867c0e64c47279857f9518b5c0ee08556387",
+    "byte_equal_prior_1be_initial_failure_png": true,
+    "initial": {
+      "ready": true,
+      "workspaceHidden": false,
+      "errorVisible": false,
+      "layout": "ready",
+      "ariaBusy": "false",
+      "status": "Verified published bytes · 24 runs · four paired seeds · aggregate observations",
+      "matrixRows": 24,
+      "plots": [
+        {
+          "metric": "living_cells",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        },
+        {
+          "metric": "structural_mass_mol",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        },
+        {
+          "metric": "food_free_mol",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        },
+        {
+          "metric": "oxygen_free_mol",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        }
+      ],
+      "runId": "seed-1-baseline",
+      "tick": "0",
+      "unhandled": []
+    },
+    "post_png": {
+      "ready": true,
+      "workspaceHidden": false,
+      "errorVisible": false,
+      "layout": "ready",
+      "ariaBusy": "false",
+      "status": "Verified published bytes · 24 runs · four paired seeds · aggregate observations",
+      "matrixRows": 24,
+      "plots": [
+        {
+          "metric": "living_cells",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        },
+        {
+          "metric": "structural_mass_mol",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        },
+        {
+          "metric": "food_free_mol",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        },
+        {
+          "metric": "oxygen_free_mol",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        }
+      ],
+      "runId": "seed-1-baseline",
+      "tick": "0",
+      "unhandled": []
+    },
+    "visual_review": "Four complete saved curves, 24-row matrix, baseline seed1/detail tick0, living histogram8, environment/source/provenance qualifiers visible; no blank partial plot or obvious private content. Full trajectory window remains separate from selected genesis detail.",
+    "qualification": "This single initial image/state does not accept 48 endpoints/layouts/keyboard/negative/full nine LAB gates. Due actionsPassed:false, explicit post-PNG readiness wait and full automatic proof were not completed; final actual sampled state is nevertheless ready and was independently read."
+  },
+  "errors_and_cleanup": {
+    "request_failures": 1,
+    "page_errors": 0,
+    "runtime_exceptions": 0,
+    "console_errors": 0,
+    "browser_unhandled_initial": [],
+    "browser_unhandled_final": [],
+    "node_unhandled": 0,
+    "callback_errors": 0,
+    "cleanup_errors": 0,
+    "guard_blocked": 0,
+    "guard_status_retained": "RUNNING",
+    "finalization": {
+      "pageClosed": true,
+      "pendingCallbacks": 0,
+      "pausedRequests": 0,
+      "contextAndBrowserCleanupErrors": 0,
+      "networkRequests": 8,
+      "timelineEvents": 35,
+      "actionsPassed": false
+    },
+    "qualification": "Listeners/Request guard remained through page closure. Collected final arrays and closed-page/callback/pause counts independently checked. Automatic proof rejects at actionsPassed:false and does not promote guard/status to PASS."
+  },
+  "runtime": {
+    "reported": {
+      "playwright": "1.61.1",
+      "version": "149.0.7827.55",
+      "node": "v24.21.0",
+      "runner": "ubuntu22",
+      "workflowRun": "37250700549"
+    },
+    "sandbox_status": "PASS",
+    "observed_argv_forbidden_flags": 0,
+    "launch_settings": {
+      "headless": true,
+      "chromiumSandbox": true,
+      "args": [
+        "--enable-automation"
+      ]
+    },
+    "stock_software_gpu_flags": "Official runtime stock SwiftShader flags retained; no added GPU weakening. No WebGL/hardware/FPS/kernel-isolation claim.",
+    "limits": {
+      "run": 150000,
+      "operation": 15000,
+      "cdp": 5000,
+      "launch": 20000,
+      "cleanup": 5000,
+      "requests": 32,
+      "events": 4096,
+      "activeCallbacks": 32
+    }
+  },
+  "bounded_privacy": {
+    "utf8_members_decoded": 1,
+    "decoded_utf8_bytes": 36031,
+    "binary_members_skipped": 1,
+    "actual_pngs_viewed": 1,
+    "nested_zip_count": 0,
+    "combined_expanded_bytes": 465704,
+    "max_decoded_budget_bytes": 67108864,
+    "obvious_credential_pattern_candidates": 0,
+    "auth_cookie_header_candidates": 0,
+    "private_chat_old_vm_pattern_candidates": 0,
+    "qualification": "Bounded obvious-pattern and actual image review, not exhaustive secret detection. No raw job logs or arbitrary native body text added to archive."
+  },
+  "observed_limits": [
+    "Full native decoded data count and CDP body SHA are not direct product Reader EOF/signal/reason evidence.",
+    "Source loadLab + initial ready imply validated raw data path completed, but the precise native lifecycle/cancellation event is not directly observed here.",
+    "Response-stage full-body capture changes timing; this diagnostic cannot establish the uninstrumented failure cause.",
+    "No trace requested by this authorized bounded diagnostic; original report is the retained Network/Fetch timeline.",
+    "This runtime failure persists without posthoc Playwright response.body() observers, which narrows that exclusive explanation but does not prove a replacement cause.",
+    "Old 1be/600/79 FAIL and main5bea failure remain unchanged."
+  ],
+  "scope_execution": "Read-only original/source/PNG review and bounded standard parsing/hashing only; no browser/CI/HTTP/models/Cargo/source tests run by reviewer.",
+  "required_remaining_gates": [
+    "Evidence-based lifecycle/root-cause decision; no generic aborted allowance or speculative product patch",
+    "Independent source and actual review of any next explicitly authorized diagnostic",
+    "Fresh complete final-product LAB nine gates, protected fullCI/regressions and separate public acceptance before merge"
+  ]
+}

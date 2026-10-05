@@ -1,0 +1,121 @@
+{
+  "review_kind": "Narrow independent final combined-source supplement",
+  "verdict": "QUALIFIED_SOURCE_0_BLOCKERS",
+  "reviewed_at_utc": "2026-10-05T01:14:34.614720+00:00",
+  "head": "edca9b9fa16a11bb24317dead67362515b9d1e00",
+  "tree": "5e2d67d3c43cbdb2e3f9992b7114f99a97f25cf5",
+  "tracked_and_untracked_clean": true,
+  "author_head": "62a05f0d769fc1a8c3a1bcee8d26f29fc0918c29",
+  "candidate_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "candidate_tree": "64bdb5f4794f48907f99886c540f6391571b1914",
+  "publication_scope": {
+    "coordinator_reported_preparation_branch": "codex/lab-transport-diagnostic-prepare-20261005",
+    "independently_observed_local_branch": "codex/native-lab-transport-diagnostic",
+    "network_remote_read": "NOT_PERFORMED",
+    "only_runtime_trigger_branch": "codex/lab-transport-diagnostic-run-20261005",
+    "single_runtime_execution": "Coordinator-authorized and coordinator-controlled; not a global push-count lock"
+  },
+  "files": [
+    {
+      "path": ".github/workflows/lab-transport-diagnostic.yml",
+      "bytes": 2241,
+      "sha256": "ade77f54266c73cef921fd198554fab1f469252b139bbabcdbda50e0dd5ed199",
+      "same_as_prior_review": true,
+      "owner": "root"
+    },
+    {
+      "path": "scripts/check_lab_transport_diagnostic.mjs",
+      "bytes": 26584,
+      "sha256": "9f3dc0206de9d8e1371b19d10373a73b1ab6fb94889d6ddaa29992c625f7a33a",
+      "same_as_prior_review": true,
+      "owner": "QA author"
+    },
+    {
+      "path": "scripts/lab-transport-diagnostic-assets.json",
+      "bytes": 1311,
+      "sha256": "ab6b564ad4656d21ea21360d073db76b905caebfc7f74b28031a47e5d072c67e",
+      "same_as_prior_review": true,
+      "owner": "QA author"
+    }
+  ],
+  "scope_bindings": {
+    "candidate_diff_exactly_three_new_paths": [
+      ".github/workflows/lab-transport-diagnostic.yml",
+      "scripts/check_lab_transport_diagnostic.mjs",
+      "scripts/lab-transport-diagnostic-assets.json"
+    ],
+    "author_to_combined_diff_only_root_workflow": ".github/workflows/lab-transport-diagnostic.yml",
+    "two_QA_author_blobs_unchanged": true,
+    "all_other_tracked_product_and_docs_bytes_unchanged_from_1be": true,
+    "eight_site_assets_local_git_candidate_and_manifest_exact": true,
+    "total_original_asset_bytes": 6599049
+  },
+  "original_asset_pins": [
+    {
+      "filename": "lab.html",
+      "bytes": 5393,
+      "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+    },
+    {
+      "filename": "lab.js",
+      "bytes": 22571,
+      "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871"
+    },
+    {
+      "filename": "lab.css",
+      "bytes": 5019,
+      "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+    },
+    {
+      "filename": "lab-data.mjs",
+      "bytes": 20808,
+      "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a"
+    },
+    {
+      "filename": "data/lab-2/descriptor.json",
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    },
+    {
+      "filename": "data/lab-2/results.json",
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "filename": "data/lab-2/comparisons.json",
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "filename": "data/lab-2/manifest.json",
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    }
+  ],
+  "prior_reports_preserved": [
+    {
+      "filename": "lab-transport-diagnostic-source-review.json",
+      "bytes": 8834,
+      "sha256": "4ec08661bf297abc6578491e903a3a3effb408874a328433a4ca93850604b938",
+      "preserved": true
+    },
+    {
+      "filename": "lab-transport-diagnostic-source-review.md",
+      "bytes": 4145,
+      "sha256": "8d462782658141a7ef9b277a7d1273fba33e6e51252d08c7a751f722f455a0d2",
+      "preserved": true
+    }
+  ],
+  "qualifications": [
+    "The final UI guard fix and complete script/workflow semantics retain the prior independent source0 verdict. No source logic changed in this integration supplement.",
+    "No browser, CI, Cargo, HTTP, model or source-test execution by reviewer. Actual diagnostic remains NOT_RUN.",
+    "Response-stage read delays original response continuation until full body is available; uninstrumented root cause remains unproved.",
+    "Original LAB1be/600/79 FAIL statuses stay FAIL; diagnostic does not replace nine LAB gates, exact-head full CI/regressions or public acceptance."
+  ],
+  "required_next_steps": [
+    "One protected diagnostic execution at this exact combined HEAD/tree",
+    "Independent original artifact integrity/timeline/body/actualPNG/error-lifecycle review",
+    "Evidence-based follow-up and separate final product gates"
+  ],
+  "blockers": []
+}
