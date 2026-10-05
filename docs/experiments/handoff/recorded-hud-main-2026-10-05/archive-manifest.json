@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "kind": "recorded HUD fresh main public original and regression reports",
+  "main_head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+  "main_tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+  "workflow_run": 37273770904,
+  "artifact_ids": [
+    11329512976,
+    11329293338,
+    11329358270
+  ],
+  "actual_acceptance": "QUALIFIED_INDEPENDENT_PUBLIC_PASS_AND_FRESH_MAIN_REGRESSION_REPORTS_PASS",
+  "full_ci": "SUCCESS_EXACT_MAIN_9SUCCESS_2_EXPECTED_PR_ONLY_SKIPPED",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 6262580,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2990,
+      "sha256": "aa3ea2f7f1a6b758b3868819d05b7cbdd3aa00ff040a3cf74b942aefae2b901e"
+    },
+    {
+      "path": "dense-report.json",
+      "bytes": 331074,
+      "sha256": "9eb1dd073c1e6d6d957156650aac21a1f6c6eece195f32edd95369067479b002"
+    },
+    {
+      "path": "exact-head-ci-receipt.json",
+      "bytes": 16712,
+      "sha256": "a08183f4c8e0d350d73e98a3325642e6a09fe8573dfd8cd05be40eaa5e55418f"
+    },
+    {
+      "path": "inspect-main-reports.py",
+      "bytes": 5909,
+      "sha256": "20a4e942b6193be1dd82abcda79019cb7ee1f60a26a8b32201701ad6d959cec1"
+    },
+    {
+      "path": "main-followup-astra-scope.json",
+      "bytes": 1725,
+      "sha256": "3ecf5fd8d882b58d07748d871a661061ff326ed198adfb0e9c312ba4d40f6452"
+    },
+    {
+      "path": "original-artifact-pins.json",
+      "bytes": 1376,
+      "sha256": "e5d0691b61ccb5127bb498863d116875a32ad4018153d05aa91b87189fe89efb"
+    },
+    {
+      "path": "public-bounded-analysis.json",
+      "bytes": 23945,
+      "sha256": "8310904b9384830cdaf26b9a86c2daef8916bac091d05d5f109060d7b58e2ac6"
+    },
+    {
+      "path": "public-bounded-review.py",
+      "bytes": 18668,
+      "sha256": "fe363d1011a9e81da16a0a3fc1bb1462200993f897b2883247e191e5782f4ffe"
+    },
+    {
+      "path": "public-playback-813be1e-original.zip",
+      "bytes": 5598658,
+      "sha256": "d3225ea886c7fdbc605bd19e91c2830cd4b87aa131bca25dc984ddf0ea9be150"
+    },
+    {
+      "path": "public-review.json",
+      "bytes": 29963,
+      "sha256": "330d6a3db22e240d498894d73cb9a74ff5257033333a6738713e87311f426ac9"
+    },
+    {
+      "path": "public-review.md",
+      "bytes": 9883,
+      "sha256": "8676e9fe68646891aa0da2c715737934eaff59004e9b9dee61c75b1f841720dc"
+    },
+    {
+      "path": "recorded-dense-report-inspection.json",
+      "bytes": 1026,
+      "sha256": "9ace61fd6719d0f36858ff0ef2e21b6ca3700a86534e52eba229c7fd632a640a"
+    },
+    {
+      "path": "recorded-evidence.json",
+      "bytes": 216132,
+      "sha256": "ae2da01f1bcd9cd53c424b00af084635fbcedd0ede7b68016331d9c3e298a6df"
+    },
+    {
+      "path": "source-tree-bridge.json",
+      "bytes": 1266,
+      "sha256": "8cf81666c4fbc482d53d489e1e81bf712d3dc54f24258ef631ccc5dadc672a70"
+    },
+    {
+      "path": "workflow-artifact-index.json",
+      "bytes": 3253,
+      "sha256": "cb47e15b01868d8eff201b2b0f0b892e6ed4978b9e032b7d08fe3c9bb1053c56"
+    }
+  ],
+  "qualifications": [
+    "Candidate independent recorded/dense PASS remains d8e-bound; byte-identical merged tree, fresh main reports PASS, new independent public actual PASS",
+    "No new full independent main recorded/dense or GL artifact review; accepted-e2 source bridge and fresh mandatory regression steps",
+    "Original public ZIP without repacking, fresh report bytes preserved; all7main artifact metadata retained",
+    "Public raw6module bodies perpage/CDPmessages/nativeunhandledsampler unavailable; bounded privacy/software browser scope retained",
+    "Metadata/finalgzip all3horizons and default browser0\u21921, not complete2.424GBbrowserdelivery; LAB HOLD"
+  ]
+}

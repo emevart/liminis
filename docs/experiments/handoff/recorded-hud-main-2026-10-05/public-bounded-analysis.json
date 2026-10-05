@@ -1,0 +1,732 @@
+{
+  "status": "BOUNDED_LOCAL_EVIDENCE_AUDIT_PASS",
+  "head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+  "tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+  "runId": 37273770904,
+  "attempt": 1,
+  "recordedJobId": 111646192186,
+  "artifactId": 11329358270,
+  "original": {
+    "bytes": 5598658,
+    "sha256": "d3225ea886c7fdbc605bd19e91c2830cd4b87aa131bca25dc984ddf0ea9be150",
+    "entries": 6,
+    "expandedBytes": 5748873,
+    "crc": "PASS",
+    "closedRegularPaths": true,
+    "unrepacked": true
+  },
+  "trace": {
+    "bytes": 5384669,
+    "sha256": "dca3c43496bc9e8a0abfd3ec3cf554aad7eba1d5888fcdbbf44b8bac8e7daa41",
+    "entries": 145,
+    "expandedBytes": 11749493,
+    "crc": "PASS",
+    "closedRegularPaths": true,
+    "pairedActions": 202,
+    "actionErrors": 0,
+    "pageCloseAcks": 2,
+    "responseBodyCallAcks": 28,
+    "retainedBodyRows": 16,
+    "omittedModuleBodyRows": 12,
+    "redirectAndBlockedBodyRowsNotAssetBytes": 4,
+    "cdpProtocolMessagesNotRetained": true,
+    "traceStopsBeforeContextBrowserCleanup": true
+  },
+  "sourcePins": [
+    {
+      "filename": "observe.html",
+      "bytes": 6954,
+      "sha256": "105c5a860651769c0310c4185a96d7ad2442c3726b51779a8afa1f1707d0b72e"
+    },
+    {
+      "filename": "observer.js",
+      "bytes": 30075,
+      "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+    },
+    {
+      "filename": "observer.css",
+      "bytes": 7618,
+      "sha256": "edd0061678fa7f0f64f8fd6dfaf9ea12a94170c239b314b9a533a96cff5268f4"
+    },
+    {
+      "filename": "playback.mjs",
+      "bytes": 10351,
+      "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+    },
+    {
+      "filename": "recording-loader.mjs",
+      "bytes": 3190,
+      "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+    },
+    {
+      "filename": "recording.mjs",
+      "bytes": 5021,
+      "sha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334"
+    },
+    {
+      "filename": "dense-recording.mjs",
+      "bytes": 41209,
+      "sha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f"
+    },
+    {
+      "filename": "catalog.mjs",
+      "bytes": 4345,
+      "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+    },
+    {
+      "filename": "data/catalog.json",
+      "bytes": 116490,
+      "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+    },
+    {
+      "filename": "data/cell-chamber-seed-42.json",
+      "bytes": 6047570,
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+    },
+    {
+      "filename": "data/dense-cell-chamber/index.json",
+      "bytes": 1977,
+      "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+    },
+    {
+      "filename": "data/dense-cell-chamber/horizon-10000.json",
+      "bytes": 18860,
+      "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+      "bytes": 312818,
+      "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+      "bytes": 917524,
+      "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz",
+      "bytes": 288747,
+      "sha256": "5d4ecd6006dec3d74816cbc95da9d9ca036e8761094d1aef944e79531e43108e"
+    },
+    {
+      "filename": "data/dense-cell-chamber/horizon-100000.json",
+      "bytes": 128695,
+      "sha256": "10813cdd0fb88921fd62d4db7701d068e00135ae01dcc8213dff3f0d6d627858"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz",
+      "bytes": 275423,
+      "sha256": "906f92d9637b83e5b8cd2893c1ba7520049581618b2922abf1011f985d3e3e43"
+    },
+    {
+      "filename": "data/dense-cell-chamber/horizon-1000000.json",
+      "bytes": 1229207,
+      "sha256": "ab3849199d73f8d535fdc48dba299000efb64b3433491ff3e260a51fd729ea74"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz",
+      "bytes": 414483,
+      "sha256": "fb31b92d9e8590a69655fb76f2de6ffa82018e973ef3c6aca8af8ffbf1be455b"
+    }
+  ],
+  "browserSourcePins": [
+    {
+      "filename": "observe.html",
+      "bytes": 6954,
+      "sha256": "105c5a860651769c0310c4185a96d7ad2442c3726b51779a8afa1f1707d0b72e"
+    },
+    {
+      "filename": "observer.js",
+      "bytes": 30075,
+      "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+    },
+    {
+      "filename": "observer.css",
+      "bytes": 7618,
+      "sha256": "edd0061678fa7f0f64f8fd6dfaf9ea12a94170c239b314b9a533a96cff5268f4"
+    },
+    {
+      "filename": "playback.mjs",
+      "bytes": 10351,
+      "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+    },
+    {
+      "filename": "recording-loader.mjs",
+      "bytes": 3190,
+      "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+    },
+    {
+      "filename": "recording.mjs",
+      "bytes": 5021,
+      "sha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334"
+    },
+    {
+      "filename": "dense-recording.mjs",
+      "bytes": 41209,
+      "sha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f"
+    },
+    {
+      "filename": "catalog.mjs",
+      "bytes": 4345,
+      "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+    },
+    {
+      "filename": "data/catalog.json",
+      "bytes": 116490,
+      "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+    },
+    {
+      "filename": "data/cell-chamber-seed-42.json",
+      "bytes": 6047570,
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+    },
+    {
+      "filename": "data/dense-cell-chamber/index.json",
+      "bytes": 1977,
+      "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+    },
+    {
+      "filename": "data/dense-cell-chamber/horizon-10000.json",
+      "bytes": 18860,
+      "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+      "bytes": 312818,
+      "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+    },
+    {
+      "filename": "data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+      "bytes": 917524,
+      "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+    }
+  ],
+  "nodeHttps": {
+    "attempts": 1,
+    "responses": 19,
+    "totalDecodedResponseBytes": 9860557,
+    "allResponsePinsMatchGit": true,
+    "redirects": [
+      {
+        "from": "https://liminis.dev/observe.html",
+        "status": 307,
+        "to": "https://liminis.dev/observe"
+      }
+    ],
+    "finalHorizonPins": [
+      {
+        "id": "cell-chamber-10k",
+        "horizon": 10000,
+        "manifest": "data/dense-cell-chamber/horizon-10000.json",
+        "finalChunk": "data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz",
+        "lastTick": 10000,
+        "gzipBytes": 288747,
+        "gzipSha256": "5d4ecd6006dec3d74816cbc95da9d9ca036e8761094d1aef944e79531e43108e",
+        "mode": "Node HTTPS pins only; not nondefault browser endpoint rendering"
+      },
+      {
+        "id": "cell-chamber-100k",
+        "horizon": 100000,
+        "manifest": "data/dense-cell-chamber/horizon-100000.json",
+        "finalChunk": "data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz",
+        "lastTick": 100000,
+        "gzipBytes": 275423,
+        "gzipSha256": "906f92d9637b83e5b8cd2893c1ba7520049581618b2922abf1011f985d3e3e43",
+        "mode": "Node HTTPS pins only; not nondefault browser endpoint rendering"
+      },
+      {
+        "id": "cell-chamber-1m",
+        "horizon": 1000000,
+        "manifest": "data/dense-cell-chamber/horizon-1000000.json",
+        "finalChunk": "data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz",
+        "lastTick": 1000000,
+        "gzipBytes": 414483,
+        "gzipSha256": "fb31b92d9e8590a69655fb76f2de6ffa82018e973ef3c6aca8af8ffbf1be455b",
+        "mode": "Node HTTPS pins only; not nondefault browser endpoint rendering"
+      }
+    ],
+    "rawResponseBodiesNotArchived": true
+  },
+  "rawHtml": [
+    {
+      "name": "desktop",
+      "rawBytes": 7321,
+      "rawSha256": "3afb737fe5ba9cdcf1321d331ca16dc088d60bc8da16af8a18d2d3415acb879a",
+      "normalizedBytes": 6954,
+      "normalizedSha256": "105c5a860651769c0310c4185a96d7ad2442c3726b51779a8afa1f1707d0b72e",
+      "exactInsertionVerified": true,
+      "analyticsExecution": "NOT_TESTED_BLOCKED_BEFORE_TRANSMISSION"
+    },
+    {
+      "name": "mobile",
+      "rawBytes": 7321,
+      "rawSha256": "3afb737fe5ba9cdcf1321d331ca16dc088d60bc8da16af8a18d2d3415acb879a",
+      "normalizedBytes": 6954,
+      "normalizedSha256": "105c5a860651769c0310c4185a96d7ad2442c3726b51779a8afa1f1707d0b72e",
+      "exactInsertionVerified": true,
+      "analyticsExecution": "NOT_TESTED_BLOCKED_BEFORE_TRANSMISSION"
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "desktop-default.png",
+      "bytes": 115895,
+      "sha256": "d40a3ee94dbf40ffc3996332794cdb06550e0c11021ad17ae1672071c4b211b3",
+      "width": 1440,
+      "height": 900,
+      "rgbaSha256": "de9d78fbd465bcc6cd885850bb0702ef781191e83eac02cf3e5728c42865daa2",
+      "independentlyViewedViaViewImage": true
+    },
+    {
+      "filename": "mobile-default.png",
+      "bytes": 165301,
+      "sha256": "2a6e37fd80b64de3502df34c279596b797a8295d3d14564b598c42befc6173fd",
+      "width": 390,
+      "height": 2324,
+      "rgbaSha256": "369fd3ca0f9e78215a9e6b05c2055844ad4b831712c5352188595fc0b8c90d12",
+      "independentlyViewedViaViewImage": true
+    }
+  ],
+  "browserObservations": [
+    {
+      "name": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "assetBodyVerdicts": 14,
+      "sameOriginGetAndRedirects": 15,
+      "analyticsExactBlocked": 1,
+      "requestBijection": "16 exact URLs per page match trace multiset",
+      "heldSamples": [
+        {
+          "drawTarget": 30,
+          "playhead": 1.1316,
+          "modelSecondsAdvanced": 1.1316,
+          "wallSeconds": 1.1316999999999826,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "30b6b929a3d51529020a37614f4b855ab8a0f005b7770d105c974a3b627b7747",
+          "durationAt1x": "3.47 d",
+          "absoluteWallModelDifferenceSeconds": 9.999999998266951e-05
+        },
+        {
+          "drawTarget": 60,
+          "playhead": 2.2676,
+          "modelSecondsAdvanced": 1.136,
+          "wallSeconds": 1.1358999999999941,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "30b6b929a3d51529020a37614f4b855ab8a0f005b7770d105c974a3b627b7747",
+          "durationAt1x": "3.47 d",
+          "absoluteWallModelDifferenceSeconds": 0.00010000000000576215
+        }
+      ],
+      "nextSample": {
+        "time": 30,
+        "tick": 1,
+        "livingCells": 8
+      },
+      "finalization": {
+        "pageClosed": true,
+        "pendingGuardActions": 0,
+        "settledBodyReads": 14,
+        "totalBodyReads": 14,
+        "expectedAnalyticsCount": 1,
+        "finalAnalyticsCount": 1
+      },
+      "initialCanvas": {
+        "paintedPixels": 3805,
+        "sha256": "30b6b929a3d51529020a37614f4b855ab8a0f005b7770d105c974a3b627b7747"
+      },
+      "nativeClickSelectors": [
+        "#play",
+        "#play",
+        "#play",
+        "#play",
+        "#next",
+        "#previous"
+      ],
+      "actualTraceTextValues": {
+        "#duration": [
+          "2 min",
+          "3.47 d",
+          "3.47 d",
+          "3.47 d"
+        ],
+        "#playhead": [
+          "0",
+          "0",
+          "1.1316",
+          "1.1316",
+          "1.1316",
+          "2.2676",
+          "2.2676",
+          "30",
+          "0"
+        ],
+        "#time": [
+          "0",
+          "0",
+          "0",
+          "30",
+          "0"
+        ],
+        "#tick": [
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "#sample-cadence": [
+          "Schematic well-mixed inventory; no spatial coordinates. 10,001 real states · every tick / 30 model s. Overview plots: 201 sparse archive frames, every 50 ticks.",
+          "Schematic well-mixed inventory; no spatial coordinates. 10,001 real states · every tick / 30 model s. Overview plots: 201 sparse archive frames, every 50 ticks."
+        ],
+        "#living": [
+          "8"
+        ]
+      },
+      "noPlaybackRequestsThroughClose": true
+    },
+    {
+      "name": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "assetBodyVerdicts": 14,
+      "sameOriginGetAndRedirects": 15,
+      "analyticsExactBlocked": 1,
+      "requestBijection": "16 exact URLs per page match trace multiset",
+      "heldSamples": [
+        {
+          "drawTarget": 30,
+          "playhead": 1.133,
+          "modelSecondsAdvanced": 1.133,
+          "wallSeconds": 1.1331000000000058,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "c2a29a462e3772387f2dc4df513bc9807b7ddcefe0b792811930c58eb069df00",
+          "durationAt1x": "3.47 d",
+          "absoluteWallModelDifferenceSeconds": 0.00010000000000576215
+        },
+        {
+          "drawTarget": 60,
+          "playhead": 2.3018,
+          "modelSecondsAdvanced": 1.1688,
+          "wallSeconds": 1.1687999999999883,
+          "shownTime": 0,
+          "shownTick": 0,
+          "canvasSha256": "c2a29a462e3772387f2dc4df513bc9807b7ddcefe0b792811930c58eb069df00",
+          "durationAt1x": "3.47 d",
+          "absoluteWallModelDifferenceSeconds": 1.176836406102666e-14
+        }
+      ],
+      "nextSample": {
+        "time": 30,
+        "tick": 1,
+        "livingCells": 8
+      },
+      "finalization": {
+        "pageClosed": true,
+        "pendingGuardActions": 0,
+        "settledBodyReads": 14,
+        "totalBodyReads": 14,
+        "expectedAnalyticsCount": 1,
+        "finalAnalyticsCount": 1
+      },
+      "initialCanvas": {
+        "paintedPixels": 3546,
+        "sha256": "c2a29a462e3772387f2dc4df513bc9807b7ddcefe0b792811930c58eb069df00"
+      },
+      "nativeClickSelectors": [
+        "#play",
+        "#play",
+        "#play",
+        "#play",
+        "#next",
+        "#previous"
+      ],
+      "actualTraceTextValues": {
+        "#duration": [
+          "2 min",
+          "3.47 d",
+          "3.47 d",
+          "3.47 d"
+        ],
+        "#playhead": [
+          "0",
+          "0",
+          "1.133",
+          "1.133",
+          "1.133",
+          "2.3018",
+          "2.3018",
+          "30",
+          "0"
+        ],
+        "#time": [
+          "0",
+          "0",
+          "0",
+          "30",
+          "0"
+        ],
+        "#tick": [
+          "0",
+          "0",
+          "0",
+          "1"
+        ],
+        "#sample-cadence": [
+          "Schematic well-mixed inventory; no spatial coordinates. 10,001 real states · every tick / 30 model s. Overview plots: 201 sparse archive frames, every 50 ticks.",
+          "Schematic well-mixed inventory; no spatial coordinates. 10,001 real states · every tick / 30 model s. Overview plots: 201 sparse archive frames, every 50 ticks."
+        ],
+        "#living": [
+          "8"
+        ]
+      },
+      "noPlaybackRequestsThroughClose": true
+    }
+  ],
+  "retainedBrowserBodies": [
+    {
+      "name": "desktop",
+      "path": "/observe",
+      "bytes": 7321,
+      "sha256": "3afb737fe5ba9cdcf1321d331ca16dc088d60bc8da16af8a18d2d3415acb879a"
+    },
+    {
+      "name": "desktop",
+      "path": "/observer.css",
+      "bytes": 7618,
+      "sha256": "edd0061678fa7f0f64f8fd6dfaf9ea12a94170c239b314b9a533a96cff5268f4"
+    },
+    {
+      "name": "desktop",
+      "path": "/data/catalog.json",
+      "bytes": 116490,
+      "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+    },
+    {
+      "name": "desktop",
+      "path": "/data/cell-chamber-seed-42.json",
+      "bytes": 6047570,
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+    },
+    {
+      "name": "desktop",
+      "path": "/data/dense-cell-chamber/index.json",
+      "bytes": 1977,
+      "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+    },
+    {
+      "name": "desktop",
+      "path": "/data/dense-cell-chamber/horizon-10000.json",
+      "bytes": 18860,
+      "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+    },
+    {
+      "name": "desktop",
+      "path": "/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+      "bytes": 312818,
+      "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+    },
+    {
+      "name": "desktop",
+      "path": "/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+      "bytes": 917524,
+      "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+    },
+    {
+      "name": "mobile",
+      "path": "/observe",
+      "bytes": 7321,
+      "sha256": "3afb737fe5ba9cdcf1321d331ca16dc088d60bc8da16af8a18d2d3415acb879a"
+    },
+    {
+      "name": "mobile",
+      "path": "/observer.css",
+      "bytes": 7618,
+      "sha256": "edd0061678fa7f0f64f8fd6dfaf9ea12a94170c239b314b9a533a96cff5268f4"
+    },
+    {
+      "name": "mobile",
+      "path": "/data/catalog.json",
+      "bytes": 116490,
+      "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+    },
+    {
+      "name": "mobile",
+      "path": "/data/cell-chamber-seed-42.json",
+      "bytes": 6047570,
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+    },
+    {
+      "name": "mobile",
+      "path": "/data/dense-cell-chamber/index.json",
+      "bytes": 1977,
+      "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+    },
+    {
+      "name": "mobile",
+      "path": "/data/dense-cell-chamber/horizon-10000.json",
+      "bytes": 18860,
+      "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+    },
+    {
+      "name": "mobile",
+      "path": "/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+      "bytes": 312818,
+      "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+    },
+    {
+      "name": "mobile",
+      "path": "/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+      "bytes": 917524,
+      "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+    }
+  ],
+  "console": {
+    "expectedAnalyticsErrors": 2,
+    "canvasReadbackWarnings": 2,
+    "unexpectedErrors": 0,
+    "noExplicitNativeUnhandledSampler": true
+  },
+  "sourceFirstTwoStates": {
+    "initialTick": 0,
+    "initialSimTime": 0,
+    "nextTick": 1,
+    "nextSimTime": 30,
+    "livingCells": 8,
+    "denseGenesisExactSparseGenesis": true,
+    "noFullDecode": true
+  },
+  "sandbox": {
+    "browser": {
+      "engine": "Chromium",
+      "version": "149.0.7827.55",
+      "chromiumSandbox": true
+    },
+    "playwright": "1.61.1",
+    "node": "v24.21.0",
+    "runner": {
+      "os": "Linux",
+      "arch": "X64",
+      "imageOS": "ubuntu22",
+      "imageVersion": "20260927.309.1"
+    },
+    "observedArgv": [
+      "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+      "--disable-field-trial-config",
+      "--disable-background-networking",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-back-forward-cache",
+      "--disable-breakpad",
+      "--disable-client-side-phishing-detection",
+      "--disable-component-extensions-with-background-pages",
+      "--disable-component-update",
+      "--no-default-browser-check",
+      "--disable-default-apps",
+      "--disable-dev-shm-usage",
+      "--disable-edgeupdater",
+      "--disable-extensions",
+      "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+      "--enable-features=CDPScreenshotNewSurface",
+      "--allow-pre-commit-input",
+      "--disable-hang-monitor",
+      "--disable-ipc-flooding-protection",
+      "--disable-popup-blocking",
+      "--disable-prompt-on-repost",
+      "--disable-renderer-backgrounding",
+      "--force-color-profile=srgb",
+      "--metrics-recording-only",
+      "--no-first-run",
+      "--password-store=basic",
+      "--use-mock-keychain",
+      "--no-service-autorun",
+      "--export-tagged-pdf",
+      "--disable-search-engine-choice-screen",
+      "--unsafely-disable-devtools-self-xss-warnings",
+      "--edge-skip-compat-layer-relaunch",
+      "--disable-infobars",
+      "--disable-search-engine-choice-screen",
+      "--disable-sync",
+      "--enable-unsafe-swiftshader",
+      "--headless",
+      "--hide-scrollbars",
+      "--mute-audio",
+      "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+      "--enable-automation",
+      "--user-data-dir=/tmp/playwright_chromiumdev_profile-XxLSkl",
+      "--remote-debugging-pipe",
+      "--no-startup-window",
+      "--use-gl=angle",
+      "--use-angle=swiftshader-webgl",
+      "--ozone-platform=headless",
+      "--allow-pre-commit-input"
+    ],
+    "forbiddenSwitches": [],
+    "stockSoftwareGpuQualified": true
+  },
+  "sourceScriptSha256": "0d41e009ac7c8fd8feca1fd398b016a4f5dee5e8f9119f10900d150dfb0e5f7b",
+  "checks": [
+    {
+      "name": "Public critical assets and one allowlisted recording match checkout bytes",
+      "status": "PASS",
+      "elapsedMs": 450
+    },
+    {
+      "name": "Observed browser arguments retain protected sandbox process model",
+      "status": "PASS",
+      "elapsedMs": 4
+    },
+    {
+      "name": "Public default observer ready, real canvas, physical 1× hold and every-tick stepping: desktop",
+      "status": "PASS",
+      "elapsedMs": 4769
+    },
+    {
+      "name": "Public default observer ready, real canvas, physical 1× hold and every-tick stepping: mobile",
+      "status": "PASS",
+      "elapsedMs": 4692
+    }
+  ],
+  "elapsedMs": 10697.0,
+  "timeouts": {
+    "deployment": 180000,
+    "retry": 5000,
+    "fetch": 15000,
+    "operation": 15000,
+    "viewport": 60000,
+    "launch": 20000,
+    "cdp": 5000,
+    "traceStop": 15000,
+    "cleanup": 5000
+  },
+  "privacy": {
+    "utf8Entries": 15,
+    "utf8Bytes": 11110107,
+    "binaryEntries": 133,
+    "gzipDecodedEntries": 2,
+    "gzipDecodedBytes": 4132809,
+    "boundBytes": 67108864,
+    "matches": {
+      "providerCredential": 0,
+      "privateKey": 0,
+      "jwt": 0,
+      "privateOldContext": 0
+    },
+    "authenticationCookieHeaderEntries": 0,
+    "cookies": 0,
+    "notExhaustiveSecretGuarantee": true
+  },
+  "treeBridge": {
+    "fileSha256": "63a7492cda3e04bdbc50a6e72d6ce3f55e281a3911c4955f303ad2e8e34538c7",
+    "sameTree": true,
+    "qualification": "All tracked source objects byte-identical to candidate. Candidate independent recorded/dense full-artifact review remains candidate-bound. Fresh main reports/fullCI/public and public evidence/readback still required; no new main independent full recorded/dense or GL review claimed."
+  },
+  "analytics": "Exact reviewed insertion hashed; two actual pre-send blocks ACKed in final evidence. No raw CDP messages in trace; analytics execution is NOT_TESTED.",
+  "ownership": "Only own bounded script/data/report files; no source/Git/network/browser/model/Cargo/tests/run changes."
+}

@@ -1,0 +1,26 @@
+{
+  "status": "PASS_FRESH_MAIN_REGRESSION_REPORT_INSPECTION",
+  "head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+  "tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+  "run_id": 37273770904,
+  "attempt": 1,
+  "reports": {
+    "recorded": {
+      "bytes": 216132,
+      "sha256": "ae2da01f1bcd9cd53c424b00af084635fbcedd0ede7b68016331d9c3e298a6df",
+      "gates": 22,
+      "source_pins": 8,
+      "layouts": 9
+    },
+    "dense": {
+      "bytes": 331074,
+      "sha256": "9eb1dd073c1e6d6d957156650aac21a1f6c6eece195f32edd95369067479b002",
+      "gates": 14,
+      "source_pins": 20,
+      "layouts": 4
+    }
+  },
+  "layout_selection_cases": 13,
+  "strict_hud_geometry_records": 27,
+  "qualification": "Passive fresh report/source-pin inspection under identical-tree bridge and Astra scope. Candidate full independent recorded/dense PNG/trace review remains bound to d8e. This is not a new independent full-artifact MAIN or GL review. Fresh fullCI and independent actual public acceptance/readback remain separate gates."
+}

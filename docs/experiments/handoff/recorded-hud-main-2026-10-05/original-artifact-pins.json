@@ -1,0 +1,41 @@
+{
+  "head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+  "tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+  "run_id": 37273770904,
+  "attempt": 1,
+  "rows": [
+    {
+      "artifact_id": 11329512976,
+      "label": "recorded",
+      "name": "recorded-browser-813be1e-original.zip",
+      "bytes": 14595538,
+      "sha256": "862bf72562551e72e18d50b772882bd18f1d03cbf2d7b9f2b580237a57565b6a",
+      "zip_crc": "PASS",
+      "entries": 10
+    },
+    {
+      "artifact_id": 11329293338,
+      "label": "dense",
+      "name": "dense-recording-browser-813be1e-original.zip",
+      "bytes": 15996119,
+      "sha256": "0663eaf653d4be6943b1e2aedb3a7240c910f27e6a38057c05bdffa997b8cd79",
+      "zip_crc": "PASS",
+      "entries": 7
+    },
+    {
+      "artifact_id": 11329358270,
+      "label": "public",
+      "name": "public-playback-813be1e-original.zip",
+      "bytes": 5598658,
+      "sha256": "d3225ea886c7fdbc605bd19e91c2830cd4b87aa131bca25dc984ddf0ea9be150",
+      "zip_crc": "PASS",
+      "entries": 6
+    }
+  ],
+  "status": "NEW_MAIN_ORIGINAL_BYTES_AND_ZIP_CRC_PASS",
+  "qualifications": [
+    "No repacking; original artifact metadata digests matched",
+    "Independent deep candidate recorded/dense review remains candidate-bound; new main reports reviewed under source-tree identity bridge",
+    "Deep independent new public review and fullCI still separate gates"
+  ]
+}
