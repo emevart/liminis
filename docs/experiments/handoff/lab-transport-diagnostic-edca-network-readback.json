@@ -1,0 +1,74 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "68419ae6b7a53fc707983491736a663f728f0dfb",
+  "archive_tree": "b98642ef38ef9ce55231f97d76a779798d4f854b",
+  "closed_inventory": true,
+  "manifest_sha256": "5272cc2c3a857efa272c6dbe2f9345b635ff58096811cd2b83b66ccc3f020c46",
+  "file_count": 10,
+  "unique_bytes_excluding_manifest": 477283,
+  "original_zip_count": 1,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2913,
+      "sha256": "2c8beb6ee2347011e64e575762faf47c308299e9fb9634b2f8128f9cc95f375f",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-diagnostic-combined-source-review.json",
+      "bytes": 4896,
+      "sha256": "020bff5b0a8d76d41f83e34814ff7f79db56ecd056ae5df629b8d3c0c55993bd",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-diagnostic-combined-source-review.md",
+      "bytes": 1978,
+      "sha256": "bc0198ceae0bf3ae28d65bebfa8305dcd865606c2105247c9d171d56dfa41e6c",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-diagnostic-edca9b9-actual-review.json",
+      "bytes": 16516,
+      "sha256": "11fbdb83e1dd6def2e983516b622963192a67b953cf1327630079b0245c7b930",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-diagnostic-edca9b9-actual-review.md",
+      "bytes": 4289,
+      "sha256": "270abb249de63fe3c938e030489b72380bb0f7aca2b7a7e8cc2fd72ccab782e6",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-diagnostic-edca9b9-original.zip",
+      "bytes": 397681,
+      "sha256": "b4a3fdb5ca151f839f7f8fc87adefae6cb1aa8fd1bf0c85b9aaff1faa8dd7036",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "lab-transport-diagnostic-source-review.json",
+      "bytes": 8834,
+      "sha256": "4ec08661bf297abc6578491e903a3a3effb408874a328433a4ca93850604b938",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-diagnostic-source-review.md",
+      "bytes": 4145,
+      "sha256": "8d462782658141a7ef9b277a7d1273fba33e6e51252d08c7a751f722f455a0d2",
+      "verified": true
+    },
+    {
+      "path": "report.json",
+      "bytes": 36031,
+      "sha256": "8ea803d8223663f2c5c9a6e542c672af132a9cd57b21b7d67c29d140d836b759",
+      "verified": true
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}

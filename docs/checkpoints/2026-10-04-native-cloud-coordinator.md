@@ -943,3 +943,54 @@ Main5bea и draftPR21 не менялись; public smoke и LAB4a модели 
 Следующий шаг: получить original diagnostic artifact, независимо проверить
 Network timeline/body pins/PNG/error arrays и выбрать обоснованную QA правку;
 после неё обязательна свежая полная приёмка кандидата перед merge.
+
+
+### Original transport diagnostic FAIL сохранён и проверен из Git
+
+2026-10-05, 01:26 UTC. Run37250700549/job111577533759 завершились FAILURE.
+Artifact11320133411, originalZIP397681 B/SHA256
+`b4a3fdb5ca151f839f7f8fc87adefae6cb1aa8fd1bf0c85b9aaff1faa8dd7036`
+скачан через штатный GitHub connector; два members report.json/page.png,
+CRC/extracted byte equality PASS. Independent actual review подтверждает
+DIAGNOSTIC_FAIL и 0 дополнительных integrity/privacy blockers для архива.
+
+Все восемь original HTTP200 Fetch bodies точны; unchanged continuations ACK,
+восемь server finish/close-after-finish без server abort. Семь native Network
+loadingFinished; results.json после полного dataReceived5294742 B —
+loadingFailed, canceled:true, ERR_ABORTED. Chrome75.758739→75.763942=5.203 ms;
+Node arrivals2371.133→2502.646=131.513 ms — разные часы и задержка наблюдения,
+не единая causal timeline. Ошибка до cleanupPNG по source flow, но Reader
+EOF/signal/lifetime/cancellation cause непосредственно не наблюдались.
+Observed sandbox argv PASS; initial/final UI ready, fourvisibleplots/24matrix/
+seed1sample0/unhandled0. ActualPNG просмотрен независимо, прежние и остальные
+LAB gates не переименованы в PASS. actionsPassed:false; postPNG ready wait
+не выполнялся, final snapshot прочитан. Guard остался RUNNING.
+
+Архив `codex/lab-transport-diagnostic-evidence-20261005`:
+`68419ae6b7a53fc707983491736a663f728f0dfb`, tree
+`b98642ef38ef9ce55231f97d76a779798d4f854b`. Closed10files/originalZIP1,
+479464 B включая manifest, SHA manifest
+`5272cc2c3a857efa272c6dbe2f9345b635ff58096811cd2b83b66ccc3f020c46`.
+Отдельная свежая Git object DB без alternates прочитала origin branch и
+проверила все size/SHA/closedinventory/CRC. Receipt сохранён в
+`docs/experiments/handoff/lab-transport-diagnostic-edca-network-readback.json`.
+Bounded privacy1UTF8 member36031 B+1PNG, patterns0; полной secret guarantee нет.
+
+Astra согласовал ещё один отдельный evidence-only CASE: четыре conditional
+Debugger logpoints, всегда false, на неизменённом SHA-pinned lab-data.mjs.
+Entry читает только параметры без TDZ locals; finally beforecleanup, перед
+releaseLock и после awaitreleaseLock читают только primitives. Ожидаются
+16records/4datarequests, cap32; exactsourceSHA/resolvedlocations/nopauses.
+Нет monkeypatch/nativePromisehandlers/objectretention/forcedGC.
+Performance.Timestamp sandwich с document performance.now задаёт интервалы
+совмещения; смешение timeOrigin/Network epoch запрещено, пересечение UNKNOWN.
+Любые errors остаются FAIL; исчезновение abort при instrumentation не равно
+cause proof. Source author owns2scripts; root owns4WF name/branch edits;
+independent review перед ONE future push. New CASE ещё NOT_RUN.
+Future RUN branch `codex/lab-reader-lifecycle-run-20261005`; старый RUN больше
+не используется. Product1be/main5bea, PR21, raw LAB2 и frozen docs неизменны;
+models/Cargo/publicsmoke NOT_RUN. Вопросы пользователю не отправляются.
+
+Следующий шаг: exact reader-diagnostic source freeze/review0/ONE protectedrun,
+независимый разбор границ EOF/lock и причинных интервалов с Astra; затем только
+обоснованная правка и свежие full LAB/CI/public gates перед product merge.
