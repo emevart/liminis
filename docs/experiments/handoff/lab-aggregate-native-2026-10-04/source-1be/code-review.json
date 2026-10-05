@@ -1,0 +1,130 @@
+{
+  "schema": "liminis-independent-lab600-repair-combined-source-review-v1",
+  "verdict": "SOURCE_ZERO_BLOCKERS",
+  "blockers": 0,
+  "rootHead": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "rootTree": "64bdb5f4794f48907f99886c540f6391571b1914",
+  "reviewBase": "60015b28a42e222fcdafd33ed80da6c81f57c6db",
+  "files": [
+    {
+      "path": "site/lab.js",
+      "bytes": 22571,
+      "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+      "authorHead": "6a6dbdf58c456c88528d83bf68b4896a82b6adae",
+      "rootExactAuthorBytes": true
+    },
+    {
+      "path": "site/lab-ui.test.mjs",
+      "bytes": 20928,
+      "sha256": "c5e0fb0a57982c22b250a52aaa059007746aa828fac1f22d2c9609705e19348c",
+      "authorHead": "6a6dbdf58c456c88528d83bf68b4896a82b6adae",
+      "rootExactAuthorBytes": true
+    },
+    {
+      "path": "site/lab-data.mjs",
+      "bytes": 20808,
+      "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+      "authorHead": "4c0a31a2f73120a66709ccb3bc1522a18066f0d2",
+      "rootExactAuthorBytes": true
+    },
+    {
+      "path": "site/lab-data.test.mjs",
+      "bytes": 14697,
+      "sha256": "bd09228dad487dcf3859316c4464dcb106bafa7b27c0ca17062bf463ecedf725",
+      "authorHead": "4c0a31a2f73120a66709ccb3bc1522a18066f0d2",
+      "rootExactAuthorBytes": true
+    },
+    {
+      "path": "scripts/check_lab_browser.mjs",
+      "bytes": 61306,
+      "sha256": "9637ff9b10d57ded55d000e02e61d4f530f41d98e1ea94d2e942c255865c52a3",
+      "authorHead": "4108978254fdf53547f57da2693c2925131adcab",
+      "rootExactAuthorBytes": true
+    }
+  ],
+  "changedPaths": [
+    "docs/ACCEPTANCE.md",
+    "docs/checkpoints/2026-10-04-lab-aggregate-catalog.md",
+    "scripts/check_lab_browser.mjs",
+    "site/lab-data.mjs",
+    "site/lab-data.test.mjs",
+    "site/lab-ui.test.mjs",
+    "site/lab.js"
+  ],
+  "unchangedScope": [
+    "CI workflow/official protected pinned launch calls",
+    "core/API/config/version/frozen SPEC and ADR prefix",
+    "public recorded JSON/dense payload/catalog/player/decoder",
+    "LAB original raw data/descriptor/scientific producer source",
+    "LAB CSS/frame/font/projection formulas and physical3D runtime/vendor"
+  ],
+  "ui": {
+    "authorHead": "6a6dbdf58c456c88528d83bf68b4896a82b6adae",
+    "authorTree": "51a3df43ab39e7d25b59ccb0419fb52dd1be63b6",
+    "reviewedFullJsAndTests": true,
+    "permanentShells": 4,
+    "preflight": "All4measured widths checked before preparing any chart mutations",
+    "pending": "Finite0..96 preserves all shells/content, hides retained SVGs, sets data-layout=pending/aria-busy=true and truthful layout-wait status; subsequent valid RO/pageshow draws latest selected raw data",
+    "commit": "All4detached drawings and legend prepared before one synchronous commit without yielding; scientific domains/rawsamples/styles unchanged",
+    "fatal": "Negative/nonfinite width, incomplete shells and unexpected drawing exceptions go to visible fatal with controls disabled; no uncaught resize error or retry",
+    "lifecycle": "One coalesced RAF; stable width ignores own redraw; no automatic retry loop; pagehide disconnect/cancel, persisted pageshow reobserve/schedule",
+    "testsRead": "All12UI tests, including late fourth-width0 atomicity, all0..96,latest-selection recovery, detached fourth-metric failure, pending/hidden and lifecycle/startup wiring",
+    "qualification": "Synthetic DOM/RAF/BFCache tests are not native layout or browser acceptance"
+  },
+  "loader": {
+    "authorHead": "4c0a31a2f73120a66709ccb3bc1522a18066f0d2",
+    "sourceReview": "loader-eof-delta-review.json",
+    "guard": "Only actual done===true avoids cancel; incomplete reads await cancel then release, primary errors preserved; hash/size/parser invariants unchanged",
+    "qualification": "Old original600abort causality remains unclassified until fresh actual evidence"
+  },
+  "qa": {
+    "authorHead": "4108978254fdf53547f57da2693c2925131adcab",
+    "authorTree": "0a05d3b0f43ade333361fecf568e13c2d5cfbacb",
+    "fullSourceReadBytes": 61306,
+    "fullSourceReadLines": 257,
+    "assertionsRetained": [
+      "48genesis/terminal endpoints overall24runs, zero data re-fetch during selection",
+      "160published paired records and separate independent BigInt5integer metrics; no i128 Number conversion",
+      "9mandatory checks,210s budget,real native keyboard/select/back/reload/matrix link",
+      "Actual dataset/world30/chamber1/dt30/build_attestation=false/source21cbe9, fixed original SHA,size andclosed8assets",
+      "Independent raw→actualSVG paths/dots1e-5 andoneunit/CSSpx layout.02;3significant axis display andrawdomain quantities",
+      "CSSOM rawhistogram declaration serialization kept separate from barpixel proof",
+      "Atomic actualDOM batch snapshots with duplicate/missing/data-value/text/null guards; select skips only actual unchanged state",
+      "Bounded initial/pre-reload/post-reload/close response drain strictly rejects every failed/responseErrors; no URL/ERR_ABORTED waiver/native fetch/read promise observer",
+      "Post5positive fullPage originals require actualready fullrawSVG/typography/sticky page/console/unhandled0; post2negative originals require visiblefatal/nocharts/disabled controls",
+      "Final post-context/browser cleanup aggregate requires3closedpages/pending0/bodypins/allgates/layout4/typography9/PNGs7/postpositive5/postnegative2 andrepeatstickyerrors/stop flag"
+    ]
+  },
+  "independentIntegrityControl": {
+    "originalSha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+    "modifiedSha256": "58407c180b65782bafeeacef46dede6ced435ef2bb1f1ca0c79624f4dc313f2e",
+    "field": "runs[0].identity.volume_m3",
+    "tokenOffset": 5495,
+    "byteOffset": 5496,
+    "change": "e→E,1e-12→1E-12",
+    "exactOneByteSameLength": true,
+    "fullParsedTypeStructureValueEquality": true,
+    "allF64BitsEqual": 40752,
+    "allStringsEqual": 147306,
+    "allIntegersEqual": 41101,
+    "otherEqual": 146,
+    "qualification": "Independent parser/source control, no browser/science/model observation"
+  },
+  "docs": {
+    "reviewedExactDelta": true,
+    "qualification": "ACCEPTANCE/checkpoint retain LAB600FAIL/6partialPASS/unrecorded width/unclassified abort causality; native/source controls not browserPASS; new exact-head artifacts mandatory"
+  },
+  "verification": {
+    "syntaxChecks": "PASS on exact reviewed module/UI/tests/QA source across author/root identities",
+    "gitDiffCheck": "PASS",
+    "rootFileEquality": "PASS",
+    "testOrBrowserCargoModelRunsByReviewer": false,
+    "readOnlyProductAndOriginals": true
+  },
+  "remainingGates": [
+    "Fresh exacthead/tree protected fullCI with all9LAB runtimechecks and mandatory oldgates.",
+    "Independent original artifact SHA/CRC/source/trace/all7actualPNG/layout/body/cleanup acceptance before guarded merge.",
+    "No transfer of GL79PASS or prior source-only tests to this candidate; LAB79 and600FAIL remain preserved.",
+    "Postcapture SVG/typography records attest actualDOM; capturedPNG visual acceptance remains separate."
+  ]
+}

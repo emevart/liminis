@@ -1,0 +1,99 @@
+{
+  "status": "PASS",
+  "scope": "Read-only file/object binding and one-byte transport equivalence; no model/browser/science recomputation",
+  "head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "tree": "64bdb5f4794f48907f99886c540f6391571b1914",
+  "tracked_clean": true,
+  "author_blob_matches": [
+    {
+      "path": "site/lab-data.mjs",
+      "author_head": "4c0a31a2f73120a66709ccb3bc1522a18066f0d2",
+      "git_object": "8735ac28dc2abec7980b7613f9bb7acfbaa4b130",
+      "bytes": 20808,
+      "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+      "exact_author_blob_match": true
+    },
+    {
+      "path": "site/lab-data.test.mjs",
+      "author_head": "4c0a31a2f73120a66709ccb3bc1522a18066f0d2",
+      "git_object": "e7a859e1e9347c49ce342eeb0b84c797aaca73da",
+      "bytes": 14697,
+      "sha256": "bd09228dad487dcf3859316c4464dcb106bafa7b27c0ca17062bf463ecedf725",
+      "exact_author_blob_match": true
+    },
+    {
+      "path": "site/lab.js",
+      "author_head": "6a6dbdf58c456c88528d83bf68b4896a82b6adae",
+      "git_object": "1a7498a3104a9abee86ee6dccf18093470f6926a",
+      "bytes": 22571,
+      "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+      "exact_author_blob_match": true
+    },
+    {
+      "path": "site/lab-ui.test.mjs",
+      "author_head": "6a6dbdf58c456c88528d83bf68b4896a82b6adae",
+      "git_object": "4da7035b2c956975fd541458812139996c15f3ae",
+      "bytes": 20928,
+      "sha256": "c5e0fb0a57982c22b250a52aaa059007746aa828fac1f22d2c9609705e19348c",
+      "exact_author_blob_match": true
+    },
+    {
+      "path": "scripts/check_lab_browser.mjs",
+      "author_head": "4108978254fdf53547f57da2693c2925131adcab",
+      "git_object": "46cf2339160b23ccb757cdbc5e8ea1b3b525944c",
+      "bytes": 61306,
+      "sha256": "9637ff9b10d57ded55d000e02e61d4f530f41d98e1ea94d2e942c255865c52a3",
+      "exact_author_blob_match": true
+    }
+  ],
+  "unchanged_objects": {
+    "crates/liminis-core": "1f9031142731d138bf6de243ab2ac13d644e1553",
+    "configs": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+    "Cargo.toml": "4b7bef5047fafbdd10526a90de4a18952678a6a6",
+    "Cargo.lock": "224f065c1bbf103a5cfec139a2f3313e2bf80559",
+    "rust-toolchain.toml": "1fd6f1afaf9c17073863c2b9a9f50f90572a7edb",
+    "docs/experiments/lab-2": "246f2cce3ba9bf6612753267a24574f7a043add4",
+    "site/data/catalog.json": "07eabcff860ef15e7b84a315e4b870c715744fff",
+    "site/data/dense-cell-chamber": "01b9b066dc56be0aa75cb325398ba0aef97e70de",
+    "site/recording.mjs": "75e36b0e47f0c8323d84bb5942c6bac21a21c37f",
+    "site/dense-recording.mjs": "aa9b99b90e35797d7ae16cad62dbaf40401da802",
+    "site/playback.mjs": "19e198964ba31aa8801fed58e9f48eec60fc9ed9",
+    "site/observer.js": "199b8ad408ea1b2f6739fd1a9407109084b24996",
+    "crates/liminis/src/cell-viewer-3d.mjs": "c9c299a89431fd76a7ccc76ef408464fe5f5f69c",
+    "crates/liminis/src/vendor/three-r180": "37a4b0a1e61dc9e76649d0b37cc50eaa8bdb55f4",
+    "crates/liminis/src/cells_host.rs": "ff6f0113d9ed80c9d14e1a4782370240865ffb69",
+    "crates/liminis/src/cell-viewer.html": "fcab3f21526a10617067ce93d67ded19765e7521",
+    "site/observe.html": "87f30258d13440bb1204b42ccab88424c49e2edd",
+    "scripts/check_public_recording_browser.mjs": "7ad588601f09e2dd3f50a913e050a84c67b9a0dd"
+  },
+  "unchanged_lab_from_600": {
+    "site/data/lab-2": "39451a50e8fb8d30e5f10d2dc375be0ff961a360",
+    "scripts/build_lab_catalog.py": "a86176d4c213835e7865b2af2a6bae10f7cef2fe",
+    "scripts/test_build_lab_catalog.py": "ddc4a106c811bdc02e897962804190e7e4ec1fbe",
+    "site/lab.css": "71126a52c3a188352206ceaab4c965b5868d3ca4",
+    "site/lab.html": "19c81bf6d9665d5043f9e3bf9855a670330db674"
+  },
+  "integrity_control": {
+    "field": "runs[0].identity.volume_m3",
+    "token_offset": 5495,
+    "byte_offset": 5496,
+    "original_token": "1e-12",
+    "delivered_token": "1E-12",
+    "original_bytes": 5294742,
+    "delivered_bytes": 5294742,
+    "original_sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+    "delivered_sha256": "58407c180b65782bafeeacef46dede6ced435ef2bb1f1ca0c79624f4dc313f2e",
+    "changed_bytes": 1,
+    "full_parsed_binary64_bits_strings_structure_equal": true,
+    "compared_values": {
+      "objects": 49061,
+      "arrays": 12254,
+      "strings": 147306,
+      "binary64_numbers": 81853,
+      "booleans": 74,
+      "nulls": 72
+    },
+    "original_files_written": false
+  },
+  "old_arithmetic_repeated": false
+}

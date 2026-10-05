@@ -1,0 +1,9 @@
+Замечаний нет; блокирующих: 0, остальных: 0. Независимо просмотрен private reader delta источника `4c0a31a2f73120a66709ccb3bc1522a18066f0d2` / tree `8337e2d310dd501353e265e3982edf199cf7413b` в clean checkout; два файла побайтово совпадают с root cherry `026dc0801aa56c692f5e62ecfd470a4310a1f39b`. Вердикт относится к исходникам, не к будущей actual browser приёмке.
+
+Только реальный reader.read с done===true завершает чтение. На подтверждённом EOF lock освобождается без cancel; весь полученный payload без EOF ещё не означает completion. Для незавершённого/ошибочного чтения cancel дожидается settlement, затем releaseLock предпринимается даже при rejected cancel. Исходная read/oversize ошибка остаётся primary и не скрывается cleanup ошибкой. Единственная release ошибка после EOF видима и не позволяет вернуть успешный dataset. Все SHA, fixed URLs, response size limits, schema/joins, exact strings и численная интерпретация неизменны: prefix до private readBytes и suffix от exported loadLab побайтово равны parent. Исходные raw JSON/descriptor и frozen science объекты прежние.
+
+Просмотрены meaningful native Response/ReadableStream controls: завершённые четыре payloads без cancel, valid bytes без EOF, oversize refusal, delayedcancel settlement, primary read error при cleanup failures, rejected cancellation без unhandled rejection и sole postEOF release failure. Author14controlsPASS не переобъявлены собственным запуском или browserPASS. Tests/Cargo/model/browser здесь не запускались.
+
+Original LAB79 и LAB600 остаются FAIL. Этот source fix не устанавливает причину двух aborts LAB600 и не исправляет задним числом отсутствовавшие response pins. После полного coherent commit нужны independent source review и свежие actual exact-head browser bytes/screenshots/cleanup; source-only положительный вердикт их не заменяет.
+
+Замечаний нет.

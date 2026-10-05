@@ -1,0 +1,52 @@
+{
+  "schema": "liminis-independent-lab-loader-eof-source-review-v1",
+  "verdict": "SOURCE_ZERO_BLOCKERS",
+  "blockers": 0,
+  "authorHead": "4c0a31a2f73120a66709ccb3bc1522a18066f0d2",
+  "authorTree": "8337e2d310dd501353e265e3982edf199cf7413b",
+  "rootCherry": "026dc0801aa56c692f5e62ecfd470a4310a1f39b",
+  "exactAuthorRootFileEquality": true,
+  "files": [
+    {
+      "path": "site/lab-data.mjs",
+      "bytes": 20808,
+      "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a"
+    },
+    {
+      "path": "site/lab-data.test.mjs",
+      "bytes": 14697,
+      "sha256": "bd09228dad487dcf3859316c4464dcb106bafa7b27c0ca17062bf463ecedf725"
+    }
+  ],
+  "scope": "Only readBytes cleanup and appended real reader tests",
+  "guards": [
+    "Completed only when actual reader result done===true; delivered complete payload without EOF remains pending.",
+    "Completed EOF releases lock without cancellation.",
+    "Incomplete read or size failure awaits reader.cancel and attempts release even if cancellation rejects.",
+    "A boolean primaryFailed flag preserves original thrown value over cleanup errors; sole cleanup error remains visible.",
+    "Unchanged header descriptor/raw SHA pins, byte limits, fatal UTF8, JSON parser, strict joins and selector semantics.",
+    "Previous tests unchanged exact prefix; seven appended tests use real native Response/ReadableStream readers, delegating native read/cancel/release; targeted spies qualify release-error controls."
+  ],
+  "testCasesRead": 14,
+  "newTests": [
+    "Every completed original body reads EOF before release; no cancel.",
+    "Full correct payload remains pending until genuine done=true.",
+    "Oversized incomplete body cancels once and releases; size guard retained.",
+    "Delayed cancellation must settle before release.",
+    "Read rejection remains original object despite cancel/release failure.",
+    "Rejected native source cancellation consumed with no unhandled and size error preserved.",
+    "Sole release failure after EOF rejects visibly without cancellation."
+  ],
+  "verification": {
+    "nodeSyntaxCheckModule": "PASS",
+    "nodeSyntaxCheckTests": "PASS",
+    "gitDiffCheck": "PASS",
+    "testsExecutedByReviewer": false,
+    "modelsCargoNativeBrowserExecuted": false
+  },
+  "qualifications": [
+    "Node reader controls are not actual Chromium or HTTP proof.",
+    "Original LAB600 remains FAIL; initial/reload ERR_ABORTED causality is not transferred from this source fix.",
+    "Fresh exact-head protected actual browser gate and final aggregate required after UI/QA integration."
+  ]
+}

@@ -1,0 +1,11 @@
+Независимый combined source review: 0 blockers для1be0d0940ef75aa00d6152e5b718df0cc5fb446f/tree64bdb5f4794f48907f99886c540f6391571b1914.
+
+Пять module/UI/test/QA files exact byte-identical author6a6UI/4c0loader/410QA. Прочитаны весь UIJS, все12UItests и полный QA61 306bytes/257lines. Diff от600 содержит только эти5files и2honest docs. CI/core/API/config/version/frozen/ADR/publicJSON/REC2/LABraw/descriptor/CSS/3Druntime unchanged.
+
+UI сохраняет четыре attached SVGshells после validated data, проверяет все ширины до обновления, готовит все4drawings иlegend вне DOM и коммитит синхронно. Finite0..96 означает pending: retainedcurves скрыты, aria-busy/data-layout/status честные, recovery рисует latestselection даже при прежней ширине. Invalidnegative/nonfinite/renderfailure — visiblefatal. CoalescedRAF не retryloop; pagehide cancel/disconnect и BFCache pageshow wiring квалифицированы как synthetic. Raw curves/domains/styles не изменены. Loader EOF cleanup source0 сохранён; прежние abortcausality не переоценены.
+
+QA batching меняет транспорт DOMнаблюдений, сохраняя independent raw assertions:48endpoints/24runs/160pairs,9publishedmetrics+5BigIntinteger raworacle,9gates/210s,actual keyboard/back/reload,1e-5SVG math,.02CSSlayout,rawaxisanchors/typography/CSSOM histogram. Strings/i128 не преобразуются Number. Unchanged selects пропускаются только после actualDOM equality. Initial/reload/close boundeddrain строго отвергает все failures/bodyerrors, no nativepromiseobserver/abortallowance. После5positivePNG проверяются полный rawSVG/typography/stickyerrors; после2negative — visiblefatal/nocharts/disabled controls. Finalcleanup требует3closedpages/pending0/bodypins/layout4/typography9/PNG7 и повторно errors/stopped.
+
+Независимо проверен numeric-integrity transport control: ровно byte5496 e→E в runs[0].identity.volume_m3, same5 294 742bytes, expectedmodifiedSHA58407c…; весь parsed JSON/type/structure равен,40 752f64bits/147 306strings/41 101ints unchanged. Это source/parser negative control, не новые модельные данные.
+
+Syntax/diffchecks PASS; tests/browser/Cargo/model не запускались. Source0 не означает actualbrowserPASS. LAB79/600FAIL и unresolved600abortcause сохранены. Требуются fresh exact-head protected fullCI и independent original SHA/CRC/source/trace/все7actualPNG/cleanup acceptance; postcapture DOMoracle не заменяет просмотр actualPNG.

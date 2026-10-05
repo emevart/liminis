@@ -8,7 +8,7 @@
   "followup_candidate": "60015b28a42e222fcdafd33ed80da6c81f57c6db",
   "followup_actual_status": "PENDING",
   "archive_group_cap_bytes": 67108864,
-  "unique_bytes": 2306375,
+  "unique_bytes": 2351597,
   "files": [
     {
       "path": "README.md",
@@ -104,6 +104,64 @@
       "path": "original-79/report.json",
       "bytes": 26429,
       "sha256": "ff3d0c18b797e8ae30121b088fcfcebe6b7117675eae3423d560b1f7362dfdc6"
+    },
+    {
+      "path": "source-1be/README.md",
+      "bytes": 1674,
+      "sha256": "33a5c7763cdd17ff8047b85023c9a92ba32433a59410323602551fc0597722ba"
+    },
+    {
+      "path": "source-1be/code-review.json",
+      "bytes": 7074,
+      "sha256": "f8585485565ff440bceda6921693556980ae0296f250360af6361642521c6bc6"
+    },
+    {
+      "path": "source-1be/code-review.md",
+      "bytes": 2881,
+      "sha256": "9310527b4f3a9d43a0cb2dd228b116726b584344971f501c316d79927a05e89f"
+    },
+    {
+      "path": "source-1be/loader-code.json",
+      "bytes": 2592,
+      "sha256": "cd418ca7e253cba88c77d43d700b0842e947e3f17e75322a52456ecd278a5de4"
+    },
+    {
+      "path": "source-1be/loader-code.md",
+      "bytes": 1556,
+      "sha256": "d6d16dbbe313493840d9bec931842edc5db40ac29ea81022c8f8b83a33d4e8dc"
+    },
+    {
+      "path": "source-1be/loader-numerics.json",
+      "bytes": 4568,
+      "sha256": "9ddbc1031eb93dd1d4b6e2cb2dba4e95c456aa032d44d0d6f25dca6e52c37f31"
+    },
+    {
+      "path": "source-1be/loader-numerics.md",
+      "bytes": 2562,
+      "sha256": "630e4c3169dd3e3c4aed68e52977806883c90ad160ecf28509cf8215a73cc81e"
+    },
+    {
+      "path": "source-1be/numerics-binding.json",
+      "bytes": 4465,
+      "sha256": "ae7fed9b37c9e4dbf64cbebb7416f3f8aa153acff73e15c66c91252d72e4642f"
+    },
+    {
+      "path": "source-1be/numerics-review.json",
+      "bytes": 9443,
+      "sha256": "2c9c2b4ad80fac5ec115cba91f80097bea91f1f1fed15dea9031b8ea95702b00"
+    },
+    {
+      "path": "source-1be/numerics-review.md",
+      "bytes": 8407,
+      "sha256": "24b48ec1c369a060e23c51b9060484ed750d2b5f801c17f160d8f0f1d84181ef"
     }
-  ]
+  ],
+  "source_followup": {
+    "source_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+    "source_tree": "64bdb5f4794f48907f99886c540f6391571b1914",
+    "code_source_blockers": 0,
+    "numerics_source_blockers": 0,
+    "fresh_ci_run": 37248220760,
+    "actual_acceptance": "PENDING"
+  }
 }

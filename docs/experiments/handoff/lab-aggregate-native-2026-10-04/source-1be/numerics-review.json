@@ -1,0 +1,160 @@
+{
+  "kind": "independent_lab_resize_batch_numerics_source_review/v1",
+  "verdict": "QUALIFIED_SOURCE_PASS",
+  "findings": [],
+  "blocking_findings": 0,
+  "other_findings": 0,
+  "protocol_verdict": "замечаний нет",
+  "head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "tree": "64bdb5f4794f48907f99886c540f6391571b1914",
+  "tracked_clean_at_review": true,
+  "scope": "Read-only independent source/math/precision review of the EOF reader, permanent atomic chart rendering, and batched protected QA; not an actual browser gate",
+  "source_binding": {
+    "report": "resize-batch-1be0d09-binding.json",
+    "bytes": 4465,
+    "sha256": "ae7fed9b37c9e4dbf64cbebb7416f3f8aa153acff73e15c66c91252d72e4642f",
+    "author_files": [
+      {
+        "path": "site/lab-data.mjs",
+        "author_head": "4c0a31a2f73120a66709ccb3bc1522a18066f0d2",
+        "git_object": "8735ac28dc2abec7980b7613f9bb7acfbaa4b130",
+        "bytes": 20808,
+        "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+        "exact_author_blob_match": true
+      },
+      {
+        "path": "site/lab-data.test.mjs",
+        "author_head": "4c0a31a2f73120a66709ccb3bc1522a18066f0d2",
+        "git_object": "e7a859e1e9347c49ce342eeb0b84c797aaca73da",
+        "bytes": 14697,
+        "sha256": "bd09228dad487dcf3859316c4464dcb106bafa7b27c0ca17062bf463ecedf725",
+        "exact_author_blob_match": true
+      },
+      {
+        "path": "site/lab.js",
+        "author_head": "6a6dbdf58c456c88528d83bf68b4896a82b6adae",
+        "git_object": "1a7498a3104a9abee86ee6dccf18093470f6926a",
+        "bytes": 22571,
+        "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+        "exact_author_blob_match": true
+      },
+      {
+        "path": "site/lab-ui.test.mjs",
+        "author_head": "6a6dbdf58c456c88528d83bf68b4896a82b6adae",
+        "git_object": "4da7035b2c956975fd541458812139996c15f3ae",
+        "bytes": 20928,
+        "sha256": "c5e0fb0a57982c22b250a52aaa059007746aa828fac1f22d2c9609705e19348c",
+        "exact_author_blob_match": true
+      },
+      {
+        "path": "scripts/check_lab_browser.mjs",
+        "author_head": "4108978254fdf53547f57da2693c2925131adcab",
+        "git_object": "46cf2339160b23ccb757cdbc5e8ea1b3b525944c",
+        "bytes": 61306,
+        "sha256": "9637ff9b10d57ded55d000e02e61d4f530f41d98e1ea94d2e942c255865c52a3",
+        "exact_author_blob_match": true
+      }
+    ],
+    "immutable_objects_identical_to_previous_independent_arithmetic_binding": true,
+    "raw_lab_and_descriptor_unchanged_from_600": true
+  },
+  "scientific_source": {
+    "commit": "21cbe90732128edee61963544e414d29a7420577",
+    "world_format_version": 30,
+    "chamber_format": 1,
+    "dt_seconds": 30,
+    "build_attestation": false,
+    "runs": 24,
+    "conditions": 6,
+    "paired_seeds": 4,
+    "retained_samples": 4044,
+    "original_raw_bytes": 6494550,
+    "new_models_or_comparisons": 0
+  },
+  "reviewed_contracts": [
+    {
+      "source": "site/lab-data.mjs:130",
+      "result": "PASS",
+      "contract": "Successful done===true EOF releases without cancellation. Incomplete/read/size failures await cancellation and still release; primary failure is retained and cleanup rejection consumed. Reader size/SHA/decode/schema/math outside the private function unchanged; no asserted explanation for previous network aborts."
+    },
+    {
+      "source": "site/lab.js:19",
+      "result": "PASS",
+      "contract": "Four permanent attached shells are created only after validated data and selected exported observation; pre-validation refusal leaves no chart shells. Every width is measured before content replacement. Complete detached content for all four curves is prepared before synchronous commit."
+    },
+    {
+      "source": "site/lab.js:32",
+      "result": "PASS",
+      "contract": "Finite widths 0..96 retain complete existing drawing but hide all four shells and expose layout=pending/aria-busy; no fake width, clamp or invented points. Recovery redraws current selection even at old width. Negative/nonfinite width or render errors are fatal. Ready claims require actual successful render."
+    },
+    {
+      "source": "site/lab.js:44",
+      "result": "PASS",
+      "contract": "Unchanged original raw domains/samples/units: x=72+time/(window*30)*(width-84), y=178-amount/ymax*166; height210, x1=width-12/y0=12/y1=178, declared font11, one SVG unit per CSS px. Axis-only three-significant-digit text; paths keep six decimals and dots retain raw coordinate math. Structural biomass/FOOD/O2 in mol; declarations separately mol/m3."
+    },
+    {
+      "source": "scripts/check_lab_browser.mjs:98",
+      "result": "PASS",
+      "contract": "One atomic actual detail snapshot checks its run/tick identity, 15 raw fields, exact original integer strings, medium accounting, genesis null residuals, live histogram/current richness versus historical richness and the same environment snapshot. Duplicate/missing batched fields refuse; synthetic controls include 2^53+1 strings and null-versus-zero."
+    },
+    {
+      "source": "scripts/check_lab_browser.mjs:173",
+      "result": "PASS",
+      "contract": "One atomic comparison snapshot preserves pinned published nine displayed metrics and published min/max/width/count, exact string counters and unavailable null values. Existing raw oracle independently recomputes five integer metrics for 160 pairs after BIO scales match; browser floating paired differences/ranges remain comparisons.json pin assertions, not a new floating scientific recomputation."
+    },
+    {
+      "source": "scripts/check_lab_browser.mjs:131",
+      "result": "PASS",
+      "contract": "Independent oracle uses original exported observations, observed viewport width and separately written domain/coordinate formulas; no product helper import. Every actual path point/dot and all four metrics/four seeds are checked with unchanged 1e-5 SVG-coordinate tolerance. Raw x/y axis anchors precede exact three-digit labels, actual CSS scale/font/clipping/nonoverlap checks."
+    },
+    {
+      "source": "scripts/check_lab_browser.mjs:199",
+      "result": "PASS",
+      "contract": "Full source inventory remains 24 runs/48 genesis+terminal endpoints, 140 landmark+20 latest common pairs, 9 gates, 210000ms whole-gate budget. Five positive fullPage PNGs each require readiness, full raw paths+dots and typography after capture plus sticky error checks. Both negative captures require zero chart shells/hidden workspace/disabled controls again after capture. Four layout sizes and real keyboard/back/reload stay mandatory."
+    },
+    {
+      "source": "scripts/check_lab_browser.mjs:81",
+      "result": "PASS",
+      "contract": "Bounded pending response/body tasks drain before reload and every page close; failed/body/protocol/page/unhandled/cleanup errors cannot become PASS. Final aggregate checks all three raw response pins on every page, 7 screenshots, 5 positive/2 negative postchecks, 9 typography records, all gates, unchanged clean HEAD/tree and sticky failures."
+    }
+  ],
+  "independent_transport_proof": {
+    "field": "runs[0].identity.volume_m3",
+    "token_offset": 5495,
+    "byte_offset": 5496,
+    "original_token": "1e-12",
+    "delivered_token": "1E-12",
+    "original_bytes": 5294742,
+    "delivered_bytes": 5294742,
+    "original_sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+    "delivered_sha256": "58407c180b65782bafeeacef46dede6ced435ef2bb1f1ca0c79624f4dc313f2e",
+    "changed_bytes": 1,
+    "full_parsed_binary64_bits_strings_structure_equal": true,
+    "compared_values": {
+      "objects": 49061,
+      "arrays": 12254,
+      "strings": 147306,
+      "binary64_numbers": 81853,
+      "booleans": 74,
+      "nulls": 72
+    },
+    "original_files_written": false
+  },
+  "reported_author_checks_not_repeated": {
+    "ui_focused_node_tests": 19,
+    "data_loader_tests": 14,
+    "qa_integer_controls": 6,
+    "qa_batch_precision_duplicate_missing_null_controls": 6,
+    "actual_browser": "NOT_RUN_BY_THIS_REVIEW"
+  },
+  "qualifications": [
+    "This source verdict closes no historical actual browser failure: LAB79 CSSOM failure and LAB600 layout/network-evidence failure remain original FAIL artifacts.",
+    "Fresh protected exact-head full CI and independent original browser artifact review remain required; no transfer of previous 3D/regression/browser PASS to this HEAD.",
+    "No model, Cargo, native browser, million-frame decode, previous 3672-difference/2835-range arithmetic or author test repetition was performed.",
+    "Histogram comparison establishes exact CSSOM declaration serialization from original counts, not independently measured bar raster width; actual typography and pixel evidence require protected browser artifacts.",
+    "Pending hidden drawing is retained data, not a ready render of current selection. BFCache lifecycle is a source/synthetic contract only here.",
+    "Four paired seeds and sampled aggregate evidence support descriptive published comparisons; no per-tick ledger recalc, reconstructed cells/full genomes, fitness/species/GRN or open-evolution acceptance.",
+    "Unchanged official protected Chromium argv/sandbox policy remains required; stock SwiftShader if observed does not establish hardware GPU or kernel-isolation attestation."
+  ],
+  "written_scope": "Only these independent evidence files outside source worktrees; no Git/source/raw edits"
+}
