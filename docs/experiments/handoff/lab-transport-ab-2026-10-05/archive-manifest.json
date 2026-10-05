@@ -10,14 +10,14 @@
   "actual_diagnostic_status": "AB_PROBE_FAIL",
   "arm_a": "TRANSPORT_FAIL",
   "arm_b": "TRANSPORT_PASS",
-  "product_acceptance": "NOT_ACCEPTED",
+  "product_acceptance": "PENDING_FRESH_FULL_CI_AND_ACTUAL_REVIEW",
   "archive_group_cap_bytes": 67108864,
-  "unique_bytes": 937434,
+  "unique_bytes": 968614,
   "files": [
     {
       "path": "README.md",
-      "bytes": 3115,
-      "sha256": "4bc135d79e9dea3bc8b32a99c9b26fdf8541afebc123683e5024a125187c8324"
+      "bytes": 4360,
+      "sha256": "2e8fa4c081f0e0f7388abfa11967d33e64351c014bfacbc2cb168a81fd7d587e"
     },
     {
       "path": "lab-transport-ab-3b174d4-actual-review.json",
@@ -45,9 +45,33 @@
       "sha256": "e159b43064bc814a2f7f005dcdd4deda1192dc57edcfc301e022849a585f0731"
     },
     {
+      "path": "native-pipe-data-binding-review.json",
+      "bytes": 9345,
+      "sha256": "7ad0c687e4d5dfe6753920a9fbf170c4c258db9878539dd72bd061a5f011a4dd"
+    },
+    {
+      "path": "native-pipe-data-binding-review.md",
+      "bytes": 5751,
+      "sha256": "ba9a6b742ae8be7d7ac0a85c703e55436992a470c2580a26f86e865e62a00c2e"
+    },
+    {
+      "path": "native-pipe-production-delta-review.json",
+      "bytes": 10409,
+      "sha256": "db80845266b50014c5d54a5504b3f89a70f55e6e558c36535c4178741f569397"
+    },
+    {
+      "path": "native-pipe-production-delta-review.md",
+      "bytes": 4430,
+      "sha256": "5ded54c33f170c04a44daf41bca9d0b4670ef074d4a150954d33a94be1861d9b"
+    },
+    {
       "path": "report.json",
       "bytes": 79930,
       "sha256": "fb2ad75d70948cf8089110d7a26e0f3a146c5d11cab8e15247ca6447fa451abc"
     }
-  ]
+  ],
+  "production_source_candidate_head": "c02bc689bf7014bda3bfdf346e3906a9bc536f14",
+  "production_source_candidate_tree": "416655a9ef6f1ba91c0556eb35fb8f300249bb15",
+  "production_source_review": "CODE_AND_DATA_BINDING_0",
+  "production_full_ci_run": 37259168567
 }

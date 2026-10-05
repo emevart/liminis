@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "reviewed_at_utc": "2026-10-05T03:23:42.340597+00:00",
+  "reviewer_role": "Independent read-only reviewer; did not author module/tests/docs and did not execute browser, Cargo, models, tests or further causal probe",
+  "verdict": "QUALIFIED_SOURCE_ZERO_BLOCKERS_BEFORE_ONE_EXACT_HEAD_COMPLETE_PROTECTED_CI",
+  "blockers": [],
+  "bindings": {
+    "combinedHead": "c02bc689bf7014bda3bfdf346e3906a9bc536f14",
+    "combinedTree": "416655a9ef6f1ba91c0556eb35fb8f300249bb15",
+    "productionAuthorHead": "e180e0d77ccd06989667780db9d784abccca8a3f",
+    "productionAuthorTree": "a74abd2c2c43889ce7f64b9c4a72cfdc6b70bb41",
+    "baseHead": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+    "baseTree": "64bdb5f4794f48907f99886c540f6391571b1914",
+    "cleanCombinedWorkingTree": true,
+    "changesFromBase": [
+      "M\tdocs/ACCEPTANCE.md",
+      "M\tdocs/checkpoints/2026-10-04-lab-aggregate-catalog.md",
+      "M\tsite/lab-data.mjs",
+      "M\tsite/lab-data.test.mjs"
+    ],
+    "files": [
+      {
+        "path": "docs/ACCEPTANCE.md",
+        "bytes": 165814,
+        "sha256": "5276a8b93cefe5c7f591d33c19fc799c69159384af0cd9e05c7174cb3027dfa4",
+        "workingAndHeadByteExact": true,
+        "owner": "coordinator docs",
+        "basePrefixByteExact": true,
+        "appendedBytes": 2463,
+        "appendedLines": 30,
+        "appendSha256": "be4969f734aae5b42ff03fe11aa1177e01a29890fcabf851117efce4cd7d1ee3"
+      },
+      {
+        "path": "docs/checkpoints/2026-10-04-lab-aggregate-catalog.md",
+        "bytes": 14792,
+        "sha256": "be74642c1eea97c3f9a1a07b702df78f91d06f4de1006e27266e053ecc721a08",
+        "workingAndHeadByteExact": true,
+        "owner": "coordinator docs",
+        "basePrefixByteExact": true,
+        "appendedBytes": 3753,
+        "appendedLines": 51,
+        "appendSha256": "b3cb57a3efa5477f3afd1dba80a35205cb61c2b7e8bfd37cb6529c54d09ad14f"
+      },
+      {
+        "path": "site/lab-data.mjs",
+        "bytes": 20280,
+        "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+        "workingAndHeadByteExact": true,
+        "authorCommitByteExact": true,
+        "owner": "coordinator as explicitly handed-off production author"
+      },
+      {
+        "path": "site/lab-data.test.mjs",
+        "bytes": 15160,
+        "sha256": "b109041d5e62c11aef9b66370c5da46a2886c2a77d999714b03418da125a3703",
+        "workingAndHeadByteExact": true,
+        "authorCommitByteExact": true,
+        "owner": "coordinator as explicitly handed-off production author"
+      }
+    ]
+  },
+  "module_identity": {
+    "productionFullModuleEqualsActualABVariant": true,
+    "moduleBytes": 20280,
+    "moduleSha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+    "onlyReadBytesFunctionChanges": true,
+    "prefixAndSuffixByteExactToBase": true,
+    "originalFunctionSha256": "d6484a68a09e8318452e376e7c092f2565fca8ef9f1bdc827c8e2d705812c07a",
+    "productionFunctionSha256": "3129290bf9cbe4eccfd8b17bdf1628547d8fde5273a12f3a5e13cbe600f59a92",
+    "parserHashJoinsExportedAPIDataPinsFormulaUIAndScientificInputsUnchanged": true,
+    "noQAOracleCIOrProtectedRuntimeDelta": true,
+    "noCoreConfigVersionFrozenSpecOrNorthStarDelta": true
+  },
+  "reviewed_behavior": [
+    {
+      "location": "site/lab-data.mjs:130",
+      "finding": "Fetch/HTTP failure behavior is preserved; missing native streamed pipeTo response is explicitly rejected. The former unbounded arrayBuffer fallback is removed as required. Supported actual Chromium has the standard stream API; unsupported stream environments fail visibly."
+    },
+    {
+      "location": "site/lab-data.mjs:137",
+      "finding": "Length increments before validation; check(length <= limit) precedes chunks.push. Oversize cannot be retained in the collector or exposed as a verified dataset. Existing per-file caps are unchanged."
+    },
+    {
+      "location": "site/lab-data.mjs:141",
+      "finding": "Awaiting native pipeTo with default options gives standard sink backpressure, source cancellation on sink failure, and lock release before settlement. No adapter timer, manual reader observer or retained Response reference is added."
+    },
+    {
+      "location": "site/lab-data.mjs:142",
+      "finding": "The saved writeError is rethrown if the native pipe promise rejects after a write/size error; this preserves primary error identity when source cancellation rejects with a secondary error. Other native read/pipe errors are rethrown unchanged."
+    },
+    {
+      "location": "site/lab-data.mjs:143",
+      "finding": "Successful concat is unchanged and occurs only after awaited successful pipe completion. SHA, fatal UTF8 decode, descriptor admission, parallel original raw-file loads and strict joined dataset validation are byte-identical to the previous module outside readBytes."
+    }
+  ],
+  "test_review": {
+    "file": "site/lab-data.test.mjs",
+    "bytes": 15160,
+    "sha256": "b109041d5e62c11aef9b66370c5da46a2886c2a77d999714b03418da125a3703",
+    "allFirstSevenOriginalDatasetTestsBytePreserved": true,
+    "totalTests": 14,
+    "newNativeStreamTests": 7,
+    "nativeResponseReadableStreamWritableStreamUnmodifiedInProductionPath": true,
+    "replacedManualReaderSpies": "Old getReader/read/cancel/release wrapping is removed because native pipe owns the standard algorithms. Custom release-spy failure is no longer an adapter interface; actual native lock and primary error behavior is asserted instead.",
+    "cases": [
+      {
+        "line": 112,
+        "proof": "All four exact pinned bodies pass real loadLab SHA/parser/joins; 24 runs/4044 retained samples, full byte delivery/EOF, no source cancel, bodyUsed:true and locked:false. Demand-driven 32KiB pulls plus source desiredSize show queued chunks <=1; this is source queue proof, not heap measurement."
+      },
+      {
+        "line": 124,
+        "proof": "Entire valid descriptor body is delivered while close is gated; loader remains pending and native lock held without cancel until source EOF, then joins all data and unlocks."
+      },
+      {
+        "line": 133,
+        "proof": "Incremental oversized native source stops before its full payload/EOF, cancels exactly once with the same primary size error, and releases its lock. Delivered byte/pull bounds allow at most the small native prefetch window, not unbounded accumulation."
+      },
+      {
+        "line": 142,
+        "proof": "A gated asynchronous source cancellation keeps outer rejection pending and native source locked until actual cancel settlement, then unlocks."
+      },
+      {
+        "line": 151,
+        "proof": "Native source controller.error produces the exact original read error object, no redundant source cancellation and an unlocked body."
+      },
+      {
+        "line": 157,
+        "proof": "Native source cancellation rejection is consumed and does not replace the primary size error; cancel reason is object-identical to the exposed error, native lock releases and no Node unhandledRejection occurs after two turns."
+      },
+      {
+        "line": 167,
+        "proof": "Missing native response stream rejects after one request and never calls the explicitly instrumented arrayBuffer fallback."
+      }
+    ],
+    "authorReportedExecution": {
+      "status": "14 PASS as reported by coordinator/author",
+      "node": "24.19",
+      "executions": "Once focused; reviewer did not repeat",
+      "qualification": "Node native stream controls and parser tests do not assert Chromium or all LAB gates PASS."
+    }
+  },
+  "documentation_review": {
+    "acceptanceAppendLines": 30,
+    "checkpointAppendLines": 51,
+    "bothBasePrefixesByteExact": true,
+    "historicalManualContractRetainedWithExplicitNewConsumerOverride": true,
+    "oldProduct1beDiagnosticEdcaReader0b52AndABOverallFailPreserved": true,
+    "ABOnlyQualifiedCandidateNotCauseRepeatabilityPerformanceOrNineGates": true,
+    "furtherCausalRunsClosed": true,
+    "newCodeAndNumericsReviewAndExactHeadFullCIRequired": true,
+    "postMergePublicDeliveryAndBrowserAcceptanceRequired": true,
+    "archiveReferences": "Historical archive/readback milestones quoted as coordinator-recorded provenance; this narrow source review does not redownload those archives."
+  },
+  "prior_actual_evidence": {
+    "ABDiagnosticHead": "3b174d480ac1be94bea543d08322f075a229ba44",
+    "ABOverallStatus": "AB_PROBE_FAIL",
+    "A": "Original manual-reader arm retains full comparisons.json native canceled ERR_ABORTED",
+    "B": "Only one bounded initial transport/baseline/UI/closure arm passed with this exact module and all eight original pins; both PNGs previously independently viewed",
+    "priorIndependentReview": "lab-transport-ab-3b174d4-actual-review.json",
+    "transferToProductionAcceptance": false
+  },
+  "remaining_required_gates": [
+    "Independent data/numerics source review in its separate assigned scope",
+    "One fresh protected exact-head full CI with unchanged all nine LAB gates and negative/security/raw numeric oracles",
+    "All existing recorded/dense/LIVE/physical13GL regression gates and complete mandatory build/lint/tests",
+    "Independent actual original artifact acceptance including all required images, original body pins/request failures/late errors/cleanup",
+    "Durable original evidence archive/readback before guarded merge",
+    "Separate exact deployed public delivery/browser acceptance after merge/deploy"
+  ],
+  "qualifications": [
+    "Source module identity to diagnostic B permits a candidate production implementation, not a transfer of diagnostic acceptance to full LAB.",
+    "Native pipe behavior is standard browser API semantics and meaningfully tested in Node; protected Chromium/full UI acceptance remains pending.",
+    "Source queue assertions do not measure overall browser heap, consumer retained bytes or performance.",
+    "The browser fetch byte stream contract supplies Uint8Array chunks; arbitrary synthetic non-byte or mutable custom chunk protocols are outside the existing fetchImpl contract.",
+    "Missing stream refusal is an intentional bounded failure path; no fallback or abort/error waiver weakens integrity.",
+    "The reason for Chromium cancellation, repeatability and scientific interpretation remain unknown. Old FAILs and overall AB_PROBE_FAIL remain unchanged.",
+    "No reviewer runtime, extra causal experiment, model or source mutation was performed."
+  ]
+}

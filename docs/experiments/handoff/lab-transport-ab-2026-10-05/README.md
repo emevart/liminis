@@ -39,3 +39,22 @@ source21cbe907/world30/chamber1, formulas/core/frozen docs неизменны;
 Archive manifest задаёт закрытый inventory/size/SHA с cap64MiB. Отдельный
 сетевой Git readback публикуется receipt координатора; здесь не заявляется
 readback до фактической проверки. Это evidence branch, не product release.
+
+
+## Новый production consumer: только независимый SOURCE0
+
+Чистый candidate `c02bc689bf7014bda3bfdf346e3906a9bc536f14`, tree
+`416655a9ef6f1ba91c0556eb35fb8f300249bb15`; author/source ref
+`codex/lab-stream-pipe-to-20261005`, commit
+`e180e0d77ccd06989667780db9d784abccca8a3f`.
+ExactBmodule/function/prefixsuffix,14focused native behavioral tests и
+неизменные raw/formulas/24runs/4044samples независимо рассмотрены:
+code/data-numerics0. Только module/tests +root ACCEPTANCE/checkpoint отличаются
+от1be; QA/CI/UI/raw/core/frozen docs неизменны. Собственные два code и два
+numerics reports включены явно и без joblogs/private context.
+
+FullmandatoryCI37259168567 запущена на exactcandidate; actual9LAB/fullCI/
+publicdelivery verdict здесь ещё PENDING. Это не browser/science PASS и не
+перенос приёмки с A/B. Старый diagnostic artifact/report и AB_PROBE_FAIL
+сохраняются byte-exact. Новый closedmanifest относится только к evidence
+и source0; receipt этого нового ref публикуется после фактического readback.

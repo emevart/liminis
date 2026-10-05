@@ -1,0 +1,166 @@
+{
+  "kind": "independent_lab_native_pipe_data_numerics_binding_review/v1",
+  "verdict": "QUALIFIED_SOURCE_DATA_BINDING_PASS",
+  "findings": [],
+  "blocking_findings": 0,
+  "other_findings": 0,
+  "protocol_verdict": "замечаний нет",
+  "head": "c02bc689bf7014bda3bfdf346e3906a9bc536f14",
+  "tree": "416655a9ef6f1ba91c0556eb35fb8f300249bb15",
+  "base": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "clean_checkout": true,
+  "exact_changed_files": [
+    "site/lab-data.mjs",
+    "site/lab-data.test.mjs"
+  ],
+  "changed_file_pins": {
+    "site/lab-data.mjs": {
+      "bytes": 20280,
+      "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+      "git_object": "2b830e850025719e7d5518f65ed3ad6ac60c6732"
+    },
+    "site/lab-data.test.mjs": {
+      "bytes": 15160,
+      "sha256": "b109041d5e62c11aef9b66370c5da46a2886c2a77d999714b03418da125a3703",
+      "git_object": "eb841573151fa38885b1ffbdb08a12f6818e6b54"
+    }
+  },
+  "unchanged_module_prefix": {
+    "bytes": 17530,
+    "sha256": "4e9d3d5fd252722078e75e40feaf1b1b1007f97019a0262ab2d27f22a83e71a5"
+  },
+  "unchanged_module_suffix_from_loadLab": {
+    "bytes": 1906,
+    "sha256": "7d2a5310ffa0af761c50d2c3d24ec991962b306d24a9a887b571838e0624ead1"
+  },
+  "raw_delivery_pins": {
+    "results": {
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+      "git_object": "65df63d0331c00203f216b4561ac32b1e2322ed0",
+      "base_object_equal": true
+    },
+    "comparisons": {
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+      "git_object": "33289c45fdfdd70e0e964c84eff02df5a2739c86",
+      "base_object_equal": true
+    },
+    "manifest": {
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+      "git_object": "64a5d60aec3329c2877c65b5f1a20758d70b1ac4",
+      "base_object_equal": true
+    },
+    "descriptor": {
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+      "git_object": "022099edbb665aca0246171b79f157bab4df65f2",
+      "base_object_equal": true
+    }
+  },
+  "unchanged_product_oracles_objects": {
+    "site/lab.js": "1a7498a3104a9abee86ee6dccf18093470f6926a",
+    "site/lab.css": "71126a52c3a188352206ceaab4c965b5868d3ca4",
+    "site/lab.html": "19c81bf6d9665d5043f9e3bf9855a670330db674",
+    "site/lab-ui.test.mjs": "4da7035b2c956975fd541458812139996c15f3ae",
+    "scripts/check_lab_browser.mjs": "46cf2339160b23ccb757cdbc5e8ea1b3b525944c",
+    "scripts/build_lab_catalog.py": "a86176d4c213835e7865b2af2a6bae10f7cef2fe",
+    "scripts/test_build_lab_catalog.py": "ddc4a106c811bdc02e897962804190e7e4ec1fbe",
+    "site/data/lab-2": "39451a50e8fb8d30e5f10d2dc375be0ff961a360",
+    "docs/experiments/lab-2": "246f2cce3ba9bf6612753267a24574f7a043add4"
+  },
+  "immutable_objects": {
+    "crates/liminis-core": "1f9031142731d138bf6de243ab2ac13d644e1553",
+    "configs": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+    "Cargo.toml": "4b7bef5047fafbdd10526a90de4a18952678a6a6",
+    "Cargo.lock": "224f065c1bbf103a5cfec139a2f3313e2bf80559",
+    "rust-toolchain.toml": "1fd6f1afaf9c17073863c2b9a9f50f90572a7edb",
+    "docs/experiments/lab-2": "246f2cce3ba9bf6612753267a24574f7a043add4",
+    "site/data/catalog.json": "07eabcff860ef15e7b84a315e4b870c715744fff",
+    "site/data/dense-cell-chamber": "01b9b066dc56be0aa75cb325398ba0aef97e70de",
+    "site/recording.mjs": "75e36b0e47f0c8323d84bb5942c6bac21a21c37f",
+    "site/dense-recording.mjs": "aa9b99b90e35797d7ae16cad62dbaf40401da802",
+    "site/playback.mjs": "19e198964ba31aa8801fed58e9f48eec60fc9ed9",
+    "site/observer.js": "199b8ad408ea1b2f6739fd1a9407109084b24996",
+    "crates/liminis/src/cell-viewer-3d.mjs": "c9c299a89431fd76a7ccc76ef408464fe5f5f69c",
+    "crates/liminis/src/vendor/three-r180": "37a4b0a1e61dc9e76649d0b37cc50eaa8bdb55f4",
+    "crates/liminis/src/cells_host.rs": "ff6f0113d9ed80c9d14e1a4782370240865ffb69",
+    "crates/liminis/src/cell-viewer.html": "fcab3f21526a10617067ce93d67ded19765e7521",
+    "site/observe.html": "87f30258d13440bb1204b42ccab88424c49e2edd",
+    "scripts/check_public_recording_browser.mjs": "7ad588601f09e2dd3f50a913e050a84c67b9a0dd",
+    "docs/SPEC.md": "32bf455e15a3a460590a9fa4001074e4f9512829",
+    "docs/NORTH_STAR.md": "3f43d7ba6cdd3086c62b05d9aa374cba82db8048"
+  },
+  "inventory": {
+    "runs": 24,
+    "samples": 4044,
+    "genesis_unknown_ledger_runs": 24,
+    "extinct_runs": 4,
+    "extinct_terminal_tick": 454,
+    "censored_horizon_runs": 20,
+    "censored_horizon_tick": 20000,
+    "starvation_latest_common_tick": 400,
+    "missing_landmark500_available": 0,
+    "missing_landmark500_expected": 4
+  },
+  "scope": "Object/byte/hash and inventory binding only; no science arithmetic or model/browser/Cargo execution",
+  "isolated_author": {
+    "head": "e180e0d77ccd06989667780db9d784abccca8a3f",
+    "tree": "a74abd2c2c43889ce7f64b9c4a72cfdc6b70bb41",
+    "clean_checkout_at_review": true
+  },
+  "combined_changed_files": [
+    "docs/ACCEPTANCE.md",
+    "docs/checkpoints/2026-10-04-lab-aggregate-catalog.md",
+    "site/lab-data.mjs",
+    "site/lab-data.test.mjs"
+  ],
+  "private_function_pin": {
+    "bytes": 844,
+    "sha256": "3129290bf9cbe4eccfd8b17bdf1628547d8fde5273a12f3a5e13cbe600f59a92"
+  },
+  "scientific_source": {
+    "commit": "21cbe90732128edee61963544e414d29a7420577",
+    "world_format_version": 30,
+    "chamber_format": 1,
+    "dt_seconds": 30,
+    "build_attestation": false,
+    "numerical_recalculation": false,
+    "original_raw_bytes": 6494550,
+    "capabilities": "aggregate samples only; no cells/positions/full genomes/resumable states/event reconstruction"
+  },
+  "numerical_semantics": {
+    "hash_parser_joins_metric_selectors": "Unchanged literal module prefix17530B and suffix1906B from loadLab prove all public validators/pins/parse/canonical sample handling/joins/types/units/metric values/availability/URL boundaries unchanged. Successful read concatenates original ordered Uint8Array chunks after awaited native completion, then unchanged SHA check and fatal UTF-8 decoder/JSON parser; no coercion/reconstruction of observations.",
+    "integer_precision": "Exact original u64/i128 decimal strings, BigInt range checks and scale identity remain unchanged. mol/J remain original derived exported Number displays; no new integer-to-float conversion or ledger arithmetic.",
+    "projection": "site/lab.js and CSS/HTML/UI tests and protected QA blobs unchanged from independent reviewed1be: raw domains, x/y formulas, pending/atomic shell contract, exact CSSOM widths, independent path/dot/axis oracles and full48/24/160/9/210 controls preserved.",
+    "transport_boundary": "Standard awaited native pipeTo controls completion/cancellation/unlock. Writable sink enforces previous size cap before retaining each chunk; write/size failure remains primary if native cancellation also fails. Missing stream refuses visibly; unbounded arrayBuffer fallback removed. Partial/error streams cannot reach post-success concat/validation/exposure.",
+    "failure_evidence": "Root docs preserve old1be/diagnosticCASE/A/B FAIL, qualify B as UA compatibility candidate and disclaim causal explanation, repeatability/speed, nine gates and hardware/browser/science acceptance. This review did not independently repeat or adjudicate A/B runtime artifacts."
+  },
+  "reported_checks_not_repeated": {
+    "native_node_tests": 14,
+    "includes": "Seven dataset/schema/hash controls and seven genuine native stream EOF/oversize/cancel/error/backpressure/missing-stream controls; reviewed source and author report only",
+    "scope": "Not browser or scientific acceptance"
+  },
+  "required_next_gates": [
+    "One fresh protected exact-head all-nine LAB gate and full required CI, preserving original security/oracles/negative controls and strict failed/body/page/unhandled/cleanup guards.",
+    "Independent bounded original runtime artifact review and durable evidence/source/hash readback.",
+    "After accepted merge/deployment, separate existing public LAB delivery/browser acceptance; deployment/source identity and historical producer remain distinct."
+  ],
+  "execution_status": {
+    "models": "NOT_RUN",
+    "cargo": "NOT_RUN",
+    "browser": "NOT_RUN",
+    "science_outputs_recalculated": false,
+    "author_tests_repeated": false,
+    "raw_or_source_worktree_edits": false,
+    "written_files": "Only these two independent bounded review artifacts outside worktrees"
+  },
+  "qualifications": [
+    "Exact clean candidate/source binding does not establish runtime compatibility. Native Node evidence and a successful B probe are not all-nine LAB/browser/full-CI/public PASS.",
+    "No new build attestation, biological observation, timestep/config/schema/world relabel, full-genome/spatial/temperature/GRN/evolution or per-tick scientific recalculation claim.",
+    "Historical FAIL and prior protected PASS remain pinned to their original source; none transfer to this candidate.",
+    "Capped accepted/retained bytes and demand-driven stream controls are not a whole-browser heap or achieved speed measurement.",
+    "Future protected Chromium retains original official defaults/observed argv/sandbox policy; software rendering is not hardware GPU or kernel isolation attestation."
+  ]
+}
