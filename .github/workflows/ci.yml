@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Validate recordings, catalog freshness, and download integrity
-        run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs scripts/cell-viewer-3d.test.mjs
+        run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs scripts/cell-viewer-3d.test.mjs scripts/physical-3d-png.test.mjs
       - name: Validate exact dense codec and Linux publication boundaries
         run: |
           git fetch --no-tags --depth=1 origin bd2a7f25e61abd713109171fc25b7c3de86003ab
