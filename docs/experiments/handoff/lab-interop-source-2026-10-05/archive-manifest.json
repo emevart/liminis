@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "kind": "Bounded official exact-version source-only interoperability audit",
+  "candidate_head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+  "candidate_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "verdict": "NO_SUPPORTED_FIX",
+  "source_only": true,
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 31923,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1602,
+      "sha256": "4f1e6a66d4a3e4876eda5c0cdca73684577cfc79e05f65a23b1cb7c85166c9a9"
+    },
+    {
+      "path": "astra-review.json",
+      "bytes": 3089,
+      "sha256": "228f742cd1b2866ae070a483fcfa185c17e72c4b0dc25665a517f62c5d187b1b"
+    },
+    {
+      "path": "astra-review.md",
+      "bytes": 5868,
+      "sha256": "15276f8ff9705f54990f3bbfa67fd3b6f55515129bdb74fc37629b7ce099924a"
+    },
+    {
+      "path": "audit-summary.json",
+      "bytes": 1678,
+      "sha256": "a33bf7855f4f8facf3c7a71da2c7c29946e555b943016839a0f5f9c134c19ddb"
+    },
+    {
+      "path": "audit.md",
+      "bytes": 9371,
+      "sha256": "c2108787c18e594867b108ff87f247f05f4d57265c6e96d2d20838a2ab50c061"
+    },
+    {
+      "path": "draft-reproducer.md",
+      "bytes": 3465,
+      "sha256": "3cb349a6c9efb12b95cdb29a9d8661e50d252bb6b724fd47f78a44a43e6967a6"
+    },
+    {
+      "path": "source-read-receipts.json",
+      "bytes": 6850,
+      "sha256": "d2479e3b5fd5ccf2476e0ee5260e63fd6ce49a17cfb3d6a84b6e0dba492ed757"
+    }
+  ]
+}

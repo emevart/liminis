@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "source_session_conservative_start_utc": "2026-10-05T05:20:00Z",
+  "target_file_cap": 8,
+  "bytes_cap": 10485760,
+  "targets": [
+    {
+      "repo": "microsoft/playwright",
+      "commit": "39e3553a4f283a41134d75d7e404484bd9e6865a",
+      "path": "packages/playwright-core/browsers.json",
+      "name": "playwright-browsers.json",
+      "url": "https://api.github.com/repos/microsoft/playwright/contents/packages/playwright-core/browsers.json?ref=39e3553a4f283a41134d75d7e404484bd9e6865a",
+      "status": "READ",
+      "delivered_text_chars": 1939,
+      "bytes": 1939,
+      "sha256": "ee39bc924bc3d1bd895626c2910f1292d109bbfeeb5abd113acb45e1951cc942",
+      "local_git_blob_sha1": "a0651c74390cc68c1f2767bfc144bd4f9e4eecf4",
+      "lines": 81
+    },
+    {
+      "repo": "microsoft/playwright",
+      "commit": "39e3553a4f283a41134d75d7e404484bd9e6865a",
+      "path": "packages/playwright-core/src/server/chromium/crNetworkManager.ts",
+      "name": "playwright-crNetworkManager.ts",
+      "url": "https://api.github.com/repos/microsoft/playwright/contents/packages/playwright-core/src/server/chromium/crNetworkManager.ts?ref=39e3553a4f283a41134d75d7e404484bd9e6865a",
+      "status": "READ",
+      "delivered_text_chars": 41780,
+      "bytes": 41782,
+      "sha256": "d6c32e4709ce663d485b29b7f9c8eba68fa8af2c9106257e2a5e25fa60208abe",
+      "local_git_blob_sha1": "9620171f92b747a0476aea1cae09d1383767f0fe",
+      "lines": 897
+    },
+    {
+      "repo": "microsoft/playwright",
+      "commit": "39e3553a4f283a41134d75d7e404484bd9e6865a",
+      "path": "packages/playwright-core/src/server/network.ts",
+      "name": "playwright-network.ts",
+      "url": "https://api.github.com/repos/microsoft/playwright/contents/packages/playwright-core/src/server/network.ts?ref=39e3553a4f283a41134d75d7e404484bd9e6865a",
+      "status": "READ",
+      "delivered_text_chars": 29055,
+      "bytes": 29055,
+      "sha256": "90b823b9eed7b0d964d99a073310867d5eae3fd3e5ae6e1581f1f15f1ab2f42a",
+      "local_git_blob_sha1": "db00d5a7039a88a458d4968896af95f79d93b4c6",
+      "lines": 917
+    },
+    {
+      "repo": "chromium/chromium",
+      "commit": "3188f8a607ae7e067593be8aab7f02d2451fec07",
+      "path": "content/browser/devtools/protocol/fetch_handler.cc",
+      "name": "chromium-fetch_handler.cc",
+      "url": "https://api.github.com/repos/chromium/chromium/contents/content/browser/devtools/protocol/fetch_handler.cc?ref=3188f8a607ae7e067593be8aab7f02d2451fec07",
+      "status": "READ",
+      "delivered_text_chars": 19203,
+      "bytes": 19203,
+      "sha256": "fea86da2bdf4e148f189316e23f9b664af475a9d39e015ae2d9e9cf83aefb5a3",
+      "local_git_blob_sha1": "66e645984a3040010d70862f7ec26c406b72cbf1",
+      "lines": 508
+    },
+    {
+      "repo": "chromium/chromium",
+      "commit": "3188f8a607ae7e067593be8aab7f02d2451fec07",
+      "path": "content/browser/devtools/devtools_url_loader_interceptor.cc",
+      "name": "chromium-devtools_url_loader_interceptor.cc",
+      "url": "https://api.github.com/repos/chromium/chromium/contents/content/browser/devtools/devtools_url_loader_interceptor.cc?ref=3188f8a607ae7e067593be8aab7f02d2451fec07",
+      "status": "READ",
+      "delivered_text_chars": 86200,
+      "bytes": 86200,
+      "sha256": "bb8d4d36b3a02ce01e5714ee17609477b2d417da6ca059eb6a8e27b831734380",
+      "local_git_blob_sha1": "ffdcc59129ba0222476b42c44baf5f9819cfbab4",
+      "lines": 2151
+    },
+    {
+      "repo": "chromium/chromium",
+      "commit": "3188f8a607ae7e067593be8aab7f02d2451fec07",
+      "path": "third_party/blink/renderer/core/fetch/body_stream_buffer.cc",
+      "name": "chromium-body_stream_buffer.cc",
+      "url": "https://api.github.com/repos/chromium/chromium/contents/third_party/blink/renderer/core/fetch/body_stream_buffer.cc?ref=3188f8a607ae7e067593be8aab7f02d2451fec07",
+      "status": "READ",
+      "delivered_text_chars": 23044,
+      "bytes": 23044,
+      "sha256": "e72f2c9f570f8937ee1847afb1c1d6f16d0de459ac2a256f2db67c00a2dfd34a",
+      "local_git_blob_sha1": "47579747a86dbf33d7f9bfbee5755db8d6672b25",
+      "lines": 689
+    },
+    {
+      "repo": "chromium/chromium",
+      "commit": "3188f8a607ae7e067593be8aab7f02d2451fec07",
+      "path": "third_party/blink/renderer/core/fetch/fetch_data_loader.cc",
+      "name": "chromium-fetch_data_loader.cc",
+      "url": "https://api.github.com/repos/chromium/chromium/contents/third_party/blink/renderer/core/fetch/fetch_data_loader.cc?ref=3188f8a607ae7e067593be8aab7f02d2451fec07",
+      "status": "READ",
+      "superseded_missing_path": "third_party/blink/renderer/platform/loader/fetch/fetch_data_loader.cc",
+      "superseded_result": "404NotFound, wrongpath; no permission deny or bypass",
+      "bytes": 23597,
+      "sha256": "2961f3331f265f77fe524f1af7e18c31d37df61fd6cb1de5d07c1d59e902a930",
+      "local_git_blob_sha1": "45d9158a56d3b1cb1b3f9221c97b7a4bfae02871",
+      "lines": 718
+    },
+    {
+      "repo": "chromium/chromium",
+      "commit": "3188f8a607ae7e067593be8aab7f02d2451fec07",
+      "path": "third_party/blink/renderer/platform/loader/fetch/data_pipe_bytes_consumer.cc",
+      "name": "chromium-data_pipe_bytes_consumer.cc",
+      "url": "https://api.github.com/repos/chromium/chromium/contents/third_party/blink/renderer/platform/loader/fetch/data_pipe_bytes_consumer.cc?ref=3188f8a607ae7e067593be8aab7f02d2451fec07",
+      "status": "READ",
+      "delivered_text_chars": 8686,
+      "bytes": 8686,
+      "sha256": "33f18494c47733f94415440a5e0d5ad331adc07260485ba7c9b098a86d3cdf40",
+      "local_git_blob_sha1": "89f2ec260e4977fc85c4fe5ca6d8421d4a504b95",
+      "lines": 304
+    }
+  ],
+  "official_metadata": [
+    {
+      "label": "playwright_tag",
+      "ref": "refs/tags/v1.61.1",
+      "node_id": "MDM6UmVmMjIxOTgxODkxOnJlZnMvdGFncy92MS42MS4x",
+      "url": "https://api.github.com/repos/microsoft/playwright/git/refs/tags/v1.61.1",
+      "object": {
+        "sha": "39e3553a4f283a41134d75d7e404484bd9e6865a",
+        "type": "commit",
+        "url": "https://api.github.com/repos/microsoft/playwright/git/commits/39e3553a4f283a41134d75d7e404484bd9e6865a"
+      }
+    },
+    {
+      "label": "chromium_tag",
+      "ref": "refs/tags/149.0.7827.55",
+      "node_id": "MDM6UmVmMTIwMzYwNzY1OnJlZnMvdGFncy8xNDkuMC43ODI3LjU1",
+      "url": "https://api.github.com/repos/chromium/chromium/git/refs/tags/149.0.7827.55",
+      "object": {
+        "sha": "3188f8a607ae7e067593be8aab7f02d2451fec07",
+        "type": "commit",
+        "url": "https://api.github.com/repos/chromium/chromium/git/commits/3188f8a607ae7e067593be8aab7f02d2451fec07"
+      }
+    }
+  ],
+  "actual_target_count": 8,
+  "actual_target_bytes": 233506,
+  "source_byte_scope": "Exact UTF8 content bytes delivered by approved official GitHub GET at pinned commit; local SHA256 and GitblobSHA1, not independently API blob-digest attestation"
+}

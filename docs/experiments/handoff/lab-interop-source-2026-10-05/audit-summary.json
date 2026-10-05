@@ -1,0 +1,43 @@
+{
+  "verdict": "NO_SUPPORTED_FIX",
+  "source_only": true,
+  "main_accepted_head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+  "main_accepted_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "PW_commit": "39e3553a4f283a41134d75d7e404484bd9e6865a",
+  "chromium_commit": "3188f8a607ae7e067593be8aab7f02d2451fec07",
+  "target_files": 8,
+  "source_bytes": 233506,
+  "conservative_start_utc": "2026-10-05T05:20:00Z",
+  "completed_observed_utc": "2026-10-05T05:28:14Z",
+  "time_scope": "Conservative start; completion observed through native clock before publication",
+  "LAB": "HOLD",
+  "source_matrix": "audit.md",
+  "reproducer": "draft-reproducer.md",
+  "new_runtime_runs": 0,
+  "product_source_edits": 0,
+  "supported_minimal_fix": null,
+  "qualifications": [
+    "Official pinned source/version match; not browser-binary Git attestation",
+    "No official upstream issue was queried or filed",
+    "No causality or repeatability established; native signals and reader/parser EOF distinct",
+    "Unknown missing transitive network-cache and ownership/stream implementation paths remain",
+    "Source digests bind exact delivered UTF8 content, no independent upstream blob-digest attestation"
+  ],
+  "reports": [
+    {
+      "path": "audit.md",
+      "bytes": 9371,
+      "sha256": "c2108787c18e594867b108ff87f247f05f4d57265c6e96d2d20838a2ab50c061"
+    },
+    {
+      "path": "draft-reproducer.md",
+      "bytes": 3465,
+      "sha256": "3cb349a6c9efb12b95cdb29a9d8661e50d252bb6b724fd47f78a44a43e6967a6"
+    },
+    {
+      "path": "source-read-receipts.json",
+      "bytes": 6850,
+      "sha256": "d2479e3b5fd5ccf2476e0ee5260e63fd6ce49a17cfb3d6a84b6e0dba492ed757"
+    }
+  ]
+}
