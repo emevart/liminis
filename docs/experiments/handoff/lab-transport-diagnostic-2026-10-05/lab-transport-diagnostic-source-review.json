@@ -1,0 +1,152 @@
+{
+  "review_kind": "Independent static source/workflow review; no diagnostic browser run",
+  "verdict": "QUALIFIED_SOURCE_0_BLOCKERS",
+  "remaining_blockers": [],
+  "reviewed_at_utc": "2026-10-05T01:07:26.195710+00:00",
+  "reviewer": "independent code/reliability reviewer, not script/workflow author",
+  "author_head": "62a05f0d769fc1a8c3a1bcee8d26f29fc0918c29",
+  "author_tree": "dec35fb2fc1e0aed29491c379257b452fc0b334b",
+  "base_candidate_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "base_candidate_tree": "64bdb5f4794f48907f99886c540f6391571b1914",
+  "workflow_binding": "Reviewed root-owned untracked workflow by exact SHA. Combined diagnostic HEAD/tree must be frozen before the sole approved future-branch push.",
+  "sources": [
+    {
+      "path": "scripts/check_lab_transport_diagnostic.mjs",
+      "bytes": 26584,
+      "sha256": "9f3dc0206de9d8e1371b19d10373a73b1ab6fb94889d6ddaa29992c625f7a33a",
+      "ownership": "QA author"
+    },
+    {
+      "path": "scripts/lab-transport-diagnostic-assets.json",
+      "bytes": 1311,
+      "sha256": "ab6b564ad4656d21ea21360d073db76b905caebfc7f74b28031a47e5d072c67e",
+      "ownership": "QA author"
+    },
+    {
+      "path": ".github/workflows/lab-transport-diagnostic.yml",
+      "bytes": 2241,
+      "sha256": "ade77f54266c73cef921fd198554fab1f469252b139bbabcdbda50e0dd5ed199",
+      "ownership": "root workflow"
+    }
+  ],
+  "scope_diff": {
+    "author_commit_paths": [
+      "scripts/check_lab_transport_diagnostic.mjs",
+      "scripts/lab-transport-diagnostic-assets.json"
+    ],
+    "both_new": true,
+    "product_site_diff_from_1be": false,
+    "workflow_new_root_owned": true,
+    "runtime_browser_network_models_cargo": "NOT_RUN"
+  },
+  "source_asset_proof": {
+    "method": "Independently read all eight exact 1be Git blobs and compare manifest byte sizes/SHA; candidate tree matched. No browser or large data decode.",
+    "assets": [
+      {
+        "filename": "lab.html",
+        "bytes": 5393,
+        "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+      },
+      {
+        "filename": "lab.js",
+        "bytes": 22571,
+        "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871"
+      },
+      {
+        "filename": "lab.css",
+        "bytes": 5019,
+        "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+      },
+      {
+        "filename": "lab-data.mjs",
+        "bytes": 20808,
+        "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a"
+      },
+      {
+        "filename": "data/lab-2/descriptor.json",
+        "bytes": 50708,
+        "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+      },
+      {
+        "filename": "data/lab-2/results.json",
+        "bytes": 5294742,
+        "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+      },
+      {
+        "filename": "data/lab-2/comparisons.json",
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+      },
+      {
+        "filename": "data/lab-2/manifest.json",
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+      }
+    ],
+    "total_bytes": 6599049,
+    "status": "PASS"
+  },
+  "workflow_review": {
+    "trigger": "push only to codex/lab-transport-diagnostic-run-20261005; preparation branch does not match",
+    "permissions": {
+      "contents": "read"
+    },
+    "checkout": "github.sha, persist-credentials:false, sparse eight original assets and two new scripts",
+    "source_fetch": "fixed 1be SHA; --filter=blob:none --no-tags --depth=1",
+    "runtime": "ubuntu-22.04 / Node24 / unchanged official playwright1.61.1 / chromium install",
+    "expected_identity": "github.sha exported as EXPECTED_HEAD; exact checkout Git tree exported as EXPECTED_TREE; script checks both and tracked clean tree",
+    "budget": "8min job; script150s run with explicit operation/CDP/launch/cleanup/request/event limits",
+    "artifact": "always upload target/qa/lab-transport-diagnostic; missing files is an error; 7-day retention",
+    "no_scope_expansion": [
+      "No PR trigger",
+      "No Cargo or models",
+      "No deploy",
+      "No source mutation",
+      "No secret/token arguments",
+      "No broad/full-history fetch"
+    ]
+  },
+  "protocol_review": {
+    "original_identity": "One real page/context and one CDP Fetch owner. Native browser fetch/Response/Reader/Promise are not replaced or wrapped, and no observer then/catch/finally handlers are attached to native promises.",
+    "request_scope": "Wildcard Request-stage interception is installed before goto. Only exact loopback GET of eight literal filenames and the fixed initial HTML query are admitted; no credentials/hash/redirect/retry/external route.",
+    "response_scope": "Original Response-stage HTTP200, exact content length/no encoding, original getResponseBody bytes/SHA, then acknowledged continueResponse({requestId}) with no body/status/header overrides; no route.fetch/fulfill/second fetch/takeResponseBodyAsStream.",
+    "correlation": "One Request/Response mapping per Network ID, exact filename, eight unique Network/Fetch/server records, loadingFinished, zero failed/blocked/errors, full-body pin then continuation ack order.",
+    "server_evidence": "Original Buffer bytes only; server finish/close/abort observations remain separate from CDP proof. Final server finish and closed-after-finish required.",
+    "guard_lifecycle": "Guard and error listeners remain until acknowledged page close; bounded callback drain before/after page/context/browser cleanup; final aggregate requires closed page, no pending callbacks/paused requests/sticky errors.",
+    "native_unhandled": "Init listener only records unhandledrejection without preventDefault. Runtime.exceptionThrown/pageerror/console/requestfailed/native loadingFailed all preserve diagnostic FAIL; no cancellation allowances.",
+    "sandbox": "Official chromiumSandbox:true, headless, only enable-automation added; observed CDP argv rejects all eight prior sandbox prohibitions and GPU/web-security weakening flags.",
+    "ui_scope": "Initial and post-PNG actual ready state, baseline seed1/tick0, 24 matrix rows and four visible SVGs; no full LAB geometry/science gate claim."
+  },
+  "fixed_review_finding": {
+    "finding": "Earlier snapshot-only UI verdict could ignore a fatal UI exposed by PNG-triggered rendering.",
+    "resolution": "Shared ready predicate and final live state, bounded post-PNG ready wait, final aggregate ready/workspace/fatal/layout/run/tick/unhandled assertions. Reviewed exact final bytes; no actual PNG claim."
+  },
+  "reviewer_checks": {
+    "node_syntax": "PASS",
+    "git_diff_whitespace": "PASS",
+    "workflow_yaml_parse": "PASS",
+    "all_8_git_blob_pins": "PASS",
+    "exact_author_diff_and_blob_identity": "PASS",
+    "browser_network": "NOT_RUN"
+  },
+  "author_source_controls_qualified": {
+    "reported": "node syntax + eight-asset preflight + whitespace + one positive/five synthetic DOM refusals; browser/network/models/Cargo/CI NOT_RUN",
+    "reviewer_execution": "No author test rerun or browser/model execution"
+  },
+  "qualifications": [
+    "This is source approval only for the single coordinator-controlled diagnostic launch. The workflow branch pattern itself permits pushes; one execution is a coordinator constraint, not a deduplicating workflow guarantee.",
+    "Response-stage interception waits for the entire original body before continuing and can change delivery timing. Even diagnostic PASS cannot prove the uninstrumented transport cause or remove the prior 1be/600/79 failures.",
+    "Exact decoded response body pins and native Network terminal state are different from observing product Reader EOF/signal reasons; those are not claimed.",
+    "PNG is an actual capture planned for later independent visual review. Source predicates establish readiness around it, not a source-only pixel PASS.",
+    "No trace is requested by this expressly bounded diagnostic design. Timelines/body digests/one PNG need actual independent artifact acceptance.",
+    "Nine complete LAB gates, final source HEAD/tree full protected CI, existing regressions and future public delivery acceptance remain mandatory before product acceptance/merge."
+  ],
+  "required_next_gates": [
+    "Root combined diagnostic source freeze/pin",
+    "Sole approved protected actual diagnostic run",
+    "Independent original artifact integrity/body/timeline/PNG/error review",
+    "Evidence-based next decision; no speculative production change",
+    "Fresh complete product LAB/CI/public gates separately"
+  ],
+  "old_actual_status": "Original LAB1be remains CONFIRMED_EARLY_FAIL / NOT_ACCEPTED; original600 and79 failure evidence remains FAIL."
+}

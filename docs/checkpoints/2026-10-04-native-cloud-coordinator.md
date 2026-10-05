@@ -914,3 +914,32 @@ source unchanged and publicdeployedpinNULL, main5bea stable.
 Следующий шаг: close diagnostic source0+finalafterPNGready guard, freeze
 clean diagnostichead/tree иодинprotectedrun, independent actualtimeline
 acceptance; only then justifiedQAchange/fullmandatoryCI beforemerge.
+
+
+### Запущена одна отдельная диагностика LAB transport
+
+2026-10-05, 01:16 UTC. Независимый source review: 0 blockers на чистом
+`edca9b9fa16a11bb24317dead67362515b9d1e00`, tree
+`5e2d67d3c43cbdb2e3f9992b7114f99a97f25cf5`. Отличие от product1be — ровно
+три новых файла: два diagnostic scripts и root workflow. Все восемь site
+assets совпали с исходным кандидатом по Git blobs, размерам и SHA: 6599049 B.
+Source preflight PASS; HTTP/browser на native машине не запускались.
+
+Astra согласовал один evidence-only запуск. Remote RUN branch сначала создан
+из опубликованного product1be без диагностического workflow, затем выполнен
+один обычный push проверенного edca9b9. Run
+https://github.com/emevart/liminis/actions/runs/37250700549 — IN_PROGRESS.
+Единственный initial load, pre-send Request guard, original Response body
+через CDP и unchanged continuation. Любые ошибки остаются FAIL. Response-stage
+pause меняет timing: диагностический PASS не установит причину прежнего
+uninstrumented abort и не заменит девять LAB gates/fullCI/public acceptance.
+
+Четыре отдельных независимых source reports сохранены с исходными байтами в
+`docs/experiments/handoff/lab-transport-diagnostic-2026-10-05/`.
+Issue11 обновлён: https://github.com/emevart/liminis/issues/11#issuecomment-5986459043.
+Main5bea и draftPR21 не менялись; public smoke и LAB4a модели NOT_RUN.
+Пользователь отсутствует до утра: вопросов ему нет, спорные решения Astra.
+
+Следующий шаг: получить original diagnostic artifact, независимо проверить
+Network timeline/body pins/PNG/error arrays и выбрать обоснованную QA правку;
+после неё обязательна свежая полная приёмка кандидата перед merge.
