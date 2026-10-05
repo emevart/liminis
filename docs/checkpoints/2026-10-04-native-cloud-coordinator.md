@@ -1602,3 +1602,56 @@ flow, только CSS mobile block cell-viewer.html плюс bounded existing L
 finding не доказан. LAB21/publicLAB/LAB4/models/causal retries HOLD; user
 questions до утра не отправляем. Archive network receipt и main source bridge
 сохранены рядом с checkpoint; исходные refs/evidence не удалялись.
+
+
+## 2026-10-05 07:12 UTC — HUD MAIN/public ACCEPTED, следующий LIVE scope открыт
+
+MAIN `813be1efad29569a3011f00697bd5d41b7397dc6`, tree
+`c5775c00a150768f2819e265a4165d8605bd48e3`, normal GitHub ref read неизменен.
+Fresh push run37273770904 attempt1 завершён SUCCESS:9checksSUCCESS и только
+два ожидаемых ADR020/032 PR-only SKIP;8GHAjobsSUCCESS+2SKIP. Все шесть
+mandatory browser steps и отдельный public step реально completed SUCCESS.
+Новые main recorded/dense reports проверены under identical-tree bridge:
+22+14gate inventories,8+20sourcepins,13selectioncases,27strictHUDgeometry
+records,20legacyHTTP,state/clock/atomic/endpoints/cancel/error guards PASS.
+Это fresh report inspection, не новый full independent main PNG/trace review.
+
+Independent новый public actual review:0blockers; original artifact11329358270
+5,598,658B/SHA d3225ea886c7fdbc605bd19e91c2830cd4b87aa131bca25dc984ddf0ea9be150,
+outer/nestedCRC и оба настоящих PNG проверены;19HTTPS pins всех3horizons,
+14actualPWbodychecks/ACK per1440/390 viewport,4gates и реальный default0→1/
+30s/1× playback PASS. Fixed367B insertion@6938 нормализована до нового
+GitHTML6954B/SHA105c5a86…0b72e, pre-sendblock/drain14/14,pending0,pageclosedtrue.
+Raw8bodies/page retained,6modulebodies/page missing/rawCDPmessages unavailable/
+no separate nativeunhandledsampler явно квалифицированы. Privacy15UTF8/
+11,110,107B +2gzip/4,132,809decodedB, obviouspatterns/auth/cookies0 bounded.
+
+Closed main evidence branch `codex/recorded-hud-main-evidence-20261005`,
+commit `2ad8c1d7372f69992bd15a335fd440aa90d9a436`, tree
+`a5135c6ecb048b58576750ccb70beee80c0aa82a`, prefix
+`docs/experiments/handoff/recorded-hud-main-2026-10-05`,16files/6,266,239B <64MiB,
+one original public ZIP без перепаковки плюс fresh reports/frozen review/
+source-tree bridge/CI и все7mainartifact IDs/digests. Manifest SHA256
+`16f74b46f16f898224105419e22656203891abdb03609042b60fca9e85eca0ed`.
+Separate GitDB без alternates, normal network readback: closed inventory,
+все sizes/SHA и public ZIP CRC PASS. Main archive diff-check PASS.
+
+**ACCEPTED**: candidate independent recorded/dense actual PASS; byte-identical
+merged tree; fresh main regression reports PASS; fresh public independent
+actual PASS; candidate и selected main archives/readbacks PASS. Independent
+GL actual review остаётся e2-bound с source identity и fresh mandatory
+regressions. Нет нового full independent main recorded/dense/GL artifact
+PASS, full2.424GBpublicHTTP/browser/hardwareFPS/kernel/fullsecret guarantee.
+Acceptance receipt, network readback, fresh CI/inspection и source bridge
+сохранены рядом; ничего из old refs/evidence/raw не удалено/пересчитано.
+
+Все условия Astra для следующего legacy LIVE mobile stage закрыты. Scope
+открывается на fresh accepted813: только mobileCSS cell-viewer.html для
+chamber1 normal-flow stage→readout→sidebar, используя existingchamber2 grid;
+сохранить desktop/physical geometry,DOM/IDs/JS/API/model/dt/×N/FPS. Separate QA
+только check_live_cells_browser.mjs: paused resize/scroll/Find existingID,
+viewportPNG/hits/noextraPOST/stateunchanged, прежние guards/budgets. При
+broader source needs/failure/newconcern STOP и finding к Astra. Product/QA
+будут в отдельных codex branches/worktrees, независимый review и один
+protected exactCI сериализует root. LAB21/publicLAB/LAB4/models/causal retries
+HOLD; пользователя до утра не спрашиваем.

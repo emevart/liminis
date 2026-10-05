@@ -10,6 +10,9 @@
   "candidate_archive_commit": "c40242da8f6bdeacd271288dfd7260b3a3118a88",
   "candidate_archive_tree": "b232c31f2d5a550df0aab410f6d9132d6f75982a",
   "candidate_archive_manifest_sha256": "05da2766cd3174e895eb676bb141973de940a8769218e63ea31a81fdf2f62282",
-  "status": "MERGED_TREE_IDENTITY_PASS_FRESH_RUNTIME_PENDING",
-  "qualification": "All tracked source objects byte-identical to candidate. Candidate independent recorded/dense full-artifact review remains candidate-bound. Fresh main reports/fullCI/public and public evidence/readback still required; no new main independent full recorded/dense or GL review claimed."
+  "status": "MERGED_TREE_IDENTITY_PASS_FRESH_MAIN_CI_AND_RECORDED_DENSE_REPORTS_SUCCESS",
+  "qualification": "All tracked source objects byte-identical to accepted d8e candidate. Candidate independent recorded/dense full-artifact review remains candidate-bound. Fresh main CI and recorded/dense reports checked under Astra approved scope; independent new public review/evidence/readback separately required. No new full independent main recorded/dense or GL artifact review claimed.",
+  "fresh_run_id": 37273770904,
+  "fresh_ci_receipt": "exact-head-ci-receipt.json",
+  "fresh_regression_report_inspection": "recorded-dense-report-inspection.json"
 }

@@ -1,0 +1,79 @@
+{
+  "head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+  "tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+  "run_id": 37273770904,
+  "attempt": 1,
+  "artifacts": [
+    {
+      "id": 11329905124,
+      "name": "physical-3d-browser-813be1efad29569a3011f00697bd5d41b7397dc6",
+      "bytes": 46845978,
+      "digest": "sha256:1ea141afabcf3ea2d9e23957d8c6b90653e576707046768676bb8b5d75e810e3",
+      "created_at": "2026-10-05T06:45:30Z",
+      "expires_at": "2026-10-12T06:45:23Z",
+      "head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+      "run_id": 37273770904
+    },
+    {
+      "id": 11329512976,
+      "name": "recorded-browser-813be1efad29569a3011f00697bd5d41b7397dc6-1",
+      "bytes": 14595538,
+      "digest": "sha256:862bf72562551e72e18d50b772882bd18f1d03cbf2d7b9f2b580237a57565b6a",
+      "created_at": "2026-10-05T06:44:35Z",
+      "expires_at": "2026-10-12T06:44:33Z",
+      "head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+      "run_id": 37273770904
+    },
+    {
+      "id": 11329358270,
+      "name": "public-playback-813be1efad29569a3011f00697bd5d41b7397dc6",
+      "bytes": 5598658,
+      "digest": "sha256:d3225ea886c7fdbc605bd19e91c2830cd4b87aa131bca25dc984ddf0ea9be150",
+      "created_at": "2026-10-05T06:44:47Z",
+      "expires_at": "2026-10-12T06:44:46Z",
+      "head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+      "run_id": 37273770904
+    },
+    {
+      "id": 11329293338,
+      "name": "dense-recording-browser-813be1efad29569a3011f00697bd5d41b7397dc6",
+      "bytes": 15996119,
+      "digest": "sha256:0663eaf653d4be6943b1e2aedb3a7240c910f27e6a38057c05bdffa997b8cd79",
+      "created_at": "2026-10-05T06:44:33Z",
+      "expires_at": "2026-10-12T06:44:31Z",
+      "head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+      "run_id": 37273770904
+    },
+    {
+      "id": 11329167349,
+      "name": "physical-projection-browser-813be1efad29569a3011f00697bd5d41b7397dc6",
+      "bytes": 29309759,
+      "digest": "sha256:9bcdfb8c55741346e5cbe42edc935bb56252ead00722d2a46f44894aeb1134ed",
+      "created_at": "2026-10-05T06:45:23Z",
+      "expires_at": "2026-10-12T06:45:21Z",
+      "head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+      "run_id": 37273770904
+    },
+    {
+      "id": 11329042628,
+      "name": "live-cells-browser-813be1efad29569a3011f00697bd5d41b7397dc6",
+      "bytes": 5525134,
+      "digest": "sha256:fef252766486a91864b82f2326b700b21313346cde193dad37302a885193b030",
+      "created_at": "2026-10-05T06:45:20Z",
+      "expires_at": "2026-10-12T06:45:19Z",
+      "head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+      "run_id": 37273770904
+    },
+    {
+      "id": 11328778274,
+      "name": "live-physical-browser-813be1efad29569a3011f00697bd5d41b7397dc6",
+      "bytes": 6734954,
+      "digest": "sha256:396c42f4d614c6356568b9fa121fa689cd7f61607b246c40cfd98d34a8abbd7b",
+      "created_at": "2026-10-05T06:45:21Z",
+      "expires_at": "2026-10-12T06:45:20Z",
+      "head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+      "run_id": 37273770904
+    }
+  ],
+  "qualification": "All fresh main artifact metadata preserved; selected public original ZIP and main recorded/dense reports are durably archived. This index does not claim a new independent full recorded/dense/GL artifact review."
+}

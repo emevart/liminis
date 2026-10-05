@@ -1,0 +1,53 @@
+{
+  "status": "ACCEPTED_RECORDED_HUD_MAIN_AND_PUBLIC_QUALIFIED",
+  "at": "2026-10-05T07:11:00Z",
+  "main_head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+  "main_tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+  "pr": 23,
+  "fresh_main_run": 37273770904,
+  "candidate_head": "d8e69e4d652e40409fc15bc5e9f247eb58d8c5ab",
+  "candidate_run": 37270688687,
+  "candidate_archive_commit": "c40242da8f6bdeacd271288dfd7260b3a3118a88",
+  "candidate_archive_manifest_sha256": "05da2766cd3174e895eb676bb141973de940a8769218e63ea31a81fdf2f62282",
+  "main_archive_commit": "2ad8c1d7372f69992bd15a335fd440aa90d9a436",
+  "main_archive_tree": "a5135c6ecb048b58576750ccb70beee80c0aa82a",
+  "main_archive_manifest_sha256": "16f74b46f16f898224105419e22656203891abdb03609042b60fca9e85eca0ed",
+  "main_archive_files": 16,
+  "main_archive_bytes": 6266239,
+  "proofs": {
+    "ci": {
+      "file": "exact-head-ci-receipt.json",
+      "bytes": 16712,
+      "sha256": "a08183f4c8e0d350d73e98a3325642e6a09fe8573dfd8cd05be40eaa5e55418f"
+    },
+    "regression_report_inspection": {
+      "file": "recorded-dense-report-inspection.json",
+      "bytes": 1026,
+      "sha256": "9ace61fd6719d0f36858ff0ef2e21b6ca3700a86534e52eba229c7fd632a640a"
+    },
+    "source_tree_bridge": {
+      "file": "source-tree-bridge.json",
+      "bytes": 1266,
+      "sha256": "8cf81666c4fbc482d53d489e1e81bf712d3dc54f24258ef631ccc5dadc672a70"
+    },
+    "archive_network_readback": {
+      "file": "archive-network-readback.json",
+      "bytes": 3593,
+      "sha256": "da36e8e2265dd15a1ad17e02d25385cf43b8a482c27ebd0a0dbb2554113a4f26"
+    },
+    "public_independent_review": {
+      "file": "review.json",
+      "bytes": 29963,
+      "sha256": "330d6a3db22e240d498894d73cb9a74ff5257033333a6738713e87311f426ac9"
+    }
+  },
+  "acceptance_statement": "Candidate independent recorded/dense actual PASS; byte-identical merged tree; fresh main regression reports PASS; fresh public independent actual PASS; both candidate and selected main evidence normal network readbacks PASS.",
+  "qualifications": [
+    "Main9SUCCESS/2expectedPR-onlySKIP, not all11SUCCESS",
+    "No new independent full-artifact main recorded/dense or GL review; GL independent actual review e2-bound plus source identity and fresh regression steps",
+    "Retained trace-body/publicCDP/nativeunhandled/legacydrain/boundedprivacy/softwarebrowser/partiallargehorizon limits preserved in frozen reports",
+    "No full2.424GBpublicHTTP/browser delivery or hardwareFPS/kernel attestation claimed",
+    "LAB21/publicLAB/LAB4/models/causal retries remain HOLD"
+  ],
+  "next_stage": "Astra-approved legacy LIVE chamber1 mobile readout normal-flow CSS repair; main/public conditions now closed, no new model actions/experiments"
+}
