@@ -1,0 +1,58 @@
+name: LAB transport consumer A B compatibility probe evidence only
+
+on:
+  push:
+    branches: [codex/lab-transport-ab-run-20261005]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lab-transport-ab-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: protected original LAB consumer compatibility comparison
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /AGENTS.md
+            /scripts/check_lab_transport_ab.mjs
+            /scripts/lab-transport-ab-assets.json
+            /scripts/fixtures/lab-transport-ab/lab-data-pipe-to.mjs
+            /site/lab.html
+            /site/lab.js
+            /site/lab.css
+            /site/lab-data.mjs
+            /site/data/lab-2/
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Fetch fixed source and verify exact A assets and only B consumer delta
+        run: |
+          git fetch --filter=blob:none --no-tags --depth=1 origin 1be0d0940ef75aa00d6152e5b718df0cc5fb446f
+          node scripts/check_lab_transport_ab.mjs --source-preflight-only
+      - name: Install unchanged official protected browser runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/liminis-lab-transport-ab" --no-save --package-lock=false playwright@1.61.1
+          "$RUNNER_TEMP/liminis-lab-transport-ab/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Observe exact A and bounded pipeTo B in two fresh guarded contexts
+        env:
+          LIMINIS_PLAYWRIGHT_MODULE: ${{ runner.temp }}/liminis-lab-transport-ab/node_modules/playwright
+          LIMINIS_EXPECTED_HEAD: ${{ github.sha }}
+        run: LIMINIS_EXPECTED_TREE="$(git rev-parse 'HEAD^{tree}')" node scripts/check_lab_transport_ab.mjs
+      - name: Preserve original comparison evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lab-transport-ab-${{ github.sha }}
+          path: target/qa/lab-transport-ab/
+          if-no-files-found: error
+          retention-days: 7
