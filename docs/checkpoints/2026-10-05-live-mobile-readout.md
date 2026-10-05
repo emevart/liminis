@@ -111,3 +111,35 @@ Root cherry-pick exact QA blob; product unchanged. Node --check/diff-check
 durable original failure archive/readback и только затем один fresh full CI
 нового candidate. Старый a57 FAIL/skip/evidence/ref сохраняется. Fresh actual/
 merge/MAIN/public acceptance всё ещё PENDING; LAB и остальные HOLD неизменны.
+
+## Итоговая приёмка PR24: HOLD
+
+Свежий candidate000e2eb6b6d42b81f4cee19eaa23e3f09c917ee6/tree
+a8cdcc995fe3f6c6ec130ff5400b81d733c55286 тоже не принят. Workflow
+37284723150 attempt1 завершён FAILURE:10 из11 check-runs SUCCESS, LIVE browser
+FAIL;9 из10 workflow jobs SUCCESS. Rust build/lint/test и recorded browser
+SUCCESS. Физический viewer/projection/Three.js actual gates SKIPPED.
+
+Разрешённая QA-правка persistent #cell-detail закончила обе конкретные
+проверки верхнего/нижнего инспектора и environment. Затем на1440px строгая
+native scroll clipping assertion для Events parent section получила
+`clipped=true`; скрипт остановился до мобильных размеров и финальных state
+assertions. Trace/report не сохранили численные границы target/ancestor,
+ось или величину clipping. По screenshot точную геометрию восстановить нельзя;
+cause/fix на этих данных не утверждаем.
+
+Решение Astra: HOLD_NO_SUPPORTED_REPAIR; новый authoring, diagnostic runtime и
+третий full CI сейчас не разрешены. Изменять product CSS, менять проверяемый
+Events target или ослаблять строгую clipping oracle оснований нет. Второй
+original ZIP/run/artifact metadata, raw trace/report, bounded analysis и HOLD
+disposition зафиксированы в `codex/live-mobile-second-failure-evidence-20261005`.
+Отдельная network readback исходного ZIP/размеров/SHA/CRC завершена успешно.
+Первый FAIL и его readback остаются в собственном архивном ref.
+
+PR24 закрывается в HOLD без merge. Текущий `main`
+813be1efad29569a3011f00697bd5d41b7397dc6 и проверенный deployed playback
+остаются принятыми. Архив каждой записи каждого тика, 1,000,001 states на
+миллионном горизонте, и старые recordings/raw24 не пересчитывались и не
+переименовывались. Physical world/2D/Three.js функциональность остаётся на
+принятом `main`; эта мобильная UX-поправка в неё не вошла.
+LAB21/publicLAB/LAB4 и новые model/science runs остаются HOLD.
