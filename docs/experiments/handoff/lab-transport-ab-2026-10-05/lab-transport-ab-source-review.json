@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "reviewed_at_utc": "2026-10-05T02:07:39.673137+00:00",
+  "reviewer_role": "Independent read-only code/reliability reviewer; neither source nor workflow author",
+  "verdict": "QUALIFIED_SOURCE_ZERO_BLOCKERS_FOR_ONE_LAST_AB_DIAGNOSTIC_ONLY",
+  "blockers": [],
+  "scope": "Source and workflow review only. No browser, HTTP/CI launch, model, Cargo, native experiment or complete LAB acceptance performed by reviewer.",
+  "bindings": {
+    "final_head": "3b174d480ac1be94bea543d08322f075a229ba44",
+    "final_tree": "25d34dcaf7ef6962820b4e1ed26317f3e78739dd",
+    "author_head": "25c5d6728ce7ea0567bb529b0cdacfe1e5f9a9d3",
+    "author_tree": "70c949a2c0d24ce4e7d56fcdb1179d26f977c7dc",
+    "review_base_head": "0b52aeec6c6dd07bc2a7b73fe506adcbb12cbf7a",
+    "original_product_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+    "original_product_tree": "64bdb5f4794f48907f99886c540f6391571b1914",
+    "clean_working_tree": true,
+    "final_coordinator_commit_only_workflow": true,
+    "changes_from_base": [
+      "A\t.github/workflows/lab-transport-ab.yml",
+      "A\tscripts/check_lab_transport_ab.mjs",
+      "A\tscripts/fixtures/lab-transport-ab/lab-data-pipe-to.mjs",
+      "A\tscripts/lab-transport-ab-assets.json"
+    ],
+    "files": [
+      {
+        "path": ".github/workflows/lab-transport-ab.yml",
+        "bytes": 2244,
+        "sha256": "6a5092d31c2cc929a04e42a9911309713271ef0444d82933a651692808acca6a",
+        "owner": "coordinator",
+        "workingAndHeadByteExact": true
+      },
+      {
+        "path": "scripts/check_lab_transport_ab.mjs",
+        "bytes": 35511,
+        "sha256": "2b0b616cce3bc5b602fd105140f274cd01b503f60def151fc92dae7bf7a35e8d",
+        "owner": "QA author",
+        "workingAndHeadByteExact": true
+      },
+      {
+        "path": "scripts/lab-transport-ab-assets.json",
+        "bytes": 2173,
+        "sha256": "68db0a3fa78207d2da16e33ae6be32c2c41e49ed71c2ce294a5590481a82884d",
+        "owner": "QA author",
+        "workingAndHeadByteExact": true
+      },
+      {
+        "path": "scripts/fixtures/lab-transport-ab/lab-data-pipe-to.mjs",
+        "bytes": 20280,
+        "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+        "owner": "QA author",
+        "workingAndHeadByteExact": true
+      }
+    ]
+  },
+  "asset_identity": {
+    "A_original_assets": [
+      {
+        "filename": "lab.html",
+        "bytes": 5393,
+        "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+        "candidateAndFinalHeadByteExact": true
+      },
+      {
+        "filename": "lab.js",
+        "bytes": 22571,
+        "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+        "candidateAndFinalHeadByteExact": true
+      },
+      {
+        "filename": "lab.css",
+        "bytes": 5019,
+        "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+        "candidateAndFinalHeadByteExact": true
+      },
+      {
+        "filename": "lab-data.mjs",
+        "bytes": 20808,
+        "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+        "candidateAndFinalHeadByteExact": true
+      },
+      {
+        "filename": "data/lab-2/descriptor.json",
+        "bytes": 50708,
+        "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+        "candidateAndFinalHeadByteExact": true
+      },
+      {
+        "filename": "data/lab-2/results.json",
+        "bytes": 5294742,
+        "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+        "candidateAndFinalHeadByteExact": true
+      },
+      {
+        "filename": "data/lab-2/comparisons.json",
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+        "candidateAndFinalHeadByteExact": true
+      },
+      {
+        "filename": "data/lab-2/manifest.json",
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+        "candidateAndFinalHeadByteExact": true
+      }
+    ],
+    "A_total_bytes": 6599049,
+    "B_seven_other_assets_byte_exact": true,
+    "B_variant": {
+      "filename": "scripts/fixtures/lab-transport-ab/lab-data-pipe-to.mjs",
+      "serves": "lab-data.mjs",
+      "bytes": 20280,
+      "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+      "original_sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+      "original_function_sha256": "d6484a68a09e8318452e376e7c092f2565fca8ef9f1bdc827c8e2d705812c07a",
+      "variant_function_sha256": "3129290bf9cbe4eccfd8b17bdf1628547d8fde5273a12f3a5e13cbe600f59a92",
+      "difference": "ONLY readBytes function; bounded native pipeTo/WritableStream, no manual reader/lock release or unbounded fallback; all other module bytes identical."
+    },
+    "B_only_readBytes_function_delta": true,
+    "B_module_prefix_and_suffix_byte_exact": true,
+    "B_original_bytes": 20808,
+    "B_variant_bytes": 20280,
+    "B_size_delta": -528,
+    "function_hashes_independently_verified": true,
+    "production_site_core_science_parser_and_UI_unchanged": true
+  },
+  "source_findings": [
+    {
+      "claim": "Bounded B consumer",
+      "evidence": "Native WritableStream.write increments length and checks the byte cap before chunks.push. Native pipeTo is awaited with its default backpressure, cancellation and lock release. The saved writeError is rethrown when a secondary cancellation rejection replaces the primary size error. No unbounded arrayBuffer fallback is introduced."
+    },
+    {
+      "claim": "Sequential A closure prerequisite",
+      "evidence": "Before B starts, A must have mainSettled and pageClosed, zero pending callbacks and paused requests, zero cleanup errors, admitted sandbox/guard state, and zero global Node unhandled errors. Context and browser close promises are awaited through the error-preserving cleanup wrapper. Otherwise B is explicitly NOT_RUN and overall FAIL."
+    },
+    {
+      "claim": "Actual original bodies and no substitution",
+      "evidence": "Request-stage Fetch interception is enabled before navigation. Only the eight literal loopback GET paths and fixed initial query are admitted; every other request is blocked before transmission. Response-stage Fetch.getResponseBody validates exact size/SHA and Content-Length/no Content-Encoding, followed by continueResponse containing requestId alone. No route/fulfill/second fetch or browser native Promise/Response/Reader observer is installed."
+    },
+    {
+      "claim": "Strict terminal and cleanup gate",
+      "evidence": "Each arm PASS requires eight unique Network/Fetch/server observations, loadingFinished for every admitted resource, exact original body hashes, continuation ACK after body completion, server GET200 completed and not aborted, ready initial/final UI, baseline seed1/tick0, 24 matrix rows, four visible plots, zero page/runtime/console/Node/callback/cleanup/request errors, settled main, closed page and zero pending work. Owned observations are revalidated again after both arms."
+    },
+    {
+      "claim": "Narrow advisory comparison only",
+      "evidence": "Candidate eligibility permits failed native requests only among the four original data JSON files: full decoded count equals the exact pin, one canceled ERR_ABORTED with no blockedReason and one matching Playwright GET failure during main; all eight bodies, unchanged ACKs, server completions, exact initial/final UI and clean lifecycle remain mandatory. The helper never changes a failed arm or overall FAIL."
+    },
+    {
+      "claim": "Protected runtime and closed scope",
+      "evidence": "Official Playwright1.61.1 Chromium with chromiumSandbox:true and only enable-automation as added argument; observed argv must reject all eight sandbox bypasses plus ignore-gpu-blocklist and disable-web-security. No Debugger, forced GC, native Promise observers or extra causal cases. Each arm owns a new browser/context/page and bounded loopback server."
+    }
+  ],
+  "workflow_contract": {
+    "sha256": "6a5092d31c2cc929a04e42a9911309713271ef0444d82933a651692808acca6a",
+    "trigger_only": "codex/lab-transport-ab-run-20261005",
+    "permissions": {
+      "contents": "read"
+    },
+    "timeout_minutes": 10,
+    "ubuntu": "22.04",
+    "node_major": 24,
+    "playwright": "1.61.1",
+    "checkout_ref": "github.sha",
+    "persist_credentials": false,
+    "fixed_original_fetch": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+    "source_preflight_mandatory": true,
+    "external_expected_head": "github.sha",
+    "expected_tree": "actual checked-out HEAD tree",
+    "artifact_always": true,
+    "missing_artifact": "error",
+    "retention_days": 7,
+    "cargo_models_deploy_security_writes": false,
+    "preparation_push_does_not_trigger": true
+  },
+  "controls": {
+    "reviewer_independent_checks": [
+      "Full workflow/driver/manifest and changed readBytes semantics read",
+      "Exact final HEAD/tree/clean state and four-path addition verified",
+      "Final coordinator commit contains only its workflow",
+      "Four full-file SHA pins verified against working and committed blobs",
+      "All eight source assets hashed and compared with fixed product and final HEAD",
+      "Original and B function SHA plus exact prefix/suffix equality verified"
+    ],
+    "author_reported_only": {
+      "native_Node_stream_cases": 6,
+      "candidate_telemetry_controls": {
+        "positive": 1,
+        "negative": 9
+      },
+      "sequential_telemetry_controls": {
+        "positive": 1,
+        "negative": 7
+      },
+      "status": "PASS as reported by QA author; Node/synthetic controls, not Chromium runtime acceptance"
+    },
+    "reviewer_browser_runtime": "NOT_RUN",
+    "actual_artifact_acceptance": "PENDING_SEPARATE_REVIEW"
+  },
+  "decision_rules": [
+    "Any A or B failure retains AB_PROBE_FAIL and nonzero exit. All raw failures remain retained.",
+    "Only eligible A native data cancellation plus strict B transport PASS may label a UA compatibility candidate, requiring independent actual artifact review and future complete LAB/CI acceptance.",
+    "B failure or both arms passing is inconclusive and stops further causal runs; no production merge is implied.",
+    "A security or sequential cleanup failure stops B before its launch.",
+    "Existing LAB1be and earlier diagnostic FAIL artifacts remain FAIL and are not superseded by source tests."
+  ],
+  "qualifications": [
+    "This source verdict authorizes only the explicitly bounded ONE LAST A/B diagnostic. No scientific, product or overall CI PASS is asserted.",
+    "Response-stage CDP body capture changes delivery timing; comparison cannot prove a Chromium cancellation cause.",
+    "Node stream and synthetic telemetry controls do not prove the actual protected Chromium result.",
+    "Actual original A/B reports, request correspondence, pins, late errors, cleanup and both compositor PNGs must be independently reviewed after the one run.",
+    "A future production pipeTo change remains separate, requiring meaningful error/cap/cancellation tests and all unchanged nine LAB gates plus complete protected CI."
+  ]
+}

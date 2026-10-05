@@ -1,0 +1,2217 @@
+{
+  "status": "AB_PROBE_FAIL",
+  "scope": "ONE diagnostic A/B compatibility probe ONLY, not LAB acceptance, scientific validation, a production fix, or exact-head full CI. Any arm failure stays overall FAIL. Both transport passes are inconclusive and stop further causal runs.",
+  "startedAt": "2026-10-05T02:06:51.738Z",
+  "limits": {
+    "run": 150000,
+    "operation": 15000,
+    "cdp": 5000,
+    "launch": 20000,
+    "cleanup": 5000,
+    "requests": 32,
+    "events": 4096,
+    "activeCallbacks": 32
+  },
+  "sources": [
+    {
+      "filename": "lab.html",
+      "bytes": 5393,
+      "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+    },
+    {
+      "filename": "lab.js",
+      "bytes": 22571,
+      "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871"
+    },
+    {
+      "filename": "lab.css",
+      "bytes": 5019,
+      "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+    },
+    {
+      "filename": "lab-data.mjs",
+      "bytes": 20808,
+      "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a"
+    },
+    {
+      "filename": "data/lab-2/descriptor.json",
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    },
+    {
+      "filename": "data/lab-2/results.json",
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "filename": "data/lab-2/comparisons.json",
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "filename": "data/lab-2/manifest.json",
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    }
+  ],
+  "arms": [
+    {
+      "label": "A",
+      "status": "TRANSPORT_FAIL",
+      "scope": "Exact unchanged original1be arm",
+      "startedAt": "2026-10-05T02:06:51.939Z",
+      "sources": [
+        {
+          "filename": "lab.html",
+          "bytes": 5393,
+          "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+        },
+        {
+          "filename": "lab.js",
+          "bytes": 22571,
+          "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871"
+        },
+        {
+          "filename": "lab.css",
+          "bytes": 5019,
+          "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+        },
+        {
+          "filename": "lab-data.mjs",
+          "bytes": 20808,
+          "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a"
+        },
+        {
+          "filename": "data/lab-2/descriptor.json",
+          "bytes": 50708,
+          "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+        },
+        {
+          "filename": "data/lab-2/results.json",
+          "bytes": 5294742,
+          "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+        },
+        {
+          "filename": "data/lab-2/comparisons.json",
+          "bytes": 1116928,
+          "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+        },
+        {
+          "filename": "data/lab-2/manifest.json",
+          "bytes": 82880,
+          "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+        }
+      ],
+      "candidateHead": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+      "candidateTree": "64bdb5f4794f48907f99886c540f6391571b1914",
+      "diagnosticHead": "3b174d480ac1be94bea543d08322f075a229ba44",
+      "diagnosticTree": "25d34dcaf7ef6962820b4e1ed26317f3e78739dd",
+      "scriptSha256": "2b0b616cce3bc5b602fd105140f274cd01b503f60def151fc92dae7bf7a35e8d",
+      "manifestSha256": "68db0a3fa78207d2da16e33ae6be32c2c41e49ed71c2ce294a5590481a82884d",
+      "variant": null,
+      "serverRequests": [
+        {
+          "id": 1,
+          "method": "GET",
+          "path": "/lab.html",
+          "receivedUnixMs": 1791166013502,
+          "status": 200,
+          "bytes": 5393,
+          "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+          "finishedUnixMs": 1791166013504,
+          "closedUnixMs": 1791166013505,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 2,
+          "method": "GET",
+          "path": "/lab.css",
+          "receivedUnixMs": 1791166013514,
+          "status": 200,
+          "bytes": 5019,
+          "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+          "finishedUnixMs": 1791166013514,
+          "closedUnixMs": 1791166013514,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 3,
+          "method": "GET",
+          "path": "/lab.js",
+          "receivedUnixMs": 1791166013515,
+          "status": 200,
+          "bytes": 22571,
+          "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+          "finishedUnixMs": 1791166013516,
+          "closedUnixMs": 1791166013516,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 4,
+          "method": "GET",
+          "path": "/lab-data.mjs",
+          "receivedUnixMs": 1791166013522,
+          "status": 200,
+          "bytes": 20808,
+          "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+          "finishedUnixMs": 1791166013523,
+          "closedUnixMs": 1791166013523,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 5,
+          "method": "GET",
+          "path": "/data/lab-2/descriptor.json",
+          "receivedUnixMs": 1791166013545,
+          "status": 200,
+          "bytes": 50708,
+          "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+          "finishedUnixMs": 1791166013545,
+          "closedUnixMs": 1791166013545,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 6,
+          "method": "GET",
+          "path": "/data/lab-2/results.json",
+          "receivedUnixMs": 1791166013562,
+          "status": 200,
+          "bytes": 5294742,
+          "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+          "finishedUnixMs": 1791166013565,
+          "closedUnixMs": 1791166013565,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 7,
+          "method": "GET",
+          "path": "/data/lab-2/comparisons.json",
+          "receivedUnixMs": 1791166013568,
+          "status": 200,
+          "bytes": 1116928,
+          "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+          "finishedUnixMs": 1791166013568,
+          "closedUnixMs": 1791166013568,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 8,
+          "method": "GET",
+          "path": "/data/lab-2/manifest.json",
+          "receivedUnixMs": 1791166013569,
+          "status": 200,
+          "bytes": 82880,
+          "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+          "finishedUnixMs": 1791166013569,
+          "closedUnixMs": 1791166013569,
+          "closedAfterFinish": true
+        }
+      ],
+      "network": [
+        {
+          "requestId": "46DE83182FCD25F455C7277D92A98F9D",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 1811.986058,
+              "timestamp": 317.561116,
+              "wallTime": 1791166013.49618,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:44473",
+                "path": "/lab.html",
+                "initialQuery": true
+              },
+              "type": "Document"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 1823.295913,
+              "timestamp": 317.572653,
+              "status": 200,
+              "mimeType": "text/html",
+              "encodedDataLength": 175,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 1829.739922,
+              "timestamp": 317.575487,
+              "dataLength": 5393,
+              "encodedDataLength": 0
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 1830.828443,
+              "timestamp": 317.569481,
+              "encodedDataLength": 5568
+            }
+          ],
+          "started": true,
+          "filename": "lab.html",
+          "responseSeen": true,
+          "decodedDataLength": 5393,
+          "encodedDataLength": 0,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3118.2",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 1829.792862,
+              "timestamp": 317.57585,
+              "wallTime": 1791166013.510945,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:44473",
+                "path": "/lab.css",
+                "initialQuery": false
+              },
+              "type": "Stylesheet"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 1833.237948,
+              "timestamp": 317.583919,
+              "status": 200,
+              "mimeType": "text/css",
+              "encodedDataLength": 174,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 1833.814591,
+              "timestamp": 317.583944,
+              "dataLength": 5019,
+              "encodedDataLength": 0
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 1833.832714,
+              "timestamp": 317.584312,
+              "dataLength": 0,
+              "encodedDataLength": 5019
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 1833.896614,
+              "timestamp": 317.580304,
+              "encodedDataLength": 5193
+            }
+          ],
+          "started": true,
+          "filename": "lab.css",
+          "responseSeen": true,
+          "decodedDataLength": 5019,
+          "encodedDataLength": 5019,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3118.3",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 1829.874134,
+              "timestamp": 317.576329,
+              "wallTime": 1791166013.511405,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:44473",
+                "path": "/lab.js",
+                "initialQuery": false
+              },
+              "type": "Script"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 1834.812394,
+              "timestamp": 317.585723,
+              "status": 200,
+              "mimeType": "text/javascript",
+              "encodedDataLength": 182,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 1834.89013,
+              "timestamp": 317.585741,
+              "dataLength": 22571,
+              "encodedDataLength": 0
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 1835.207686,
+              "timestamp": 317.585873,
+              "dataLength": 0,
+              "encodedDataLength": 22571
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 1835.239346,
+              "timestamp": 317.581449,
+              "encodedDataLength": 22753
+            }
+          ],
+          "started": true,
+          "filename": "lab.js",
+          "responseSeen": true,
+          "decodedDataLength": 22571,
+          "encodedDataLength": 22571,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3118.6",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 1835.43355,
+              "timestamp": 317.586058,
+              "wallTime": 1791166013.521131,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:44473",
+                "path": "/lab-data.mjs",
+                "initialQuery": false
+              },
+              "type": "Script"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 1846.802651,
+              "timestamp": 317.596873,
+              "status": 200,
+              "mimeType": "text/javascript",
+              "encodedDataLength": 182,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 1846.832107,
+              "timestamp": 317.5969,
+              "dataLength": 20808,
+              "encodedDataLength": 0
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 1846.853607,
+              "timestamp": 317.596957,
+              "dataLength": 0,
+              "encodedDataLength": 20808
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 1847.184509,
+              "timestamp": 317.588679,
+              "encodedDataLength": 20990
+            }
+          ],
+          "started": true,
+          "filename": "lab-data.mjs",
+          "responseSeen": true,
+          "decodedDataLength": 20808,
+          "encodedDataLength": 20808,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3118.7",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 1854.410338,
+              "timestamp": 317.599787,
+              "wallTime": 1791166013.534882,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:44473",
+                "path": "/data/lab-2/descriptor.json",
+                "initialQuery": false
+              },
+              "type": "Fetch"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 1871.595193,
+              "timestamp": 317.621289,
+              "status": 200,
+              "mimeType": "application/json",
+              "encodedDataLength": 183,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 1874.310713,
+              "timestamp": 317.621882,
+              "dataLength": 50708,
+              "encodedDataLength": 50708
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 1878.95788,
+              "timestamp": 317.611741,
+              "encodedDataLength": 50891
+            }
+          ],
+          "started": true,
+          "filename": "data/lab-2/descriptor.json",
+          "responseSeen": true,
+          "decodedDataLength": 50708,
+          "encodedDataLength": 50708,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3118.8",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 1876.577179,
+              "timestamp": 317.624383,
+              "wallTime": 1791166013.55948,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:44473",
+                "path": "/data/lab-2/results.json",
+                "initialQuery": false
+              },
+              "type": "Fetch"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 1992.046121,
+              "timestamp": 317.742099,
+              "status": 200,
+              "mimeType": "application/json",
+              "encodedDataLength": 185,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 2136.162168,
+              "timestamp": 317.749311,
+              "dataLength": 5294742,
+              "encodedDataLength": 5294742
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 2181.279847,
+              "timestamp": 317.641726,
+              "encodedDataLength": 5294927
+            }
+          ],
+          "started": true,
+          "filename": "data/lab-2/results.json",
+          "responseSeen": true,
+          "decodedDataLength": 5294742,
+          "encodedDataLength": 5294742,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3118.9",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 1876.632263,
+              "timestamp": 317.624636,
+              "wallTime": 1791166013.559715,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:44473",
+                "path": "/data/lab-2/comparisons.json",
+                "initialQuery": false
+              },
+              "type": "Fetch"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 1983.661024,
+              "timestamp": 317.701716,
+              "status": 200,
+              "mimeType": "application/json",
+              "encodedDataLength": 185,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 1983.676723,
+              "timestamp": 317.703583,
+              "dataLength": 1116928,
+              "encodedDataLength": 0
+            },
+            {
+              "event": "loadingFailed",
+              "observedMonotonicMs": 1983.748087,
+              "timestamp": 317.704888,
+              "errorText": "net::ERR_ABORTED",
+              "canceled": true,
+              "blockedReason": null,
+              "type": "Fetch",
+              "observerPhase": "main"
+            }
+          ],
+          "started": true,
+          "filename": "data/lab-2/comparisons.json",
+          "responseSeen": true,
+          "decodedDataLength": 1116928,
+          "encodedDataLength": 0,
+          "terminal": "loadingFailed"
+        },
+        {
+          "requestId": "3118.10",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 1876.675454,
+              "timestamp": 317.624845,
+              "wallTime": 1791166013.559918,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:44473",
+                "path": "/data/lab-2/manifest.json",
+                "initialQuery": false
+              },
+              "type": "Fetch"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 1910.664381,
+              "timestamp": 317.655329,
+              "status": 200,
+              "mimeType": "application/json",
+              "encodedDataLength": 183,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 1983.545587,
+              "timestamp": 317.655787,
+              "dataLength": 82880,
+              "encodedDataLength": 82880
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 1983.582917,
+              "timestamp": 317.637798,
+              "encodedDataLength": 83063
+            }
+          ],
+          "started": true,
+          "filename": "data/lab-2/manifest.json",
+          "responseSeen": true,
+          "decodedDataLength": 82880,
+          "encodedDataLength": 82880,
+          "terminal": "loadingFinished"
+        }
+      ],
+      "fetch": [
+        {
+          "networkId": "46DE83182FCD25F455C7277D92A98F9D",
+          "requestFetchId": "interception-job-1.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:44473",
+            "path": "/lab.html",
+            "initialQuery": true
+          },
+          "requestPausedMs": 1812.437264,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "lab.html",
+          "requestContinuedMs": 1813.140442,
+          "responseFetchId": "interception-job-1.0",
+          "responsePausedMs": 1819.247302,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/html"
+            },
+            {
+              "name": "content-length",
+              "value": "5393"
+            }
+          ],
+          "getBodyStartedMs": 1819.34187,
+          "getBodyCompletedMs": 1820.186433,
+          "body": {
+            "bytes": 5393,
+            "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 1820.93175,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3118.2",
+          "requestFetchId": "interception-job-2.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:44473",
+            "path": "/lab.css",
+            "initialQuery": false
+          },
+          "requestPausedMs": 1826.163815,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "lab.css",
+          "requestContinuedMs": 1827.092446,
+          "responseFetchId": "interception-job-2.0",
+          "responsePausedMs": 1830.582422,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/css"
+            },
+            {
+              "name": "content-length",
+              "value": "5019"
+            }
+          ],
+          "getBodyStartedMs": 1830.60283,
+          "getBodyCompletedMs": 1831.611202,
+          "body": {
+            "bytes": 5019,
+            "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 1832.395506,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3118.3",
+          "requestFetchId": "interception-job-3.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:44473",
+            "path": "/lab.js",
+            "initialQuery": false
+          },
+          "requestPausedMs": 1826.514502,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "lab.js",
+          "requestContinuedMs": 1827.358961,
+          "responseFetchId": "interception-job-3.0",
+          "responsePausedMs": 1830.982873,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/javascript"
+            },
+            {
+              "name": "content-length",
+              "value": "22571"
+            }
+          ],
+          "getBodyStartedMs": 1830.992571,
+          "getBodyCompletedMs": 1831.979885,
+          "body": {
+            "bytes": 22571,
+            "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 1832.869385,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3118.6",
+          "requestFetchId": "interception-job-4.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:44473",
+            "path": "/lab-data.mjs",
+            "initialQuery": false
+          },
+          "requestPausedMs": 1835.55045,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "lab-data.mjs",
+          "requestContinuedMs": 1836.001507,
+          "responseFetchId": "interception-job-4.0",
+          "responsePausedMs": 1837.204757,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/javascript"
+            },
+            {
+              "name": "content-length",
+              "value": "20808"
+            }
+          ],
+          "getBodyStartedMs": 1837.221489,
+          "getBodyCompletedMs": 1838.075873,
+          "body": {
+            "bytes": 20808,
+            "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 1839.04343,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3118.7",
+          "requestFetchId": "interception-job-5.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:44473",
+            "path": "/data/lab-2/descriptor.json",
+            "initialQuery": false
+          },
+          "requestPausedMs": 1854.494787,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "data/lab-2/descriptor.json",
+          "requestContinuedMs": 1858.013402,
+          "responseFetchId": "interception-job-5.0",
+          "responsePausedMs": 1860.581706,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "content-length",
+              "value": "50708"
+            }
+          ],
+          "getBodyStartedMs": 1860.617723,
+          "getBodyCompletedMs": 1862.153267,
+          "body": {
+            "bytes": 50708,
+            "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 1863.643315,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3118.8",
+          "requestFetchId": "interception-job-6.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:44473",
+            "path": "/data/lab-2/results.json",
+            "initialQuery": false
+          },
+          "requestPausedMs": 1873.726436,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "data/lab-2/results.json",
+          "requestContinuedMs": 1878.994589,
+          "responseFetchId": "interception-job-6.0",
+          "responsePausedMs": 1879.22923,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "content-length",
+              "value": "5294742"
+            }
+          ],
+          "getBodyStartedMs": 1879.247955,
+          "getBodyCompletedMs": 1969.689325,
+          "body": {
+            "bytes": 5294742,
+            "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 1991.903503,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3118.9",
+          "requestFetchId": "interception-job-7.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:44473",
+            "path": "/data/lab-2/comparisons.json",
+            "initialQuery": false
+          },
+          "requestPausedMs": 1874.350147,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "data/lab-2/comparisons.json",
+          "requestContinuedMs": 1879.790754,
+          "responseFetchId": "interception-job-7.0",
+          "responsePausedMs": 1885.252038,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "content-length",
+              "value": "1116928"
+            }
+          ],
+          "getBodyStartedMs": 1885.266685,
+          "getBodyCompletedMs": 1907.856659,
+          "body": {
+            "bytes": 1116928,
+            "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 1983.635706,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3118.10",
+          "requestFetchId": "interception-job-8.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:44473",
+            "path": "/data/lab-2/manifest.json",
+            "initialQuery": false
+          },
+          "requestPausedMs": 1874.880714,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "data/lab-2/manifest.json",
+          "requestContinuedMs": 1879.824879,
+          "responseFetchId": "interception-job-8.0",
+          "responsePausedMs": 1886.02001,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "content-length",
+              "value": "82880"
+            }
+          ],
+          "getBodyStartedMs": 1886.031722,
+          "getBodyCompletedMs": 1891.820704,
+          "body": {
+            "bytes": 82880,
+            "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 1910.591905,
+          "continuationArguments": [
+            "requestId"
+          ]
+        }
+      ],
+      "requestFailures": [
+        {
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:44473",
+            "path": "/data/lab-2/comparisons.json",
+            "initialQuery": false
+          },
+          "errorText": "net::ERR_ABORTED",
+          "observedMonotonicMs": 1984.16989,
+          "observerPhase": "main"
+        }
+      ],
+      "pageErrors": [],
+      "runtimeExceptions": [],
+      "consoleErrors": [],
+      "nodeUnhandled": [],
+      "callbackErrors": [],
+      "cleanupErrors": [],
+      "guard": {
+        "status": "RUNNING",
+        "blocked": []
+      },
+      "sandbox": {
+        "status": "PASS",
+        "arguments": [
+          "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+          "--disable-field-trial-config",
+          "--disable-background-networking",
+          "--disable-background-timer-throttling",
+          "--disable-backgrounding-occluded-windows",
+          "--disable-back-forward-cache",
+          "--disable-breakpad",
+          "--disable-client-side-phishing-detection",
+          "--disable-component-extensions-with-background-pages",
+          "--disable-component-update",
+          "--no-default-browser-check",
+          "--disable-default-apps",
+          "--disable-dev-shm-usage",
+          "--disable-edgeupdater",
+          "--disable-extensions",
+          "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+          "--enable-features=CDPScreenshotNewSurface",
+          "--allow-pre-commit-input",
+          "--disable-hang-monitor",
+          "--disable-ipc-flooding-protection",
+          "--disable-popup-blocking",
+          "--disable-prompt-on-repost",
+          "--disable-renderer-backgrounding",
+          "--force-color-profile=srgb",
+          "--metrics-recording-only",
+          "--no-first-run",
+          "--password-store=basic",
+          "--use-mock-keychain",
+          "--no-service-autorun",
+          "--export-tagged-pdf",
+          "--disable-search-engine-choice-screen",
+          "--unsafely-disable-devtools-self-xss-warnings",
+          "--edge-skip-compat-layer-relaunch",
+          "--disable-infobars",
+          "--disable-search-engine-choice-screen",
+          "--disable-sync",
+          "--enable-unsafe-swiftshader",
+          "--headless",
+          "--hide-scrollbars",
+          "--mute-audio",
+          "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+          "--enable-automation",
+          "--user-data-dir=/tmp/playwright_chromiumdev_profile-Bdi3XW",
+          "--remote-debugging-pipe",
+          "--no-startup-window",
+          "--use-gl=angle",
+          "--use-angle=swiftshader-webgl",
+          "--ozone-platform=headless",
+          "--allow-pre-commit-input"
+        ],
+        "launchSettings": {
+          "headless": true,
+          "chromiumSandbox": true,
+          "args": [
+            "--enable-automation"
+          ]
+        }
+      },
+      "screenshot": {
+        "status": "PASS",
+        "bytes": 429673,
+        "sha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014"
+      },
+      "origin": "http://127.0.0.1:44473",
+      "browser": {
+        "playwright": "1.61.1",
+        "version": "149.0.7827.55",
+        "node": "v24.21.0",
+        "runner": "ubuntu22",
+        "workflowRun": "37254028918"
+      },
+      "failures": [
+        {
+          "stage": "Network loadingFailed",
+          "error": "Error: Native Network loadingFailed: net::ERR_ABORTED\n    at file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:74:309\n    at CDPSession2.<anonymous> (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:43:74)\n    at CDPSession2._callHandler (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:10379:33)\n    at CDPSession2.emit (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:10369:16)\n    at Proxy.<anonymous> (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:56132:16)\n    at Proxy._callHandler (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:10379:33)\n    at Proxy.emit (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:10369:16)\n    at Connection.dispatch (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:62251:25)\n    at Immediate._onImmediate (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:62311:85)\n    at process.processImmediate (node:internal/timers:574:21)"
+        },
+        {
+          "stage": "Playwright requestfailed",
+          "error": "Error: net::ERR_ABORTED\n    at _Page.<anonymous> (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:77:275)\n    at _Page._callHandler (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:10379:33)\n    at _Page.emit (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:10369:16)\n    at _BrowserContext._onRequestFailed (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:60694:16)\n    at Proxy.<anonymous> (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:60636:113)\n    at Proxy._callHandler (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:10379:33)\n    at Proxy.emit (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:10369:16)\n    at Connection.dispatch (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:62251:25)\n    at Immediate._onImmediate (/home/runner/work/_temp/liminis-lab-transport-ab/node_modules/playwright-core/lib/coreBundle.js:62311:85)\n    at process.processImmediate (node:internal/timers:574:21)"
+        },
+        {
+          "stage": "main",
+          "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at main (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:101:262)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:103:89\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:20:70)\n    at async runArm (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:103:143)\n    at async probe (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:124:13)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:20:70)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:129:157"
+        },
+        {
+          "stage": "main settlement",
+          "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\ntrue !== false\n\n    at main (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:101:262)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:103:89\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:20:70)\n    at async runArm (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:103:143)\n    at async probe (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:124:13)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:20:70)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:129:157"
+        },
+        {
+          "stage": "post-cleanup aggregate",
+          "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at proof (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:89:10)\n    at runArm (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:109:11)\n    at async probe (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:124:13)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:20:70)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:129:157"
+        },
+        {
+          "stage": "final probe aggregate",
+          "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n\n    at proof (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:89:10)\n    at Object.revalidate (file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:111:69)\n    at file:///home/runner/work/liminis/liminis/scripts/check_lab_transport_ab.mjs:130:48"
+        }
+      ],
+      "ui": {
+        "ready": true,
+        "workspaceHidden": false,
+        "errorVisible": false,
+        "layout": "ready",
+        "ariaBusy": "false",
+        "status": "Verified published bytes · 24 runs · four paired seeds · aggregate observations",
+        "matrixRows": 24,
+        "plots": [
+          {
+            "metric": "living_cells",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "structural_mass_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "food_free_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "oxygen_free_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          }
+        ],
+        "runId": "seed-1-baseline",
+        "tick": "0",
+        "unhandled": []
+      },
+      "finalPage": {
+        "ready": true,
+        "workspaceHidden": false,
+        "errorVisible": false,
+        "layout": "ready",
+        "ariaBusy": "false",
+        "status": "Verified published bytes · 24 runs · four paired seeds · aggregate observations",
+        "matrixRows": 24,
+        "plots": [
+          {
+            "metric": "living_cells",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "structural_mass_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "food_free_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "oxygen_free_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          }
+        ],
+        "runId": "seed-1-baseline",
+        "tick": "0",
+        "unhandled": []
+      },
+      "finalization": {
+        "pageClosed": true,
+        "mainSettled": true,
+        "pendingCallbacks": 0,
+        "pausedRequests": 0,
+        "contextAndBrowserCleanupErrors": 0,
+        "networkRequests": 8,
+        "timelineEvents": 35,
+        "actionsPassed": false
+      },
+      "finishedAt": "2026-10-05T02:06:54.227Z"
+    },
+    {
+      "label": "B",
+      "status": "TRANSPORT_PASS",
+      "scope": "Explicit diagnostic-only pipeTo module variant; not a production fix",
+      "startedAt": "2026-10-05T02:06:54.228Z",
+      "sources": [
+        {
+          "filename": "lab.html",
+          "bytes": 5393,
+          "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+        },
+        {
+          "filename": "lab.js",
+          "bytes": 22571,
+          "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871"
+        },
+        {
+          "filename": "lab.css",
+          "bytes": 5019,
+          "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+        },
+        {
+          "filename": "lab-data.mjs",
+          "bytes": 20280,
+          "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e"
+        },
+        {
+          "filename": "data/lab-2/descriptor.json",
+          "bytes": 50708,
+          "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+        },
+        {
+          "filename": "data/lab-2/results.json",
+          "bytes": 5294742,
+          "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+        },
+        {
+          "filename": "data/lab-2/comparisons.json",
+          "bytes": 1116928,
+          "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+        },
+        {
+          "filename": "data/lab-2/manifest.json",
+          "bytes": 82880,
+          "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+        }
+      ],
+      "candidateHead": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+      "candidateTree": "64bdb5f4794f48907f99886c540f6391571b1914",
+      "diagnosticHead": "3b174d480ac1be94bea543d08322f075a229ba44",
+      "diagnosticTree": "25d34dcaf7ef6962820b4e1ed26317f3e78739dd",
+      "scriptSha256": "2b0b616cce3bc5b602fd105140f274cd01b503f60def151fc92dae7bf7a35e8d",
+      "manifestSha256": "68db0a3fa78207d2da16e33ae6be32c2c41e49ed71c2ce294a5590481a82884d",
+      "variant": {
+        "filename": "scripts/fixtures/lab-transport-ab/lab-data-pipe-to.mjs",
+        "serves": "lab-data.mjs",
+        "bytes": 20280,
+        "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+        "original_sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+        "original_function_sha256": "d6484a68a09e8318452e376e7c092f2565fca8ef9f1bdc827c8e2d705812c07a",
+        "variant_function_sha256": "3129290bf9cbe4eccfd8b17bdf1628547d8fde5273a12f3a5e13cbe600f59a92",
+        "difference": "ONLY readBytes function; bounded native pipeTo/WritableStream, no manual reader/lock release or unbounded fallback; all other module bytes identical.",
+        "prefixAndSuffixByteExact": true,
+        "differenceBytes": -528
+      },
+      "serverRequests": [
+        {
+          "id": 1,
+          "method": "GET",
+          "path": "/lab.html",
+          "receivedUnixMs": 1791166014454,
+          "status": 200,
+          "bytes": 5393,
+          "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+          "finishedUnixMs": 1791166014455,
+          "closedUnixMs": 1791166014455,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 2,
+          "method": "GET",
+          "path": "/lab.css",
+          "receivedUnixMs": 1791166014462,
+          "status": 200,
+          "bytes": 5019,
+          "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+          "finishedUnixMs": 1791166014462,
+          "closedUnixMs": 1791166014462,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 3,
+          "method": "GET",
+          "path": "/lab.js",
+          "receivedUnixMs": 1791166014463,
+          "status": 200,
+          "bytes": 22571,
+          "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+          "finishedUnixMs": 1791166014463,
+          "closedUnixMs": 1791166014463,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 4,
+          "method": "GET",
+          "path": "/lab-data.mjs",
+          "receivedUnixMs": 1791166014469,
+          "status": 200,
+          "bytes": 20280,
+          "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+          "finishedUnixMs": 1791166014469,
+          "closedUnixMs": 1791166014469,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 5,
+          "method": "GET",
+          "path": "/data/lab-2/descriptor.json",
+          "receivedUnixMs": 1791166014492,
+          "status": 200,
+          "bytes": 50708,
+          "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+          "finishedUnixMs": 1791166014492,
+          "closedUnixMs": 1791166014492,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 6,
+          "method": "GET",
+          "path": "/data/lab-2/results.json",
+          "receivedUnixMs": 1791166014507,
+          "status": 200,
+          "bytes": 5294742,
+          "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+          "finishedUnixMs": 1791166014510,
+          "closedUnixMs": 1791166014510,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 7,
+          "method": "GET",
+          "path": "/data/lab-2/comparisons.json",
+          "receivedUnixMs": 1791166014512,
+          "status": 200,
+          "bytes": 1116928,
+          "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+          "finishedUnixMs": 1791166014513,
+          "closedUnixMs": 1791166014513,
+          "closedAfterFinish": true
+        },
+        {
+          "id": 8,
+          "method": "GET",
+          "path": "/data/lab-2/manifest.json",
+          "receivedUnixMs": 1791166014516,
+          "status": 200,
+          "bytes": 82880,
+          "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+          "finishedUnixMs": 1791166014516,
+          "closedUnixMs": 1791166014516,
+          "closedAfterFinish": true
+        }
+      ],
+      "network": [
+        {
+          "requestId": "4BF1F9ED7AB0D8624B4393F93D642771",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 2765.889351,
+              "timestamp": 318.516899,
+              "wallTime": 1791166014.451972,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:41495",
+                "path": "/lab.html",
+                "initialQuery": true
+              },
+              "type": "Document"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 2771.373309,
+              "timestamp": 318.522423,
+              "status": 200,
+              "mimeType": "text/html",
+              "encodedDataLength": 175,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 2778.61975,
+              "timestamp": 318.524821,
+              "dataLength": 5393,
+              "encodedDataLength": 0
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 2779.887611,
+              "timestamp": 318.520838,
+              "encodedDataLength": 5568
+            }
+          ],
+          "started": true,
+          "filename": "lab.html",
+          "responseSeen": true,
+          "decodedDataLength": 5393,
+          "encodedDataLength": 0,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3169.2",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 2778.663493,
+              "timestamp": 318.525213,
+              "wallTime": 1791166014.460323,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:41495",
+                "path": "/lab.css",
+                "initialQuery": false
+              },
+              "type": "Stylesheet"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 2780.792128,
+              "timestamp": 318.530932,
+              "status": 200,
+              "mimeType": "text/css",
+              "encodedDataLength": 174,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 2780.814139,
+              "timestamp": 318.530964,
+              "dataLength": 5019,
+              "encodedDataLength": 0
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 2780.827003,
+              "timestamp": 318.531398,
+              "dataLength": 0,
+              "encodedDataLength": 5019
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 2780.856428,
+              "timestamp": 318.527881,
+              "encodedDataLength": 5193
+            }
+          ],
+          "started": true,
+          "filename": "lab.css",
+          "responseSeen": true,
+          "decodedDataLength": 5019,
+          "encodedDataLength": 5019,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3169.3",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 2779.168701,
+              "timestamp": 318.525545,
+              "wallTime": 1791166014.46061,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:41495",
+                "path": "/lab.js",
+                "initialQuery": false
+              },
+              "type": "Script"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 2781.988695,
+              "timestamp": 318.532964,
+              "status": 200,
+              "mimeType": "text/javascript",
+              "encodedDataLength": 182,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 2782.000176,
+              "timestamp": 318.532989,
+              "dataLength": 22571,
+              "encodedDataLength": 0
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 2782.271035,
+              "timestamp": 318.533141,
+              "dataLength": 0,
+              "encodedDataLength": 22571
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 2782.292455,
+              "timestamp": 318.528738,
+              "encodedDataLength": 22753
+            }
+          ],
+          "started": true,
+          "filename": "lab.js",
+          "responseSeen": true,
+          "decodedDataLength": 22571,
+          "encodedDataLength": 22571,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3169.6",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 2782.436526,
+              "timestamp": 318.533307,
+              "wallTime": 1791166014.468382,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:41495",
+                "path": "/lab-data.mjs",
+                "initialQuery": false
+              },
+              "type": "Script"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 2794.814201,
+              "timestamp": 318.545612,
+              "status": 200,
+              "mimeType": "text/javascript",
+              "encodedDataLength": 182,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 2794.830331,
+              "timestamp": 318.545636,
+              "dataLength": 20280,
+              "encodedDataLength": 0
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 2794.848665,
+              "timestamp": 318.545677,
+              "dataLength": 0,
+              "encodedDataLength": 20280
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 2794.871628,
+              "timestamp": 318.535347,
+              "encodedDataLength": 20462
+            }
+          ],
+          "started": true,
+          "filename": "lab-data.mjs",
+          "responseSeen": true,
+          "decodedDataLength": 20280,
+          "encodedDataLength": 20280,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3169.7",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 2801.439245,
+              "timestamp": 318.548674,
+              "wallTime": 1791166014.483798,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:41495",
+                "path": "/data/lab-2/descriptor.json",
+                "initialQuery": false
+              },
+              "type": "Fetch"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 2817.099812,
+              "timestamp": 318.567713,
+              "status": 200,
+              "mimeType": "application/json",
+              "encodedDataLength": 183,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 2820.143337,
+              "timestamp": 318.568103,
+              "dataLength": 50708,
+              "encodedDataLength": 50708
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 2822.244714,
+              "timestamp": 318.558359,
+              "encodedDataLength": 50891
+            }
+          ],
+          "started": true,
+          "filename": "data/lab-2/descriptor.json",
+          "responseSeen": true,
+          "decodedDataLength": 50708,
+          "encodedDataLength": 50708,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3169.8",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 2820.247092,
+              "timestamp": 318.570542,
+              "wallTime": 1791166014.505609,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:41495",
+                "path": "/data/lab-2/results.json",
+                "initialQuery": false
+              },
+              "type": "Fetch"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 2936.068684,
+              "timestamp": 318.683198,
+              "status": 200,
+              "mimeType": "application/json",
+              "encodedDataLength": 185,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 2989.031676,
+              "timestamp": 318.694762,
+              "dataLength": 5294742,
+              "encodedDataLength": 5294742
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 3003.991049,
+              "timestamp": 318.582589,
+              "encodedDataLength": 5294927
+            }
+          ],
+          "started": true,
+          "filename": "data/lab-2/results.json",
+          "responseSeen": true,
+          "decodedDataLength": 5294742,
+          "encodedDataLength": 5294742,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3169.9",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 2820.28836,
+              "timestamp": 318.570805,
+              "wallTime": 1791166014.505883,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:41495",
+                "path": "/data/lab-2/comparisons.json",
+                "initialQuery": false
+              },
+              "type": "Fetch"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 2989.576424,
+              "timestamp": 318.740638,
+              "status": 200,
+              "mimeType": "application/json",
+              "encodedDataLength": 185,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 3012.115231,
+              "timestamp": 318.756793,
+              "dataLength": 1116928,
+              "encodedDataLength": 1116928
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 3142.505652,
+              "timestamp": 318.581879,
+              "encodedDataLength": 1117113
+            }
+          ],
+          "started": true,
+          "filename": "data/lab-2/comparisons.json",
+          "responseSeen": true,
+          "decodedDataLength": 1116928,
+          "encodedDataLength": 1116928,
+          "terminal": "loadingFinished"
+        },
+        {
+          "requestId": "3169.10",
+          "events": [
+            {
+              "event": "requestWillBeSent",
+              "observedMonotonicMs": 2822.22671,
+              "timestamp": 318.571003,
+              "wallTime": 1791166014.506111,
+              "method": "GET",
+              "location": {
+                "origin": "http://127.0.0.1:41495",
+                "path": "/data/lab-2/manifest.json",
+                "initialQuery": false
+              },
+              "type": "Fetch"
+            },
+            {
+              "event": "responseReceived",
+              "observedMonotonicMs": 2989.890254,
+              "timestamp": 318.740868,
+              "status": 200,
+              "mimeType": "application/json",
+              "encodedDataLength": 183,
+              "fromDiskCache": false,
+              "fromServiceWorker": false
+            },
+            {
+              "event": "dataReceived",
+              "observedMonotonicMs": 3110.023842,
+              "timestamp": 318.763511,
+              "dataLength": 82880,
+              "encodedDataLength": 82880
+            },
+            {
+              "event": "loadingFinished",
+              "observedMonotonicMs": 3144.715509,
+              "timestamp": 318.583526,
+              "encodedDataLength": 83063
+            }
+          ],
+          "started": true,
+          "filename": "data/lab-2/manifest.json",
+          "responseSeen": true,
+          "decodedDataLength": 82880,
+          "encodedDataLength": 82880,
+          "terminal": "loadingFinished"
+        }
+      ],
+      "fetch": [
+        {
+          "networkId": "4BF1F9ED7AB0D8624B4393F93D642771",
+          "requestFetchId": "interception-job-1.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:41495",
+            "path": "/lab.html",
+            "initialQuery": true
+          },
+          "requestPausedMs": 2766.637969,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "lab.html",
+          "requestContinuedMs": 2767.134469,
+          "responseFetchId": "interception-job-1.0",
+          "responsePausedMs": 2769.416775,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/html"
+            },
+            {
+              "name": "content-length",
+              "value": "5393"
+            }
+          ],
+          "getBodyStartedMs": 2769.434208,
+          "getBodyCompletedMs": 2770.137128,
+          "body": {
+            "bytes": 5393,
+            "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 2770.735892,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3169.2",
+          "requestFetchId": "interception-job-2.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:41495",
+            "path": "/lab.css",
+            "initialQuery": false
+          },
+          "requestPausedMs": 2774.74837,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "lab.css",
+          "requestContinuedMs": 2775.550657,
+          "responseFetchId": "interception-job-2.0",
+          "responsePausedMs": 2777.193322,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/css"
+            },
+            {
+              "name": "content-length",
+              "value": "5019"
+            }
+          ],
+          "getBodyStartedMs": 2777.201557,
+          "getBodyCompletedMs": 2778.125152,
+          "body": {
+            "bytes": 5019,
+            "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 2779.644365,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3169.3",
+          "requestFetchId": "interception-job-3.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:41495",
+            "path": "/lab.js",
+            "initialQuery": false
+          },
+          "requestPausedMs": 2775.169561,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "lab.js",
+          "requestContinuedMs": 2776.812988,
+          "responseFetchId": "interception-job-3.0",
+          "responsePausedMs": 2777.640091,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/javascript"
+            },
+            {
+              "name": "content-length",
+              "value": "22571"
+            }
+          ],
+          "getBodyStartedMs": 2777.646934,
+          "getBodyCompletedMs": 2779.389967,
+          "body": {
+            "bytes": 22571,
+            "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 2780.274836,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3169.6",
+          "requestFetchId": "interception-job-4.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:41495",
+            "path": "/lab-data.mjs",
+            "initialQuery": false
+          },
+          "requestPausedMs": 2782.528779,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "lab-data.mjs",
+          "requestContinuedMs": 2782.943859,
+          "responseFetchId": "interception-job-4.0",
+          "responsePausedMs": 2784.108756,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "text/javascript"
+            },
+            {
+              "name": "content-length",
+              "value": "20280"
+            }
+          ],
+          "getBodyStartedMs": 2784.114286,
+          "getBodyCompletedMs": 2784.851791,
+          "body": {
+            "bytes": 20280,
+            "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 2785.59135,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3169.7",
+          "requestFetchId": "interception-job-5.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:41495",
+            "path": "/data/lab-2/descriptor.json",
+            "initialQuery": false
+          },
+          "requestPausedMs": 2798.887543,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "data/lab-2/descriptor.json",
+          "requestContinuedMs": 2805.175779,
+          "responseFetchId": "interception-job-5.0",
+          "responsePausedMs": 2807.182921,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "content-length",
+              "value": "50708"
+            }
+          ],
+          "getBodyStartedMs": 2807.192308,
+          "getBodyCompletedMs": 2808.647006,
+          "body": {
+            "bytes": 50708,
+            "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 2809.555657,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3169.8",
+          "requestFetchId": "interception-job-6.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:41495",
+            "path": "/data/lab-2/results.json",
+            "initialQuery": false
+          },
+          "requestPausedMs": 2819.80397,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "data/lab-2/results.json",
+          "requestContinuedMs": 2820.529866,
+          "responseFetchId": "interception-job-6.0",
+          "responsePausedMs": 2824.142778,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "content-length",
+              "value": "5294742"
+            }
+          ],
+          "getBodyStartedMs": 2824.150002,
+          "getBodyCompletedMs": 2902.979964,
+          "body": {
+            "bytes": 5294742,
+            "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 2933.64943,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3169.9",
+          "requestFetchId": "interception-job-7.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:41495",
+            "path": "/data/lab-2/comparisons.json",
+            "initialQuery": false
+          },
+          "requestPausedMs": 2822.256897,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "data/lab-2/comparisons.json",
+          "requestContinuedMs": 2824.477026,
+          "responseFetchId": "interception-job-7.0",
+          "responsePausedMs": 2831.327143,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "content-length",
+              "value": "1116928"
+            }
+          ],
+          "getBodyStartedMs": 2831.336571,
+          "getBodyCompletedMs": 2923.325092,
+          "body": {
+            "bytes": 1116928,
+            "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 2935.698869,
+          "continuationArguments": [
+            "requestId"
+          ]
+        },
+        {
+          "networkId": "3169.10",
+          "requestFetchId": "interception-job-8.0",
+          "method": "GET",
+          "location": {
+            "origin": "http://127.0.0.1:41495",
+            "path": "/data/lab-2/manifest.json",
+            "initialQuery": false
+          },
+          "requestPausedMs": 2822.403221,
+          "status": "ORIGINAL_BODY_PINNED",
+          "filename": "data/lab-2/manifest.json",
+          "requestContinuedMs": 2824.770247,
+          "responseFetchId": "interception-job-8.0",
+          "responsePausedMs": 2832.527557,
+          "httpStatus": 200,
+          "responseErrorReason": null,
+          "headers": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "content-length",
+              "value": "82880"
+            }
+          ],
+          "getBodyStartedMs": 2832.533899,
+          "getBodyCompletedMs": 2926.809245,
+          "body": {
+            "bytes": 82880,
+            "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+            "base64Encoded": true
+          },
+          "responseContinuedMs": 2936.690742,
+          "continuationArguments": [
+            "requestId"
+          ]
+        }
+      ],
+      "requestFailures": [],
+      "pageErrors": [],
+      "runtimeExceptions": [],
+      "consoleErrors": [],
+      "nodeUnhandled": [],
+      "callbackErrors": [],
+      "cleanupErrors": [],
+      "guard": {
+        "status": "PASS",
+        "blocked": []
+      },
+      "sandbox": {
+        "status": "PASS",
+        "arguments": [
+          "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+          "--disable-field-trial-config",
+          "--disable-background-networking",
+          "--disable-background-timer-throttling",
+          "--disable-backgrounding-occluded-windows",
+          "--disable-back-forward-cache",
+          "--disable-breakpad",
+          "--disable-client-side-phishing-detection",
+          "--disable-component-extensions-with-background-pages",
+          "--disable-component-update",
+          "--no-default-browser-check",
+          "--disable-default-apps",
+          "--disable-dev-shm-usage",
+          "--disable-edgeupdater",
+          "--disable-extensions",
+          "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+          "--enable-features=CDPScreenshotNewSurface",
+          "--allow-pre-commit-input",
+          "--disable-hang-monitor",
+          "--disable-ipc-flooding-protection",
+          "--disable-popup-blocking",
+          "--disable-prompt-on-repost",
+          "--disable-renderer-backgrounding",
+          "--force-color-profile=srgb",
+          "--metrics-recording-only",
+          "--no-first-run",
+          "--password-store=basic",
+          "--use-mock-keychain",
+          "--no-service-autorun",
+          "--export-tagged-pdf",
+          "--disable-search-engine-choice-screen",
+          "--unsafely-disable-devtools-self-xss-warnings",
+          "--edge-skip-compat-layer-relaunch",
+          "--disable-infobars",
+          "--disable-search-engine-choice-screen",
+          "--disable-sync",
+          "--enable-unsafe-swiftshader",
+          "--headless",
+          "--hide-scrollbars",
+          "--mute-audio",
+          "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+          "--enable-automation",
+          "--user-data-dir=/tmp/playwright_chromiumdev_profile-u2NKZ0",
+          "--remote-debugging-pipe",
+          "--no-startup-window",
+          "--use-gl=angle",
+          "--use-angle=swiftshader-webgl",
+          "--ozone-platform=headless",
+          "--allow-pre-commit-input"
+        ],
+        "launchSettings": {
+          "headless": true,
+          "chromiumSandbox": true,
+          "args": [
+            "--enable-automation"
+          ]
+        }
+      },
+      "screenshot": {
+        "status": "PASS",
+        "bytes": 429673,
+        "sha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014"
+      },
+      "origin": "http://127.0.0.1:41495",
+      "browser": {
+        "playwright": "1.61.1",
+        "version": "149.0.7827.55",
+        "node": "v24.21.0",
+        "runner": "ubuntu22",
+        "workflowRun": "37254028918"
+      },
+      "ui": {
+        "ready": true,
+        "workspaceHidden": false,
+        "errorVisible": false,
+        "layout": "ready",
+        "ariaBusy": "false",
+        "status": "Verified published bytes · 24 runs · four paired seeds · aggregate observations",
+        "matrixRows": 24,
+        "plots": [
+          {
+            "metric": "living_cells",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "structural_mass_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "food_free_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "oxygen_free_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          }
+        ],
+        "runId": "seed-1-baseline",
+        "tick": "0",
+        "unhandled": []
+      },
+      "finalPage": {
+        "ready": true,
+        "workspaceHidden": false,
+        "errorVisible": false,
+        "layout": "ready",
+        "ariaBusy": "false",
+        "status": "Verified published bytes · 24 runs · four paired seeds · aggregate observations",
+        "matrixRows": 24,
+        "plots": [
+          {
+            "metric": "living_cells",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "structural_mass_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "food_free_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "oxygen_free_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          }
+        ],
+        "runId": "seed-1-baseline",
+        "tick": "0",
+        "unhandled": []
+      },
+      "finalization": {
+        "pageClosed": true,
+        "mainSettled": true,
+        "pendingCallbacks": 0,
+        "pausedRequests": 0,
+        "contextAndBrowserCleanupErrors": 0,
+        "networkRequests": 8,
+        "timelineEvents": 35,
+        "actionsPassed": true
+      },
+      "finishedAt": "2026-10-05T02:06:55.208Z"
+    }
+  ],
+  "nodeUnhandled": [],
+  "errors": [],
+  "decision": "CANDIDATE_UA_COMPATIBILITY_ONLY_REQUIRES_INDEPENDENT_REVIEW_AND_FULL_LAB_CI",
+  "qualifications": [
+    "A is byte-exact product1be. B differs ONLY in the explicit fixture readBytes function using bounded native pipeTo/WritableStream. Seven other assets and all published raw biological data are byte-identical.",
+    "Two sequential fresh browser contexts/pages use the same official pinned runtime, stock sandbox settings, pre-send Request guards and original-response body pins. This probe uses no Debugger, route fulfillment, second fetch, Promise observer, retained Response/Reader, forced GC or liveness timer.",
+    "Response-stage Fetch.getResponseBody changes delivery timing; every continueResponse passes requestId alone. Network terminal failure remains failure even after full original body admission.",
+    "A fail plus B pass identifies only a candidate UA compatibility path. It does not prove a Chromium cancellation cause, biological effect or production readiness. Existing failures/reports and mandatory nine LAB gates remain unchanged."
+  ],
+  "candidateHead": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "candidateTree": "64bdb5f4794f48907f99886c540f6391571b1914",
+  "candidateTotalBytes": 6599049,
+  "diagnosticHead": "3b174d480ac1be94bea543d08322f075a229ba44",
+  "diagnosticTree": "25d34dcaf7ef6962820b4e1ed26317f3e78739dd",
+  "scriptSha256": "2b0b616cce3bc5b602fd105140f274cd01b503f60def151fc92dae7bf7a35e8d",
+  "manifestSha256": "68db0a3fa78207d2da16e33ae6be32c2c41e49ed71c2ce294a5590481a82884d",
+  "variant": {
+    "filename": "scripts/fixtures/lab-transport-ab/lab-data-pipe-to.mjs",
+    "serves": "lab-data.mjs",
+    "bytes": 20280,
+    "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+    "original_sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+    "original_function_sha256": "d6484a68a09e8318452e376e7c092f2565fca8ef9f1bdc827c8e2d705812c07a",
+    "variant_function_sha256": "3129290bf9cbe4eccfd8b17bdf1628547d8fde5273a12f3a5e13cbe600f59a92",
+    "difference": "ONLY readBytes function; bounded native pipeTo/WritableStream, no manual reader/lock release or unbounded fallback; all other module bytes identical.",
+    "prefixAndSuffixByteExact": true,
+    "differenceBytes": -528
+  },
+  "finishedAt": "2026-10-05T02:06:55.275Z"
+}

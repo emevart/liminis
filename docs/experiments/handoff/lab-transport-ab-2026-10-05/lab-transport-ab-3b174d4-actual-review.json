@@ -1,0 +1,688 @@
+{
+  "schema_version": 1,
+  "reviewed_at_utc": "2026-10-05T02:14:26.441035+00:00",
+  "reviewer_role": "Independent artifact/code reviewer, not QA or workflow author",
+  "verdict": "QUALIFIED_CANDIDATE_COMPARISON_CONFIRMED_OVERALL_FAIL_RETAINED",
+  "additional_integrity_scope_or_privacy_blockers": [],
+  "scope": "Read-only independent acceptance of ONE LAST diagnostic AFAIL/BPASS comparison, not nine LAB gates, product/full CI acceptance or Chromium cause proof. No browser/model/Cargo/HTTP/tests/extra causal run performed.",
+  "source_binding": {
+    "diagnosticHead": "3b174d480ac1be94bea543d08322f075a229ba44",
+    "diagnosticTree": "25d34dcaf7ef6962820b4e1ed26317f3e78739dd",
+    "originalProductHead": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+    "originalProductTree": "64bdb5f4794f48907f99886c540f6391571b1914",
+    "cleanReviewedSource": true,
+    "blobs": [
+      {
+        "path": "scripts/check_lab_transport_ab.mjs",
+        "bytes": 35511,
+        "sha256": "2b0b616cce3bc5b602fd105140f274cd01b503f60def151fc92dae7bf7a35e8d"
+      },
+      {
+        "path": "scripts/lab-transport-ab-assets.json",
+        "bytes": 2173,
+        "sha256": "68db0a3fa78207d2da16e33ae6be32c2c41e49ed71c2ce294a5590481a82884d"
+      },
+      {
+        "path": "scripts/fixtures/lab-transport-ab/lab-data-pipe-to.mjs",
+        "bytes": 20280,
+        "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e"
+      },
+      {
+        "path": ".github/workflows/lab-transport-ab.yml",
+        "bytes": 2244,
+        "sha256": "6a5092d31c2cc929a04e42a9911309713271ef0444d82933a651692808acca6a"
+      }
+    ],
+    "variantOnlyReadBytesFunction": true,
+    "variantPrefixSuffixAndBothFunctionShaVerified": true,
+    "sevenOtherAssetsAndAllScientificDataUnchanged": true
+  },
+  "original_artifact": {
+    "run": "37254028918",
+    "job": "111587245283",
+    "artifact": "11322181713",
+    "archiveFile": "lab-transport-ab-3b174d4-original.zip",
+    "bytes": 805885,
+    "sha256": "f8905342189586970b4bbc5b6164b2c48cbcb34a9f013eb6bbe2637e92ad69d0",
+    "crcErrors": 0,
+    "closedInventory": true,
+    "members": [
+      {
+        "name": "A/page.png",
+        "bytes": 429673,
+        "compressedBytes": 391093,
+        "sha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014",
+        "crc": 641269070,
+        "extractedByteExact": true
+      },
+      {
+        "name": "A/report.json",
+        "bytes": 36215,
+        "compressedBytes": 5723,
+        "sha256": "f424f7924bbfc795b6c09a6b7d9ff49d9d07c83118f4927bdcc316697c622ade",
+        "crc": 3913930238,
+        "extractedByteExact": true
+      },
+      {
+        "name": "B/page.png",
+        "bytes": 429673,
+        "compressedBytes": 391093,
+        "sha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014",
+        "crc": 641269070,
+        "extractedByteExact": true
+      },
+      {
+        "name": "B/report.json",
+        "bytes": 31021,
+        "compressedBytes": 5352,
+        "sha256": "58c6754a923c86667f425dd5b45432e69cb3c6cf4fadf22bf6dd4c1328f6fbb2",
+        "crc": 4292550222,
+        "extractedByteExact": true
+      },
+      {
+        "name": "report.json",
+        "bytes": 79930,
+        "compressedBytes": 12028,
+        "sha256": "fb2ad75d70948cf8089110d7a26e0f3a146c5d11cab8e15247ca6447fa451abc",
+        "crc": 678452346,
+        "extractedByteExact": true
+      }
+    ],
+    "expandedBytes": 1006512,
+    "decodedUtf8Files": 3,
+    "decodedUtf8Bytes": 147166,
+    "nestedZipFiles": 0,
+    "encryptedFiles": 0,
+    "symlinks": 0,
+    "traversalOrDuplicateEntries": 0,
+    "allExtractedBytesMatchOriginal": true,
+    "standaloneAndConsolidatedArmReportsDeepEqual": true,
+    "jsonMemberCount": 3,
+    "pngMemberCount": 2
+  },
+  "reported_overall": {
+    "status": "AB_PROBE_FAIL",
+    "decision": "CANDIDATE_UA_COMPATIBILITY_ONLY_REQUIRES_INDEPENDENT_REVIEW_AND_FULL_LAB_CI",
+    "errors": [],
+    "nodeUnhandled": [],
+    "startedAt": "2026-10-05T02:06:51.738Z",
+    "finishedAt": "2026-10-05T02:06:55.275Z",
+    "limits": {
+      "run": 150000,
+      "operation": 15000,
+      "cdp": 5000,
+      "launch": 20000,
+      "cleanup": 5000,
+      "requests": 32,
+      "events": 4096,
+      "activeCallbacks": 32
+    }
+  },
+  "actual_arms": [
+    {
+      "label": "A",
+      "status": "TRANSPORT_FAIL",
+      "start": "2026-10-05T02:06:51.939Z",
+      "finished": "2026-10-05T02:06:54.227Z",
+      "resources": [
+        {
+          "filename": "lab.html",
+          "bytes": 5393,
+          "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+          "nativeRequestId": "46DE83182FCD25F455C7277D92A98F9D",
+          "requestFetchId": "interception-job-1.0",
+          "responseFetchId": "interception-job-1.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 5393,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 4
+        },
+        {
+          "filename": "lab.js",
+          "bytes": 22571,
+          "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+          "nativeRequestId": "3118.3",
+          "requestFetchId": "interception-job-3.0",
+          "responseFetchId": "interception-job-3.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 22571,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 5
+        },
+        {
+          "filename": "lab.css",
+          "bytes": 5019,
+          "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+          "nativeRequestId": "3118.2",
+          "requestFetchId": "interception-job-2.0",
+          "responseFetchId": "interception-job-2.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 5019,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 5
+        },
+        {
+          "filename": "lab-data.mjs",
+          "bytes": 20808,
+          "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+          "nativeRequestId": "3118.6",
+          "requestFetchId": "interception-job-4.0",
+          "responseFetchId": "interception-job-4.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 20808,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 5
+        },
+        {
+          "filename": "data/lab-2/descriptor.json",
+          "bytes": 50708,
+          "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+          "nativeRequestId": "3118.7",
+          "requestFetchId": "interception-job-5.0",
+          "responseFetchId": "interception-job-5.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 50708,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 4
+        },
+        {
+          "filename": "data/lab-2/results.json",
+          "bytes": 5294742,
+          "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+          "nativeRequestId": "3118.8",
+          "requestFetchId": "interception-job-6.0",
+          "responseFetchId": "interception-job-6.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 5294742,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 4
+        },
+        {
+          "filename": "data/lab-2/comparisons.json",
+          "bytes": 1116928,
+          "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+          "nativeRequestId": "3118.9",
+          "requestFetchId": "interception-job-7.0",
+          "responseFetchId": "interception-job-7.0",
+          "terminal": "loadingFailed",
+          "decodedBytes": 1116928,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 4
+        },
+        {
+          "filename": "data/lab-2/manifest.json",
+          "bytes": 82880,
+          "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+          "nativeRequestId": "3118.10",
+          "requestFetchId": "interception-job-8.0",
+          "responseFetchId": "interception-job-8.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 82880,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 4
+        }
+      ],
+      "originalBodyPinCount": 8,
+      "totalPinnedBodyBytes": 6599049,
+      "nativeFinishedCount": 7,
+      "nativeFailures": [
+        {
+          "filename": "data/lab-2/comparisons.json",
+          "nativeRequestId": "3118.9",
+          "nativeFailure": {
+            "event": "loadingFailed",
+            "observedMonotonicMs": 1983.748087,
+            "timestamp": 317.704888,
+            "errorText": "net::ERR_ABORTED",
+            "canceled": true,
+            "blockedReason": null,
+            "type": "Fetch",
+            "observerPhase": "main"
+          },
+          "matchingPlaywrightFailure": {
+            "method": "GET",
+            "location": {
+              "origin": "http://127.0.0.1:44473",
+              "path": "/data/lab-2/comparisons.json",
+              "initialQuery": false
+            },
+            "errorText": "net::ERR_ABORTED",
+            "observedMonotonicMs": 1984.16989,
+            "observerPhase": "main"
+          },
+          "fullDecodedBytes": 1116928,
+          "lastNativeDataTimestamp": 317.703583,
+          "nativeFailureMinusLastDataMs": 1.30500000000211,
+          "NodeObservationAckBeforeFailureObservation": true
+        }
+      ],
+      "reportedFailureStages": [
+        "Network loadingFailed",
+        "Playwright requestfailed",
+        "main",
+        "main settlement",
+        "post-cleanup aggregate",
+        "final probe aggregate"
+      ],
+      "errorArrayCounts": {
+        "requestFailures": 1,
+        "pageErrors": 0,
+        "runtimeExceptions": 0,
+        "consoleErrors": 0,
+        "nodeUnhandled": 0,
+        "callbackErrors": 0,
+        "cleanupErrors": 0
+      },
+      "initialAndFinalUI": {
+        "ready": true,
+        "workspaceHidden": false,
+        "errorVisible": false,
+        "layout": "ready",
+        "ariaBusy": "false",
+        "status": "Verified published bytes · 24 runs · four paired seeds · aggregate observations",
+        "matrixRows": 24,
+        "plots": [
+          {
+            "metric": "living_cells",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "structural_mass_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "food_free_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "oxygen_free_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          }
+        ],
+        "runId": "seed-1-baseline",
+        "tick": "0",
+        "unhandled": []
+      },
+      "finalization": {
+        "pageClosed": true,
+        "mainSettled": true,
+        "pendingCallbacks": 0,
+        "pausedRequests": 0,
+        "contextAndBrowserCleanupErrors": 0,
+        "networkRequests": 8,
+        "timelineEvents": 35,
+        "actionsPassed": false
+      },
+      "sandbox": {
+        "status": "PASS",
+        "launchSettings": {
+          "headless": true,
+          "chromiumSandbox": true,
+          "args": [
+            "--enable-automation"
+          ]
+        },
+        "forbiddenFlagCount": 0,
+        "observedStockSwiftShader": true,
+        "argumentCount": 49
+      },
+      "guard": {
+        "status": "RUNNING",
+        "blocked": []
+      }
+    },
+    {
+      "label": "B",
+      "status": "TRANSPORT_PASS",
+      "start": "2026-10-05T02:06:54.228Z",
+      "finished": "2026-10-05T02:06:55.208Z",
+      "resources": [
+        {
+          "filename": "lab.html",
+          "bytes": 5393,
+          "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+          "nativeRequestId": "4BF1F9ED7AB0D8624B4393F93D642771",
+          "requestFetchId": "interception-job-1.0",
+          "responseFetchId": "interception-job-1.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 5393,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 4
+        },
+        {
+          "filename": "lab.js",
+          "bytes": 22571,
+          "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+          "nativeRequestId": "3169.3",
+          "requestFetchId": "interception-job-3.0",
+          "responseFetchId": "interception-job-3.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 22571,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 5
+        },
+        {
+          "filename": "lab.css",
+          "bytes": 5019,
+          "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+          "nativeRequestId": "3169.2",
+          "requestFetchId": "interception-job-2.0",
+          "responseFetchId": "interception-job-2.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 5019,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 5
+        },
+        {
+          "filename": "lab-data.mjs",
+          "bytes": 20280,
+          "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+          "nativeRequestId": "3169.6",
+          "requestFetchId": "interception-job-4.0",
+          "responseFetchId": "interception-job-4.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 20280,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 5
+        },
+        {
+          "filename": "data/lab-2/descriptor.json",
+          "bytes": 50708,
+          "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+          "nativeRequestId": "3169.7",
+          "requestFetchId": "interception-job-5.0",
+          "responseFetchId": "interception-job-5.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 50708,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 4
+        },
+        {
+          "filename": "data/lab-2/results.json",
+          "bytes": 5294742,
+          "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+          "nativeRequestId": "3169.8",
+          "requestFetchId": "interception-job-6.0",
+          "responseFetchId": "interception-job-6.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 5294742,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 4
+        },
+        {
+          "filename": "data/lab-2/comparisons.json",
+          "bytes": 1116928,
+          "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+          "nativeRequestId": "3169.9",
+          "requestFetchId": "interception-job-7.0",
+          "responseFetchId": "interception-job-7.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 1116928,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 4
+        },
+        {
+          "filename": "data/lab-2/manifest.json",
+          "bytes": 82880,
+          "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+          "nativeRequestId": "3169.10",
+          "requestFetchId": "interception-job-8.0",
+          "responseFetchId": "interception-job-8.0",
+          "terminal": "loadingFinished",
+          "decodedBytes": 82880,
+          "sourceAndActualBodyPinExact": true,
+          "originalContinueAckAfterBody": true,
+          "continueArguments": [
+            "requestId"
+          ],
+          "serverGET200FinishedAndNotAborted": true,
+          "noDiskOrServiceWorkerCache": true,
+          "eventCount": 4
+        }
+      ],
+      "originalBodyPinCount": 8,
+      "totalPinnedBodyBytes": 6598521,
+      "nativeFinishedCount": 8,
+      "nativeFailures": [],
+      "reportedFailureStages": [],
+      "errorArrayCounts": {
+        "requestFailures": 0,
+        "pageErrors": 0,
+        "runtimeExceptions": 0,
+        "consoleErrors": 0,
+        "nodeUnhandled": 0,
+        "callbackErrors": 0,
+        "cleanupErrors": 0
+      },
+      "initialAndFinalUI": {
+        "ready": true,
+        "workspaceHidden": false,
+        "errorVisible": false,
+        "layout": "ready",
+        "ariaBusy": "false",
+        "status": "Verified published bytes · 24 runs · four paired seeds · aggregate observations",
+        "matrixRows": 24,
+        "plots": [
+          {
+            "metric": "living_cells",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "structural_mass_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "food_free_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          },
+          {
+            "metric": "oxygen_free_mol",
+            "visible": "visible",
+            "width": 453,
+            "height": 210
+          }
+        ],
+        "runId": "seed-1-baseline",
+        "tick": "0",
+        "unhandled": []
+      },
+      "finalization": {
+        "pageClosed": true,
+        "mainSettled": true,
+        "pendingCallbacks": 0,
+        "pausedRequests": 0,
+        "contextAndBrowserCleanupErrors": 0,
+        "networkRequests": 8,
+        "timelineEvents": 35,
+        "actionsPassed": true
+      },
+      "sandbox": {
+        "status": "PASS",
+        "launchSettings": {
+          "headless": true,
+          "chromiumSandbox": true,
+          "args": [
+            "--enable-automation"
+          ]
+        },
+        "forbiddenFlagCount": 0,
+        "observedStockSwiftShader": true,
+        "argumentCount": 49
+      },
+      "guard": {
+        "status": "PASS",
+        "blocked": []
+      }
+    }
+  ],
+  "actual_pngs": [
+    {
+      "arm": "A",
+      "file": "A/page.png",
+      "bytes": 429673,
+      "pngSha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014",
+      "width": 1440,
+      "height": 2443,
+      "decodedRgbaBytes": 14071680,
+      "decodedRgbaSha256": "d8bfac48aa3c1986425bfe8e6299867c0e64c47279857f9518b5c0ee08556387",
+      "viewedWithViewImage": true,
+      "visualObservation": "Complete four aggregate plots, baseline seed1 tick0 sample, readable inspector/environment/provenance and all24 matrix rows; no blank, pending or fatal panel visible."
+    },
+    {
+      "arm": "B",
+      "file": "B/page.png",
+      "bytes": 429673,
+      "pngSha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014",
+      "width": 1440,
+      "height": 2443,
+      "decodedRgbaBytes": 14071680,
+      "decodedRgbaSha256": "d8bfac48aa3c1986425bfe8e6299867c0e64c47279857f9518b5c0ee08556387",
+      "viewedWithViewImage": true,
+      "visualObservation": "Complete four aggregate plots, baseline seed1 tick0 sample, readable inspector/environment/provenance and all24 matrix rows; no blank, pending or fatal panel visible."
+    }
+  ],
+  "pngPairByteAndRgbaExact": true,
+  "sequential_freshness": {
+    "sourceAwaitedArmABeforeArmB": true,
+    "ASettledClosedAndNoPendingBeforeB": true,
+    "AReportFinishedAt": "2026-10-05T02:06:54.227Z",
+    "BReportStartedAt": "2026-10-05T02:06:54.228Z",
+    "strictTimestampOrder": true,
+    "AAndBLoopbackOriginsDistinct": true,
+    "observedNativeBrowserProfilesDistinct": true,
+    "officialRuntimeAndObservedArgvSameExceptProfile": true,
+    "serverTrafficWindowsDisjoint": true,
+    "closeAckSourceAndFinalizationProof": true,
+    "browserClosureIndependentOSProcessAudit": "Not separately retained; source awaited page/context/browser close and raw cleanup/finalization prove the scoped closure contract."
+  },
+  "privacy_review": {
+    "scope": "Bounded obvious credentials/private older context review; not a guarantee of absence of every possible secret. Only these three UTF8 JSON entries and two actual viewed PNGs; no raw job log or nested ZIP archived.",
+    "patternCounts": {
+      "private_key": 0,
+      "github_credential": 0,
+      "api_credential": 0,
+      "authorization_or_cookie_value": 0,
+      "credential_url_or_query": 0,
+      "private_chat_reference": 0,
+      "session_secret_assignment": 0
+    },
+    "visualPrivateContextConcern": false,
+    "knownCIPaths": "Standard public CI /home/runner/work, runner temp, browser cache/profile paths are ordinary provenance."
+  },
+  "qualifications": [
+    "A remains TRANSPORT_FAIL: comparisons.json fullbody admission and received count do not waive the native canceled ERR_ABORTED. The derived main/postcleanup/final aggregate failures remain present.",
+    "B passes only this initial transport/baseline/UI/closure probe; the mandatory nine LAB interactions, negative tests, resize, layout/typography and full protected CI remain future gates.",
+    "All16 body pins are observed SHA/length of original CDP Fetch.getResponseBody results tied to native IDs; raw response body bytes are not retained as separate artifact members. Original source bytes and the explicit variant were independently rehashed.",
+    "Response-stage CDP interception changes delivery timing. One sequential A/B observation supports only a compatibility candidate; it does not establish Chromium C++ cancellation cause, repeatability, biological effects or general platform correctness.",
+    "Native loadingFinished timestamps can precede later queued response/data observations under interception; Node event arrival times and Chrome timestamps are different clocks. No cross-clock causal ordering or performance comparison is asserted.",
+    "Both compositor PNGs were actually viewed and independently byte/RGBA compared; matching initial views do not substitute for all LAB functional and numeric acceptance.",
+    "Observed stock SwiftShader arguments preserve the approved official runtime qualification; no hardware GPU/native FPS claim.",
+    "No debugger, manual fetch/reader Promise observer, body replacement, repeated HTTP fetch, forced GC or further causal retry was introduced.",
+    "Earlier LAB and diagnostic artifacts remain FAIL; this diagnostic run itself remains overall AB_PROBE_FAIL."
+  ],
+  "next_required_gate": "Independent source review of any future production consumer patch, meaningful error/cap/cancellation regressions, then one exact-head complete protected LAB/CI acceptance and independent actual artifacts. No further causal diagnostic runs authorized."
+}

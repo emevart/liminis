@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "kind": "Original bounded evidence-only LAB A FAIL / B strict transport PASS; overall FAIL",
+  "diagnostic_head": "3b174d480ac1be94bea543d08322f075a229ba44",
+  "diagnostic_tree": "25d34dcaf7ef6962820b4e1ed26317f3e78739dd",
+  "candidate_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "workflow_run": 37254028918,
+  "workflow_job": 111587245283,
+  "artifact_id": 11322181713,
+  "actual_diagnostic_status": "AB_PROBE_FAIL",
+  "arm_a": "TRANSPORT_FAIL",
+  "arm_b": "TRANSPORT_PASS",
+  "product_acceptance": "NOT_ACCEPTED",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 937434,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3115,
+      "sha256": "4bc135d79e9dea3bc8b32a99c9b26fdf8541afebc123683e5024a125187c8324"
+    },
+    {
+      "path": "lab-transport-ab-3b174d4-actual-review.json",
+      "bytes": 25768,
+      "sha256": "0d3f609876c0e3e0fa7f0ff70a907d6589a2a088a9f9d65e8c31f05c73a862cd"
+    },
+    {
+      "path": "lab-transport-ab-3b174d4-actual-review.md",
+      "bytes": 6199,
+      "sha256": "32b080cc9d32559203843e5e5b3eaacd89edf6ef19f2a4b7f131fd3b21ed8be7"
+    },
+    {
+      "path": "lab-transport-ab-3b174d4-original.zip",
+      "bytes": 805885,
+      "sha256": "f8905342189586970b4bbc5b6164b2c48cbcb34a9f013eb6bbe2637e92ad69d0"
+    },
+    {
+      "path": "lab-transport-ab-source-review.json",
+      "bytes": 11194,
+      "sha256": "d34544c2c76d41c56495f08a6c3c2413c97b9513fd68ec4355d8193d1e2f8f12"
+    },
+    {
+      "path": "lab-transport-ab-source-review.md",
+      "bytes": 5343,
+      "sha256": "e159b43064bc814a2f7f005dcdd4deda1192dc57edcfc301e022849a585f0731"
+    },
+    {
+      "path": "report.json",
+      "bytes": 79930,
+      "sha256": "fb2ad75d70948cf8089110d7a26e0f3a146c5d11cab8e15247ca6447fa451abc"
+    }
+  ]
+}
