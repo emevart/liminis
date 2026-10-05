@@ -13,12 +13,12 @@
   "actual_acceptance": "QUALIFIED_INDEPENDENT_PASS_ZERO_BLOCKERS",
   "full_ci": "SUCCESS_EXACT_MAIN_9SUCCESS_2_EXPECTED_PR_ONLY_SKIPPED",
   "archive_group_cap_bytes": 67108864,
-  "unique_bytes": 34981219,
+  "unique_bytes": 35146838,
   "files": [
     {
       "path": "README.md",
-      "bytes": 3633,
-      "sha256": "51de528d418c72f83e5634ca67607453878d20f3aa80710db693cac09867a068"
+      "bytes": 4806,
+      "sha256": "8e0b6c576798ca252a31923f7b721c1066e3e3801f860d659df6509f12d1d93d"
     },
     {
       "path": "dense-recording-browser-e2fd620-original.zip",
@@ -34,6 +34,26 @@
       "path": "independent-actual-review.md",
       "bytes": 6338,
       "sha256": "3a2f39a2ea7e6d2c9c340150cef314bf3d09d51a9fade16cc627fd1aac5ce406"
+    },
+    {
+      "path": "initial-network-readback.json",
+      "bytes": 2033,
+      "sha256": "ed8e58c29abf2cf568332dcd2481418cddd965eb07512f1c2fe30917612d8d03"
+    },
+    {
+      "path": "privacy-scanner.py",
+      "bytes": 13753,
+      "sha256": "4277a7d60c7eb4abaffb6182ca04d0eb0167cf915a3749a79a26c110690c7eea"
+    },
+    {
+      "path": "privacy-supplement.json",
+      "bytes": 144711,
+      "sha256": "c515e39d341e7ebe5a821d2e3ace252bd4f770fd5f2636cb7391bebe07906944"
+    },
+    {
+      "path": "privacy-supplement.md",
+      "bytes": 3949,
+      "sha256": "3cc11384214c4713aa02994577de9aed2e8adcc4f54a6046b0ca364ff37d35d2"
     },
     {
       "path": "public-playback-e2fd620-original.zip",
@@ -52,5 +72,8 @@
     "Public19HTTPSmetadata/finalgzip and default14browserassets perviewport; nofull2.42GBHTTP/nondefault publicrender/hostGit attestation",
     "DenseHUDoverlap at216cells is nonblocking visual limitation",
     "Historical5beaFAILcauseunknown/LABHOLD"
-  ]
+  ],
+  "privacy_supplement": "Bounded original UTF8 resources; explicit scope/caps/exclusions in separate supplement; no exhaustive guarantee",
+  "prior_archive_commit": "d0c6452672aa268c3fc4cca3968e92fc24513d29",
+  "prior_manifest_sha256": "23b7fd5a95e9e58c6261a70a0d1b714ca97a3f0a56c30900ab7b18be484183a5"
 }

@@ -11,3 +11,9 @@ PUBLIC:19 HTTPS source/metadata/finalgzip pins всех3horizons; browser scope 
 Неблокирующее визуальное ограничение:при216cells/tick992 schematic glyphs пересекают HUD heading/counter text, особенно320/390px. Controls видимы и unobscured; общая чистота плотного observer не подтверждена. Некоторые response bodies отсутствуют в trace и привязаны к точным protected QA observations; full trace-only reconstruction не заявлена. Public analytics metadata намеренно публичны в exactHTML. Bounded privacy и просмотр PNG не являются полным secret guarantee.
 
 Нет полного2.42GB public download, public100k/1M render, свежего full1M decode/modelrun, universal performance/peakheap, hardwareFPS или полного accessibility audit. Historicalmain5bea encoded-SHAFAIL остаётся неизвестной причины. LAB21/publicLAB/models сохраняют Astra HOLD; source-only interoperability audit здесь не запускался. Scientific24/raw/source21cbe907/world30 неизменны. Overall LIVE/GL и все архивные readbacks — отдельные gates.
+
+## Дополнение: bounded проверка текстовых ресурсов
+
+Отдельный `privacy-supplement.json/.md` расширяет прежнюю actual-приёмку проверкой bounded UTF-8 текстов outer/nested original ZIP, включая допустимые gzip resources. Точные caps, охват, исключения binary images, cookies/auth и намеренно публичные analytics metadata указаны в supplement. Прежние actual review и три original ZIP сохранены побайтно; браузер/HTTP/tests/models заново не запускались. Это проверка очевидных шаблонов, а не гарантия отсутствия любых секретов.
+
+Первоначальный архив commit `d0c6452672aa268c3fc4cca3968e92fc24513d29` и его completed network readback сохранены в Git history и `initial-network-readback.json`. Текущий дополненный закрытый inventory требует нового отдельного network readback; старый receipt его не принимает.

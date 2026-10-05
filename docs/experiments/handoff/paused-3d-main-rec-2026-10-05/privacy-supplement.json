@@ -1,0 +1,3337 @@
+{
+  "schema_version": 1,
+  "kind": "bounded_utf8_privacy_supplement",
+  "created_at_utc": "2026-10-05T05:16:05.719705+00:00",
+  "source_head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+  "source_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "verdict": "QUALIFIED_0_BLOCKERS",
+  "blockers": [],
+  "blocker_count": 0,
+  "blocker_candidates": [],
+  "coverage_gaps": [],
+  "scope": "Local scan of all ordinary UTF-8 outer and nested trace resources of the three pinned original ZIPs, bounded gzip decoding, plus two unchanged frozen review texts; independent actual review not repeated.",
+  "caps": {
+    "file_bytes": 33554432,
+    "total_read_bytes": 536870912,
+    "entry_count": 4096,
+    "nested_zip_depth": 2,
+    "elapsed_seconds": 180
+  },
+  "observed": {
+    "archive_member_files": 528,
+    "archive_member_bytes": 136369687,
+    "excluded_image_files": 468,
+    "excluded_image_bytes": 20909999,
+    "scanned_utf8_files": 59,
+    "scanned_utf8_bytes": 97451329,
+    "scanned_outer_text_files": 5,
+    "outer_report_json_records": 3,
+    "nested_zip_containers": 3,
+    "scanned_nested_text_files": 41,
+    "http_jsonl_records": 244,
+    "gzip_decoded_files": 11,
+    "gzip_encoded_bytes": 6565763,
+    "gzip_decoded_bytes": 22481199,
+    "scanned_gzip_text_files": 11,
+    "scanned_frozen_review_text_files": 2
+  },
+  "total_read_bytes_including_pin_rereads": 228860550,
+  "archive_entry_count": 528,
+  "elapsed_seconds": 12.325,
+  "inputs_before_and_after_equal": true,
+  "inputs": [
+    {
+      "path": "/workspace/attachments/632baeeb-c4b7-4ccf-b770-f3d288c2ca67/recorded-browser-e2fd620-original.zip",
+      "bytes": 12616518,
+      "sha256": "e6a5d33458fff1594349ca08c2fb1a22de5f93e8b4abff4a87e9daa8566cca53"
+    },
+    {
+      "path": "/workspace/attachments/ec2cd3d3-8644-4c90-951f-00bb78aed1a2/dense-recording-browser-e2fd620-original.zip",
+      "bytes": 16608101,
+      "sha256": "c81d16c90616d57d6da404abc127082b4b3bb3a876714b34530c462def6633b2"
+    },
+    {
+      "path": "/workspace/attachments/08896089-36df-4650-9c82-a2625425574a/public-playback-e2fd620-original.zip",
+      "bytes": 5704503,
+      "sha256": "a0af87ecffc69d9138a5f0cd97a886d1ca24c8a46d4e1669adea44d4b597a4ff"
+    },
+    {
+      "path": "/workspace/liminis-evidence/paused-3d-main-rec-public-review/review.json",
+      "bytes": 42126,
+      "sha256": "dfbd7b2dfb0a560fc45e700107964d890baaae64ca8f2cc72b5b2546f37a0577"
+    },
+    {
+      "path": "/workspace/liminis-evidence/paused-3d-main-rec-public-review/review.md",
+      "bytes": 6338,
+      "sha256": "3a2f39a2ea7e6d2c9c340150cef314bf3d09d51a9fade16cc627fd1aac5ce406"
+    }
+  ],
+  "archive_config": {
+    "path": "/workspace/liminis-evidence/main-rec-archive-config.json",
+    "bytes": 6028,
+    "sha256": "dce34eaa1058eac66fc04f3f238bdebb991c1de85ba09e779651daee9674164a"
+  },
+  "public_intended_analytics_metadata": {
+    "classification": "Known intended public HTML hosting metadata; not a private bearer credential. No analytics execution claim.",
+    "exact_insertion_bytes": 367,
+    "exact_insertion_sha256": "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
+    "cloudflare_token": "f62c9cac700945e5b371e0dc055cbb61",
+    "counts": {
+      "public_analytics_script_url_occurrences": 24,
+      "exact_public_cloudflare_token_occurrences": 3,
+      "files_with_exact_public_cloudflare_token": 3,
+      "raw_html_exact_insertion_pins": 2
+    }
+  },
+  "high_precision_rules": {
+    "private_key_block": "-----BEGIN (?:RSA |EC |DSA |OPENSSH |ENCRYPTED )?PRIVATE KEY-----",
+    "github_token": "\\b(?:gh[opusr]_[A-Za-z0-9]{36,255}|github_pat_[A-Za-z0-9_]{30,255})\\b",
+    "openai_secret_key": "\\bsk-(?:(?:proj|svcacct)-)?[A-Za-z0-9_-]{32,255}\\b",
+    "aws_access_key": "\\b(?:AKIA|ASIA)[A-Z0-9]{16}\\b",
+    "slack_token": "\\bxox[baprs]-[0-9]{8,16}-[0-9]{8,16}-[A-Za-z0-9]{16,80}\\b",
+    "google_api_key": "\\bAIza[0-9A-Za-z_-]{35}\\b",
+    "tailscale_auth_key": "\\btskey-(?:auth|api)-[A-Za-z0-9_-]{20,200}\\b",
+    "concrete_authorization": "(?i)\\b(?:authorization|proxy-authorization)\\s*[\"\\']?\\s*[:=]\\s*[\"\\']?\\s*(?:Bearer|Basic)\\s+[A-Za-z0-9+/=._-]{12,255}",
+    "signed_storage_query": "(?i)[?&](?:X-Amz-(?:Credential|Signature|Security-Token)|X-Goog-(?:Credential|Signature)|sig)=[A-Za-z0-9%+/=_-]{12,400}",
+    "concrete_secret_assignment": "(?i)\\b(?:AWS_SECRET_ACCESS_KEY|SSH_PRIVATE_KEY|OPENAI_API_KEY|GITHUB_TOKEN|GH_TOKEN|API_SECRET|SECRET_KEY|ACCESS_TOKEN)\\s*[\"\\']?\\s*[:=]\\s*[\"\\'][A-Za-z0-9+/=._-]{20,255}[\"\\']",
+    "private_vm_ssh_identity": "\\b(?:root|ubuntu|ec2-user)@(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\b",
+    "private_network_url": "(?i)https?://(?:10\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}|192\\.168\\.[0-9]{1,3}\\.[0-9]{1,3}|172\\.(?:1[6-9]|2[0-9]|3[01])\\.[0-9]{1,3}\\.[0-9]{1,3})(?=[:/\\s\"\\'])",
+    "private_user_credential_path": "/home/(?!runner/)[A-Za-z0-9_.-]{1,60}/(?:\\.ssh/(?:id_rsa|id_ed25519|authorized_keys)|\\.codex/(?:auth|sessions)|\\.config/(?:openai|codex)/)",
+    "private_chat_link": "(?i)https?://(?:chatgpt\\.com|chat\\.openai\\.com)/c/[0-9a-f-]{30,40}",
+    "private_chat_protocol": "<\\|(?:im_start|start_header_id)\\|>(?:system|user|assistant)",
+    "chat_message_record": "\"role\"\\s*:\\s*\"(?:system|user|assistant)\"\\s*,\\s*\"content\"\\s*:"
+  },
+  "http_structure_checks": "Concrete Authorization/Proxy-Authorization/Cookie/Set-Cookie nonempty header values/maps and nonempty cookie arrays in all .network JSONL and outer JSON reports.",
+  "matching_values_policy": "No credential match values or matching text snippets emitted or saved; only rule/path/count/offset candidates.",
+  "inventory": [
+    {
+      "path": "recorded-browser-e2fd620-original.zip!cell-chamber-100k-desktop.png",
+      "bytes": 114558,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!cell-chamber-10k-desktop.png",
+      "bytes": 106211,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!cell-chamber-1m-desktop.png",
+      "bytes": 115603,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!desktop-short.png",
+      "bytes": 85576,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!evidence.json",
+      "bytes": 19802,
+      "sha256": "e57e0480808100d108b87c2b0f60ae8a763830ff695736668f4922b4b26fe657",
+      "status": "SCANNED_UTF8",
+      "kind": "outer_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!held-30fps.png",
+      "bytes": 27470,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!held-60fps.png",
+      "bytes": 27470,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!mobile-narrow.png",
+      "bytes": 131177,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!mobile.png",
+      "bytes": 134675,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!trace.trace",
+      "bytes": 17356494,
+      "sha256": "cb6722e58ea38556f58d76251ce8f0e1f873b29ab86d573609e8d3223852b106",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!trace.network",
+      "bytes": 269718,
+      "sha256": "2de86ee36d21b77e4aaef66f82f269913470766aee2ea07527878b9992f06a6f",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@fdb181a40c38ae6e88606da2ef05d1b0-1791174558142.jpeg",
+      "bytes": 20428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@fdb181a40c38ae6e88606da2ef05d1b0-1791174558291.jpeg",
+      "bytes": 35523,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@fdb181a40c38ae6e88606da2ef05d1b0-1791174558748.jpeg",
+      "bytes": 35523,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@fdb181a40c38ae6e88606da2ef05d1b0-1791174558797.jpeg",
+      "bytes": 35523,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@fdb181a40c38ae6e88606da2ef05d1b0-1791174558822.jpeg",
+      "bytes": 35523,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@18d566575c4958574fb4751a10c3ef0e-1791174558997.jpeg",
+      "bytes": 20428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@18d566575c4958574fb4751a10c3ef0e-1791174559150.jpeg",
+      "bytes": 35924,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@18d566575c4958574fb4751a10c3ef0e-1791174559522.jpeg",
+      "bytes": 35924,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@18d566575c4958574fb4751a10c3ef0e-1791174559575.jpeg",
+      "bytes": 35924,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@18d566575c4958574fb4751a10c3ef0e-1791174559606.jpeg",
+      "bytes": 35924,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@57f5bdb1a20322675e59e2d388793fbd-1791174559761.jpeg",
+      "bytes": 20428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@57f5bdb1a20322675e59e2d388793fbd-1791174559912.jpeg",
+      "bytes": 35817,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@57f5bdb1a20322675e59e2d388793fbd-1791174560262.jpeg",
+      "bytes": 35817,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@57f5bdb1a20322675e59e2d388793fbd-1791174560314.jpeg",
+      "bytes": 35817,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@57f5bdb1a20322675e59e2d388793fbd-1791174560339.jpeg",
+      "bytes": 35817,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e5ce848f2c7da6f6a9d0b816021e2faa-1791174560520.jpeg",
+      "bytes": 23721,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e5ce848f2c7da6f6a9d0b816021e2faa-1791174560852.jpeg",
+      "bytes": 37563,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e5ce848f2c7da6f6a9d0b816021e2faa-1791174561034.jpeg",
+      "bytes": 37563,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e5ce848f2c7da6f6a9d0b816021e2faa-1791174561072.jpeg",
+      "bytes": 37563,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@27e99adb5cd4f8263b6a8e5a808542b4-1791174561166.jpeg",
+      "bytes": 11221,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@27e99adb5cd4f8263b6a8e5a808542b4-1791174561313.jpeg",
+      "bytes": 16156,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@905722e433dbb4fa22a3dd0c8c4979a9-1791174562107.jpeg",
+      "bytes": 410,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@905722e433dbb4fa22a3dd0c8c4979a9-1791174562118.jpeg",
+      "bytes": 7682,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@905722e433dbb4fa22a3dd0c8c4979a9-1791174562460.jpeg",
+      "bytes": 13511,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@905722e433dbb4fa22a3dd0c8c4979a9-1791174562813.jpeg",
+      "bytes": 18202,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563046.jpeg",
+      "bytes": 2241,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563067.jpeg",
+      "bytes": 20428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563218.jpeg",
+      "bytes": 35523,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563635.jpeg",
+      "bytes": 35202,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563675.jpeg",
+      "bytes": 35325,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563708.jpeg",
+      "bytes": 35253,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563741.jpeg",
+      "bytes": 35323,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563774.jpeg",
+      "bytes": 35315,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563808.jpeg",
+      "bytes": 35318,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563841.jpeg",
+      "bytes": 35314,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563875.jpeg",
+      "bytes": 35328,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563908.jpeg",
+      "bytes": 35338,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563941.jpeg",
+      "bytes": 35329,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174563975.jpeg",
+      "bytes": 35335,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174564008.jpeg",
+      "bytes": 35324,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174564041.jpeg",
+      "bytes": 35322,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174564076.jpeg",
+      "bytes": 35325,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174564108.jpeg",
+      "bytes": 35318,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174564141.jpeg",
+      "bytes": 35322,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174564175.jpeg",
+      "bytes": 35325,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174564378.jpeg",
+      "bytes": 35338,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174564608.jpeg",
+      "bytes": 35339,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174564775.jpeg",
+      "bytes": 35313,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174564813.jpeg",
+      "bytes": 35322,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174564834.jpeg",
+      "bytes": 35324,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565093.jpeg",
+      "bytes": 35323,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565125.jpeg",
+      "bytes": 35275,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565158.jpeg",
+      "bytes": 35323,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565191.jpeg",
+      "bytes": 35341,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565225.jpeg",
+      "bytes": 35329,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565258.jpeg",
+      "bytes": 35322,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565291.jpeg",
+      "bytes": 35336,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565324.jpeg",
+      "bytes": 35255,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565358.jpeg",
+      "bytes": 35316,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565393.jpeg",
+      "bytes": 35323,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565412.jpeg",
+      "bytes": 35391,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565431.jpeg",
+      "bytes": 35396,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565458.jpeg",
+      "bytes": 35400,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565491.jpeg",
+      "bytes": 35410,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565524.jpeg",
+      "bytes": 35395,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565558.jpeg",
+      "bytes": 35391,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565591.jpeg",
+      "bytes": 35391,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565624.jpeg",
+      "bytes": 35403,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565658.jpeg",
+      "bytes": 35390,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565692.jpeg",
+      "bytes": 35389,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565730.jpeg",
+      "bytes": 35406,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565753.jpeg",
+      "bytes": 37719,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565775.jpeg",
+      "bytes": 37719,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565816.jpeg",
+      "bytes": 37719,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565833.jpeg",
+      "bytes": 37719,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565853.jpeg",
+      "bytes": 37719,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565872.jpeg",
+      "bytes": 37719,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565892.jpeg",
+      "bytes": 35330,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565919.jpeg",
+      "bytes": 38916,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@4b8ab1932577ec5b999b4b5888e60cbd-1791174565961.jpeg",
+      "bytes": 42575,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174566075.jpeg",
+      "bytes": 2241,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174566119.jpeg",
+      "bytes": 20428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174566260.jpeg",
+      "bytes": 35523,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174566709.jpeg",
+      "bytes": 35202,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174566741.jpeg",
+      "bytes": 35202,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174566791.jpeg",
+      "bytes": 35314,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174566824.jpeg",
+      "bytes": 35321,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174566858.jpeg",
+      "bytes": 35323,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174566890.jpeg",
+      "bytes": 35315,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174566924.jpeg",
+      "bytes": 35318,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174566957.jpeg",
+      "bytes": 35318,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174566991.jpeg",
+      "bytes": 35328,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567029.jpeg",
+      "bytes": 35338,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567049.jpeg",
+      "bytes": 35327,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567089.jpeg",
+      "bytes": 35327,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567154.jpeg",
+      "bytes": 10507,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567178.jpeg",
+      "bytes": 35327,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567195.jpeg",
+      "bytes": 35323,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567225.jpeg",
+      "bytes": 35327,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567243.jpeg",
+      "bytes": 35322,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567263.jpeg",
+      "bytes": 35331,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567283.jpeg",
+      "bytes": 35333,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567302.jpeg",
+      "bytes": 35313,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567324.jpeg",
+      "bytes": 35319,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567342.jpeg",
+      "bytes": 35314,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567360.jpeg",
+      "bytes": 35317,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567377.jpeg",
+      "bytes": 35335,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567394.jpeg",
+      "bytes": 35317,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567410.jpeg",
+      "bytes": 35324,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567428.jpeg",
+      "bytes": 35331,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567445.jpeg",
+      "bytes": 35316,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567465.jpeg",
+      "bytes": 35323,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567483.jpeg",
+      "bytes": 35336,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567503.jpeg",
+      "bytes": 35329,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@85e4643a90a65e9c1b2b9c74968a46c2-1791174567519.jpeg",
+      "bytes": 35329,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174567678.jpeg",
+      "bytes": 2039,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174567712.jpeg",
+      "bytes": 20428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568027.jpeg",
+      "bytes": 35523,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568286.jpeg",
+      "bytes": 35523,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568305.jpeg",
+      "bytes": 35225,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568353.jpeg",
+      "bytes": 42406,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568386.jpeg",
+      "bytes": 56791,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568415.jpeg",
+      "bytes": 58302,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568449.jpeg",
+      "bytes": 69495,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568484.jpeg",
+      "bytes": 70148,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568516.jpeg",
+      "bytes": 65510,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568547.jpeg",
+      "bytes": 52936,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568579.jpeg",
+      "bytes": 52859,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568613.jpeg",
+      "bytes": 53364,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568646.jpeg",
+      "bytes": 53565,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568679.jpeg",
+      "bytes": 52924,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568713.jpeg",
+      "bytes": 53653,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568746.jpeg",
+      "bytes": 53541,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568779.jpeg",
+      "bytes": 53571,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174568812.jpeg",
+      "bytes": 53604,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174569046.jpeg",
+      "bytes": 55573,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174569246.jpeg",
+      "bytes": 53587,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174569350.jpeg",
+      "bytes": 53828,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@2b90710edc75a55536b40b8583973121-1791174569413.jpeg",
+      "bytes": 42440,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174569544.jpeg",
+      "bytes": 2241,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174569580.jpeg",
+      "bytes": 20428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174569734.jpeg",
+      "bytes": 35523,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570177.jpeg",
+      "bytes": 35519,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570196.jpeg",
+      "bytes": 35210,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570258.jpeg",
+      "bytes": 42482,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570282.jpeg",
+      "bytes": 48513,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570298.jpeg",
+      "bytes": 56815,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570313.jpeg",
+      "bytes": 57677,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570332.jpeg",
+      "bytes": 58282,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570355.jpeg",
+      "bytes": 68663,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570369.jpeg",
+      "bytes": 69491,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570384.jpeg",
+      "bytes": 70599,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570400.jpeg",
+      "bytes": 70166,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570416.jpeg",
+      "bytes": 70417,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570432.jpeg",
+      "bytes": 65509,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570448.jpeg",
+      "bytes": 63687,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570463.jpeg",
+      "bytes": 52937,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570480.jpeg",
+      "bytes": 53268,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570497.jpeg",
+      "bytes": 52868,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570511.jpeg",
+      "bytes": 53072,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570528.jpeg",
+      "bytes": 53373,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570544.jpeg",
+      "bytes": 53534,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570559.jpeg",
+      "bytes": 53577,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570574.jpeg",
+      "bytes": 52632,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570589.jpeg",
+      "bytes": 52930,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570605.jpeg",
+      "bytes": 53563,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570622.jpeg",
+      "bytes": 53645,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570640.jpeg",
+      "bytes": 53564,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570661.jpeg",
+      "bytes": 53573,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570678.jpeg",
+      "bytes": 53575,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570691.jpeg",
+      "bytes": 53543,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570706.jpeg",
+      "bytes": 53577,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570723.jpeg",
+      "bytes": 53604,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174570942.jpeg",
+      "bytes": 55507,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174571142.jpeg",
+      "bytes": 53450,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174571238.jpeg",
+      "bytes": 53738,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174571257.jpeg",
+      "bytes": 53831,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174571346.jpeg",
+      "bytes": 42434,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174571370.jpeg",
+      "bytes": 48518,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@f4250719607688b9ac6895b14e3d9f79-1791174571401.jpeg",
+      "bytes": 57091,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174571515.jpeg",
+      "bytes": 2039,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174571542.jpeg",
+      "bytes": 20428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174571866.jpeg",
+      "bytes": 35523,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572128.jpeg",
+      "bytes": 35202,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572175.jpeg",
+      "bytes": 35313,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572207.jpeg",
+      "bytes": 35311,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572240.jpeg",
+      "bytes": 35313,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572274.jpeg",
+      "bytes": 35325,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572308.jpeg",
+      "bytes": 35320,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572340.jpeg",
+      "bytes": 35325,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572379.jpeg",
+      "bytes": 35334,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572398.jpeg",
+      "bytes": 35823,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572840.jpeg",
+      "bytes": 35319,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572873.jpeg",
+      "bytes": 35300,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572907.jpeg",
+      "bytes": 35326,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572940.jpeg",
+      "bytes": 35316,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174572973.jpeg",
+      "bytes": 35302,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174573007.jpeg",
+      "bytes": 35328,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@e17cfc2eeee2dd8564a26762547466e0-1791174573040.jpeg",
+      "bytes": 35313,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@9e5270309aec8d5a98525a46ea95bb8c-1791174573171.jpeg",
+      "bytes": 20428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@9e5270309aec8d5a98525a46ea95bb8c-1791174573204.jpeg",
+      "bytes": 24027,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@8270a515cc340b58a7cb20b9f037fb50-1791174573341.jpeg",
+      "bytes": 2241,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@8270a515cc340b58a7cb20b9f037fb50-1791174573460.jpeg",
+      "bytes": 20428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@8270a515cc340b58a7cb20b9f037fb50-1791174573617.jpeg",
+      "bytes": 24361,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@3ae358f3d4abc5bfe0a255a414fe3727-1791174573988.jpeg",
+      "bytes": 2241,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@3ae358f3d4abc5bfe0a255a414fe3727-1791174573995.jpeg",
+      "bytes": 2241,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@3ae358f3d4abc5bfe0a255a414fe3727-1791174574060.jpeg",
+      "bytes": 20428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/page@3ae358f3d4abc5bfe0a255a414fe3727-1791174574499.jpeg",
+      "bytes": 24143,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/e4aa5a3098f724d686d286d88c6b60b84d0a6ca8.html",
+      "bytes": 6894,
+      "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/aa5413dbd7c4cddfa7e26b00271b2f42cdbf2a5c.css",
+      "bytes": 7408,
+      "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/e6df9dcbdfd4d7e799fad6189c4a8a71f3447365.json",
+      "bytes": 116490,
+      "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/63462f3050882282a0df6d2d9720a959a822e043.json",
+      "bytes": 6047570,
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/4aa73fac4b0fc212cd7ff82231bfdf552de70f35.json",
+      "bytes": 5356325,
+      "sha256": "b8db46c1dc83f8cd642ee2a3bd7913890e6868e265c61a8d390797399b37a4c9",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/0f25e1d64e5e2de073a719c8dd71a5f2cf1d04ee.json",
+      "bytes": 5312311,
+      "sha256": "ee236189e9b6891599bc428aefb0e4b892c7397e712bcf045f7db14a5bc4061d",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/56b828a69388a5855eec613b290b16ddc737b165.json",
+      "bytes": 6047570,
+      "sha256": "dea784e95d1fb692796ad8c99b164b4354ff47455ecb7a0955fc6dc6c1a47e64",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/62fb9fcb4399f3aa498ff3e88388ecc0f9d275e9.json",
+      "bytes": 68320,
+      "sha256": "e7bd8bf6c0d3da6920b9a015abc2246f12c31de80a32374b09ed05570276ce5c",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/1b635890dbefd604338923cf573545a86a939bbb.json",
+      "bytes": 5950327,
+      "sha256": "84ea1c879f7c8fb123cd1484565ba9611fd77996bdea59bd9795b53beeb9192b",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!trace.stacks",
+      "bytes": 31416,
+      "sha256": "500945e3dc47a3934ce24de246004a2e77a33080234029735ba11a35ef275a0c",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip!trace.zip!resources/src@a343c650f434409c6f49445731db5ef3828eea26.txt",
+      "bytes": 30320,
+      "sha256": "4ea59640417ecde91154a68bd5189e035bb0d937f9ade06d04241c8e85ddab21",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!dense-desktop-short.png",
+      "bytes": 288536,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!dense-desktop.png",
+      "bytes": 331324,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!dense-million-end.png",
+      "bytes": 230938,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!dense-mobile-narrow.png",
+      "bytes": 236238,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!dense-mobile.png",
+      "bytes": 251613,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!report.json",
+      "bytes": 155327,
+      "sha256": "7c4b17cd5b6fc2f2b91f08123aa652f07d251807980aa6671f050bb52e32a7fc",
+      "status": "SCANNED_UTF8",
+      "kind": "outer_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!trace.trace",
+      "bytes": 3765254,
+      "sha256": "03ed6b691f7267f8f17abf5ae5a3dcbdbdb9874a5a2e97b1ea5a2da94bffbbb0",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!trace.network",
+      "bytes": 122093,
+      "sha256": "ec6b419592104985df15aa97a9c5a5052274dc56de3011b9fc7ad2397f1c1611",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@a7bc558098649f647e2f8c26140cacef-1791174576303.jpeg",
+      "bytes": 2684,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@a7bc558098649f647e2f8c26140cacef-1791174576329.jpeg",
+      "bytes": 6344,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@2c92103e1abe75c647c11785efbcc112-1791174582478.jpeg",
+      "bytes": 2684,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@2c92103e1abe75c647c11785efbcc112-1791174582500.jpeg",
+      "bytes": 6344,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174583463.jpeg",
+      "bytes": 2684,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174583537.jpeg",
+      "bytes": 22740,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174583939.jpeg",
+      "bytes": 31206,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174584207.jpeg",
+      "bytes": 44250,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174584300.jpeg",
+      "bytes": 61262,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174584663.jpeg",
+      "bytes": 61535,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174584687.jpeg",
+      "bytes": 61397,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174584760.jpeg",
+      "bytes": 61388,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174585717.jpeg",
+      "bytes": 60970,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174586577.jpeg",
+      "bytes": 61121,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174586632.jpeg",
+      "bytes": 61052,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174586857.jpeg",
+      "bytes": 61205,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174586936.jpeg",
+      "bytes": 60922,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174587537.jpeg",
+      "bytes": 61032,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174588235.jpeg",
+      "bytes": 69837,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174589362.jpeg",
+      "bytes": 81693,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174590340.jpeg",
+      "bytes": 81830,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174590577.jpeg",
+      "bytes": 64690,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174590929.jpeg",
+      "bytes": 64828,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174591676.jpeg",
+      "bytes": 81664,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592389.jpeg",
+      "bytes": 81302,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592465.jpeg",
+      "bytes": 81074,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592495.jpeg",
+      "bytes": 81069,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592538.jpeg",
+      "bytes": 81071,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592575.jpeg",
+      "bytes": 81065,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592594.jpeg",
+      "bytes": 81078,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592631.jpeg",
+      "bytes": 81081,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592659.jpeg",
+      "bytes": 81073,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592697.jpeg",
+      "bytes": 81075,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592726.jpeg",
+      "bytes": 81074,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592759.jpeg",
+      "bytes": 81079,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592797.jpeg",
+      "bytes": 81074,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592826.jpeg",
+      "bytes": 81076,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592859.jpeg",
+      "bytes": 81069,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592893.jpeg",
+      "bytes": 81074,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592926.jpeg",
+      "bytes": 81072,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174592959.jpeg",
+      "bytes": 81078,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593161.jpeg",
+      "bytes": 81077,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593200.jpeg",
+      "bytes": 81070,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593220.jpeg",
+      "bytes": 81077,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593241.jpeg",
+      "bytes": 81070,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593266.jpeg",
+      "bytes": 81077,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593281.jpeg",
+      "bytes": 81077,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593298.jpeg",
+      "bytes": 81083,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593317.jpeg",
+      "bytes": 81085,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593333.jpeg",
+      "bytes": 81087,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593349.jpeg",
+      "bytes": 81076,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593370.jpeg",
+      "bytes": 81081,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593385.jpeg",
+      "bytes": 81073,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593406.jpeg",
+      "bytes": 81072,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593420.jpeg",
+      "bytes": 81072,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593439.jpeg",
+      "bytes": 81077,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593456.jpeg",
+      "bytes": 81086,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593471.jpeg",
+      "bytes": 81086,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593488.jpeg",
+      "bytes": 81083,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593507.jpeg",
+      "bytes": 81086,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593524.jpeg",
+      "bytes": 81087,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593546.jpeg",
+      "bytes": 81086,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593563.jpeg",
+      "bytes": 81079,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593578.jpeg",
+      "bytes": 81073,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593595.jpeg",
+      "bytes": 81077,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593613.jpeg",
+      "bytes": 81073,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593630.jpeg",
+      "bytes": 81085,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593647.jpeg",
+      "bytes": 81080,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593667.jpeg",
+      "bytes": 81085,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593684.jpeg",
+      "bytes": 81084,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593889.jpeg",
+      "bytes": 81077,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593912.jpeg",
+      "bytes": 81081,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593929.jpeg",
+      "bytes": 81082,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593948.jpeg",
+      "bytes": 81086,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593966.jpeg",
+      "bytes": 81083,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174593992.jpeg",
+      "bytes": 81074,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174594010.jpeg",
+      "bytes": 81086,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174594031.jpeg",
+      "bytes": 81079,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174594048.jpeg",
+      "bytes": 81085,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174594509.jpeg",
+      "bytes": 81085,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174594602.jpeg",
+      "bytes": 81085,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174594656.jpeg",
+      "bytes": 66293,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174594678.jpeg",
+      "bytes": 72207,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174595092.jpeg",
+      "bytes": 72207,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174595166.jpeg",
+      "bytes": 72207,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174595217.jpeg",
+      "bytes": 34763,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174595756.jpeg",
+      "bytes": 34407,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174595798.jpeg",
+      "bytes": 28850,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174596198.jpeg",
+      "bytes": 28389,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174596327.jpeg",
+      "bytes": 28844,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@5180e818de1a1e5b64fa0828840f9430-1791174596332.jpeg",
+      "bytes": 28850,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@28be871d431114a18d383052b5d08ab9-1791174596480.jpeg",
+      "bytes": 2684,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@28be871d431114a18d383052b5d08ab9-1791174596551.jpeg",
+      "bytes": 22740,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@28be871d431114a18d383052b5d08ab9-1791174596944.jpeg",
+      "bytes": 31296,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@28be871d431114a18d383052b5d08ab9-1791174597262.jpeg",
+      "bytes": 44905,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@28be871d431114a18d383052b5d08ab9-1791174598004.jpeg",
+      "bytes": 45051,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@28be871d431114a18d383052b5d08ab9-1791174598383.jpeg",
+      "bytes": 45184,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@28be871d431114a18d383052b5d08ab9-1791174598677.jpeg",
+      "bytes": 61597,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@1844824480a4a3e5862f5d2d43badc68-1791174598906.jpeg",
+      "bytes": 2684,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@1844824480a4a3e5862f5d2d43badc68-1791174598945.jpeg",
+      "bytes": 22740,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@1844824480a4a3e5862f5d2d43badc68-1791174599379.jpeg",
+      "bytes": 31500,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@1844824480a4a3e5862f5d2d43badc68-1791174599638.jpeg",
+      "bytes": 44989,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@1844824480a4a3e5862f5d2d43badc68-1791174600298.jpeg",
+      "bytes": 45144,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@1844824480a4a3e5862f5d2d43badc68-1791174600703.jpeg",
+      "bytes": 45297,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@1844824480a4a3e5862f5d2d43badc68-1791174601060.jpeg",
+      "bytes": 64663,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@1844824480a4a3e5862f5d2d43badc68-1791174601152.jpeg",
+      "bytes": 64663,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@1844824480a4a3e5862f5d2d43badc68-1791174601225.jpeg",
+      "bytes": 64663,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/page@1844824480a4a3e5862f5d2d43badc68-1791174601253.jpeg",
+      "bytes": 64663,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/1fce0293c1d2d7da05c9f377dee23fd5021d610f.html",
+      "bytes": 170,
+      "sha256": "abacc5855496a98266b0002b0477f8c9e4ecad2d402672b83416c2165522b3d2",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/b9bbac57edf875e86434060e86bb127a8c3de952.json",
+      "bytes": 1610,
+      "sha256": "d3d102bcb4233900416ba0532c9cdd83b41b353963b15c47a9c66e4852b260aa",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/12529e55ec2fbad3239b0085e398b3f007128674.json",
+      "bytes": 6138,
+      "sha256": "e237a9f1f44e1838139caa4b5202151e63c2f6ee48c9ac1a99f2e8310e4d4373",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/49bf2f9bc4d8d6373d530ee1480b09ad13669eb7.gz!gzip-decoded",
+      "bytes": 218302,
+      "sha256": "371e1573d514fad99fd7ba2b8808e6b1cc78e4549015c115afe57aae4baa837d",
+      "status": "SCANNED_UTF8",
+      "kind": "gzip_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/ffeabd6198f1fbe4bf2cb18f7dd06c3d0f4decb7.json",
+      "bytes": 1798,
+      "sha256": "603b6f3b62448c2dc6cd6abe976c77ffbb9aad83f9c143813785137e4f71a370",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/938d7a47725aef95dd3175fc8a8ca69fc423a823.json",
+      "bytes": 124764,
+      "sha256": "7da1efd07473e15af331c060341fcb75fdcc911e60a5be9347423f9791442bcd",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/dcbc06d8a5054d2bdebc75c9f33853e47c5c1676.gz!gzip-decoded",
+      "bytes": 1121413,
+      "sha256": "eeb1ec43fa946aaed7e4955e2ec5f09c63bec9ef035143bd714388c8c84ac6b4",
+      "status": "SCANNED_UTF8",
+      "kind": "gzip_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/c6d029e61ad548ccfbe97ec05faef26f6222c8d2.gz!gzip-decoded",
+      "bytes": 4135813,
+      "sha256": "b182beef2ab203c653624da2bd9c58b926568859d4e957967427d1f4799df5bd",
+      "status": "SCANNED_UTF8",
+      "kind": "gzip_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/e4aa5a3098f724d686d286d88c6b60b84d0a6ca8.html",
+      "bytes": 6894,
+      "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/aa5413dbd7c4cddfa7e26b00271b2f42cdbf2a5c.css",
+      "bytes": 7408,
+      "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/e6df9dcbdfd4d7e799fad6189c4a8a71f3447365.json",
+      "bytes": 116490,
+      "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/63462f3050882282a0df6d2d9720a959a822e043.json",
+      "bytes": 6047570,
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/a1ab7bbeb06f6fd23d8c50a4afe9d529ae56c745.json",
+      "bytes": 1977,
+      "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/9642cd400c4bd0ea4f67aba5043d40acaa17da05.json",
+      "bytes": 18860,
+      "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/7767f0626d1d7a19acb21c338bd1fe875b47a57e.gz!gzip-decoded",
+      "bytes": 3011396,
+      "sha256": "b60102166267417ca31ebef12331db7f1abb10296fc9fd2d40d9ad0112fd9bb8",
+      "status": "SCANNED_UTF8",
+      "kind": "gzip_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/a2d8e46421f0895f0fcf020332265a2c6fbe88ea.gz!gzip-decoded",
+      "bytes": 3051264,
+      "sha256": "a835be8ced3c76105ceb79aa97367c2ca04b922c8af4f9df83885374529b21fa",
+      "status": "SCANNED_UTF8",
+      "kind": "gzip_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/fbb6fba4c2edc0a6d3af907a7036208794a7f746.gz!gzip-decoded",
+      "bytes": 3298181,
+      "sha256": "8a93f6a40b19cba058a41dc9c80bf3e1bbb93fd624b6796d162489505c88f99f",
+      "status": "SCANNED_UTF8",
+      "kind": "gzip_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/e8da38089a09575326a9b365041b133e5fec96ce.gz!gzip-decoded",
+      "bytes": 979585,
+      "sha256": "5be163e52b8f06b878fa91c2a49fbf5b51defd2eb86417da1631a4814b3c1312",
+      "status": "SCANNED_UTF8",
+      "kind": "gzip_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/4aa73fac4b0fc212cd7ff82231bfdf552de70f35.json",
+      "bytes": 5356325,
+      "sha256": "b8db46c1dc83f8cd642ee2a3bd7913890e6868e265c61a8d390797399b37a4c9",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/f0054a52c9279bd2209037d8e4a0283a6378dadf.json",
+      "bytes": 128695,
+      "sha256": "10813cdd0fb88921fd62d4db7701d068e00135ae01dcc8213dff3f0d6d627858",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/a28f5bdbd77706e9e4c3fb054d3130b5a0c4221c.gz!gzip-decoded",
+      "bytes": 1142274,
+      "sha256": "4efff132d53cd5b551ef86bfb6a99fe380e767c3976af5bc88922f94bf0a801b",
+      "status": "SCANNED_UTF8",
+      "kind": "gzip_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/0f25e1d64e5e2de073a719c8dd71a5f2cf1d04ee.json",
+      "bytes": 5312311,
+      "sha256": "ee236189e9b6891599bc428aefb0e4b892c7397e712bcf045f7db14a5bc4061d",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/096937977d45c74e17db223f450057d1dada434a.gz!gzip-decoded",
+      "bytes": 1390162,
+      "sha256": "9da1192580b9e23d179dd42bef3760e392e7e79170f66ff7742acc9a9c69beac",
+      "status": "SCANNED_UTF8",
+      "kind": "gzip_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!trace.stacks",
+      "bytes": 86061,
+      "sha256": "21fcbe8c716fcca8998c9b83d70093de0281a6f52449e2d4fa78e9c985793126",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip!trace.zip!resources/src@70b23632cbd42e6b7fa32cfa160a5d1b6e3b2c8b.txt",
+      "bytes": 65135,
+      "sha256": "2458878a2db655f5e9d6c396d11dd683ce4f7f384c3692abf358795c1609e1a1",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!desktop-default.png",
+      "bytes": 117579,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!desktop-observe-raw.html",
+      "bytes": 7261,
+      "sha256": "47d1c84479b19c2025ddb8d273bf85d824c8aaf28f46a9043e475e015dea396a",
+      "status": "SCANNED_UTF8",
+      "kind": "outer_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!evidence.json",
+      "bytes": 68384,
+      "sha256": "bc475afde241399d6849fe26bdbc7007a617a874159c0cd65a8983fd5f224385",
+      "status": "SCANNED_UTF8",
+      "kind": "outer_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!mobile-default.png",
+      "bytes": 165522,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!mobile-observe-raw.html",
+      "bytes": 7261,
+      "sha256": "47d1c84479b19c2025ddb8d273bf85d824c8aaf28f46a9043e475e015dea396a",
+      "status": "SCANNED_UTF8",
+      "kind": "outer_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!trace.trace",
+      "bytes": 541697,
+      "sha256": "56f02132bf01b6e85f76bc4d3d7572fcc860ab83d3e362921e13f6341752b8eb",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!trace.network",
+      "bytes": 86739,
+      "sha256": "f3c1e9097640d5913633e5645b9288cc87672f2e1451bc973dcc24c9c3f9d3d6",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174611820.jpeg",
+      "bytes": 2241,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174611825.jpeg",
+      "bytes": 2241,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174612005.jpeg",
+      "bytes": 20428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174612512.jpeg",
+      "bytes": 27105,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174612791.jpeg",
+      "bytes": 38242,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174613703.jpeg",
+      "bytes": 38242,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174613758.jpeg",
+      "bytes": 38242,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174613794.jpeg",
+      "bytes": 38242,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174613818.jpeg",
+      "bytes": 37770,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174613855.jpeg",
+      "bytes": 37770,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174613890.jpeg",
+      "bytes": 37481,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174613923.jpeg",
+      "bytes": 37488,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174613956.jpeg",
+      "bytes": 37480,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174613990.jpeg",
+      "bytes": 37482,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614023.jpeg",
+      "bytes": 37496,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614056.jpeg",
+      "bytes": 37497,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614089.jpeg",
+      "bytes": 37483,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614123.jpeg",
+      "bytes": 37491,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614157.jpeg",
+      "bytes": 37485,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614190.jpeg",
+      "bytes": 37490,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614223.jpeg",
+      "bytes": 37496,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614256.jpeg",
+      "bytes": 37497,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614289.jpeg",
+      "bytes": 37474,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614323.jpeg",
+      "bytes": 37498,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614356.jpeg",
+      "bytes": 37502,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614389.jpeg",
+      "bytes": 37489,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614623.jpeg",
+      "bytes": 37498,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614856.jpeg",
+      "bytes": 37485,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174614992.jpeg",
+      "bytes": 37474,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615028.jpeg",
+      "bytes": 37490,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615053.jpeg",
+      "bytes": 37433,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615314.jpeg",
+      "bytes": 37441,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615357.jpeg",
+      "bytes": 37462,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615376.jpeg",
+      "bytes": 37488,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615395.jpeg",
+      "bytes": 37482,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615415.jpeg",
+      "bytes": 37486,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615434.jpeg",
+      "bytes": 37486,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615454.jpeg",
+      "bytes": 37492,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615476.jpeg",
+      "bytes": 37501,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615494.jpeg",
+      "bytes": 37491,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615509.jpeg",
+      "bytes": 37505,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615527.jpeg",
+      "bytes": 37484,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615545.jpeg",
+      "bytes": 37492,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615562.jpeg",
+      "bytes": 37507,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615579.jpeg",
+      "bytes": 37504,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615596.jpeg",
+      "bytes": 37496,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615613.jpeg",
+      "bytes": 37501,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615629.jpeg",
+      "bytes": 37479,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615646.jpeg",
+      "bytes": 37490,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615662.jpeg",
+      "bytes": 37489,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615681.jpeg",
+      "bytes": 37499,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615697.jpeg",
+      "bytes": 37496,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615716.jpeg",
+      "bytes": 37500,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615733.jpeg",
+      "bytes": 37487,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615749.jpeg",
+      "bytes": 37492,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615768.jpeg",
+      "bytes": 37510,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615785.jpeg",
+      "bytes": 37502,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615802.jpeg",
+      "bytes": 37494,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615818.jpeg",
+      "bytes": 37485,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174615834.jpeg",
+      "bytes": 37486,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174616035.jpeg",
+      "bytes": 37484,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174616239.jpeg",
+      "bytes": 37444,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174616438.jpeg",
+      "bytes": 37493,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174616454.jpeg",
+      "bytes": 37488,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174616471.jpeg",
+      "bytes": 37501,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174616488.jpeg",
+      "bytes": 37494,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174616508.jpeg",
+      "bytes": 37484,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174616527.jpeg",
+      "bytes": 37497,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174616543.jpeg",
+      "bytes": 37428,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@17461177bdec6fd403e6f511889b34d7-1791174616814.jpeg",
+      "bytes": 37892,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174616980.jpeg",
+      "bytes": 849,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174617030.jpeg",
+      "bytes": 11221,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174617485.jpeg",
+      "bytes": 13585,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174617760.jpeg",
+      "bytes": 18665,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174618976.jpeg",
+      "bytes": 18573,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174618994.jpeg",
+      "bytes": 18293,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619015.jpeg",
+      "bytes": 18293,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619061.jpeg",
+      "bytes": 18091,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619094.jpeg",
+      "bytes": 18086,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619127.jpeg",
+      "bytes": 18085,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619160.jpeg",
+      "bytes": 18080,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619194.jpeg",
+      "bytes": 18083,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619227.jpeg",
+      "bytes": 18085,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619260.jpeg",
+      "bytes": 18079,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619294.jpeg",
+      "bytes": 18086,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619327.jpeg",
+      "bytes": 18087,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619361.jpeg",
+      "bytes": 18073,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619394.jpeg",
+      "bytes": 18089,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619427.jpeg",
+      "bytes": 18094,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619460.jpeg",
+      "bytes": 18075,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619494.jpeg",
+      "bytes": 18082,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619527.jpeg",
+      "bytes": 18093,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619560.jpeg",
+      "bytes": 18085,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174619794.jpeg",
+      "bytes": 18092,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620027.jpeg",
+      "bytes": 18091,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620160.jpeg",
+      "bytes": 18079,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620196.jpeg",
+      "bytes": 18077,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620210.jpeg",
+      "bytes": 18102,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620510.jpeg",
+      "bytes": 18110,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620527.jpeg",
+      "bytes": 18085,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620543.jpeg",
+      "bytes": 18070,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620559.jpeg",
+      "bytes": 18085,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620576.jpeg",
+      "bytes": 18085,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620593.jpeg",
+      "bytes": 18072,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620610.jpeg",
+      "bytes": 18086,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620626.jpeg",
+      "bytes": 18093,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620643.jpeg",
+      "bytes": 18071,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620660.jpeg",
+      "bytes": 18091,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620677.jpeg",
+      "bytes": 18079,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620693.jpeg",
+      "bytes": 18076,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620709.jpeg",
+      "bytes": 18087,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620727.jpeg",
+      "bytes": 18082,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620743.jpeg",
+      "bytes": 18088,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620759.jpeg",
+      "bytes": 18083,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620776.jpeg",
+      "bytes": 18086,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620793.jpeg",
+      "bytes": 18079,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620810.jpeg",
+      "bytes": 18090,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620826.jpeg",
+      "bytes": 18083,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620843.jpeg",
+      "bytes": 18072,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620859.jpeg",
+      "bytes": 18088,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620876.jpeg",
+      "bytes": 18079,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620893.jpeg",
+      "bytes": 18087,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620910.jpeg",
+      "bytes": 18080,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620927.jpeg",
+      "bytes": 18081,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620943.jpeg",
+      "bytes": 18083,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620960.jpeg",
+      "bytes": 18094,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620976.jpeg",
+      "bytes": 18079,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174620993.jpeg",
+      "bytes": 18088,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174621194.jpeg",
+      "bytes": 18088,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174621394.jpeg",
+      "bytes": 18087,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174621594.jpeg",
+      "bytes": 18086,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174621611.jpeg",
+      "bytes": 18090,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174621627.jpeg",
+      "bytes": 18091,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174621645.jpeg",
+      "bytes": 18087,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174621661.jpeg",
+      "bytes": 18102,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174621960.jpeg",
+      "bytes": 18374,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/page@853e82566cdaf863b8400fc0bd1c84b1-1791174622010.jpeg",
+      "bytes": 18349,
+      "status": "EXCLUDED",
+      "reason": "recognized binary image; no OCR/metadata scan"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/1dd4d26ad7e1345f5d36fbff6a527a206baeb5ab.html",
+      "bytes": 7261,
+      "sha256": "47d1c84479b19c2025ddb8d273bf85d824c8aaf28f46a9043e475e015dea396a",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/aa5413dbd7c4cddfa7e26b00271b2f42cdbf2a5c.css",
+      "bytes": 7408,
+      "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/e6df9dcbdfd4d7e799fad6189c4a8a71f3447365.json",
+      "bytes": 116490,
+      "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/63462f3050882282a0df6d2d9720a959a822e043.json",
+      "bytes": 6047570,
+      "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/a1ab7bbeb06f6fd23d8c50a4afe9d529ae56c745.json",
+      "bytes": 1977,
+      "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/9642cd400c4bd0ea4f67aba5043d40acaa17da05.json",
+      "bytes": 18860,
+      "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/dcbc06d8a5054d2bdebc75c9f33853e47c5c1676.gz!gzip-decoded",
+      "bytes": 1121413,
+      "sha256": "eeb1ec43fa946aaed7e4955e2ec5f09c63bec9ef035143bd714388c8c84ac6b4",
+      "status": "SCANNED_UTF8",
+      "kind": "gzip_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/7767f0626d1d7a19acb21c338bd1fe875b47a57e.gz!gzip-decoded",
+      "bytes": 3011396,
+      "sha256": "b60102166267417ca31ebef12331db7f1abb10296fc9fd2d40d9ad0112fd9bb8",
+      "status": "SCANNED_UTF8",
+      "kind": "gzip_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!trace.stacks",
+      "bytes": 22334,
+      "sha256": "fa6647bcbb046e62703faecf50cdf9d593a669288d118248c5161f1b7123194f",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip!trace.zip!resources/src@6e9472d4058998172de1bbae6c27a25391d8d097.txt",
+      "bytes": 42579,
+      "sha256": "aa56ce8ab6b5e4573fdc3b3125fb7c4046e8eb2f093120db82f0beb9a458c7fe",
+      "status": "SCANNED_UTF8",
+      "kind": "nested_text"
+    },
+    {
+      "path": "independent-actual-review.json",
+      "bytes": 42126,
+      "sha256": "dfbd7b2dfb0a560fc45e700107964d890baaae64ca8f2cc72b5b2546f37a0577",
+      "status": "SCANNED_UTF8",
+      "kind": "frozen_review_text"
+    },
+    {
+      "path": "independent-actual-review.md",
+      "bytes": 6338,
+      "sha256": "3a2f39a2ea7e6d2c9c340150cef314bf3d09d51a9fade16cc627fd1aac5ce406",
+      "status": "SCANNED_UTF8",
+      "kind": "frozen_review_text"
+    }
+  ],
+  "scanner_sha256": "4277a7d60c7eb4abaffb6182ca04d0eb0167cf915a3749a79a26c110690c7eea",
+  "limitations": [
+    "Bounded strict UTF-8/gzip text scan is not an exhaustive secret guarantee.",
+    "Binary images excluded; no new visual/OCR review, steganography, arbitrary binary metadata, base64 secrets or encrypted content scan.",
+    "Generic names such as token, authorization, cookie or private are not alone treated as secrets; intended exact public analytics identifier classified separately.",
+    "Private VM/chat coverage uses the documented obvious high-precision patterns; unknown hostnames, paraphrased conversations or unlisted identifiers can escape detection.",
+    "No HTTP/browser/tests/model/Git/source edits, no actual evidence reacceptance, no LAB or interoperability audit."
+  ]
+}
