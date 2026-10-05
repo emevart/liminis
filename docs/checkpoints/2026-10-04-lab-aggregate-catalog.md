@@ -1,0 +1,190 @@
+# LAB-3a: каталог сохранённых агрегатных наблюдений
+
+- Дата и цель: 2026-10-04, 22:58 UTC. Показать на существующем сайте 24
+  сохранённых LAB прогона, графики, параметры среды и living kinetics alleles.
+  Никакого пересчёта биологии или реконструкции индивидуальных клеток.
+- Основа: принятый main `5beaafb2c4f717862b62e67fd3e23e7d81860535`, tree
+  `7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d`, после guarded merge PR20.
+  LIVE-3b принят на exact 9d: 11 checks, 13 actual3D и 79 regression checks,
+  независимые code/numerics verdicts 0 blockers. Original ZIP и собственные
+  отчёты сохранены в трёх группах с закрытым Git network byte/CRC readback.
+  Current main run `37241483046` и public all3horizon follow-up пока в работе;
+  его PASS не переносится на новый LAB source.
+- Integration: `codex/lab-aggregate-site`; отдельные data/view/browser-QA
+  branches/worktrees основаны на том же main. Root владеет ADR112, shared
+  ACCEPTANCE, navigation, CI и checkpoint. Data author владеет stdlib builder,
+  focused tests и site/data/lab-2. UI author — lab.html/js/css/data adapter и
+  узкие tests; QA author — отдельный actual browser script. Review независимо
+  от авторов; Cargo остаётся сериализованным и для этого этапа не требуется.
+- Разрешения: прежний user write-go/единственный coordinator сохраняется.
+  Текущее user поручение делегирует вопросы и решения adviser Astra. Astra
+  явно одобрил ADR112 и scoped coding; повторного согласования этого scope
+  не требуется. Новые infrastructure/secrets/spend/security bypass не разрешены.
+  Official pinned protected Actions используются для настоящего browser QA;
+  native Node/source checks не называются browser PASS.
+- Immutable source: `21cbe90732128edee61963544e414d29a7420577`, world30,
+  chamber1, dt30s; current main/site commit не заменяет numerical provenance.
+  results.json: 5294742 bytes, SHA256
+  `6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a`;
+  comparisons.json: 1116928 bytes, SHA256
+  `e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3`;
+  manifest.json: 82880 bytes, SHA256
+  `f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3`.
+  Всего 6494550 original bytes копируются без reserialization. Raw LAB files,
+  source identity, frozen docs, old recordings/URLs/SHA остаются сохранёнными.
+- Readiness подтверждена: 6 conditions × seeds1/7/42/2026, 24 run IDs,
+  4044 samples; TOML одинаков внутри каждого условия, различается между ними.
+  Существующий recorded catalog несовместим с агрегатными rows без cell
+  inventory; его contract не ослабляется. Отдельный descriptor/adapter — ADR112.
+- Обязательные ограничения: 20 horizon-censored runs на 20000; 4 starvation
+  extinct на454 с samples0/100/200/300/400/454. Latest-common400, terminal454
+  и missing landmark500 различаются; unknown 0/4/null не равен нулю. Detail
+  selector выбирает retained sample; published paired records не пересчитываются.
+  Historical allele richness не равна living/species/full-genome diversity;
+  четыре seed пары не являются 24 независимыми репликами. Genesis ledger
+  неизвестен. Линии графиков — визуальные направляющие между наблюдениями.
+- Сделано: scoped authors started; append-only ADR112 и acceptance добавлены
+  в integration. Actual source/data/UI/browser checks ещё не выполнялись;
+  LAB PASS не объявлен. Sparse worktrees исключают только dense gzip chunks;
+  full dense inventory checks в них не запускать.
+- Следующий шаг: получить clean data/descriptor и UI/QA commits, принять
+  независимый source/numerics review, провести один exact protected fullCI
+  с actual LAB browser gate, сохранить original evidence/readback; после
+  green acceptance guarded merge и existing public LAB delivery acceptance.
+
+Автопробуждение после завершения active cloud turn не подтверждено.
+
+## Source integration и уточнение QA, 23:23 UTC
+
+Clean published data43356e5, UI fa4ce68 и browserQA3baa2d3 объединены обычными
+cherry-pick; собственные scoped authors завершены.15 Python,12 UI Node,
+160 raw paired-record checks/6 synthetic integer controls прошли у авторов.
+Native browser/model/Cargo не запускались. Root добавляет только Lab navigation
+на existing homepage, LAB gate в unchanged protected recorded job и
+builder freshness/focused checks в existing data job. Official Playwright1.61.1,
+Ubuntu22/sandbox:true/observed argv и остальные mandatory CI gates сохранены.
+
+Main5bea pushCI37241483046 завершился FAILURE только на paused3D check8
+(first7GL PASS; Rust/recorded/dense/public jobs PASS). Original FAIL сохранён.
+Independent diagnostics подтверждают22 неизменных API tick1, но original
+per-canvas PNG/post-FPS audits отсутствуют; причина raster/encoding/timing
+неизвестна. Public artifact независимо qualified PASS для19HTTPS pins всех
+3 horizons и actual default10k playback; это не overallmainGREEN/full2.42GB
+HTTP readback/public100k1M rendering.
+
+Astra явно одобрил отдельный QA-only repair commit в этом integration PR
+и один fresh complete CI для LAB+fixed3D. Strict dimensions/decodedRGBA всей
+прежней области, all3 original PNG и pre/post API/camera/viewport/layers,
+diffcount/bounds сохраняются до assert. Никаких masks/tolerance/retries,
+production3D bytes main5bea-exact.4 meaningful syntheticPNG controls PASS;
+source/numerics/UX independent review идёт, actual fixed3D/LAB браузер ещё
+NOT_RUN. Существующий FAIL не превращается в PASS после смены oracle.
+
+## First actual LAB FAIL и узкие исправления, 23:50 UTC
+
+Exact79df352/tree0c9b9a/run37243706546 завершился FAILURE: LAB2checksPASS,
+check3 histogram CSSOM96.7391% вместо raw89/92×100=96.7391304347 отвергнут
+прежним1e-5. Original artifact11318651498/2210725bytes/SHA256
+`bbd3f4dce56469c082be6e61f8d9abdd913d48987af6575620a6493e4bcb3a09`
+сохранён без перепаковки, outerCRC PASS, report/PNG/trace проверены независимо.
+Новых биологических данных это расхождение не устанавливает.
+
+Astra и независимые reviewers одобрили exact detachedCSSOM reference из raw
+counts/living, без broadtolerance и изменения product histogram arithmetic.
+Actual PNG подтвердил мелкие оси: clean published UI follow-up a0e5461
+cherry-picked02aeab1; dynamicSVG1unit1CSSpx,height210,axisfont11/3sig,
+один width-change ResizeObserver.14 meaningful UI Node PASS у автора,
+rootQA теперь независимо проверяет rawframes/axes,4actualtypography layouts,
+clip/nonoverlap и exactcounts; source/numerics review0. Старый FAIL сохранён;
+новый source требует полного fresh CI и original artifacts.
+
+Fixed3D79 original11318935319/59183146bytes/SHA256
+`8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60`
+доставлен через unchanged bounded helper pattern: fb3a5b47/run37244552112,
+4exact rawparts. Original SHA/size/CRC PASS;13checksPASS,all3PNG1130×752,
+same raw+RGBA SHA,changedPixels0/statepoll3each. Independent actual review
+и durablearchive ещё в работе. Overall79FAIL и прежний main5FAIL не relabel;
+этот 3D verdict не переносится на следующий LAB candidate.
+
+Подготовлен отдельный publicLAB evidence-only smoke по Astra scope:
+8asset pins/productcandidate отдельно от QAhead; deployedProductHead:null
+запрещает runtime. Preparation branch не запускает QA. После acceptedmerge/
+existingdeployment root закрепит actualproductSHA и запустит protected smoke.
+Новая infrastructure/secrets/spend/security bypass не создаётся.
+
+### Original600 FAIL: узкий lifecycle/layout/QA repair
+
+2026-10-05, 00:23 UTC. Candidate60015b28a42e222fcdafd33ed80da6c81f57c6db/
+tree117583151afcc3e6326971f87c44f3e41bc56eac fullrun37245225939FAIL;
+10checksSUCCESS, recordedjobFAIL. ActualLAB first6gatesPASS, gate7layoutFAIL;
+остальные не выполнены. Original49,316,006-byte artifact11319250919/SHA
+bdc0b53a6543c560b505737a83c1dcae214f74d79bdad05ecdb9793307b06b80
+доставлен reviewed fixed helper5148bfea/run37246516009 как3raw ranges и
+exact originalreport companion; native size/SHA/CRC/reportbytes PASS.
+Independent numerical coverage подтверждает24runs/48endpoints/160pairs,
+но actual PNG пустые/partial plots, comparisons responsepins отсутствуют.
+FullPage captures вызывают ROerrors до сменыviewport; конкретная width не
+записана. Astra approved permanent4shell/atomic render, conditional EOF
+cleanup и QA batching без уменьшения9gates/210s. Narrow authors используют
+свои ветки и file ownership; shared CI/ADR/navigation сериализует root.
+
+Original79 LABFAIL и qualified physical3D13PASS сохранены в раздельных
+проверенных Git evidence refs41f38a5d иe43cb056 соответственно. Новый LAB600
+FAIL archive/review и новые source fixes в работе; public QA подготовлен
+64bf8213/source0, runtimeNOT_RUN/deployedSHA=null. Raw24/scientific source
+21cbe907/world30/chamber1 неизменны, новых model runs нет.
+
+Следующий шаг: complete narrow source fixes+independent review, fresh full
+CI на едином чистом candidate, native original runtime artifacts/archives/
+readback, guarded PR21merge и existingdeployment/public LAB acceptance.
+
+
+### Bounded native pipe: отдельный UA-compatibility candidate
+
+2026-10-05, 03:19 UTC. Product1be/run37248220760 остаётся FAIL на LABgate2;
+9/10GHAjobs SUCCESS не означают overallGREEN. Original1beZIP/review сохранены
+в closed archive d6c6db823c72022ff72e6890fa1c3542a7c94f83 с networkreadback.
+Independent actual transportCASEedca/readerCASE0b52 FAIL сохранены в refs
+68419ae6b7a53fc707983491736a663f728f0dfb и
+cd7fa2c103d1e273abe79e5efeedaecf468fcaa7. ObservedEOFdone/release без adapter
+cancel в0b52 не доказали внутреннюю причину native ERR_ABORTED.
+
+Последняя approved A/B run37254028918 на exact3b174d4/tree25d34dc сохранила
+AB_PROBE_FAIL: A comparisons canceledERR_ABORTED duringmain, B8nativefinished/
+originalpins/4readyplots24matrixbaseline1tick0/unhandledallerrors0/cleanup0.
+Independent source/actual review0, оба originalPNG просмотрены. Astra явно
+разрешил EXACT B только как UA-compatibility candidate, не productacceptance.
+Furthercausalprobes закрыты. Original805885-byte ZIP и safe4review reports
+сохранены без перепаковки: branchcodex/lab-transport-ab-evidence-20261005,
+commitd9a78d218e06b65fa93de540bbf69f412b04fc9b/tree42e33b9a3ae72b2947ea924526198d85f9f4b91a,
+closed8files939228B/manifestSHA7e9f4ae35836743b7824be9691125d3013d52a397cd8574a85cb54631ad6df8b.
+Separate normal-network Git object DB безalternates closedsize/SHA/ZIPCRC PASS.
+Receipt хранится coordinatorbranch; boundedprivacy3JSON147166B+2PNG/0patterns,
+не fullsecretguarantee. OverallA/B/всеoldFAIL остаются FAIL.
+
+Root завершил isolated2file authorcommit после передачи недоступного pending
+scoped author: e180e0d77ccd06989667780db9d784abccca8a3f/treea74abd2c2c43889ce7f64b9c4a72cfdc6b70bb41.
+readBytes byte-exact provenBmodule20280B/SHA
+51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e,
+functionSHA3129290bf9cbe4eccfd8b17bdf1628547d8fde5273a12f3a5e13cbe600f59a92;
+original1be prefix/suffix неизменны. Standard native awaited pipeTo и bounded
+WritableStream сохраняют primarywrite/sizeerror, missingstreamfailclosed.
+Нет arrayBuffer fallback/таймеров/retainedResponses. Parser/hash/joins/формулы/
+raw24/source21cbe907/world30/chamber1/buildattestationfalse/CSS/UI/QA/CI/core/
+frozenSPEC/NORTHSTAR неизменны; новых научных прогонов нет.
+
+Native Node24.19 fourteen focusedtests PASS: прежние7datasetchecks и7native
+ReadableStream tests full4exactresponses/24runs/4044samples/demand-driven
+upstreamqueue≤1, delayedEOF, incrementaloversizecancelonce, awaitcancel+unlock,
+readerroridentity, primarysizeerror при secondarycancelreject/noUnhandled,
+missingstreamno fallback. Queue assertion не измеряет wholebrowserheap;
+Nodetests не browserPASS. RootACCEPTANCEappend30lines уточняет newconsumer
+и сохранность oldmanualreader evidence. Code cherry-picked2f623e98; combined
+source independentcode/data-numerics review PENDING; full9LAB/fullCI NOT_RUN.
+
+Main5bea не менялся, PR21draft не принят; publicprepareddeployedSHA=null.
+Следующий шаг: независимый source0 на едином cleanhead, один fresh protected
+mandatoryCI с all9LAB/recorded/dense/13GL gates, original artifact actualreview
+и durablearchive/readback. Только green permits guardedmerge и existing
+publicdeployment/browser delivery. Пользователь отсутствует, вопросы/спорные
+решения Astra; LAB4a/newmodels/Cargo вне нового mandatoryCI NOT_RUN.

@@ -19,7 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Validate recordings, catalog freshness, and download integrity
-        run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs scripts/cell-viewer-3d.test.mjs
+        run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs scripts/cell-viewer-3d.test.mjs scripts/physical-3d-png.test.mjs
+      - name: Validate immutable aggregate laboratory delivery
+        run: |
+          python3 scripts/test_build_lab_catalog.py
+          python3 scripts/build_lab_catalog.py --check
       - name: Validate exact dense codec and Linux publication boundaries
         run: |
           git fetch --no-tags --depth=1 origin bd2a7f25e61abd713109171fc25b7c3de86003ab
@@ -442,6 +446,19 @@ jobs:
           LIMINIS_PLAYWRIGHT_MODULE: ${{ runner.temp }}/liminis-recorded-browser/node_modules/playwright
           LIMINIS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: LIMINIS_EXPECTED_TREE="$(git rev-parse 'HEAD^{tree}')" node scripts/check_dense_recording_browser.mjs
+      - name: Real aggregate laboratory observations and paired browser acceptance
+        env:
+          LIMINIS_PLAYWRIGHT_MODULE: ${{ runner.temp }}/liminis-recorded-browser/node_modules/playwright
+          LIMINIS_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: LIMINIS_EXPECTED_TREE="$(git rev-parse 'HEAD^{tree}')" node scripts/check_lab_browser.mjs
+      - name: Attach exact-head laboratory screenshots, trace and raw-delivery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lab-browser-${{ github.event.pull_request.head.sha || github.sha }}
+          path: target/qa/lab-browser/
+          if-no-files-found: error
+          retention-days: 7
       - name: Attach exact-head dense screenshots, trace and transport evidence
         if: always()
         uses: actions/upload-artifact@v4
