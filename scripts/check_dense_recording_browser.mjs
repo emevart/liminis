@@ -248,11 +248,76 @@ async function inspectorUi(expected) {
   const fields = await page.locator("#cell-detail > dl.kv").evaluate((list) => Object.fromEntries([...list.querySelectorAll("dt")].map((term) => [term.textContent, term.nextElementSibling.textContent])));
   const cell = expected.cells.find((entry) => entry.id === fields.id); assert.ok(cell, "Inspector exact ID must belong to the actual shown inventory"); assert.equal(fields["mass units"], cell.mass_units); assert.equal(fields["energy units"], cell.energy_units); assert.equal(fields.parent, cell.parent_id ?? "founder"); assert.equal(fields["birth tick"], String(cell.birth_tick)); return fields;
 }
-async function layout(filename, viewport) {
+async function hudGeometry() {
+  const observed = await evaluate(() => {
+    const stage = document.querySelector('.stage'), nodes = { header: document.querySelector('.stage-header'), title: document.querySelector('.stage-title'), stats: document.querySelector('.stage-stats'), footer: document.querySelector('.frame-stamp'), canvas: document.getElementById('chamber') };
+    const box = (node) => { const r = node.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }; };
+    const rows = {};
+    for (const [name, node] of Object.entries(nodes)) {
+      if (!node) throw new Error(`Missing recorded HUD ${name}`);
+      const style = getComputedStyle(node), text = [], walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT); let leaf;
+      while ((leaf = walker.nextNode())) if (leaf.textContent.trim()) { const range = document.createRange(); range.selectNodeContents(leaf); for (const r of range.getClientRects()) text.push({ value: leaf.textContent.trim(), left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }); }
+      rows[name] = { ...box(node), display: style.display, visibility: style.visibility, opacity: Number(style.opacity), clientWidth: node.clientWidth, clientHeight: node.clientHeight, scrollWidth: node.scrollWidth, scrollHeight: node.scrollHeight, text };
+    }
+    const canvas = nodes.canvas, r = canvas.getBoundingClientRect();
+    return { stage: box(stage), rows, canvasBacking: { width: canvas.width, height: canvas.height }, rendererPadding: 36, roundedInterior: { width: Math.round(r.width) - 72, height: Math.round(r.height) - 72 }, canvasUnobscured: [[.5, .5], [.01, .01], [.99, .01], [.01, .99], [.99, .99]].map(([x, y]) => document.elementFromPoint(r.left + r.width * x, r.top + r.height * y) === canvas), loadingHidden: document.getElementById('loading').hidden };
+  });
+  const contains = (outer, inner) => inner.left >= outer.left && inner.right <= outer.right && inner.top >= outer.top && inner.bottom <= outer.bottom;
+  for (const [name, row] of Object.entries(observed.rows)) {
+    assert.ok(row.width > 0 && row.height > 0 && row.display !== 'none' && row.visibility === 'visible' && row.opacity > 0 && contains(observed.stage, row), `Hidden or out-of-stage HUD ${name}: ${JSON.stringify(row)}`);
+    assert.ok(row.scrollWidth <= row.clientWidth && row.scrollHeight <= row.clientHeight, `HUD ${name} content overflows its row`);
+    for (const text of row.text) assert.ok(contains(row, text) && contains(observed.stage, text), `Clipped HUD ${name} text: ${JSON.stringify(text)}`);
+  }
+  const { header, title, stats, footer, canvas } = observed.rows;
+  assert.ok(contains(header, title) && contains(header, stats));
+  assert.ok(header.bottom <= canvas.top && title.bottom <= canvas.top && stats.bottom <= canvas.top && canvas.bottom <= footer.top, 'HUD header/footer must be disjoint from the canvas');
+  assert.ok(canvas.width > 72 && canvas.height > 72 && observed.roundedInterior.width > 0 && observed.roundedInterior.height > 0, 'Canvas must retain a positive schematic interior after the existing 36px padding');
+  assert.ok(observed.loadingHidden && observed.canvasUnobscured.every(Boolean), 'Canvas must be visible without HUD/loading overlays');
+  return observed;
+}
+function inspectorValue(value) {
+  if (typeof value === 'number') { if (value === 0) return '0'; if (Number.isInteger(value)) return value.toLocaleString('en-US'); return Math.abs(value) < 1e-4 || Math.abs(value) >= 1e6 ? value.toExponential(3) : value.toLocaleString('en-US', { maximumSignificantDigits: 4 }); }
+  if (Array.isArray(value)) return `[${value.map(inspectorValue).join(', ')}]`;
+  if (value && typeof value === 'object') return `{ ${Object.entries(value).map(([key, item]) => `${key}: ${inspectorValue(item)}`).join(', ')} }`;
+  return String(value);
+}
+async function layoutInspector(expected, genomes) {
+  const observed = await evaluate(() => { const pairs = (list) => Object.fromEntries([...list.querySelectorAll('dt')].map((term) => [term.textContent, term.nextElementSibling.textContent])); return { heading: document.querySelector('#cell-detail .selected b')?.textContent, fields: pairs(document.querySelector('#cell-detail > dl.kv')), objects: Object.fromEntries([...document.querySelectorAll('#cell-detail .subobject')].map((node) => [node.querySelector('.eyebrow').textContent, pairs(node.querySelector('dl'))])) }; });
+  const cell = expected.cells.at(-1); assert.equal(observed.fields.id, cell.id); assert.equal(observed.heading, `${cell.genome_key} · cell ${cell.id}`);
+  assert.equal(observed.fields['mass units'], cell.mass_units); assert.equal(observed.fields['energy units'], cell.energy_units); assert.equal(observed.fields.parent, cell.parent_id ?? 'founder'); assert.equal(observed.fields['birth tick'], String(cell.birth_tick));
+  const physiology = genomes[cell.genome_key], objects = {}; assert.ok(physiology);
+  for (const [label, key] of [['Genome', 'genome'], ['Phenotype', 'phenotype']]) if (physiology[key] && Object.keys(physiology[key]).length) objects[label] = Object.fromEntries(Object.entries(physiology[key]).map(([key, value]) => [key, inspectorValue(value)]));
+  assert.deepEqual(observed.objects, objects, 'Inspector genome/phenotype must remain the pinned metadata values'); return observed;
+}
+async function layoutInventory(expected) {
+  const observed = await evaluate(() => ({ readouts: Object.fromEntries(['living', 'births', 'deaths', 'divisions', 'generation', 'ledger', 'tick', 'time', 'playhead', 'frame-label', 'frame-change', 'frame-count'].map((id) => [id, document.getElementById(id).textContent])), frequencies: [...document.querySelectorAll('#frequencies .frequency')].map((row) => ({ key: row.querySelector('span').textContent, value: row.querySelector('.mono').textContent })), genomeTotal: document.getElementById('genome-total').textContent }));
+  const counts = new Map(); for (const cell of expected.cells) counts.set(cell.genome_key, (counts.get(cell.genome_key) || 0) + 1);
+  assert.deepEqual(observed.frequencies, [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([key, count]) => ({ key, value: `${count} · ${(count / expected.cells.length * 100).toFixed(1)}%` })));
+  assert.equal(observed.genomeTotal, `${counts.size} variant${counts.size === 1 ? '' : 's'}`); return observed;
+}
+async function layoutSelection(expected, genomes) {
+  assert.ok(expected.cells.length); const inventoryBefore = await layoutInventory(expected), canvas = page.locator('#chamber'); await canvas.click({ position: { x: 5, y: 5 } }); assert.equal(await shown('tick'), expected.tick); assert.equal(await page.locator('#selection-label').textContent(), 'none selected');
+  // Unmodified observer uses max(0, selectedIndex). From none, ArrowLeft
+  // selects the last actual cell, which is also first in reverse hit order.
+  await canvas.focus(); await canvas.press('ArrowLeft'); const keyboard = await layoutInspector(expected, genomes);
+  const ring = await canvas.evaluate((node) => {
+    const r = node.getBoundingClientRect(), data = node.getContext('2d').getImageData(0, 0, node.width, node.height).data; let left = node.width, right = -1, top = node.height, bottom = -1, pixels = 0;
+    for (let y = 0; y < node.height; y++) for (let x = 0; x < node.width; x++) { const i = (y * node.width + x) * 4; if (data[i] === 255 && data[i + 1] === 255 && data[i + 2] === 255 && data[i + 3] === 255) { left = Math.min(left, x); right = Math.max(right, x); top = Math.min(top, y); bottom = Math.max(bottom, y); pixels++; } }
+    return { pixels, backingBounds: { left, right, top, bottom }, backing: { width: node.width, height: node.height }, canvasRect: { left: r.left, top: r.top, width: r.width, height: r.height }, clientX: r.left + (left + right + 1) / 2 * r.width / node.width, clientY: r.top + (top + bottom + 1) / 2 * r.height / node.height };
+  });
+  assert.ok(ring.pixels >= 4 && ring.clientX > ring.canvasRect.left && ring.clientX < ring.canvasRect.left + ring.canvasRect.width && ring.clientY > ring.canvasRect.top && ring.clientY < ring.canvasRect.top + ring.canvasRect.height, 'Actual exact-white selection ring must yield an in-canvas pointer target');
+  await canvas.click({ position: { x: 5, y: 5 } }); const clearedSelection = await page.locator('#selection-label').textContent(); assert.equal(clearedSelection, 'none selected'); assert.equal(await page.locator('#cell-detail > dl.kv').count(), 0);
+  await page.mouse.click(ring.clientX, ring.clientY); const pointer = await layoutInspector(expected, genomes); assert.deepEqual(pointer, keyboard); await stateUi(expected); const inventoryAfter = await layoutInventory(expected); assert.deepEqual(inventoryAfter, inventoryBefore);
+  return { tick: expected.tick, cells: expected.cells.length, selectedId: expected.cells.at(-1).id, keyboard: 'Verified blank-padding pointer clears selection; real ArrowLeft chooses last actual frame ID', pointer: 'After a second verified blank click clears keyboard selection, one actual click at the saved exact-white selection-ring bounding-box center; schematic only, no physical-coordinate claim', clearedSelection, ring, inspector: pointer, inventoryBefore, inventoryAfter };
+}
+async function layout(filename, viewport, expected, genomes) {
+  const httpBaseline = report.http.length;
   await page.setViewportSize(viewport); await sleep(100); assert.ok(await evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Horizontal overflow");
   const observations = [];
   for (const id of [...controls, "duration", "sample-cadence", "clock-help"]) { const element = page.locator(`#${id}`); await element.scrollIntoViewIfNeeded(); const rect = await element.evaluate((node) => { const r = node.getBoundingClientRect(), hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height, viewportWidth: innerWidth, viewportHeight: innerHeight, unobscured: hit === node || node.contains(hit) }; }); assert.ok(rect.width > 0 && rect.height > 0 && rect.left >= -1 && rect.right <= rect.viewportWidth + 1 && rect.top >= -1 && rect.bottom <= rect.viewportHeight + 1 && (!controls.includes(id) || rect.unobscured), `Clipped or overlaid #${id}: ${JSON.stringify(rect)}`); observations.push({ id, ...rect }); }
-  await evaluate(() => scrollTo(0, 0)); (report.layouts ||= []).push({ filename, viewport, controls: observations }); await screenshot(filename);
+  await evaluate(() => scrollTo(0, 0)); const before = await stateUi(expected), hudBefore = await hudGeometry(), selection = await layoutSelection(expected, genomes); await evaluate(() => scrollTo(0, 0));
+  (report.layouts ||= []).push({ filename, viewport, tick: expected.tick, cells: expected.cells.length, controls: observations, stateBefore: before, hudBefore, selection }); await screenshot(filename);
+  const current = report.layouts.at(-1); current.hudAfterScreenshot = await hudGeometry(); current.stateAfterScreenshot = await stateUi(expected); assert.deepEqual(await layoutInspector(expected, genomes), selection.inspector); current.inventoryAfterScreenshot = await layoutInventory(expected); assert.deepEqual(current.inventoryAfterScreenshot, selection.inventoryAfter); assert.equal(report.http.length, httpBaseline, 'Resize, HUD reads, keyboard/pointer selection and PNG must not fetch data');
 }
 
 async function standalone() {
@@ -388,15 +453,18 @@ async function actualUi() {
     assert.ok(finalTime < (startTick + 1) * 30); assert.equal(await page.locator("#play").getAttribute("aria-label"), "Play recording"); assert.equal(report.http.length, baseline);
   });
   await check("Actual dense controls fit desktop, short desktop and 390/320px mobile", async () => {
-    for (const [filename, viewport] of [["dense-desktop.png", { width: 1440, height: 900 }], ["dense-desktop-short.png", { width: 1440, height: 720 }], ["dense-mobile.png", { width: 390, height: 844 }], ["dense-mobile-narrow.png", { width: 320, height: 844 }]]) await layout(filename, viewport);
+    await seekUi(992); const expected = (await reference(first.manifestPath, 992)).frame; assert.equal(expected.cells.length, 216); await stateUi(expected); await inspectorUi(expected); await page.waitForLoadState('networkidle');
+    report.ui.layoutFixture = { tick: expected.tick, cells: expected.cells.length, reference: 'Existing independent Python decoder of unchanged original dense chunk', genomeSource: 'Pinned original dense manifest' };
+    for (const [filename, viewport] of [["dense-desktop.png", { width: 1440, height: 900 }], ["dense-desktop-short.png", { width: 1440, height: 720 }], ["dense-mobile.png", { width: 390, height: 844 }], ["dense-mobile-narrow.png", { width: 320, height: 844 }]]) await layout(filename, viewport, expected, first.manifest.genomes);
   });
   const chunkRequests = report.http.filter((item) => item.path.startsWith(new URL(first.entry.dense.index, origin).pathname.replace(/index\.json$/, "")) && item.path.endsWith(".gz")); assert.ok(chunkRequests.length <= 16); report.ui.tenKChunkRequests = chunkRequests.length; await pageEnd();
   for (const current of cases.slice(1)) await check(`Actual dense ${current.entry.experiment.steps} UI uses real endpoints without a full recording fetch`, async () => {
     const baseline = report.http.length; await fresh(); await page.goto(`${origin}/observe.html?experiment=${encodeURIComponent(current.entry.id)}`); await waitTick(0); await stateUi(current.archive.frames[0]);
+    const initialHud = await hudGeometry();
     await page.locator("#next").click(); await waitTick(1); await stateUi((await reference(current.manifestPath, 1)).frame); await seekUi(current.entry.experiment.steps); await stateUi(current.archive.frames.at(-1));
     assert.equal(await page.locator("#next").isDisabled(), true); assert.equal(await page.locator("#play").getAttribute("aria-label"), "Replay recording"); assert.equal(await page.locator("#frame-count").textContent(), `${current.entry.experiment.steps + 1} / ${current.entry.experiment.steps + 1}`);
-    if (current.entry.experiment.steps === 1_000_000) await screenshot("dense-million-end.png"); await page.waitForLoadState("networkidle");
-    const requests = report.http.slice(baseline).filter((item) => item.path.endsWith(".gz")); assert.ok(requests.length <= 8); (report.ui.endpoints ||= []).push({ horizon: current.entry.experiment.steps, shownTick: await shown("tick"), chunkRequests: requests.length, method: "actual DOM/canvas and original archival endpoint values" }); await pageEnd();
+    const endpointHud = await hudGeometry(); if (current.entry.experiment.steps === 1_000_000) await screenshot("dense-million-end.png"); const finalHud = await hudGeometry(); await stateUi(current.archive.frames.at(-1)); await page.waitForLoadState("networkidle");
+    const requests = report.http.slice(baseline).filter((item) => item.path.endsWith(".gz")); assert.ok(requests.length <= 8); (report.ui.endpoints ||= []).push({ horizon: current.entry.experiment.steps, shownTick: await shown("tick"), chunkRequests: requests.length, method: "actual DOM/canvas and original archival endpoint values", initialHud, endpointHud, finalHud }); await pageEnd();
   });
   report.ui.status = "PASS";
 }

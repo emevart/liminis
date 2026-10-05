@@ -1781,3 +1781,37 @@ QA decoder/comparator, не browserPASS. Production3D/core/site/recordings
 не меняются. Separatefreshmain head/independentreview/fullCI/actual13GL и
 прежниеREC/dense/physical regressions обязательны; old79/c02PASS не переносится.
 LABcandidate/publicLAB/models остаются отдельным HOLD.
+
+## REC observer: HUD и canvas в раздельных строках
+
+Recorded well-mixed observer отделяет normal-flow header/title/stats и
+frame-stamp footer от canvas. Glyphs остаются schematic inventory, не
+физическими координатами. CSS layout не меняет source observations,
+decoded cells/genomes/counters, clock/dt/×N, display targets или decoder.
+Данные/old URLs/SHA не пересобираются, observer.js остаётся неизменным.
+
+Существующие protected `site/playback.browser.mjs` и
+`scripts/check_dense_recording_browser.mjs` обязаны сохранять DOM rectangles:
+header/title/stats/footer и полный текст внутри своих bounds без overflow,
+canvas не пересекается с HUD; usable canvas после прежнего padding36px
+положителен по обеим осям. Проверяются desktop1440×900, short1440×720,
+mobile390×844 и320×844 с настоящими PNG/trace. Canvas нельзя скрыть, закрыть
+overlay или обрезать ради прохождения; счётчики не заменяются ellipsis.
+
+Dense10k tick992 должен показывать все216 actual cells и counters того же
+независимо decoded frame. После resize проверяются настоящие keyboard и
+pointer selection с exact ID/parent/genome/mass_units/energy_units inspector;
+pointer coordinates относятся к actual canvas rect/pixels. Initial/final
+состояния и sparse archive path сохраняют свои source identity и readouts.
+Размер canvas после layout change может измениться; при фиксированном
+viewport paused30/60 pixel/state/byte oracles остаются строгими, без
+mask/crop/tolerance/retry. Sandbox/observedargv/network/body/cancellation/
+unhandled/cleanup/time guards и mandatory full CI сохраняются.
+
+Нужны independent exact-source review, новые actual browser artifacts на
+accepted HEAD/tree и после merge отдельный public deployment/playback gate.
+HTML/CSS served byte pins выводятся из нового source, старые PASS не
+переносятся. Native Node syntax/source checks не являются browserPASS.
+LAB21/publicLAB/LAB4/models сохраняют Astra HOLD; legacy mobile sticky
+transport/sidebar overlap остаётся отдельным отложенным finding.
+Scope/pending: `docs/checkpoints/2026-10-05-recorded-hud.md`.
