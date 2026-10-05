@@ -994,3 +994,37 @@ models/Cargo/publicsmoke NOT_RUN. Вопросы пользователю не �
 Следующий шаг: exact reader-diagnostic source freeze/review0/ONE protectedrun,
 независимый разбор границ EOF/lock и причинных интервалов с Astra; затем только
 обоснованная правка и свежие full LAB/CI/public gates перед product merge.
+
+
+### Второй отдельный CASE Reader lifecycle: source0 и запуск
+
+2026-10-05, 01:40 UTC. Финальный independent source review: qualified0blockers
+на clean `0b52aeec6c6dd07bc2a7b73fe506adcbb12cbf7a`, tree
+`e4a1fcca97f7d5f4bbef915858dba49b5c3f0233`.
+Script285a32de1bb0f232d3c4ce6ba51bd3a520622cc48d7061406f2e87e4dd7d867d,
+manifest3402878d7b33e08f92812ca25f33bcc5c8319a412cc67cd0ecb1f8752fcf1847,
+rootWFd65f7b28ac44c69e501b2006fed031318fbc32c96ab5475258c2ad5422fdf58e.
+Отличие от product1be — только прежние три diagnostic paths; все восемь
+site assets6599049 B неизменны. Два новых independent source reports сохранены
+в `docs/experiments/handoff/lab-reader-lifecycle-2026-10-05/`.
+
+Четыре conditional false точки: entry131, finally139, pre_release142,
+post_release144. Uppercolumn23 для pre_release включает вызов метода до его
+исполнения. Node definition-only inspector проверил source feasibility, но
+фактические Chrome sourceSHA/possible/resolved positions ещё обязательны.
+Ожидаются16primitive records, cap32; TDZ locals в entry не читаются. Native
+fetch/Response/Reader/Promise не переопределяются, новые Promise observers и
+GC отсутствуют. Clock anchors только same document/timeOrigin; declared1ms
+precision allowance, drift/overlap UNKNOWN, Node arrival не browser time.
+Derived order annotations идемпотентны; исходные records сохраняются.
+
+Remote RUN branch создан из опубликованного product1be без нового workflow,
+один обычный push финального0b52. Фактический official protected run:
+https://github.com/emevart/liminis/actions/runs/37252287604 — IN_PROGRESS.
+Root не запускал native browser/Cargo/models/deploy. Предыдущий edca FAIL,
+архив68419ae и product gates сохраняются. Даже diagnosticPASS не докажет
+причину или исправление поведения без instrumentation и не заменит fullCI.
+
+Следующий шаг: original artifact и independent actual source-location/EOF/
+lock/timing review, решение Astra по доказательствам. Main5bea/PR21 не менялись,
+public smoke/LAB4a NOT_RUN; вопросов отсутствующему пользователю нет.
