@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Observe a recorded Liminis well-mixed cell experiment." />
     <link rel="canonical" href="https://liminis.dev/observe.html" />
-    <link rel="stylesheet" href="./observer.css?v=physical-clock-1" />
+    <link rel="stylesheet" href="./observer.css?v=recorded-hud-1" />
     <title>Liminis · Recorded experiment</title>
   </head>
   <body>
@@ -20,9 +20,11 @@
       <main class="workspace" aria-busy="true" id="workspace">
         <section class="viewer" aria-label="Recorded well-mixed chamber">
           <div class="stage">
+            <div class="stage-header">
+              <div class="stage-title"><span class="eyebrow">Well-mixed chamber</span><strong><span id="living">—</span> living cells</strong></div>
+              <div class="stage-stats mono"><span><b id="births">—</b> births</span><span><b id="deaths">—</b> deaths</span><span><b id="divisions">—</b> divisions</span><span>generation <b id="generation">—</b></span><span>ledger <b id="ledger">—</b></span></div>
+            </div>
             <canvas id="chamber" tabindex="0" aria-label="Recorded living cells. Select a cell to inspect it."></canvas>
-            <div class="stage-title"><span class="eyebrow">Well-mixed chamber</span><strong><span id="living">—</span> living cells</strong></div>
-            <div class="stage-stats mono"><span><b id="births">—</b> births</span><span><b id="deaths">—</b> deaths</span><span><b id="divisions">—</b> divisions</span><span>generation <b id="generation">—</b></span><span>ledger <b id="ledger">—</b></span></div>
             <div class="frame-stamp mono"><span id="frame-label">loading dataset</span><span id="frame-change"></span></div>
             <div class="loading" id="loading">Loading recorded experiment…</div>
           </div>
