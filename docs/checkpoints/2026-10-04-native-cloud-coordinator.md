@@ -1283,3 +1283,51 @@ mandatoryfullCI/PR. Cargo сериализуются; nativeCargo/models не з
 Fresh13GL/allregressions/actualoriginals/archive/readback затемguardedmerge
 QA-onlyPR/existingmainfollowup/publicscope. LAB21/models остаютсяHOLD.
 РешенияAstra, пользовательдоутраотсутствует; auto-wakeup не обещается.
+
+
+### PR22: exact83fa full CI GREEN; actual originals получены
+
+2026-10-05, 04:13 UTC. Отдельный QA-only PR22 открыт draft на base5bea:
+https://github.com/emevart/liminis/pull/22 . Head
+83fa1e52e478e2a33602a24bf83b5456e55e70a3/tree
+47ce45646315b09493d58d87ca8fce4dc867aa8d, production/site/core/raw/frozen
+objects unchanged. Independent exact source/code и DATA/GEOMETRY0 завершены.
+Safe4reports уже опубликованы source-only archive749b81e8af2d7b4a4453531268a8f403ad0e1e56,
+treef7f0591bbabb7047d7b19dc2306afb30a029343a,
+codex/paused-3d-qa-evidence-20261005; closed6files31280B,
+manifest6fe2ab55dc8f82fd6aa635739a1271fd2fd8b70bada01421103a5c1b129f68b5,
+separate GitDB/noalternates normal-network closedsize/SHA PASS.
+
+Fresh mandatoryrun37260833244 attempt1/eventpull_request completedSUCCESS;
+all10GHAjobs и Workers Builds:liminis check SUCCESS на exact83fa (11/11).
+Rust/build/lint/tests SUCCESS; recordedjob111607516475 и LIVEjob111607516729
+SUCCESS со всеми прежними защищёнными browser substeps. Старые FAIL не
+переименовываются; source0/jobGREEN не заменяют independent actual acceptance.
+
+Все6 новых original ZIP получены.3Dartifact11324254318 exact48498615B,
+SHA413f5c6ddfb79df66135f4701fbfc4fbeca11a9aa1b65270bc9870351399f671:
+approved read-actions-only fixed helper efc54aaaa753e79a91427f58d4eb316eff7aabd7,
+run37262081937 SUCCESS, три rawparts16777216/16777216/14944183 получены
+через existing app/native reads. ContainerSHA/CRC/receipts/offsets/rawSHA и
+исходный size/SHA/CRC22members совпали; ZIP восстановлен без перепаковки.
+Helper не запускает checkout/build/browser/models/deploy, HTTP auth только
+fixedAPI и newNOauth officialstorage request.150s между reads/5min hardjobcap;
+transport не заявляет product acceptance. Native sourcehelper review0.
+
+Independent actual REC/dense qualifiedPASS0: legacy22+17HTTP и dense14,
+все13PNG просмотрены; source/body/trace/SHA/CRC и boundedprivacy проверены.
+Dense9ERR_ABORTED:5verified fullbodyEOF/count доdefaultabort +4explicitcancel,
+PW/CDP/nativebijections/orphan0, не generic error allowance. Legacy отдельная
+browserUnhandled array не измерена. Native1x1523.3ms/advanced1.523s;
+loopback100k/1M finalgzip bodies сохранены и pinned. Full2.42GB publicHTTP/
+hardwareFPS не измерены. Два originals и safe own reports опубликованы
+codex/paused-3d-83-rec-evidence-20261005,
+6c646b0ca9203ed8047c62f8f504effbfe7c24d3/tree32b0253600a06c16a71560e614513549aec0b335,
+closed6files29172633B/manifest711933c9bbf95dcceecd63657e1525115fdb641c405aaefe2b8bbb2e5cc72c2c;
+network byte readback IN_PROGRESS. Actual LIVE/physical/projection и две
+независимые actual3D reviews IN_PROGRESS. Merge/product acceptance PENDING.
+
+Следующий шаг: завершить actualreviews, bounded originals+reports archives
+и normalnetwork closed readbacks; затем guardedmerge PR22 exact83fa,
+fresh main CI/actual/public scope. LABPR21c02/publicLAB/LAB4models и новые
+LABcausalprobes/retries остаются Astra HOLD. Пользователя до утра не спрашиваем.
