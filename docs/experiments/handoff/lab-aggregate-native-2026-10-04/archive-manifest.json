@@ -8,12 +8,37 @@
   "followup_candidate": "60015b28a42e222fcdafd33ed80da6c81f57c6db",
   "followup_actual_status": "PENDING",
   "archive_group_cap_bytes": 67108864,
-  "unique_bytes": 2351597,
+  "unique_bytes": 3030823,
   "files": [
     {
       "path": "README.md",
       "bytes": 1876,
       "sha256": "a0d75688bdfa4ea13061dfb5581652fefa0e6a2337944012f32fd4c589744b49"
+    },
+    {
+      "path": "failure-1be/README.md",
+      "bytes": 2099,
+      "sha256": "3c960f8431c144c5b03f55274e3ce4bbd778dcc9b943c72fa3871f33a3ea4813"
+    },
+    {
+      "path": "failure-1be/code-review.json",
+      "bytes": 12122,
+      "sha256": "119659bf99511e3a45589fa391a3a65d3290849ffd43b42471f11e074d3ee2ec"
+    },
+    {
+      "path": "failure-1be/code-review.md",
+      "bytes": 3397,
+      "sha256": "f910bbc354d891d8a9d99a8abb2522488360ea6c8198ac3c747bc9ab29f28fec"
+    },
+    {
+      "path": "failure-1be/lab-browser-1be0d09-original.zip",
+      "bytes": 643462,
+      "sha256": "21ff9f8d414b1f2346a9bdef92147eaadec2adaa95cd41a65d5b26ef404cfe4c"
+    },
+    {
+      "path": "failure-1be/report.json",
+      "bytes": 18146,
+      "sha256": "828d174d95dc205bd0e71bd9208166012ad230e840809a43b8fa21be42eb0959"
     },
     {
       "path": "independent-code/REVIEW.md",
@@ -162,6 +187,16 @@
     "code_source_blockers": 0,
     "numerics_source_blockers": 0,
     "fresh_ci_run": 37248220760,
-    "actual_acceptance": "PENDING"
-  }
+    "actual_acceptance": "EARLY_FAIL",
+    "original_lab_artifact_id": 11319619204
+  },
+  "followup_original_artifacts": [
+    {
+      "artifact_id": 11319619204,
+      "path": "failure-1be/lab-browser-1be0d09-original.zip",
+      "bytes": 643462,
+      "sha256": "21ff9f8d414b1f2346a9bdef92147eaadec2adaa95cd41a65d5b26ef404cfe4c",
+      "qualification": "CONFIRMED_EARLY_FAIL"
+    }
+  ]
 }
