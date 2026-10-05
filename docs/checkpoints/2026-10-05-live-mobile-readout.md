@@ -73,3 +73,41 @@ spend, native browser bypass, reset/clean/force-overwrite или удалени�
 
 Следующий шаг: freeze combined HEAD/tree, независимое source review, затем
 один protected official pinned Playwright CI; никаких native browser/models.
+
+## Первый actual FAIL и узкая QA-правка
+
+Run37282535160 attempt1 на a57a6854b633c8e272eb4012ff11a0ec125e6fc2/
+tree2f9f0760ada0bbd1812a232bc6a30883242c76d3: legacy LIVE actual FAIL при
+native scroll нижнего inspector field на1440px — Element is not attached
+to the DOM. Mobile cases/physical/projection/GL actual steps NOT_EXECUTED.
+Source qualified0 не заменяет actual приёмку; PR24 merge HOLD.
+Original artifact11332948215,8544954B,
+SHAc0b5cddbc1d5d520e80f079c93bbac2adffc446bff04d1b1bd1d4dac91352ba0
+сохранён без перепаковки, outer/nested CRC PASS. Independent failure review
+прочитал четыре report PNG и два held PNG, source/body/trace: paused tick2138/
+ID240 unchanged, первых12gates PASS, complete responsive gate не достигнут.
+Privacy35UTF8/994970B obviouspatterns/auth/cookies0, bounded qualification.
+
+Trace call317 resolved transient lastdd0.05 около8210.152ms, stateGET
+8218.488ms→HTTP200 примерно8222.616ms; последующий inspector сериализован
+заново с тем же ID/tick. Source commitState→renderInspector.replaceChildren
+на обычном poll согласуется с lifecycle finding; direct mutation callback/
+единственный инициатор не записаны, точная causality не заявляется.
+
+Astra APPROVE_BOUNDED_QA_REPAIR: только прежний browser QA helper upper/lower.
+Автор frozen d61f56d9490a38221bdf4ea046f732619c114dc9,
+tree6932c58eaaa35a32990447fd43652ca7a8b6ad32, parenta973b25b….
+Native scroll теперь обращён к persistent #cell-detail; после await одна
+синхронная read-only evaluation заново находит current конкретный upperDL/
+lowerfield и снимает rect/clipping/hit/text/group +exact ID/tick/inspector.
+Нельзя удерживать descendant/ElementHandle через await. Именно field, а не
+wrapper, обязан пройти все прежние strict bounds/hit/value oracles и PNG.
+Если wrapper scroll не выводит field целиком в viewport — FAIL: нет fallback,
+JS scroll/retry/timer/retention/poll pause или product renderer change.
+Все прочие viewport/Find/noPOST/model-state/oldguards/budgets сохранены.
+
+Root cherry-pick exact QA blob; product unchanged. Node --check/diff-check
+только source syntax PASS. Нужны новый frozen combined independent source0,
+durable original failure archive/readback и только затем один fresh full CI
+нового candidate. Старый a57 FAIL/skip/evidence/ref сохраняется. Fresh actual/
+merge/MAIN/public acceptance всё ещё PENDING; LAB и остальные HOLD неизменны.
