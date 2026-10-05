@@ -131,9 +131,18 @@ async function readBytes(url, limit, fetchImpl) {
   const response = await fetchImpl(url);
   if (!response.ok) throw new Error(`LAB data request failed (${response.status}).`);
   if (!response.body?.getReader) { const bytes = new Uint8Array(await response.arrayBuffer()); check(bytes.length <= limit, 'response size'); return bytes; }
-  const reader = response.body.getReader(), chunks = []; let length = 0;
-  try { for (;;) { const { value, done } = await reader.read(); if (done) break; length += value.length; check(length <= limit, 'response size'); chunks.push(value); } }
-  finally { await reader.cancel(); reader.releaseLock(); }
+  const reader = response.body.getReader(), chunks = []; let length = 0, completed = false, primaryFailed = false;
+  try { for (;;) { const { value, done } = await reader.read(); if (done === true) { completed = true; break; } length += value.length; check(length <= limit, 'response size'); chunks.push(value); } }
+  catch (error) { primaryFailed = true; throw error; }
+  finally {
+    // EOF освобождает lock без cancel; cleanup незавершённого чтения не скрывает его ошибку.
+    let cleanupFailed = false, cleanupError;
+    try { if (!completed) await reader.cancel(); }
+    catch (error) { cleanupFailed = true; cleanupError = error; }
+    try { await reader.releaseLock(); }
+    catch (error) { if (!cleanupFailed) cleanupError = error; cleanupFailed = true; }
+    if (cleanupFailed && !primaryFailed) throw cleanupError;
+  }
   const bytes = new Uint8Array(length); let offset = 0; for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; } return bytes;
 }
 export async function loadLab({ baseURL = import.meta.url, fetchImpl = globalThis.fetch, cryptoImpl = globalThis.crypto } = {}) {
