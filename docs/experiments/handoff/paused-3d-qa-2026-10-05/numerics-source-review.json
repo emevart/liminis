@@ -1,0 +1,140 @@
+{
+  "kind": "independent_paused_3d_qa_data_geometry_source_review/v1",
+  "verdict": "QUALIFIED_SOURCE_PASS",
+  "findings": [],
+  "blocking_findings": 0,
+  "other_findings": 0,
+  "protocol_verdict": "замечаний нет",
+  "head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+  "tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "base": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+  "clean": true,
+  "changed_files": [
+    ".github/workflows/ci.yml",
+    "docs/ACCEPTANCE.md",
+    "docs/checkpoints/2026-10-05-3d-paused-pixel-qa.md",
+    "scripts/check_physical_3d_browser.mjs",
+    "scripts/physical-3d-png.test.mjs"
+  ],
+  "exact_patch_source": "3d48f47d5929fc7d06c808c3845d8d440ba4d716",
+  "exact_patch_files": {
+    "scripts/check_physical_3d_browser.mjs": {
+      "git_object": "731f080aa30e4099265df54ef741ed98533159ac",
+      "bytes": 65448,
+      "sha256": "59fab4f9323e240b913a3006584b402ee3586032b98efad2dfa67ca78a908730"
+    },
+    "scripts/physical-3d-png.test.mjs": {
+      "git_object": "a50d3c0db4dc60ab886d8d61a5648614049fd7ae",
+      "bytes": 5177,
+      "sha256": "f9b41461d7d476fc389698cbc4369baf0d6eb2cb9e1e2073b29d3bb8b9203808"
+    }
+  },
+  "unchanged_qa_blocks": {
+    "source_host_api_and_independent_projector": {
+      "bytes": 10914,
+      "sha256": "1a3eccc3be9d33913894b9cb93e3a4730a45481178df9850f067a1fd809f5857"
+    },
+    "contrast_SI_glyph_box_slice_geometry_and_first_seven_gates": {
+      "bytes": 36342,
+      "sha256": "d9b75cbf7532fdb45488ab2059c27218c3b86d78fc9328960fcde21cc738c81b"
+    },
+    "division_gesture_renderer_negative_legacy_cleanup_full_gate_guards": {
+      "bytes": 11284,
+      "sha256": "85cb4ce5d6da54d8fbe9f5a2757d275a077b8d26bb2fee4fe5bbe169d6d08a88"
+    }
+  },
+  "unchanged_production_objects": {
+    "crates/liminis-core": "1f9031142731d138bf6de243ab2ac13d644e1553",
+    "configs": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+    "crates/liminis/src": "1b8ba337234f0348bf7c6d833e9123cc97359f77",
+    "Cargo.toml": "4b7bef5047fafbdd10526a90de4a18952678a6a6",
+    "Cargo.lock": "224f065c1bbf103a5cfec139a2f3313e2bf80559",
+    "rust-toolchain.toml": "1fd6f1afaf9c17073863c2b9a9f50f90572a7edb",
+    "site": "ee6bd108839c418e07c29d79a9b8fbd897b30093",
+    "docs/experiments": "76aba23510e19899755aeff7771e0d8063f4bca8",
+    "docs/SPEC.md": "32bf455e15a3a460590a9fa4001074e4f9512829",
+    "docs/NORTH_STAR.md": "3f43d7ba6cdd3086c62b05d9aa374cba82db8048",
+    "docs/DECISIONS.md": "4c4ef10f0193aafd34b90a06fdc2b640b7e073d8",
+    "scripts/cell-viewer-3d.test.mjs": "42234e3e59aa4c364ddf2caf297cbee56a251edc",
+    "scripts/check_live_cells_browser.mjs": "c9576efaa4b28bcbb7fb25b9c8def22bc6af9605",
+    "scripts/check_public_recording_browser.mjs": "7ad588601f09e2dd3f50a913e050a84c67b9a0dd",
+    "scripts/check_physical_projection_browser.mjs": "02338c9a9bf2f1b58822b835b3b4adf289b76ff3",
+    "scripts/check_dense_recording_browser.mjs": "67adb332b1cc9ca3559b41650910dce49620371a"
+  },
+  "ci_exact_single_test_filename_addition": true,
+  "review_scope": "Read-only numerical/geometry/evidence contract review, not browser/model/CI execution or historical failure diagnosis",
+  "contracts": [
+    {
+      "source": "scripts/check_physical_3d_browser.mjs:67",
+      "result": "PASS",
+      "meaning": "Existing bounded decoder reconstructs noninterlaced8-bit RGB/RGBA native screenshots with all five scanline filters. New RGBA vector retains every alpha byte for RGBA and assigns255 for opaque RGB. Input<16MiB, maximum4Mi pixels, inflated scanline byte bound and exact length remain enforced. RGB contrast probes use the same decoded RGB values as before."
+    },
+    {
+      "source": "scripts/check_physical_3d_browser.mjs:82",
+      "result": "PASS",
+      "meaning": "pixelDifference first refuses different width/height, then compares all four channels of every pixel in the whole previous #chamber-3d screenshot region. Any channel difference is one changed pixel; exact count and inclusive bounds retained. No hash-only equality, crop, mask, rounding tolerance, rescale or retry."
+    },
+    {
+      "source": "scripts/check_physical_3d_browser.mjs:212",
+      "result": "PASS",
+      "meaning": "Exactly one baseline plus one30/one60 target capture; original PNG size/SHA and decoded dimensions/RGBA SHA are recorded independently. Before and after each image, read-only actual API/camera/viewport/layer facts are retained, plus paused-captures.json. Both hold comparisons are recorded before asserting identity, including the first mismatch, so a second capture cannot overwrite a failed pixel result."
+    },
+    {
+      "source": "scripts/check_physical_3d_browser.mjs:240",
+      "result": "PASS",
+      "meaning": "Every pre/post APIheldFacts equals accepted viewBefore: actual tick/dt/model/pacing/full cells/summary/residual. state additionally verifies cells kind, seed42, dt30, chamber2, paused, no model error and finite positions in actual chamber. Camera full facts/quaternion/frustum/zoom and viewport, mode/requestedMode/revision/drawnRevision/drawnTick and all layer/slice/opacity facts remain exact baseline identity."
+    },
+    {
+      "source": "scripts/check_physical_3d_browser.mjs:250",
+      "result": "PASS",
+      "meaning": "Target30/60 does not advance model or POST controls; 1400ms hold, independently measured wall duration, unchanged per-window1..3 normal browser state polls, window difference<=1, max singleflight1 and unchanged POST count remain mandatory. Extra read-only QA API probes capture pre/post identity; they do not alter browser pacing or introduce model Steps. Achieved FPS stays unasserted."
+    },
+    {
+      "source": "scripts/check_physical_3d_browser.mjs:44",
+      "result": "PASS",
+      "meaning": "Common scale, true APIxyz, quaternion/right-handed orthographic basis, frustum/CSS projection and numeric/pixel tolerances untouched literal bytes. Source100um cube and dimensions-only200/100/50um fixture still use actual release host; exact mathematical volume is not a controlled biological causal comparison. Full glyph/box/axis/clip/slice/daughters/ID/renderer negative/legacy geometry contract and13mandatory gates retained."
+    },
+    {
+      "source": ".github/workflows/ci.yml:22",
+      "result": "PASS",
+      "meaning": "Only one native Node test filename added to existing command; all other workflow commands/gates/source security policies unchanged. Actual protected runtime must still use pinned official PW1.61.1, unchanged sandbox/observedargvguard and report actual backend."
+    },
+    {
+      "source": "scripts/physical-3d-png.test.mjs:10",
+      "result": "PASS",
+      "meaning": "Four synthetic controls extract and exercise actual QA decoder/comparator, without browser/host lifecycle. Known RGBA fixtures check five filters/alternate encodings/opaque RGB, one-byte differences in each RGB or alpha channel, same byte buffer reshaped dimensions, multi-pixel bounds and invalid signature/filter/oversize refusal. Tests do not assert biological/actual browser PASS and were not repeated by this reviewer."
+    }
+  ],
+  "data_source_binding": {
+    "base": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+    "production_source_unchanged": true,
+    "actual_future_physical_scope": "world31/chamber2/dt30 source physical scenario; chamber1 legacy separately",
+    "archival_dense_scope": "Original archived source/producer/world30/chamber1 identity unchanged; no dense decode or model replay performed",
+    "lab_candidate_included": false,
+    "lab_files_site_assets_loader_or_preregistration_added": false,
+    "scientific_outputs_relabelled_or_recalculated": false,
+    "new_build_attestation": false
+  },
+  "historical_and_future_qualifications": [
+    "Historical main5bea/run37241483046 remains FAIL of unknown cause. Missing full-resolution individual originals/post-FPS audits prevent claiming equal old pixels or an encoding-only explanation.",
+    "Exact old79/c02 runtime13GL PASS does not transfer to this freshmain HEAD. New raw PNG/RGBA/API capture evidence and independent actual13GL/regression artifact review remain mandatory.",
+    "This is QA-only source admission. Four native Node controls reported PASS once; no tests/model/Cargo/native browser/fullscience decode repeated here.",
+    "Whole-region pixel identity uses trusted pinned Chromium noninterlaced8-bit opaque RGB/RGBA screenshots. The tiny decoder is not a general-purpose PNG/color-profile validator; actual artifacts retain originals for independent decode and archive integrity checks.",
+    "Software SwiftShader if observed remains a renderer qualification, not hardware FPS/GPU/kernel-isolation attestation. No achieved30/60FPS, native-background or cross-platformfloat claim.",
+    "Center glyphs are display markers, not physical bodies/collisions/local chemistry. Source commonSI geometry and biology are unchanged. LAB21/publicLAB/newmodels remain HOLD."
+  ],
+  "mandatory_next_gates": [
+    "One fresh protected exact-head mandatory fullCI, actual13GL and existing LIVE/physical/2D/legacyREC/dense regressions.",
+    "Independent bounded original runtime artifact review, safe durable archive/hash/source readback before guarded adoption.",
+    "Separate existing main/public delivery scope after acceptance; no priorPASS transfer and no LAB publication implied."
+  ],
+  "execution_status": {
+    "models": "NOT_RUN",
+    "cargo": "NOT_RUN",
+    "browser": "NOT_RUN",
+    "tests_repeated": false,
+    "old_science_or_projection_1440_recomputed": false,
+    "source_edits": false,
+    "written_files": "Only source-review.json and Russian source-review.md outside worktrees"
+  }
+}

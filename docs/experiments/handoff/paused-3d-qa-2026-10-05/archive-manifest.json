@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "kind": "Bounded independent paused3D QA source evidence; runtime pending",
+  "candidate_head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+  "candidate_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "product_base_head": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+  "workflow_run": 37260833244,
+  "source_review": "CODE_AND_DATA_GEOMETRY_0",
+  "actual_acceptance": "PENDING",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 30008,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1429,
+      "sha256": "fbb894ab34d00d49036d4feea875422b4d30b69a1eeb7a32ddc5cc5f08b5a3e4"
+    },
+    {
+      "path": "code-source-review.json",
+      "bytes": 8579,
+      "sha256": "d0bd64dd7632881703e6da0182a2491648be9be0d9b170a27c04b78a64344fa6"
+    },
+    {
+      "path": "code-source-review.md",
+      "bytes": 3663,
+      "sha256": "d71b630c4703edf3adb8bfea9f90a7b04dc25000ac490d4f043c492180ecc7cc"
+    },
+    {
+      "path": "numerics-source-review.json",
+      "bytes": 9615,
+      "sha256": "284277efef40fd33d6ecc290e97a47a51f973f2fc33f656bb52b74e07c6d881b"
+    },
+    {
+      "path": "numerics-source-review.md",
+      "bytes": 6722,
+      "sha256": "985988809343aa628b3ce5150cca5b88b328396b71d01b124ea47eb9e6455dd3"
+    }
+  ]
+}

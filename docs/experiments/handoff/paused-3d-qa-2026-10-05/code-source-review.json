@@ -1,0 +1,140 @@
+{
+  "schema": "independent-source-review/v1",
+  "reviewedAtUtc": "2026-10-05T03:48:10.669652+00:00",
+  "reviewer": "/root/live2_code_review",
+  "author": "root",
+  "verdict": "QUALIFIED_SOURCE_ZERO_BLOCKERS",
+  "blockers": [],
+  "source": {
+    "head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+    "tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+    "base": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+    "baseTree": "7f6b3ea5a67810708b6a39e5e78f418d6b2d1b2d",
+    "qaCherry": "3d48f47d5929fc7d06c808c3845d8d440ba4d716",
+    "clean": true,
+    "changedPaths": [
+      ".github/workflows/ci.yml",
+      "docs/ACCEPTANCE.md",
+      "docs/checkpoints/2026-10-05-3d-paused-pixel-qa.md",
+      "scripts/check_physical_3d_browser.mjs",
+      "scripts/physical-3d-png.test.mjs"
+    ],
+    "files": {
+      ".github/workflows/ci.yml": {
+        "bytes": 21599,
+        "lines": 478,
+        "sha256": "2c38bf5455fad728903901ad9850d0d96c11c6dab9b6131283c947bf9d6c1b58",
+        "gitBlob": "75e81cf273d7499ed20c8eef496d7a45eadbe8a0"
+      },
+      "docs/ACCEPTANCE.md": {
+        "bytes": 156467,
+        "lines": 1783,
+        "sha256": "a76f7acdd7abdb490eed6aa602ab6877879c1987267d4f984fc99d50e8bcfef1",
+        "gitBlob": "5c9e4f0b77f078e543feedc4c546aca8c46e9860"
+      },
+      "docs/checkpoints/2026-10-05-3d-paused-pixel-qa.md": {
+        "bytes": 3228,
+        "lines": 47,
+        "sha256": "b4291aa5318a1d82a1d75df1d193a736966b70565077d60a93c9116ddcaf98e0",
+        "gitBlob": "cc8b0f04c1d0c34014bfb804e51583194c312517"
+      },
+      "scripts/check_physical_3d_browser.mjs": {
+        "bytes": 65448,
+        "lines": 287,
+        "sha256": "59fab4f9323e240b913a3006584b402ee3586032b98efad2dfa67ca78a908730",
+        "gitBlob": "731f080aa30e4099265df54ef741ed98533159ac"
+      },
+      "scripts/physical-3d-png.test.mjs": {
+        "bytes": 5177,
+        "lines": 77,
+        "sha256": "f9b41461d7d476fc389698cbc4369baf0d6eb2cb9e1e2073b29d3bb8b9203808",
+        "gitBlob": "a50d3c0db4dc60ab886d8d61a5648614049fd7ae"
+      }
+    },
+    "unchangedObjects": {
+      "crates": "89a706f18a5588cfcf213c00af30b90daea46431",
+      "site": "ee6bd108839c418e07c29d79a9b8fbd897b30093",
+      "configs": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+      "docs/DECISIONS.md": "4c4ef10f0193aafd34b90a06fdc2b640b7e073d8",
+      "docs/SPEC.md": "32bf455e15a3a460590a9fa4001074e4f9512829"
+    }
+  },
+  "bindingChecks": {
+    "exactFiveOwnedPaths": true,
+    "bothQaFilesByteExactCherry": true,
+    "ciOnlyAddsOneNodeTestFilename": true,
+    "acceptanceBaseBytesExactPrefix": true,
+    "acceptanceAppendedLines": 19,
+    "newCheckpointLines": 47,
+    "allThirteenExistingCheckNamesPreserved": true,
+    "productionCoreSiteConfigRawAndFrozenObjectsUnchanged": true
+  },
+  "review": [
+    {
+      "location": "scripts/check_physical_3d_browser.mjs:67",
+      "finding": "Ограниченный фактический PNG decoder поддерживает прежние 8-bit RGB/RGBA и все пять filters. Он переносит каждый RGB byte в RGBA, сохраняет исходный alpha и задаёт 255 только для opaque RGB. Размеры, encoded bytes и inflation остаются ограниченными; прежний RGB accessor для геометрии сохранён."
+    },
+    {
+      "location": "scripts/check_physical_3d_browser.mjs:82",
+      "finding": "Comparator требует одинаковые dimensions и сравнивает все четыре байта каждого pixel всей прежней compositor области. Изменение любого RGB/alpha byte или dimensions даёт FAIL. Changed-pixel count и inclusive bounds диагностические; масок, допусков, crop или повторного capture нет."
+    },
+    {
+      "location": "scripts/check_physical_3d_browser.mjs:212",
+      "finding": "Baseline/30/60 original PNG записываются на диск до сравнительных API/camera/layers/pixel assertions. Captures содержат raw SHA, RGBA SHA, dimensions и pre/post API, camera/viewport, mode/revisions/drawnTick и layers/slice inputs. Capture JSON сохраняется до identity assertions, включая first-hold mismatch."
+    },
+    {
+      "location": "scripts/check_physical_3d_browser.mjs:240",
+      "finding": "Каждый pre/post API факт сравнивается с paused viewBefore; camera/viewport, mode/requestedMode/revision/drawnRevision/drawnTick и layers сравниваются с baseline. Существующие browser poll count 1..3, difference<=1, maxState1 и отсутствие лишних POST сохранены."
+    },
+    {
+      "location": "scripts/check_physical_3d_browser.mjs:30",
+      "finding": "Дополнительные state audit GET выполняет Node fetch. Browser poll scheduling не изменено; traffic.stateStarts пополняется только page request events. Poll counters сохраняют прежнюю семантику."
+    },
+    {
+      "location": "scripts/check_physical_3d_browser.mjs:163",
+      "finding": "Точные external expected HEAD/tree, committed source bytes, официальный Playwright1.61.1, chromiumSandbox:true, observed argv prohibition и stock software-GPU qualification неизменны. Exact launch добавляет только enable-automation; achieved/hardware FPS не заявлен. Final strict lifecycle/error aggregate не изменён."
+    },
+    {
+      "location": "scripts/physical-3d-png.test.mjs:8",
+      "finding": "Четыре source-only controls извлекают actual decoder/comparator без browser/host lifecycle. Independent known pixels проверяют пять filters/разные encoding/RGB alpha, каждый изменённый channel включая alpha, dimensions, bounds и отказ на invalid signature/filter/oversized dimensions. Это meaningful synthetic controls, не browser acceptance."
+    },
+    {
+      "location": ".github/workflows/ci.yml:19",
+      "finding": "Только один test filename добавлен к прежней Node command. Остальные workflow bytes, mandatory gates, protected runtime, budgets, expected-source binding, artifact publication и skips не изменены."
+    },
+    {
+      "location": "docs/ACCEPTANCE.md:1765",
+      "finding": "Append и checkpoint сохраняют historical main5bea FAIL с неизвестной причиной. Старые 79/c02 PASS не переносятся на новый head; actual13GL/fullCI/regressions требуют новых originals. LAB PR21/publicLAB/models остаются HOLD."
+    }
+  ],
+  "reviewerActions": {
+    "gitSourceReadsAndHashes": true,
+    "gitDiffCheck": "PASS",
+    "sourceArithmeticalAndScopeAssertions": "PASS",
+    "newNodeTestsRun": false,
+    "cargoOrModelsRun": false,
+    "browserRun": false,
+    "networkRequests": false,
+    "productionOrAuthorFilesEdited": false,
+    "ownFilesWrittenOnly": [
+      "source-review.json",
+      "source-review.md"
+    ]
+  },
+  "authorReportedValidation": {
+    "fourFocusedSyntheticNodeControls": "PASS once, Node24.19; not repeated by reviewer",
+    "browserAcceptance": "PENDING"
+  },
+  "requiredRemainingGates": [
+    "Предшествующий Cargo run завершён перед запуском нового, builds сериализованы.",
+    "Один свежий protected fullCI на этом exact head/tree; все обязательные проверки зелёные.",
+    "Независимая приёмка actual13GL originals/trace/трёх paused PNG и сохранённых audits; прежние recorded/dense/physical/2D regressions.",
+    "Durable originals/review archive и readback перед guarded merge; existing main public follow-up в его заявленном scope."
+  ],
+  "limits": [
+    "Это source-only verdict для подготовки разрешённого CI, не browser PASS и не итоговая приёмка/merge.",
+    "Причина historical main5bea encoded-PNG mismatch неизвестна; source patch не доказывает равенство отсутствующих прежних captures.",
+    "Production, LAB experiment и новый causal probe не запускались.",
+    "Факт author Node PASS взят из handoff, controls прочитаны независимо, runtime здесь не повторён."
+  ]
+}
