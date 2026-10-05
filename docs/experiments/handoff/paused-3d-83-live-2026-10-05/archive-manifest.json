@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "Bounded original exact83fa LIVE+physical+2D projection browser evidence",
+  "candidate_head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+  "candidate_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "workflow_run": 37260833244,
+  "workflow_job": 111607516729,
+  "artifact_ids": [
+    11325245701,
+    11325235735,
+    11324572210
+  ],
+  "actual_regression_review": "QUALIFIED_PASS",
+  "product_acceptance": "SEPARATE_FULLCI_REC_DENSE_GL_PENDING",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 43003439,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2871,
+      "sha256": "3934f3016dabd257fc438561a0d176510da8fe1e7be0f2b274332b57462aa4c2"
+    },
+    {
+      "path": "independent-actual-review.json",
+      "bytes": 23369,
+      "sha256": "7ae5788feb3a345b1945ca6525524ec2b92cc1d352f777cc1577815d35873ae5"
+    },
+    {
+      "path": "independent-actual-review.md",
+      "bytes": 7247,
+      "sha256": "ec971844142171bbc53520e99f8c6db69f62f4cf7889da2be642dac5c80cecd1"
+    },
+    {
+      "path": "live-browser-83fa1e5-original.zip",
+      "bytes": 5667320,
+      "sha256": "f165d1522ca40e300b1b11472263f39ee9d9e3537bf2535d4d97e1788d84a4f7"
+    },
+    {
+      "path": "live-physical-83fa1e5-original.zip",
+      "bytes": 7061660,
+      "sha256": "c53e9eaaf590dba51ee11061b4fd461aba6f084600a6640c71ca0f6b9a4d8905"
+    },
+    {
+      "path": "physical-projection-83fa1e5-original.zip",
+      "bytes": 30240972,
+      "sha256": "195f24a659b01225ff103437810593a09bb49d98fb2681ddf3c74b672fefdb05"
+    }
+  ]
+}
