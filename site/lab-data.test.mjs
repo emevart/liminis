@@ -66,96 +66,107 @@ test('genuine modified descriptor/raw bytes fail integrity instead of exposing a
   for (const name of ['descriptor', 'results', 'comparisons', 'manifest']) { const net = transport({ corrupt: name }); await assert.rejects(loadLab({ baseURL: 'https://liminis.dev/lab.html', fetchImpl: net.fetchImpl, cryptoImpl: webcrypto }), /SHA-256/); if (name === 'descriptor') assert.equal(net.requested.length, 1); }
 });
 
-// Настоящие Response/ReadableStream/readers; spies делегируют native read/cancel/release.
-function readerTransport({ scenario = 'complete', readError, cancelError, releaseError, delayCancel = false } = {}) {
-  const records = []; let finishEOF, finishCancel, firstChunkRead, cancelStarted;
-  const firstChunk = new Promise(resolve => { firstChunkRead = resolve; });
+// Настоящие Response/ReadableStream/WritableStream; production pipeTo не подменяется.
+function streamTransport({ scenario = 'complete', readError, cancelError, delayCancel = false } = {}) {
+  const records = []; let finishEOF, finishCancel, delivered, cancelStarted;
+  const payloadDelivered = new Promise(resolve => { delivered = resolve; });
   const cancelling = new Promise(resolve => { cancelStarted = resolve; });
   const cancelGate = new Promise(resolve => { finishCancel = resolve; });
   const fetchImpl = async url => {
     const name = url.pathname.match(/\/(descriptor|results|comparisons|manifest)\.json$/)?.[1]; assert.ok(name);
-    const target = name === 'descriptor', payload = new Uint8Array(bytes(name));
-    const stream = new ReadableStream({
-      start(controller) {
-        if (target && scenario === 'read-error') { controller.error(readError); return; }
-        if (target && scenario === 'oversize') controller.enqueue(new Uint8Array(256 * 1024 + 1));
-        else { const middle = Math.floor(payload.length / 2); controller.enqueue(payload.subarray(0, middle)); controller.enqueue(payload.subarray(middle)); }
-        if (target && (scenario === 'await-eof' || scenario === 'oversize')) finishEOF = () => controller.close();
-        else controller.close();
+    const target = name === 'descriptor', chunkBytes = 32 * 1024;
+    const payload = target && scenario === 'oversize' ? new Uint8Array(256 * 1024 + chunkBytes * 3) : new Uint8Array(bytes(name));
+    const record = { name, events: [], cancelReasons: [], delivered: 0, pulls: 0, maxQueuedChunks: 0 };
+    let offset = 0;
+    const body = new ReadableStream({
+      pull(controller) {
+        record.pulls++;
+        if (target && scenario === 'read-error') { record.events.push('source:error'); controller.error(readError); return; }
+        if (offset < payload.length) {
+          const end = Math.min(offset + chunkBytes, payload.length);
+          controller.enqueue(payload.subarray(offset, end)); record.delivered += end - offset; offset = end;
+          record.maxQueuedChunks = Math.max(record.maxQueuedChunks, Math.max(0, -controller.desiredSize));
+          record.events.push('source:chunk');
+          if (offset === payload.length && target) delivered();
+          return;
+        }
+        if (target && scenario === 'await-eof') return new Promise(resolve => {
+          finishEOF = () => { record.events.push('source:EOF'); controller.close(); resolve(); };
+        });
+        record.events.push('source:EOF'); controller.close();
       },
-      cancel() { if (target && cancelError) return Promise.reject(cancelError); if (target && delayCancel) return cancelGate; },
-    });
-    const response = new Response(stream), getReader = response.body.getReader.bind(response.body);
-    response.body.getReader = () => {
-      const reader = getReader(), nativeRead = reader.read.bind(reader), nativeCancel = reader.cancel.bind(reader), nativeRelease = reader.releaseLock.bind(reader);
-      const record = { name, events: [], body: response.body }; records.push(record);
-      reader.read = async () => {
-        record.events.push('read:start');
-        try { const value = await nativeRead(); record.events.push(value.done === true ? 'read:EOF' : 'read:chunk'); if (target && value.done !== true) firstChunkRead(); return value; }
-        catch (error) { record.events.push('read:reject'); throw error; }
-      };
-      reader.cancel = async () => {
-        record.events.push('cancel:start'); if (target) cancelStarted();
-        try { await nativeCancel(); record.events.push('cancel:done'); }
-        catch (error) { record.events.push('cancel:reject'); throw error; }
-      };
-      reader.releaseLock = () => { record.events.push('release'); nativeRelease(); if (target && releaseError) throw releaseError; };
-      return reader;
-    };
-    return response;
+      async cancel(reason) {
+        record.cancelReasons.push(reason); record.events.push('cancel:start'); if (target) cancelStarted();
+        if (target && delayCancel) await cancelGate;
+        if (target && cancelError) { record.events.push('cancel:reject'); throw cancelError; }
+        record.events.push('cancel:done');
+      },
+    }, { highWaterMark: 0 });
+    record.response = new Response(body); record.body = record.response.body; records.push(record);
+    return record.response;
   };
-  return { records, firstChunk, cancelling, finishEOF: () => finishEOF(), finishCancel,
+  return { records, payloadDelivered, cancelling, finishEOF: () => finishEOF(), finishCancel,
     load: () => loadLab({ baseURL: 'https://liminis.dev/lab.html', fetchImpl, cryptoImpl: webcrypto }) };
 }
-const cleanup = record => record.events.filter(event => event.startsWith('cancel:') || event === 'release');
 
-test('real completed response streams observe EOF before release and never cancel any of the four bodies', { timeout: 5000 }, async () => {
-  const net = readerTransport(); assert.equal((await net.load()).runs.size, 24); assert.equal(net.records.length, 4);
+test('native pipe completes all four exact bodies, releases locks and never cancels successful streams', { timeout: 5000 }, async () => {
+  const net = streamTransport(), data = await net.load();
+  assert.equal(data.runs.size, 24); assert.equal([...data.runs.values()].reduce((sum, run) => sum + run.samples.length, 0), 4044);
+  assert.equal(net.records.length, 4);
   for (const record of net.records) {
-    assert.deepEqual(record.events, ['read:start', 'read:chunk', 'read:start', 'read:chunk', 'read:start', 'read:EOF', 'release']);
-    assert.deepEqual(cleanup(record), ['release']); assert.equal(record.body.locked, false);
+    assert.equal(record.delivered, bytes(record.name).length); assert.equal(record.events.at(-1), 'source:EOF');
+    assert.deepEqual(record.cancelReasons, []); assert.equal(record.body.locked, false); assert.equal(record.response.bodyUsed, true);
+    // Один demand-driven source chunk за pull; upstream queue не растёт с5.3MB payload.
+    assert.ok(record.maxQueuedChunks <= 1); assert.equal(record.pulls, Math.ceil(record.delivered / (32 * 1024)) + 1);
   }
 });
 
-test('delivery of the entire valid payload is not completion until the real reader returns done=true', { timeout: 5000 }, async () => {
-  const net = readerTransport({ scenario: 'await-eof' }); let completed = false;
-  const pending = net.load().then(value => { completed = true; return value; }); await net.firstChunk;
+test('all valid bytes remain pending until native source closes, with no early unlock or cancellation', { timeout: 5000 }, async () => {
+  const net = streamTransport({ scenario: 'await-eof' }); let completed = false;
+  const pending = net.load().then(value => { completed = true; return value; }); await net.payloadDelivered;
   await new Promise(resolve => setImmediate(resolve));
-  assert.equal(completed, false); assert.deepEqual(cleanup(net.records[0]), []); assert.equal(net.records[0].body.locked, true);
-  net.finishEOF(); assert.equal((await pending).runs.size, 24); assert.deepEqual(cleanup(net.records[0]), ['release']);
+  assert.equal(completed, false); assert.equal(net.records[0].body.locked, true); assert.deepEqual(net.records[0].cancelReasons, []);
+  net.finishEOF(); assert.equal((await pending).runs.size, 24);
+  assert.equal(net.records[0].body.locked, false); assert.deepEqual(net.records[0].cancelReasons, []);
 });
 
-test('real oversized incomplete body cancels exactly once then releases without weakening the size check', { timeout: 5000 }, async () => {
-  const net = readerTransport({ scenario: 'oversize' }); await assert.rejects(net.load(), /Invalid published LAB evidence: response size/);
-  assert.equal(net.records.length, 1); assert.deepEqual(cleanup(net.records[0]), ['cancel:start', 'cancel:done', 'release']);
-  assert.equal(net.records[0].events.includes('read:EOF'), false); assert.equal(net.records[0].body.locked, false);
+test('incremental size refusal stops an incomplete native source and cancels once with the original size error', { timeout: 5000 }, async () => {
+  const net = streamTransport({ scenario: 'oversize' }); let primary;
+  await assert.rejects(net.load(), error => { primary = error; return /Invalid published LAB evidence: response size/.test(error.message); });
+  assert.equal(net.records.length, 1); const record = net.records[0];
+  assert.deepEqual(record.cancelReasons, [primary]); assert.equal(record.events.at(-1), 'cancel:done');
+  assert.equal(record.events.includes('source:EOF'), false); assert.equal(record.body.locked, false);
+  assert.ok(record.delivered <= 256 * 1024 + 2 * 32 * 1024); assert.ok(record.pulls <= 10);
 });
 
-test('incomplete cleanup awaits actual native cancellation settlement before attempting release', { timeout: 5000 }, async () => {
-  const net = readerTransport({ scenario: 'oversize', delayCancel: true }), rejected = assert.rejects(net.load(), /response size/);
-  await net.cancelling; assert.deepEqual(cleanup(net.records[0]), ['cancel:start']); assert.equal(net.records[0].body.locked, true);
-  net.finishCancel(); await rejected; assert.deepEqual(cleanup(net.records[0]), ['cancel:start', 'cancel:done', 'release']); assert.equal(net.records[0].body.locked, false);
+test('native pipe waits for actual cancellation settlement before releasing its source lock', { timeout: 5000 }, async () => {
+  const net = streamTransport({ scenario: 'oversize', delayCancel: true }); let settled = false;
+  const rejected = assert.rejects(net.load().finally(() => { settled = true; }), /response size/);
+  await net.cancelling; await new Promise(resolve => setImmediate(resolve));
+  assert.equal(settled, false); assert.equal(net.records[0].body.locked, true); assert.equal(net.records[0].events.at(-1), 'cancel:start');
+  net.finishCancel(); await rejected;
+  assert.equal(net.records[0].events.at(-1), 'cancel:done'); assert.equal(net.records[0].body.locked, false);
 });
 
-test('actual stream read rejection remains primary even when native cancel and release also fail', { timeout: 5000 }, async () => {
-  const primary = new Error('original stream failure'), secondary = new Error('release spy failure');
-  const net = readerTransport({ scenario: 'read-error', readError: primary, releaseError: secondary });
+test('native source read failure keeps exact error identity and releases the lock without cancelling an errored source', { timeout: 5000 }, async () => {
+  const primary = new Error('original stream failure'), net = streamTransport({ scenario: 'read-error', readError: primary });
   await assert.rejects(net.load(), error => error === primary);
-  assert.deepEqual(net.records[0].events, ['read:start', 'read:reject', 'cancel:start', 'cancel:reject', 'release']); assert.equal(net.records[0].body.locked, false);
+  assert.deepEqual(net.records[0].events, ['source:error']); assert.deepEqual(net.records[0].cancelReasons, []); assert.equal(net.records[0].body.locked, false);
 });
 
-test('rejected actual source cancellation is consumed, keeps the size error and still attempts release', { timeout: 5000 }, async () => {
+test('rejected native cancellation is consumed and cannot replace the primary size error', { timeout: 5000 }, async () => {
   const unhandled = [], listener = reason => unhandled.push(reason); process.on('unhandledRejection', listener);
   try {
-    const net = readerTransport({ scenario: 'oversize', cancelError: new Error('cancel source rejection'), releaseError: new Error('release spy rejection') });
-    await assert.rejects(net.load(), /Invalid published LAB evidence: response size/);
-    assert.deepEqual(cleanup(net.records[0]), ['cancel:start', 'cancel:reject', 'release']); assert.equal(net.records[0].body.locked, false);
+    const secondary = new Error('source cancellation rejection'), net = streamTransport({ scenario: 'oversize', cancelError: secondary }); let primary;
+    await assert.rejects(net.load(), error => { primary = error; return error !== secondary && /response size/.test(error.message); });
+    assert.deepEqual(net.records[0].cancelReasons, [primary]); assert.equal(net.records[0].events.at(-1), 'cancel:reject'); assert.equal(net.records[0].body.locked, false);
     await new Promise(resolve => setImmediate(resolve)); await new Promise(resolve => setImmediate(resolve)); assert.deepEqual(unhandled, []);
   } finally { process.off('unhandledRejection', listener); }
 });
 
-test('sole release failure after verified EOF is visible and does not trigger cancellation', { timeout: 5000 }, async () => {
-  const failure = new Error('release failed after EOF'), net = readerTransport({ releaseError: failure });
-  await assert.rejects(net.load(), error => error === failure);
-  assert.equal(net.records[0].events.at(-2), 'read:EOF'); assert.deepEqual(cleanup(net.records[0]), ['release']); assert.equal(net.records[0].body.locked, false);
+test('missing streamed response refuses visibly without an unbounded body fallback', async () => {
+  let requested = 0, fallback = 0;
+  const fetchImpl = async () => { requested++; const response = new Response(null); response.arrayBuffer = async () => { fallback++; return bytes('descriptor').buffer; }; return response; };
+  await assert.rejects(loadLab({ baseURL: 'https://liminis.dev/lab.html', fetchImpl, cryptoImpl: webcrypto }), /LAB streamed response is unavailable/);
+  assert.equal(requested, 1); assert.equal(fallback, 0);
 });
