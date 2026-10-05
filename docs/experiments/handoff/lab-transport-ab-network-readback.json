@@ -1,0 +1,62 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "d9a78d218e06b65fa93de540bbf69f412b04fc9b",
+  "archive_tree": "42e33b9a3ae72b2947ea924526198d85f9f4b91a",
+  "closed_inventory": true,
+  "manifest_sha256": "7e9f4ae35836743b7824be9691125d3013d52a397cd8574a85cb54631ad6df8b",
+  "file_count": 8,
+  "unique_bytes_excluding_manifest": 937434,
+  "original_zip_count": 1,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3115,
+      "sha256": "4bc135d79e9dea3bc8b32a99c9b26fdf8541afebc123683e5024a125187c8324",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-ab-3b174d4-actual-review.json",
+      "bytes": 25768,
+      "sha256": "0d3f609876c0e3e0fa7f0ff70a907d6589a2a088a9f9d65e8c31f05c73a862cd",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-ab-3b174d4-actual-review.md",
+      "bytes": 6199,
+      "sha256": "32b080cc9d32559203843e5e5b3eaacd89edf6ef19f2a4b7f131fd3b21ed8be7",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-ab-3b174d4-original.zip",
+      "bytes": 805885,
+      "sha256": "f8905342189586970b4bbc5b6164b2c48cbcb34a9f013eb6bbe2637e92ad69d0",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "lab-transport-ab-source-review.json",
+      "bytes": 11194,
+      "sha256": "d34544c2c76d41c56495f08a6c3c2413c97b9513fd68ec4355d8193d1e2f8f12",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-ab-source-review.md",
+      "bytes": 5343,
+      "sha256": "e159b43064bc814a2f7f005dcdd4deda1192dc57edcfc301e022849a585f0731",
+      "verified": true
+    },
+    {
+      "path": "report.json",
+      "bytes": 79930,
+      "sha256": "fb2ad75d70948cf8089110d7a26e0f3a146c5d11cab8e15247ca6447fa451abc",
+      "verified": true
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}
