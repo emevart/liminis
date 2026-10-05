@@ -65,3 +65,18 @@ guards/oracles/budgets неизменны. Это deterministic source repin д�
 не adaptive runtime learning; final independent diff review и свежий
 public gate обязательны. Product scope остаётся только2HTML/CSS files;
 LAB HOLD и прочие ограничения не изменились.
+
+06:03 UTC. QA author опубликовал frozen `7ba64bb68edf61ec24d1b383e366b5246051bdef`
+(parent `ffc11e1b0d4900a385f199051f6812b0b5189bbe`), tree
+`36952180b3d2c780ff431205763a442b8cee34fa`, clean normal push.
+Root cherry-picked оба commits в свой integration checkout. Изменены только
+два согласованных QA файла: actual HUD/text/canvas bounds, dense tick992/
+216cells, sparse initial/endpoints и keyboard/pointer inspector. Pointer gate
+сохраняет цель из настоящих pixels, отдельно снимает keyboard selection
+blank-padding click, затем единственный target click обязан восстановить
+точный ID/inspector; no-op handler теперь не проходит. HTTP baseline ставится
+до resize. Это исправления independent source findings, не runtime retries.
+Прежние PNG counts, paused oracles, sandbox/network/body/cancellation/
+unhandled/cleanup и time budgets сохранены. Два `node --check` и diff-check
+PASS у автора означают только syntax/source. Combined exact-source review,
+existing full CI и actual/public acceptance остаются PENDING.
