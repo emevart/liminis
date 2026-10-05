@@ -52,9 +52,13 @@ SPEC/NORTH_STAR не изменяются. Это реализация уже п
 
 Следующие gates: независимый source0; один существующий protected full CI на
 exact HEAD/tree; независимая actual chamber1 mobile320/390/590+desktop и
-physical mobile regression. GL/projection regression должен реально PASS;
-при unchanged source применим явно qualified bridge к принятому e2 review,
-без заявления нового independent GL artifact review. Affected original ZIP
+physical mobile regression. GL/projection regression должен реально PASS.
+Общий cell-viewer.html изменён: whole-source identity bridge к e2 недопустим.
+Change-impact bridge описывает shared mobile CSS delta, неизменённые HTML вне
+style/3D renderer/vendor/host/GL QA/guards и свежие actual GL/projection gates.
+Старый e2 independent GL artifact review остаётся историческим; новый полный
+independent GL artifact review без отдельного concern здесь не заявляется.
+Affected original ZIP
 и reviews должны получить closed durable archive + normal network readback
 до guarded merge. После merge — fresh MAIN regression и existing public gate.
 Любой FAIL/drift/not-executed/new concern → HOLD/scoped review, без rerun ради

@@ -1842,7 +1842,10 @@ cells/resources/residual/events должны остаться прежними. 
 Нужны независимый exact-source review, один full protected exact-head CI,
 новый independent actual mobile/chamber1 и physical regression, durable
 affected original artifacts/readback, guarded merge и отдельный fresh MAIN/
-existing public gate. Старый accepted physical/GL source bridge подписывается
-как bridge, не новый independent artifact PASS. LAB21/publicLAB/LAB4/models
+existing public gate. Shared HTML изменён: whole-source identity к e2 не
+заявляется. GL change-impact bridge требует explicit mobile CSS delta,
+identity неизменённых renderer/vendor/host/QA/guards и fresh actual GL/
+projection gates. Старый e2 independent artifact review остаётся историческим.
+LAB21/publicLAB/LAB4/models
 сохраняют HOLD. Scope/pending:
 `docs/checkpoints/2026-10-05-live-mobile-readout.md`.
