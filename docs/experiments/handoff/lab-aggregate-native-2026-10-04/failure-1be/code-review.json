@@ -1,0 +1,273 @@
+{
+  "schema": "liminis-independent-lab1be-failure-review-v1",
+  "reviewerRole": "Independent source/reliability/artifact reviewer; not product/QA author",
+  "verdict": "CONFIRMED_EARLY_FAIL",
+  "releaseAcceptance": "NOT_ACCEPTED",
+  "sourceHead": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "sourceTree": "64bdb5f4794f48907f99886c540f6391571b1914",
+  "workflowRun": "https://github.com/emevart/liminis/actions/runs/37248220760",
+  "original": {
+    "filename": "lab-browser-1be0d09-original.zip",
+    "bytes": 643462,
+    "sha256": "21ff9f8d414b1f2346a9bdef92147eaadec2adaa95cd41a65d5b26ef404cfe4c",
+    "members": 3,
+    "crc": "PASS",
+    "closedInventory": "PASS",
+    "unmodified": true
+  },
+  "trace": {
+    "bytes": 248951,
+    "sha256": "f7413e5fb059042afcca07274c75ad1f3f1071157f1548c24e1cb19d359c0127",
+    "members": 11,
+    "crc": "PASS",
+    "outerExpandedBytes": 696770,
+    "nestedExpandedBytes": 2096775,
+    "combinedExpandedBytes": 2793545,
+    "networkRequests": 8,
+    "allSingleInitialLoopbackPage": true
+  },
+  "sourcePins": {
+    "gitBlobEntriesVerified": 13,
+    "headTreeExact": "PASS",
+    "siteLabDataSha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+    "qaSha256": "9637ff9b10d57ded55d000e02e61d4f530f41d98e1ea94d2e942c255865c52a3"
+  },
+  "runtimeChecks": {
+    "gate1": "PASS official observed argv",
+    "gate2": "FAIL strict initial response-body drain",
+    "laterMandatoryGates": "NOT_EXECUTED,7remaining",
+    "exactReportChecks": [
+      {
+        "name": "Observed official Chromium sandbox argv with unchanged stock launch",
+        "status": "PASS",
+        "elapsedMs": 6.860625000000027
+      },
+      {
+        "name": "Original 6.5MB JSON is verified before showing the full 6×4 matrix and historical source",
+        "status": "FAIL",
+        "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   'response.body: Protocol error (Network.getResponseBody): No data found for resource with given identifier\\n' +\n+     '    at /home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:233\\n' +\n+     '    at _Page.<anonymous> (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:691)',\n+   'response.body: Protocol error (Network.getResponseBody): No data found for resource with given identifier\\n' +\n+     '    at /home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:233\\n' +\n+     '    at _Page.<anonymous> (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:691)'\n+ ]\n- []\n\n    at drainResponses (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:81:249)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:206:5\n    at async check (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:25:110)\n    at async main (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:205:3)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:24:72)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:242:27"
+      }
+    ]
+  },
+  "bodyProof": {
+    "comparisonManifestRetainedPins": [
+      {
+        "name": "comparisons",
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+        "traceAndReportPin": "PASS"
+      },
+      {
+        "name": "manifest",
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+        "traceAndReportPin": "PASS"
+      }
+    ],
+    "descriptorResults": "No retained actual trace bodies; response.body ProtocolNoData twice and requestfailed ERR_ABORTED twice. Node server/producer source pins are separate proof, cannot substitute actual browser response body.",
+    "successfulPWBodyPins": [
+      {
+        "path": "/lab.html",
+        "status": 200,
+        "bytes": 5393,
+        "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+        "contentType": "text/html"
+      },
+      {
+        "path": "/lab.css",
+        "status": 200,
+        "bytes": 5019,
+        "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+        "contentType": "text/css"
+      },
+      {
+        "path": "/lab.js",
+        "status": 200,
+        "bytes": 22571,
+        "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+        "contentType": "text/javascript"
+      },
+      {
+        "path": "/lab-data.mjs",
+        "status": 200,
+        "bytes": 20808,
+        "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+        "contentType": "text/javascript"
+      },
+      {
+        "path": "/data/lab-2/comparisons.json",
+        "status": 200,
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+        "contentType": "application/json"
+      },
+      {
+        "path": "/data/lab-2/manifest.json",
+        "status": 200,
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+        "contentType": "application/json"
+      }
+    ],
+    "networkFailureRequests": [
+      {
+        "path": "/data/lab-2/descriptor.json",
+        "requestStartMs": 923.452,
+        "responseStatus": 200,
+        "failure": "net::ERR_ABORTED",
+        "bodySize": -1,
+        "retainedBody": false
+      },
+      {
+        "path": "/data/lab-2/results.json",
+        "requestStartMs": 934.025,
+        "responseStatus": 200,
+        "failure": "net::ERR_ABORTED",
+        "bodySize": -1,
+        "retainedBody": false
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "event": "Only initial goto starts",
+      "call": "call@18",
+      "ms": 868.329
+    },
+    {
+      "event": "descriptor Network request start",
+      "ms": 923.452
+    },
+    {
+      "event": "descriptor PW response.body begins",
+      "call": "call@40",
+      "ms": 932.489
+    },
+    {
+      "event": "results Network request start",
+      "ms": 934.025
+    },
+    {
+      "event": "descriptor PW NoData reject",
+      "call": "call@40",
+      "ms": 941.006
+    },
+    {
+      "event": "results PW body begins",
+      "call": "call@48",
+      "ms": 963.575
+    },
+    {
+      "event": "comparisons PW body pin complete",
+      "call": "call@50",
+      "ms": 1193.251
+    },
+    {
+      "event": "manifest PW body pin complete",
+      "call": "call@52",
+      "ms": 1196.739
+    },
+    {
+      "event": "Actual product ready predicate resolves",
+      "call": "call@38",
+      "ms": 1197.387
+    },
+    {
+      "event": "results PW NoData reject",
+      "call": "call@48",
+      "ms": 1197.849
+    },
+    {
+      "event": "Failure original fullPage PNG starts after strict drain failure",
+      "call": "call@54",
+      "ms": 1298.16
+    },
+    {
+      "event": "Failure PNG finishes",
+      "call": "call@54",
+      "ms": 1606.14
+    }
+  ],
+  "diagnostic": {
+    "confirmed": "Two transport/body-evidence failures on initial page precede screenshot/cleanup; no navigation/reload/matrix/selection yet. Different files failed than original600. Correct fail-closed drain stops gate2.",
+    "application": "Screenshot and ready predicate show source-pinned validated baseline tick0/8living, complete4charts and24matrix. The previously partial blank plot is not present in this capture. Under audited loader, validated commit implies successful complete bytes/hash checks, but native EOF/cancel timestamps/counts are not independently observed.",
+    "source": "Completed EOF branch has no cancel. Init script only logs browser unhandledrejection event; no fetch/read/promise override or preventDefault. Routine PW response.body observer uses Node/CDP, not added browser Promise handlers.",
+    "notProven": "Exact Chromium net::ERR_ABORTED mechanism, retention/GC/route/device/browser implementation cause, or attribution to releaseLock/observer. No flake, navigation-only or completed-body allowance accepted.",
+    "errorState": {
+      "pageErrors": [],
+      "consoleErrors": [],
+      "nodeUnhandled": [],
+      "cleanupErrors": [],
+      "normalPageClosedField": false,
+      "browserUnhandledArray": "Not collected by normal closePage because gate2 failed; absence of pageErrors is separate evidence."
+    }
+  },
+  "driverSourceRead": {
+    "package": "playwright-core",
+    "version": "1.61.1",
+    "publicTarballBytes": 2859694,
+    "publicTarballSha256": "3740bba3a3e93b4c7bd7c0f6e3c0e5f8cdce498bef13511e4d534cc99a8ce198",
+    "networkReadOnly": "Official public registry tarball read; no code executed/installed.",
+    "observedFacts": [
+      "coreBundle internalBody13124–133 waits _finishedPromise then getResponseBody callback.",
+      "Chromium _onLoadingFailed35969–593 calls response._requestFinished and report requestFailed for existing response; posthoc body attempt can follow failure.",
+      "Exact protocol types8235–293 allow Fetch.getResponseBody only response-paused; await entire body before request-affecting commands/Fetch.disable. Unmodified Fetch.continueResponse({requestId}) keeps original status/headers. Redirect bodies unavailable.",
+      "Network.streamResourceContent13109–122 exposes bufferedData and subsequent dataReceived; any proposed capture must prove bounded full correlation."
+    ],
+    "qualification": "Protocol/driver reading supports a possible bounded original-response diagnostic, not an actual browser proof or cause/fix certification. Route-fetched clone/fulfill does not attest original browser body."
+  },
+  "screenshot": {
+    "filename": "failure.png",
+    "bytes": 429673,
+    "sha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014",
+    "dimensions": [
+      1440,
+      2443
+    ],
+    "independentlyViewed": true,
+    "finding": "Initial baseline0/seed1,8living,4complete observed charts,24run matrix, historical source/world30/chamber1/build_attestation=false and honest marker/data qualifications; no obvious private image content. Does not accept later layouts/scientific/browser gates."
+  },
+  "sandbox": {
+    "actualArgvChecked": true,
+    "chromiumSandbox": true,
+    "extraArgs": [
+      "--enable-automation"
+    ],
+    "forbiddenAbsent": [
+      "--no-sandbox",
+      "--no-zygote-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-namespace-sandbox",
+      "--disable-seccomp-filter-sandbox",
+      "--disable-gpu-sandbox",
+      "--allow-sandbox-debugging",
+      "--single-process",
+      "--ignore-gpu-blocklist",
+      "--disable-web-security"
+    ],
+    "qualification": "Official pinned Chromium launch contract only; stock SwiftShader/hardware/kernel isolation qualifications unchanged"
+  },
+  "privacy": {
+    "utf8Files": 9,
+    "utf8Bytes": 2044409,
+    "binaryMembersSkipped": 4,
+    "individualDecodeCapBytes": 16777216,
+    "totalDecodeCapBytes": 67108864,
+    "candidateCounts": {
+      "credential": 0,
+      "authorization": 0,
+      "cookieHeaders": 0,
+      "privateOldContext": 0
+    },
+    "sensitiveNetworkHeaders": [],
+    "actualPNGViewed": 1,
+    "qualification": "Bounded obvious credential/auth/cookie/private-old-context scan and visual inspection; no full-secret guarantee, no values published."
+  },
+  "requiredRemainingGates": [
+    "Preserve original1be/600/79 FAIL independently; no partial or source-only release PASS.",
+    "Only root/Astra-approved one bounded evidence-only transport diagnostic after independent workflow/script review; no model/native browser locally.",
+    "If a diagnostic source change is chosen, preserve original browser bodies, runtime errors, sandbox/identity/bounds; no generic ERR_ABORTED or ProtocolNoData waiver.",
+    "Any final product candidate still requires fresh full9LAB protected actualbrowser acceptance/all7PNG/bodypins/cleanup and fullCI before guarded merge."
+  ],
+  "reviewActions": "Read-only original/source/trace/Pillow/view_image/public driver source; wrote only named own review JSON/MD. No product/original mutation, install, browser/Cargo/model/test rerun."
+}
