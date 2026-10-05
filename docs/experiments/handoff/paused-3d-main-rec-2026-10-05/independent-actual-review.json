@@ -1,0 +1,1024 @@
+{
+  "schema_version": 1,
+  "kind": "independent_main_rec_dense_public_actual_evidence_review",
+  "reviewed_at_utc": "2026-10-05T04:50:38.084192+00:00",
+  "status": "PASS",
+  "verdict": "qualified_0_blockers",
+  "blockers": [],
+  "scope": "Read-only independent acceptance review of these three original protected-worker artifacts; no launch, product edit, CI transition, model execution, download replay, or LAB interoperability audit.",
+  "identity": {
+    "source_head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+    "source_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+    "main_tree_byte_identical_to_source_83fa": true,
+    "workflow_run": 37263650472,
+    "workflow_attempt": "1",
+    "recorded_job": 111615835795,
+    "recorded_job_completed_success": "Coordinator-provided official metadata; report run/head/tree independently matched to the original ZIPs. No separate API query in this review.",
+    "overall_ci_status": "NOT_REVIEWED"
+  },
+  "input_receipt": {
+    "path": "/workspace/liminis-evidence/paused-3d-main-originals/originals-byte-receipts.json",
+    "sha256": "abffc0a8ad7eb4df862bc2ae8e10aed4f9f041190b695101d600dd8d87157ee4",
+    "use": "External original-byte pins; all three scoped ZIP/member/trace hashes and CRC independently reread here."
+  },
+  "originals": [
+    {
+      "id": 11325478162,
+      "name": "recorded-browser-e2fd620baa492b2c2ff4316d2f083ac3e78bc252-1",
+      "local_path": "/workspace/attachments/632baeeb-c4b7-4ccf-b770-f3d288c2ca67/recorded-browser-e2fd620-original.zip",
+      "bytes": 12616518,
+      "sha256": "e6a5d33458fff1594349ca08c2fb1a22de5f93e8b4abff4a87e9daa8566cca53",
+      "extract_path": "/workspace/liminis-evidence/paused-3d-main-originals/recorded-browser",
+      "outer_members": [
+        {
+          "path": "cell-chamber-100k-desktop.png",
+          "bytes": 114558,
+          "sha256": "736056bd50439519fdfbef8a29962c44e8843b28d4ed300a6fed168a9017c2c2"
+        },
+        {
+          "path": "cell-chamber-10k-desktop.png",
+          "bytes": 106211,
+          "sha256": "ffb1eada5d0310b3c4de687a8a12b42ca035adbf9cf10283f9effc59550e65e4"
+        },
+        {
+          "path": "cell-chamber-1m-desktop.png",
+          "bytes": 115603,
+          "sha256": "62fb47d3b5518dd8adb6c0f503adfec46c039b04b1ea056da18cd7a083fe657f"
+        },
+        {
+          "path": "desktop-short.png",
+          "bytes": 85576,
+          "sha256": "3231b145d2b9b7e216552754d859d98fc3e0761fb8c3235e3bed2af8e8c6ae59"
+        },
+        {
+          "path": "evidence.json",
+          "bytes": 19802,
+          "sha256": "e57e0480808100d108b87c2b0f60ae8a763830ff695736668f4922b4b26fe657"
+        },
+        {
+          "path": "held-30fps.png",
+          "bytes": 27470,
+          "sha256": "b7803f89d00ba65682e658394f14a8cd8e527a0bc84cd279c67623cf6ed56aca"
+        },
+        {
+          "path": "held-60fps.png",
+          "bytes": 27470,
+          "sha256": "b7803f89d00ba65682e658394f14a8cd8e527a0bc84cd279c67623cf6ed56aca"
+        },
+        {
+          "path": "mobile-narrow.png",
+          "bytes": 131177,
+          "sha256": "fe4d179c441df1c702774ae844648d91b3b50d830aab17906a471b46b22fb8fa"
+        },
+        {
+          "path": "mobile.png",
+          "bytes": 134675,
+          "sha256": "35d77f5fd6f1885cab285e0fcbd8f8884e2402b54005571cd760b18bc7354aec"
+        },
+        {
+          "path": "trace.zip",
+          "bytes": 13198539,
+          "sha256": "065f237367000444338260b4577b48a2023958e79f230fdf30a008e2eef8c68e"
+        }
+      ],
+      "outer_crc": "PASS",
+      "outer_inventory_paths_duplicates_symlinks": "PASS",
+      "extract_bytes_equal_original_members": "PASS",
+      "evidence_sha256": "e57e0480808100d108b87c2b0f60ae8a763830ff695736668f4922b4b26fe657",
+      "evidence_bytes": 19802,
+      "source_run_and_tree_binding": "PASS",
+      "nested_trace": {
+        "status": "PASS",
+        "filename": "trace.zip",
+        "coverage": "Browser actions/network; Node assertion results are recorded in checks.",
+        "bytes": 13198539,
+        "sha256": "065f237367000444338260b4577b48a2023958e79f230fdf30a008e2eef8c68e",
+        "crc": "PASS",
+        "inventory_paths_duplicates_symlinks": "PASS"
+      },
+      "all_report_checks": "PASS",
+      "reported_checks": 22,
+      "png_count": 8
+    },
+    {
+      "id": 11325581575,
+      "name": "dense-recording-browser-e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+      "local_path": "/workspace/attachments/ec2cd3d3-8644-4c90-951f-00bb78aed1a2/dense-recording-browser-e2fd620-original.zip",
+      "bytes": 16608101,
+      "sha256": "c81d16c90616d57d6da404abc127082b4b3bb3a876714b34530c462def6633b2",
+      "extract_path": "/workspace/liminis-evidence/paused-3d-main-originals/dense-recording-browser",
+      "outer_members": [
+        {
+          "path": "dense-desktop-short.png",
+          "bytes": 288536,
+          "sha256": "03704a973e7b0d254b68272d6398129db1f6184c976d81300842c438cd4dcd67"
+        },
+        {
+          "path": "dense-desktop.png",
+          "bytes": 331324,
+          "sha256": "3de83104a468de1faff572cee660da3abbcc71e574aef73fcf5f332da3c97ac7"
+        },
+        {
+          "path": "dense-million-end.png",
+          "bytes": 230938,
+          "sha256": "cfbbfe29d4ba980f29589ead36ccac170684e413e03bec76d5ac38b781885c9e"
+        },
+        {
+          "path": "dense-mobile-narrow.png",
+          "bytes": 236238,
+          "sha256": "5f9c88417dfd5494f6bbf9dbac50eade566628d20f58652367882699af77f5ab"
+        },
+        {
+          "path": "dense-mobile.png",
+          "bytes": 251613,
+          "sha256": "0b0020789f5b214e0e2f24a0a173bb0fe512c5a6c925d8214c40332441249b52"
+        },
+        {
+          "path": "report.json",
+          "bytes": 155327,
+          "sha256": "7c4b17cd5b6fc2f2b91f08123aa652f07d251807980aa6671f050bb52e32a7fc"
+        },
+        {
+          "path": "trace.zip",
+          "bytes": 15309513,
+          "sha256": "cc751432e219120bbd595f8bd92fed18caafe78179e61336af8dbcfd7accc44f"
+        }
+      ],
+      "outer_crc": "PASS",
+      "outer_inventory_paths_duplicates_symlinks": "PASS",
+      "extract_bytes_equal_original_members": "PASS",
+      "evidence_sha256": "7c4b17cd5b6fc2f2b91f08123aa652f07d251807980aa6671f050bb52e32a7fc",
+      "evidence_bytes": 155327,
+      "source_run_and_tree_binding": "PASS",
+      "nested_trace": {
+        "status": "PASS",
+        "filename": "trace.zip",
+        "bytes": 15309513,
+        "sha256": "cc751432e219120bbd595f8bd92fed18caafe78179e61336af8dbcfd7accc44f",
+        "crc": "PASS",
+        "inventory_paths_duplicates_symlinks": "PASS"
+      },
+      "all_report_checks": "PASS",
+      "reported_checks": 14,
+      "png_count": 5
+    },
+    {
+      "id": 11326070197,
+      "name": "public-playback-e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+      "local_path": "/workspace/attachments/08896089-36df-4650-9c82-a2625425574a/public-playback-e2fd620-original.zip",
+      "bytes": 5704503,
+      "sha256": "a0af87ecffc69d9138a5f0cd97a886d1ca24c8a46d4e1669adea44d4b597a4ff",
+      "extract_path": "/workspace/liminis-evidence/paused-3d-main-originals/public-playback",
+      "outer_members": [
+        {
+          "path": "desktop-default.png",
+          "bytes": 117579,
+          "sha256": "598fcb148c7dc84a1498ea44cdc4377f9e4d81aa492f5e8e5e709b027e9e710b"
+        },
+        {
+          "path": "desktop-observe-raw.html",
+          "bytes": 7261,
+          "sha256": "47d1c84479b19c2025ddb8d273bf85d824c8aaf28f46a9043e475e015dea396a"
+        },
+        {
+          "path": "evidence.json",
+          "bytes": 68384,
+          "sha256": "bc475afde241399d6849fe26bdbc7007a617a874159c0cd65a8983fd5f224385"
+        },
+        {
+          "path": "mobile-default.png",
+          "bytes": 165522,
+          "sha256": "643fda0bf37625d3446271550e667306060ccab90b8ee9d7be48065df2428954"
+        },
+        {
+          "path": "mobile-observe-raw.html",
+          "bytes": 7261,
+          "sha256": "47d1c84479b19c2025ddb8d273bf85d824c8aaf28f46a9043e475e015dea396a"
+        },
+        {
+          "path": "trace.zip",
+          "bytes": 5464207,
+          "sha256": "bacfa960e6b21c10096395e08b4429471bd83cb2294acd0de715e1badd143a54"
+        }
+      ],
+      "outer_crc": "PASS",
+      "outer_inventory_paths_duplicates_symlinks": "PASS",
+      "extract_bytes_equal_original_members": "PASS",
+      "evidence_sha256": "bc475afde241399d6849fe26bdbc7007a617a874159c0cd65a8983fd5f224385",
+      "evidence_bytes": 68384,
+      "source_run_and_tree_binding": "PASS",
+      "nested_trace": {
+        "status": "PASS",
+        "filename": "trace.zip",
+        "coverage": "Actual public browser actions, responses, snapshots and screenshots; Node fetch observations are in evidence.json.",
+        "bytes": 5464207,
+        "sha256": "bacfa960e6b21c10096395e08b4429471bd83cb2294acd0de715e1badd143a54",
+        "crc": "PASS",
+        "inventory_paths_duplicates_symlinks": "PASS"
+      },
+      "all_report_checks": "PASS",
+      "reported_checks": 4,
+      "png_count": 2
+    }
+  ],
+  "original_zip_total_bytes": 34929122,
+  "source_and_trace": {
+    "git_object_and_clean_main_checkout": "PASS",
+    "all_source_pin_entries_recomputed_from_exact_main_git_blobs": 47,
+    "qa_scripts": [
+      {
+        "path": "site/playback.browser.mjs",
+        "bytes": 30320,
+        "sha256": "4ea59640417ecde91154a68bd5189e035bb0d937f9ade06d04241c8e85ddab21"
+      },
+      {
+        "path": "scripts/check_dense_recording_browser.mjs",
+        "bytes": 65135,
+        "sha256": "2458878a2db655f5e9d6c396d11dd683ce4f7f384c3692abf358795c1609e1a1"
+      },
+      {
+        "path": "scripts/check_public_recording_browser.mjs",
+        "bytes": 42579,
+        "sha256": "aa56ce8ab6b5e4573fdc3b3125fb7c4046e8eb2f093120db82f0beb9a458c7fe"
+      }
+    ],
+    "embedded_trace_qa_source_bytes_equal_exact_git_script": "PASS",
+    "trace_stacks_name_exact_qa_script": "PASS",
+    "completed_trace_action_errors": 0,
+    "trace_captured_bodies": {
+      "recorded-browser": {
+        "captured": 55,
+        "original_source_bodies": 52,
+        "authorized_negative_bodies": 3,
+        "uncaptured_network_entries": 84
+      },
+      "dense-recording-browser": {
+        "captured": 46,
+        "original_source_bodies": 44,
+        "explicit_synthetic_harness_bodies": 2,
+        "uncaptured_network_entries": 27
+      },
+      "public-playback": {
+        "captured": 16,
+        "exact_original_or_pinned_hosting_html_bodies": 16,
+        "uncaptured_network_entries": 16
+      }
+    },
+    "captured_body_sha1_size_and_exact_source_byte_checks": "PASS",
+    "uncaptured_body_qualification": "Trace does not retain every JavaScript response body. Those bindings additionally use the exact-source protected QA body/served-byte SHA observations; no claim that every response body can be reconstructed from trace alone."
+  },
+  "recorded_acceptance": {
+    "status": "PASS",
+    "checks": 22,
+    "recording_byte_pins": [
+      {
+        "id": "cell-chamber-10k",
+        "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+        "bytes": 6047570
+      },
+      {
+        "id": "cell-chamber-100k",
+        "sha256": "b8db46c1dc83f8cd642ee2a3bd7913890e6868e265c61a8d390797399b37a4c9",
+        "bytes": 5356325
+      },
+      {
+        "id": "cell-chamber-1m",
+        "sha256": "ee236189e9b6891599bc428aefb0e4b892c7397e712bcf045f7db14a5bc4061d",
+        "bytes": 5312311
+      }
+    ],
+    "all_three_actual_archive_download_byte_pins": "PASS",
+    "http_local_server_counter_checks": 17,
+    "http_checks_all_pass": true,
+    "http_remote_equivalence_not_claimed": true,
+    "controls": "Real wall-time 1x hold, pause/resume, rate changes, invalid inputs, seek, previous/next archived sample, draw30/60 endpoint and explicit replay are completed exact-source QA assertions with successful trace actions.",
+    "held_canvas_30_60_png_sha256": "b7803f89d00ba65682e658394f14a8cd8e527a0bc84cd279c67623cf6ed56aca",
+    "held_canvas_raw_pixel_sha256": "7b2d91e129b3caae433ffc012d46ed579d4ab0ec89e8ee04ef50b3942b5bb2ca",
+    "negative_cases": "Trace bodies independently matched exact last-byte XOR corruption and schema999 plus its otherwise unchanged integrity-valid catalog. Unknown experiment has no recording request.",
+    "viewports": [
+      "1440x900",
+      "1366x600",
+      "390x844",
+      "320x760"
+    ],
+    "pngs_visually_reviewed": 8,
+    "visibility_scope": "Synthetic event cancellation only; native hidden/background scheduling not asserted."
+  },
+  "dense_acceptance": {
+    "status": "PASS",
+    "checks": 14,
+    "tiny_actual_native_trace_results": 101,
+    "tiny_sequential_tick_range": [
+      0,
+      100
+    ],
+    "tiny_independent_python_reference_comparisons_recorded_by_exact_qa": 101,
+    "archival_control_ticks_independently_compared_from_trace_to_git_json_binary64_and_exact_strings": [
+      0,
+      50,
+      100
+    ],
+    "known_control_genome_entries_exact": true,
+    "tiny_residuals": "Genesis null; following100 actual frames have exact matter=\"0\",energy=\"0\" strings.",
+    "fixture_qualification": {
+      "schema_version": 1,
+      "kind": "partial_saved_artifact_browser_fixture",
+      "complete_recording": false,
+      "label": "PARTIAL: original 100k metadata and only two original chunks; not a complete 100k recording",
+      "producer_commit": "bd2a7f25e61abd713109171fc25b7c3de86003ab",
+      "source_index_sha256": "603b6f3b62448c2dc6cd6abe976c77ffbb9aad83f9c143813785137e4f71a370",
+      "source_horizon": 100000,
+      "source_chunks": 393,
+      "included_chunks": 2,
+      "original_bytes": 1504219,
+      "files": [
+        {
+          "path": "index.json",
+          "bytes": 1798,
+          "sha256": "603b6f3b62448c2dc6cd6abe976c77ffbb9aad83f9c143813785137e4f71a370"
+        },
+        {
+          "path": "horizon-10000.json",
+          "bytes": 18449,
+          "sha256": "a08ecd054f85fbeb06c52b868ef604d39c1d8563231cec76dc33420a5e611c8d"
+        },
+        {
+          "path": "horizon-100000.json",
+          "bytes": 124764,
+          "sha256": "7da1efd07473e15af331c060341fcb75fdcc911e60a5be9347423f9791442bcd"
+        },
+        {
+          "path": "chunk-0000000-0000255.jsonl.gz",
+          "bytes": 312818,
+          "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+        },
+        {
+          "path": "chunk-0000768-0000992.jsonl.gz",
+          "bytes": 1046390,
+          "sha256": "8acb535328f123b618f0d9d86044a8d3a0c0cac66c85143b0bcfa5aeed468f4c"
+        }
+      ]
+    },
+    "corruption": {
+      "rawGzipBytes": 53607,
+      "rawGzipSha256": "4eb60f6866110a40314247613779e5a38308b2d240836f79040bf548525e9821",
+      "contentEncoding": null,
+      "results": [
+        {
+          "name": "sha",
+          "refused": true,
+          "error": "Dense recording: gzip integrity mismatch"
+        },
+        {
+          "name": "crc",
+          "refused": true,
+          "error": "The compressed data was not valid: incorrect data check."
+        },
+        {
+          "name": "truncated",
+          "refused": true,
+          "error": "Dense recording: truncated deflate"
+        },
+        {
+          "name": "trailing-member",
+          "refused": true,
+          "error": "Dense recording: trailing bytes or multiple gzip members"
+        }
+      ]
+    },
+    "largest_saved_chunk": {
+      "elapsedMs": 3653,
+      "gzipBytes": 1046390,
+      "decodedBytes": 4135813,
+      "records": 225,
+      "controlTicks": [
+        0,
+        50,
+        100,
+        768,
+        992
+      ],
+      "heapObservation": {
+        "usedSize": 14284748,
+        "totalSize": 47448064,
+        "embedderHeapUsedSize": 835248,
+        "backingStorageSize": 42434
+      },
+      "heapQualification": "One CDP snapshot, not peak or universal device memory",
+      "timer": {
+        "intervalMs": 10,
+        "samples": 358,
+        "maxGapMs": 444.3999999999942
+      },
+      "stats": {
+        "retainedChunks": 1,
+        "cachedChunks": 1,
+        "loadingChunks": 0,
+        "maxRetainedChunks": 1,
+        "retainedFrames": 1,
+        "currentTick": 768,
+        "closed": false,
+        "failed": false,
+        "notificationFailed": false
+      }
+    },
+    "cancel_and_disposal": {
+      "request_failure_count": 7,
+      "explicit_cancel_count": 4,
+      "native_full_EOF_count_before_finally_cleanup_count": 3,
+      "unique_CDP_native_call_Playwright_identity_bijection": "PASS",
+      "independently_checked_clock_quantization_allowance_ms": 1,
+      "fetch_or_body_failure_before_signal": 0,
+      "request_observation_pages": 5,
+      "final_classifier_phase": "after bounded cleanup and settlement",
+      "superseded_trace_state": {
+        "prior_seek_result": "AbortError",
+        "committed_tick": 992,
+        "failed": false
+      },
+      "closed_trace_state": {
+        "pending_seek_result": "AbortError",
+        "current": null,
+        "retained_chunks": 0
+      },
+      "uninstrumented": {
+        "status": "PASS",
+        "nativePromiseObservers": false,
+        "nativeReaderWrappers": false,
+        "preAbortedDataRequests": 0,
+        "caughtMidBody": "AbortError",
+        "productionUnhandled": 0,
+        "responseBytes": "Actual first 16 original saved index bytes, unchanged",
+        "sensitivityControl": {
+          "expectedEvents": 1,
+          "actualEvents": 1,
+          "exactReasonIdentity": true,
+          "unexpectedEvents": 0,
+          "label": "Synthetic native ReadableStream error-channel sensitivity control"
+        }
+      }
+    },
+    "atomic_boundary": {
+      "fromTick": 255,
+      "toTick": 256,
+      "oldPixelSha256": "27bcead9b5246c82e52f3f63cebd9eac2fb37605dcf91a647debebd1a2a2d45e",
+      "oldInspectorId": "57",
+      "heldDuringBuffer": true,
+      "delayExcludedFromPlayhead": true
+    },
+    "delayed_original": {
+      "url": "http://127.0.0.1:38539/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+      "status": "RELEASED",
+      "bytes": 917524,
+      "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1",
+      "fabricatedBytes": false
+    },
+    "physical_1x_hold": {
+      "tick": 992,
+      "rate": 1,
+      "targets": [
+        30,
+        60
+      ],
+      "requestedHoldMs": 1400,
+      "measuredWallMs": 1573,
+      "wallMeasurement": "Browser performance.now() at actual Play and Pause click events; includes intervening commands",
+      "browserClickTimesMs": [
+        8980.299999999988,
+        10553.299999999988
+      ],
+      "modelSecondsAdvanced": 1.5730000000003201,
+      "toleranceSeconds": 0.1,
+      "fromPlayhead": 29760,
+      "toPlayhead": 29761.573,
+      "pixelSha256": "079a9e811bf75e7b62da7a186cb7dbbe17472bf95cb3954e50468da056165404",
+      "httpRequests": 0
+    },
+    "local_endpoints": [
+      {
+        "horizon": 100000,
+        "shownTick": 100000,
+        "chunkRequests": 3,
+        "method": "actual DOM/canvas and original archival endpoint values"
+      },
+      {
+        "horizon": 1000000,
+        "shownTick": 1000000,
+        "chunkRequests": 3,
+        "method": "actual DOM/canvas and original archival endpoint values"
+      }
+    ],
+    "ten_k_chunk_requests": 10,
+    "local_served_bytes": 33393079,
+    "local_served_bytes_cap": 100663296,
+    "local_requests": 72,
+    "local_methods": "GET only",
+    "local_statuses": "200 only",
+    "page_console_node_and_cleanup_errors": 0,
+    "pngs_visually_reviewed": 5,
+    "precision_provenance": "Archive world30/chamber1/seed42/dt30 retained; dense engine_ref b2024cef..., legacy recording_ref43f4a2df..., actual producer bb70c9eb... distinct from viewer MAIN; build_attestation=false. No new biology or checkpoint claim."
+  },
+  "public_acceptance": {
+    "status": "PASS",
+    "checks": 4,
+    "public_base": "https://liminis.dev/",
+    "node_https_verified_assets": [
+      {
+        "filename": "observe.html",
+        "url": "https://liminis.dev/observe.html",
+        "expectedBytes": 6894,
+        "expectedSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+        "status": "PASS",
+        "redirects": [
+          {
+            "from": "https://liminis.dev/observe.html",
+            "status": 307,
+            "to": "https://liminis.dev/observe"
+          }
+        ],
+        "finalUrl": "https://liminis.dev/observe",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": null,
+        "lastModified": null,
+        "bytes": 6894,
+        "sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d"
+      },
+      {
+        "filename": "observer.js",
+        "url": "https://liminis.dev/observer.js",
+        "expectedBytes": 30075,
+        "expectedSha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/observer.js",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"59b0b60dd5223742cf17378d1b3d302b\"",
+        "lastModified": null,
+        "bytes": 30075,
+        "sha256": "2abeaf2f98933d99eb103a5181d5c261488b657dd133b52655049e000bdd4422"
+      },
+      {
+        "filename": "observer.css",
+        "url": "https://liminis.dev/observer.css",
+        "expectedBytes": 7408,
+        "expectedSha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/observer.css",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"e0a819c8d100c06bf7fe567e9ea85b43\"",
+        "lastModified": null,
+        "bytes": 7408,
+        "sha256": "7e314cd1162471cbfb7408ccd93ef7d3b3538f7b6be76881f56a7843d1197347"
+      },
+      {
+        "filename": "playback.mjs",
+        "url": "https://liminis.dev/playback.mjs",
+        "expectedBytes": 10351,
+        "expectedSha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/playback.mjs",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"2850aa20d2ca44dc599be29b4834d822\"",
+        "lastModified": null,
+        "bytes": 10351,
+        "sha256": "8a4eb35fec8443208a7039d457683786521fb75ea28d19cecc725f30aa41db37"
+      },
+      {
+        "filename": "recording-loader.mjs",
+        "url": "https://liminis.dev/recording-loader.mjs",
+        "expectedBytes": 3190,
+        "expectedSha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/recording-loader.mjs",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"1facb6aa6e68ce11e20205e269f59088\"",
+        "lastModified": null,
+        "bytes": 3190,
+        "sha256": "2d0e17c9f98f711ee82988a1d05f3659c7571fd2f0ccb22f8829933171561241"
+      },
+      {
+        "filename": "recording.mjs",
+        "url": "https://liminis.dev/recording.mjs",
+        "expectedBytes": 5021,
+        "expectedSha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/recording.mjs",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"bebaf2833dc0239118df6dc57bd66f3b\"",
+        "lastModified": null,
+        "bytes": 5021,
+        "sha256": "107715baec89d9ac05309f1d889e53f2fd6345e8739b49c051a861733b944334"
+      },
+      {
+        "filename": "dense-recording.mjs",
+        "url": "https://liminis.dev/dense-recording.mjs",
+        "expectedBytes": 41209,
+        "expectedSha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/dense-recording.mjs",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"cdefe196c00d29a928b3c1d14c9b9c69\"",
+        "lastModified": null,
+        "bytes": 41209,
+        "sha256": "b801a98b1dc07fb3fffbcc277b29e0d50faf17ac1d97b51d45dc76004a42949f"
+      },
+      {
+        "filename": "catalog.mjs",
+        "url": "https://liminis.dev/catalog.mjs",
+        "expectedBytes": 4345,
+        "expectedSha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/catalog.mjs",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"f4ee9cfaf807cee2d46215f04e9a97a9\"",
+        "lastModified": null,
+        "bytes": 4345,
+        "sha256": "87ec74f6b00b74b08c34b5473d3c1943e98506d727f624347f7e630a26e14602"
+      },
+      {
+        "filename": "data/catalog.json",
+        "url": "https://liminis.dev/data/catalog.json",
+        "expectedBytes": 116490,
+        "expectedSha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/catalog.json",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"a186177c71c6165bb76650a26d1cd132\"",
+        "lastModified": null,
+        "bytes": 116490,
+        "sha256": "c9cf27a69cae41bf1b22f08066dde73535191a7a334eb6f01a16bd94e886fcb3"
+      },
+      {
+        "filename": "data/cell-chamber-seed-42.json",
+        "url": "https://liminis.dev/data/cell-chamber-seed-42.json",
+        "expectedBytes": 6047570,
+        "expectedSha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/cell-chamber-seed-42.json",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"854e45daa5f075832543f362250b2ded\"",
+        "lastModified": null,
+        "bytes": 6047570,
+        "sha256": "6d17cac2d95fe9d3d007866d7cf72ddf14e945bbe4c060591f961f305656a1f1"
+      },
+      {
+        "filename": "data/dense-cell-chamber/index.json",
+        "url": "https://liminis.dev/data/dense-cell-chamber/index.json",
+        "expectedBytes": 1977,
+        "expectedSha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/index.json",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"7f23a9ecda316c6f8239bf8a02da3cdf\"",
+        "lastModified": null,
+        "bytes": 1977,
+        "sha256": "c7d78508ccaf00729c20decd595ea0a3256e053a5562d35a58d68748e20b015b"
+      },
+      {
+        "filename": "data/dense-cell-chamber/horizon-10000.json",
+        "url": "https://liminis.dev/data/dense-cell-chamber/horizon-10000.json",
+        "expectedBytes": 18860,
+        "expectedSha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/horizon-10000.json",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"e2511c3573ca5b5b1b6edefbd64d86b3\"",
+        "lastModified": null,
+        "bytes": 18860,
+        "sha256": "d4545d4663e249f8401f3f7ef84b8e7dfd6febe6c332b5a186830bc766f7eabb"
+      },
+      {
+        "filename": "data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+        "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+        "expectedBytes": 312818,
+        "expectedSha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000000-0000255.jsonl.gz",
+        "httpStatus": 200,
+        "contentLength": "312818",
+        "etag": "\"a783982649bd5756e0b22af47d6b5e10\"",
+        "lastModified": null,
+        "bytes": 312818,
+        "sha256": "6328ef9d314ba73acfb72e4b9ee710259255a3734a1461b5d5cf631ca71d0968"
+      },
+      {
+        "filename": "data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+        "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+        "expectedBytes": 917524,
+        "expectedSha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0000256-0000511.jsonl.gz",
+        "httpStatus": 200,
+        "contentLength": "917524",
+        "etag": "\"287c1ad97f0b66c1a8038a88ca513f5c\"",
+        "lastModified": null,
+        "bytes": 917524,
+        "sha256": "24e05e658b8658d276a4af43d8e03c76c7398a2a08fd5da5640db73a57819de1"
+      },
+      {
+        "filename": "data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz",
+        "url": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz",
+        "expectedBytes": 288747,
+        "expectedSha256": "5d4ecd6006dec3d74816cbc95da9d9ca036e8761094d1aef944e79531e43108e",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz",
+        "httpStatus": 200,
+        "contentLength": "288747",
+        "etag": "\"819fd6e48813a13e0df583dfa8a5d175\"",
+        "lastModified": null,
+        "bytes": 288747,
+        "sha256": "5d4ecd6006dec3d74816cbc95da9d9ca036e8761094d1aef944e79531e43108e"
+      },
+      {
+        "filename": "data/dense-cell-chamber/horizon-100000.json",
+        "url": "https://liminis.dev/data/dense-cell-chamber/horizon-100000.json",
+        "expectedBytes": 128695,
+        "expectedSha256": "10813cdd0fb88921fd62d4db7701d068e00135ae01dcc8213dff3f0d6d627858",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/horizon-100000.json",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"58c0fe2f84f6b184503d77484f507f68\"",
+        "lastModified": null,
+        "bytes": 128695,
+        "sha256": "10813cdd0fb88921fd62d4db7701d068e00135ae01dcc8213dff3f0d6d627858"
+      },
+      {
+        "filename": "data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz",
+        "url": "https://liminis.dev/data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz",
+        "expectedBytes": 275423,
+        "expectedSha256": "906f92d9637b83e5b8cd2893c1ba7520049581618b2922abf1011f985d3e3e43",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz",
+        "httpStatus": 200,
+        "contentLength": "275423",
+        "etag": "\"ba6cbd48a7c1850cca7131a2f6b615b0\"",
+        "lastModified": null,
+        "bytes": 275423,
+        "sha256": "906f92d9637b83e5b8cd2893c1ba7520049581618b2922abf1011f985d3e3e43"
+      },
+      {
+        "filename": "data/dense-cell-chamber/horizon-1000000.json",
+        "url": "https://liminis.dev/data/dense-cell-chamber/horizon-1000000.json",
+        "expectedBytes": 1229207,
+        "expectedSha256": "ab3849199d73f8d535fdc48dba299000efb64b3433491ff3e260a51fd729ea74",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/horizon-1000000.json",
+        "httpStatus": 200,
+        "contentLength": null,
+        "etag": "W/\"59afea41eab0ebb066b5c5488c2935ff\"",
+        "lastModified": null,
+        "bytes": 1229207,
+        "sha256": "ab3849199d73f8d535fdc48dba299000efb64b3433491ff3e260a51fd729ea74"
+      },
+      {
+        "filename": "data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz",
+        "url": "https://liminis.dev/data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz",
+        "expectedBytes": 414483,
+        "expectedSha256": "fb31b92d9e8590a69655fb76f2de6ffa82018e973ef3c6aca8af8ffbf1be455b",
+        "status": "PASS",
+        "redirects": [],
+        "finalUrl": "https://liminis.dev/data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz",
+        "httpStatus": 200,
+        "contentLength": "414483",
+        "etag": "\"bf1fed819b2402dd5c3ab2be09b6c256\"",
+        "lastModified": null,
+        "bytes": 414483,
+        "sha256": "fb31b92d9e8590a69655fb76f2de6ffa82018e973ef3c6aca8af8ffbf1be455b"
+      }
+    ],
+    "node_https_asset_count": 19,
+    "node_https_attempts": 1,
+    "browser_asset_count_per_viewport": 14,
+    "browser_response_body_read_count": 28,
+    "bounded_final_chunk_pins": [
+      {
+        "id": "cell-chamber-10k",
+        "horizon": 10000,
+        "filenames": [
+          "data/dense-cell-chamber/index.json",
+          "data/dense-cell-chamber/horizon-10000.json",
+          "data/dense-cell-chamber/chunks/00/chunk-0009890-0010000.jsonl.gz"
+        ],
+        "scope": "Node HTTPS metadata and final-chunk byte pins; no public endpoint rendering or whole-dataset download"
+      },
+      {
+        "id": "cell-chamber-100k",
+        "horizon": 100000,
+        "filenames": [
+          "data/dense-cell-chamber/index.json",
+          "data/dense-cell-chamber/horizon-100000.json",
+          "data/dense-cell-chamber/chunks/01/chunk-0099857-0100000.jsonl.gz"
+        ],
+        "scope": "Node HTTPS metadata and final-chunk byte pins; no public endpoint rendering or whole-dataset download"
+      },
+      {
+        "id": "cell-chamber-1m",
+        "horizon": 1000000,
+        "filenames": [
+          "data/dense-cell-chamber/index.json",
+          "data/dense-cell-chamber/horizon-1000000.json",
+          "data/dense-cell-chamber/chunks/15/chunk-0999841-1000000.jsonl.gz"
+        ],
+        "scope": "Node HTTPS metadata and final-chunk byte pins; no public endpoint rendering or whole-dataset download"
+      }
+    ],
+    "all_five_observed_gzip_asset_source_bytes_header_crc_single_member_decoded_size_digest": "PASS",
+    "default": "cell-chamber-10k dense,10001 actual states/every tick",
+    "viewport_results": [
+      {
+        "name": "desktop",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "heldSamples": [
+          {
+            "drawTarget": 30,
+            "playhead": 1.148,
+            "modelSecondsAdvanced": 1.148,
+            "wallSeconds": 1.148100000000006,
+            "shownTime": 0,
+            "shownTick": 0,
+            "canvasSha256": "7b2d91e129b3caae433ffc012d46ed579d4ab0ec89e8ee04ef50b3942b5bb2ca",
+            "durationAt1x": "3.47 d"
+          },
+          {
+            "drawTarget": 60,
+            "playhead": 2.302,
+            "modelSecondsAdvanced": 1.1540000000000001,
+            "wallSeconds": 1.154100000000006,
+            "shownTime": 0,
+            "shownTick": 0,
+            "canvasSha256": "7b2d91e129b3caae433ffc012d46ed579d4ab0ec89e8ee04ef50b3942b5bb2ca",
+            "durationAt1x": "3.47 d"
+          }
+        ],
+        "nextSample": {
+          "time": 30,
+          "tick": 1,
+          "livingCells": 8
+        },
+        "requestGuard": {
+          "method": "CDP Fetch.requestPaused at Request stage",
+          "allowed": 15,
+          "blocked": 0,
+          "status": "PASS"
+        },
+        "finalization": {
+          "pageClosed": true,
+          "pendingGuardActions": 0,
+          "settledBodyReads": 14,
+          "totalBodyReads": 14,
+          "expectedAnalyticsCount": 1,
+          "finalAnalyticsCount": 1
+        },
+        "redirectResponses": [
+          {
+            "url": "https://liminis.dev/observe.html",
+            "httpStatus": 307,
+            "status": "PASS",
+            "measurement": "Browser canonical redirect headers; no asset byte claim",
+            "target": "https://liminis.dev/observe"
+          }
+        ]
+      },
+      {
+        "name": "mobile",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "heldSamples": [
+          {
+            "drawTarget": 30,
+            "playhead": 1.1521,
+            "modelSecondsAdvanced": 1.1521,
+            "wallSeconds": 1.1523000000000174,
+            "shownTime": 0,
+            "shownTick": 0,
+            "canvasSha256": "7f3d5033497cdc8f8fe734536ef1f1537c3185bbe9bdab54dac1483d6f0f3f01",
+            "durationAt1x": "3.47 d"
+          },
+          {
+            "drawTarget": 60,
+            "playhead": 2.3057,
+            "modelSecondsAdvanced": 1.1536,
+            "wallSeconds": 1.1536000000000057,
+            "shownTime": 0,
+            "shownTick": 0,
+            "canvasSha256": "7f3d5033497cdc8f8fe734536ef1f1537c3185bbe9bdab54dac1483d6f0f3f01",
+            "durationAt1x": "3.47 d"
+          }
+        ],
+        "nextSample": {
+          "time": 30,
+          "tick": 1,
+          "livingCells": 8
+        },
+        "requestGuard": {
+          "method": "CDP Fetch.requestPaused at Request stage",
+          "allowed": 15,
+          "blocked": 0,
+          "status": "PASS"
+        },
+        "finalization": {
+          "pageClosed": true,
+          "pendingGuardActions": 0,
+          "settledBodyReads": 14,
+          "totalBodyReads": 14,
+          "expectedAnalyticsCount": 1,
+          "finalAnalyticsCount": 1
+        },
+        "redirectResponses": [
+          {
+            "url": "https://liminis.dev/observe.html",
+            "httpStatus": 307,
+            "status": "PASS",
+            "measurement": "Browser canonical redirect headers; no asset byte claim",
+            "target": "https://liminis.dev/observe"
+          }
+        ]
+      }
+    ],
+    "every_hop_request_guard": "Exact source enables CDP Fetch Request-stage interception before navigation; same-origin GET permitted, all foreign/nonGET refused, only exact known analytics Script exception intentionally failed before transmission. Observed same-origin paths independently equal declared asset/canonical paths; source guard itself is not claimed to be a strict per-path allowlist.",
+    "read_only_observed_requests": "GET only, no request body/cookies/credential headers; controls add no request through page closure/global final drain. No unexpected blocked requests.",
+    "known_hosting_exception": {
+      "knownEdgeInsertion": {
+        "sourceBytes": 6894,
+        "sourceSha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+        "offset": 6878,
+        "bytes": 367,
+        "sha256": "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
+        "scriptUrl": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495"
+      },
+      "analytics_execution": "not_tested",
+      "policy": "Actual browser HTML is retained; only this exact pinned insertion may differ. Its analytics Script GET is intentionally blocked before transmission."
+    },
+    "independent_raw_html_result": {
+      "raw_bytes": 7261,
+      "raw_sha256": "47d1c84479b19c2025ddb8d273bf85d824c8aaf28f46a9043e475e015dea396a",
+      "offset": 6878,
+      "insertion_bytes": 367,
+      "insertion_sha256": "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
+      "normalized_bytes": 6894,
+      "normalized_sha256": "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
+      "both_raw_files_and_captured_browser_html_equal": true
+    },
+    "analytics_block_count": 2,
+    "analytics_acknowledged_before_transmission": true,
+    "analytics_error_exceptions": "Per viewport exactly one known Script GET net::ERR_BLOCKED_BY_CLIENT.Inspector and corresponding same-URL console error; all other error/failure arrays empty.",
+    "sticky_post_cleanup_revalidation": "Both pages closed; pendingGuardActions0; settledBodyReads=totalBodyReads=14; unchanged verified critical bodies/redirects; no playback requests.",
+    "deployment_identity_qualification": "Observed deployed asset bytes match exact MAIN source pins, with only independently normalized pinned browserHTML insertion. This does not attest the hosting platform deployment Git commit.",
+    "pngs_visually_reviewed": 2
+  },
+  "privacy": {
+    "status": "PASS_WITH_PUBLIC_EVIDENCE_SCOPE",
+    "trace_requests": "All observed network requests are local127.0.0.1 or declared publicliminis.dev plus the exact blocked public analytics URL; GET/noPOST/no requestcookies/noauthorization orcredentialheaders/no signed storageURL.",
+    "retained_html": "Exact known publicanalytics insertion includes its public hosting metadata; analytics execution/telemetry collection was not tested.",
+    "limits": "Page/trace evidence and Request-stage CDP guard do not prove all browser background/kernel networking or kernel isolation."
+  },
+  "visual_review": {
+    "total_pngs": 15,
+    "png_crc_and_pinned_sha": "PASS",
+    "controls_visible_and_scoped_layout_evidence": "PASS",
+    "nonblocking_observation": "At216cells/tick992 dense schematic glyphs intersect the HUD heading/counter text, particularly320/390px. Playback controls remain visible/unobscured. These artifacts support bounded usability/control fit, not a broad uncluttered dense-observer claim."
+  },
+  "limitations": [
+    "No old83fa/5bea actual PASS transferred; this verdict uses only new37263650472 originals.",
+    "No overall MAIN CI or Rust/LIVE/physical/projection/GL verdict in this report.",
+    "No full2.42GB public HTTP download, whole-horizon public rendering, public100k/1M endpoint rendering or fresh full1M decode/model run. Nondefault public horizons are metadata/finalchunk delivery pins only.",
+    "Local100k/1M UI endpoint checks are bounded original-frame summaries/canvas plus archived endpoint equality, not everycell pixel equivalence for entirehorizons.",
+    "Draw30/60 are targets. No achievedhardwareFPS, universal device performance/peakheap, nativebackground scheduling, fullaccessibility/nativeinput or kernelisolation claim.",
+    "LAB21 remains HOLD; LAB interoperability SOURCE audit not begun.",
+    "This report is an evidence review, not a signature/binary/build attestation. Earlier code/data authorship does not serve as acceptance of these independently authored QA artifacts."
+  ]
+}

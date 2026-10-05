@@ -1,0 +1,13 @@
+# Свежая приёмка main: REC, dense и публичная запись
+
+Main e2fd620baa492b2c2ff4316d2f083ac3e78bc252, tree 47ce45646315b09493d58d87ca8fce4dc867aa8d. Protected push run37263650472, recorded job111615835795 SUCCESS. Это новые оригинальные ZIP и независимая приёмка текущего main; прежние runtime PASS не переносились. Общий CI завершён SUCCESS:9 применимых checks SUCCESS,2 существующих PR-only guard штатно SKIPPED на push.
+
+Квалифицированный независимый PASS,0блокеров:REC22,dense14,PUBLIC4checks; все15 PNG просмотрены. Original3ZIP сохранены без перепаковки; их size/SHA, outer/nested CRC, закрытые inventories, source/QA/body/trace pins проверены. Manifest задаёт отдельную группу менее64MiB; normal-network byte readback публикуется отдельно.
+
+Dense: в trace сохранены все101tiny ticks;0/50/100 whole frames и genomes независимо сравнены с исходным GitJSON по binary64 и точным строкам. SHA/CRC/коррупции отказали; семь ERR_ABORTED связаны с четырьмя explicit cancel и тремя полными EOF/count перед cleanup, без общей error allowance. Supersede→current992 и close→currentnull/retained0 подтверждены. При1x модельный playhead1.573s за1.573s wall; state/sample удержан. Local100k/1M endpoint bodies и partial largest fixture явно ограничены.
+
+PUBLIC:19 HTTPS source/metadata/finalgzip pins всех3horizons; browser scope — default14assets на desktop/mobile. Реальны tick0→1 и30s;14/14 final body reads settled на viewport. RawHTML7261B после удаления только exact367B insertion @6878/SHAbbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a побайтно равен GitHTML6894B. Точный analytics GET blocked before-transmission ACK; только соответствующие known expected errors. Origin/method и наблюдавшиеся paths подтверждены; строгий per-path source guard, Git attestation hosting и native background/kernel networking не утверждаются.
+
+Неблокирующее визуальное ограничение:при216cells/tick992 schematic glyphs пересекают HUD heading/counter text, особенно320/390px. Controls видимы и unobscured; общая чистота плотного observer не подтверждена. Некоторые response bodies отсутствуют в trace и привязаны к точным protected QA observations; full trace-only reconstruction не заявлена. Public analytics metadata намеренно публичны в exactHTML. Bounded privacy и просмотр PNG не являются полным secret guarantee.
+
+Нет полного2.42GB public download, public100k/1M render, свежего full1M decode/modelrun, universal performance/peakheap, hardwareFPS или полного accessibility audit. Historicalmain5bea encoded-SHAFAIL остаётся неизвестной причины. LAB21/publicLAB/models сохраняют Astra HOLD; source-only interoperability audit здесь не запускался. Scientific24/raw/source21cbe907/world30 неизменны. Overall LIVE/GL и все архивные readbacks — отдельные gates.

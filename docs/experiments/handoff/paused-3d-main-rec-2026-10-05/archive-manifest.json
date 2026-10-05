@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "Bounded original fresh main REC+dense+public independent evidence",
+  "candidate_head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+  "candidate_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "workflow_run": 37263650472,
+  "artifact_ids": [
+    11325478162,
+    11325581575,
+    11326070197
+  ],
+  "actual_acceptance_scope": "Newmain REC22+dense14+PUBLIC4checks,15newPNG, independent source/body/network/cancel/privacy qualifiedPASS0; other scopes separate",
+  "actual_acceptance": "QUALIFIED_INDEPENDENT_PASS_ZERO_BLOCKERS",
+  "full_ci": "SUCCESS_EXACT_MAIN_9SUCCESS_2_EXPECTED_PR_ONLY_SKIPPED",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 34981219,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3633,
+      "sha256": "51de528d418c72f83e5634ca67607453878d20f3aa80710db693cac09867a068"
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip",
+      "bytes": 16608101,
+      "sha256": "c81d16c90616d57d6da404abc127082b4b3bb3a876714b34530c462def6633b2"
+    },
+    {
+      "path": "independent-actual-review.json",
+      "bytes": 42126,
+      "sha256": "dfbd7b2dfb0a560fc45e700107964d890baaae64ca8f2cc72b5b2546f37a0577"
+    },
+    {
+      "path": "independent-actual-review.md",
+      "bytes": 6338,
+      "sha256": "3a2f39a2ea7e6d2c9c340150cef314bf3d09d51a9fade16cc627fd1aac5ce406"
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip",
+      "bytes": 5704503,
+      "sha256": "a0af87ecffc69d9138a5f0cd97a886d1ca24c8a46d4e1669adea44d4b597a4ff"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip",
+      "bytes": 12616518,
+      "sha256": "e6a5d33458fff1594349ca08c2fb1a22de5f93e8b4abff4a87e9daa8566cca53"
+    }
+  ],
+  "qualifications": [
+    "No83/5bea runtimePASStransfer",
+    "OriginalZIP noRepack; normalnetworkreadback separate",
+    "Public19HTTPSmetadata/finalgzip and default14browserassets perviewport; nofull2.42GBHTTP/nondefault publicrender/hostGit attestation",
+    "DenseHUDoverlap at216cells is nonblocking visual limitation",
+    "Historical5beaFAILcauseunknown/LABHOLD"
+  ]
+}
