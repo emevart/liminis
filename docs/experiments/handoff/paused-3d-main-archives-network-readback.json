@@ -1,0 +1,71 @@
+{
+  "status": "QUALIFIED_FRESH_MAIN_ACCEPTED",
+  "head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+  "tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "workflow_run": 37263650472,
+  "CI": "9SUCCESS_2_EXPECTED_PR_ONLY_SKIPPED",
+  "independent_actual": "REC22_DENSE14_PUBLIC4_LIVE43_GL13_CODE_AND_NUMERICS_ZERO_BLOCKERS",
+  "original_png_reviewed": 46,
+  "groups": [
+    {
+      "kind": "gl",
+      "branch": "codex/paused-3d-main-gl-evidence-20261005",
+      "prefix": "docs/experiments/handoff/paused-3d-main-gl-2026-10-05",
+      "archive_commit": "403b2c5a6a919d1accd605b358a34ddb1a6caff3",
+      "archive_tree": "9f34719ec760a59d1f40b8b7dfb7c919f8ece56f",
+      "manifest_sha256": "e435aac6d168a52aff88d8114af7b1cd94eedde1ec2027192a5788af96952641",
+      "file_count": 14,
+      "total_bytes": 48691647,
+      "original_zip_count": 1,
+      "readback_receipt": "paused-3d-main-gl-network-readback.json",
+      "readback_receipt_sha256": "3c4c80cbf2944fdf3de5fe76bfa7bc0da9a460c78ab67bb97532ac584a9832dc",
+      "closed_inventory_size_sha_original_crc": "PASS"
+    },
+    {
+      "kind": "rec",
+      "branch": "codex/paused-3d-main-rec-evidence-20261005",
+      "prefix": "docs/experiments/handoff/paused-3d-main-rec-2026-10-05",
+      "archive_commit": "0f6a3b04536f6a0a600968b1823e5a2aa51c62e7",
+      "archive_tree": "592da9deceb679b8ac26dcfa68eaf374af466da5",
+      "manifest_sha256": "867727a87d9a7790d9ce8eb3c492db8c62dbdcd022198e28b12443a13b962393",
+      "file_count": 11,
+      "total_bytes": 35149882,
+      "original_zip_count": 3,
+      "readback_receipt": "paused-3d-main-rec-network-readback.json",
+      "readback_receipt_sha256": "f389fc9e70c037d9bd3e7a5d30f435b6ba07c7d074ceb9ab7da6397cbb4e1813",
+      "closed_inventory_size_sha_original_crc": "PASS"
+    },
+    {
+      "kind": "live",
+      "branch": "codex/paused-3d-main-live-evidence-20261005",
+      "prefix": "docs/experiments/handoff/paused-3d-main-live-2026-10-05",
+      "archive_commit": "c08f273120a7fc645d1e3a0cfa37290304d8a989",
+      "archive_tree": "4eb3f7039c32f542953fca42b8f63d0ee1a6ee96",
+      "manifest_sha256": "3410afc1b3b724cbfeae8e0486384869e2b26b8654d9ec8a93bc5a4c8bfe11b2",
+      "file_count": 7,
+      "total_bytes": 41421469,
+      "original_zip_count": 3,
+      "readback_receipt": "paused-3d-main-live-network-readback.json",
+      "readback_receipt_sha256": "87712edf8cae5aaf0dad25bc24d9d5870792ecb0eead4893fbc8a3ef8236265c",
+      "closed_inventory_size_sha_original_crc": "PASS"
+    }
+  ],
+  "file_count": 32,
+  "total_bytes": 125262998,
+  "original_zip_count": 7,
+  "qualifications": [
+    "New protected exact-main runtime artifacts; no old PR/5bea runtime verdict transferred",
+    "Source bridge is identity only; five QA/doc paths changed vs preQA main, production objects unchanged",
+    "All original ZIP preserved without repacking; separate normal-network readbacks verified bytes",
+    "Each group <64MiB; combined and expanded trace bytes are separate quantities",
+    "Official pinned sandboxed browser with stock SwiftShader WebGL2, no hardware GPU or achieved FPS claim",
+    "Whole paused RGBA/dimensions/alpha exact; measured hold1399.471010ms is not rounded to strict>=1400",
+    "Public19HTTPS metadata/finalgzip pins; default14 browser assets per viewport, real0->1",
+    "No full2.42GB public HTTP, public100k/1M render, new full1M model/decode, hardware/performance or hostGit attestation",
+    "Some browser JS bodies and 33 per-record PNG absent; respective proof scope documented in reviews",
+    "Bounded text/image privacy reviews do not guarantee absence of all secrets or inspect all trace JPEG",
+    "Nonblocking dense HUD glyph/text overlap and legacy mobile sidebar readout overlap retained as findings",
+    "Historical main5bea encoded-PNG SHA failure cause unknown; current RGBA PASS does not explain it",
+    "LABPR21/publicLAB/LAB4/models/causal retries HOLD; next allowed stage one bounded source-only interoperability audit"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "c08f273120a7fc645d1e3a0cfa37290304d8a989",
+  "archive_tree": "4eb3f7039c32f542953fca42b8f63d0ee1a6ee96",
+  "closed_inventory": true,
+  "manifest_sha256": "3410afc1b3b724cbfeae8e0486384869e2b26b8654d9ec8a93bc5a4c8bfe11b2",
+  "file_count": 7,
+  "unique_bytes_excluding_manifest": 41419442,
+  "original_zip_count": 3,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2249,
+      "sha256": "15dc843f64491ec548b3dd79f0a599ff7e0bc36cc1fcd0f59b5daeca6eac0798",
+      "verified": true
+    },
+    {
+      "path": "independent-actual-review.json",
+      "bytes": 47400,
+      "sha256": "e58273012739bff0542af464a9fab526424ae629b3dddabdd46682f3c05cc1ed",
+      "verified": true
+    },
+    {
+      "path": "independent-actual-review.md",
+      "bytes": 4748,
+      "sha256": "dd41fa5e49480de13c23e349e032607daf94a80dd2baee3e2f69779e3b2bb46e",
+      "verified": true
+    },
+    {
+      "path": "live-cells-browser-e2fd620-original.zip",
+      "bytes": 5339545,
+      "sha256": "e72b43b73602bf670dd72c6bb6cfbf5453bb5dcf7e461441a41a61dda3a2a2ae",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "live-physical-browser-e2fd620-original.zip",
+      "bytes": 6630833,
+      "sha256": "a078c835d92c22311590cacb725fcb7ba9da0c2c65ca3b1672e2a0980f5111ea",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "physical-projection-browser-e2fd620-original.zip",
+      "bytes": 29394667,
+      "sha256": "6f7ebea91f554ccf46da8bf0ab7b5676cafd7e8e22a9b5b4925296f7121e297f",
+      "verified": true,
+      "zip_crc": "PASS"
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}

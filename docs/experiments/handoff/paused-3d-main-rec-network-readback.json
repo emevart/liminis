@@ -1,0 +1,82 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "0f6a3b04536f6a0a600968b1823e5a2aa51c62e7",
+  "archive_tree": "592da9deceb679b8ac26dcfa68eaf374af466da5",
+  "closed_inventory": true,
+  "manifest_sha256": "867727a87d9a7790d9ce8eb3c492db8c62dbdcd022198e28b12443a13b962393",
+  "file_count": 11,
+  "unique_bytes_excluding_manifest": 35146838,
+  "original_zip_count": 3,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 4806,
+      "sha256": "8e0b6c576798ca252a31923f7b721c1066e3e3801f860d659df6509f12d1d93d",
+      "verified": true
+    },
+    {
+      "path": "dense-recording-browser-e2fd620-original.zip",
+      "bytes": 16608101,
+      "sha256": "c81d16c90616d57d6da404abc127082b4b3bb3a876714b34530c462def6633b2",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "independent-actual-review.json",
+      "bytes": 42126,
+      "sha256": "dfbd7b2dfb0a560fc45e700107964d890baaae64ca8f2cc72b5b2546f37a0577",
+      "verified": true
+    },
+    {
+      "path": "independent-actual-review.md",
+      "bytes": 6338,
+      "sha256": "3a2f39a2ea7e6d2c9c340150cef314bf3d09d51a9fade16cc627fd1aac5ce406",
+      "verified": true
+    },
+    {
+      "path": "initial-network-readback.json",
+      "bytes": 2033,
+      "sha256": "ed8e58c29abf2cf568332dcd2481418cddd965eb07512f1c2fe30917612d8d03",
+      "verified": true
+    },
+    {
+      "path": "privacy-scanner.py",
+      "bytes": 13753,
+      "sha256": "4277a7d60c7eb4abaffb6182ca04d0eb0167cf915a3749a79a26c110690c7eea",
+      "verified": true
+    },
+    {
+      "path": "privacy-supplement.json",
+      "bytes": 144711,
+      "sha256": "c515e39d341e7ebe5a821d2e3ace252bd4f770fd5f2636cb7391bebe07906944",
+      "verified": true
+    },
+    {
+      "path": "privacy-supplement.md",
+      "bytes": 3949,
+      "sha256": "3cc11384214c4713aa02994577de9aed2e8adcc4f54a6046b0ca364ff37d35d2",
+      "verified": true
+    },
+    {
+      "path": "public-playback-e2fd620-original.zip",
+      "bytes": 5704503,
+      "sha256": "a0af87ecffc69d9138a5f0cd97a886d1ca24c8a46d4e1669adea44d4b597a4ff",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "recorded-browser-e2fd620-original.zip",
+      "bytes": 12616518,
+      "sha256": "e6a5d33458fff1594349ca08c2fb1a22de5f93e8b4abff4a87e9daa8566cca53",
+      "verified": true,
+      "zip_crc": "PASS"
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}

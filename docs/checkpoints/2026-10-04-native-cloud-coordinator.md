@@ -1386,3 +1386,77 @@ OnlyallowedexistingofficialsourceGET; accessdenySTOP/nobypass. No browser/CI/
 HTTPpage/models/probes/product/oracle/guard/flag/runtimeupdate/retries.
 Audit покаNOT_STARTED; новыйimplementation/runtime scope требует нового
 Astraрешенияпо новымдоказательствам. Пользовательдоутраотсутствует; вопросовнет.
+
+### Свежий main принят; исходные QA bytes сохранены
+
+2026-10-05, 05:20 UTC (08:20 MSK). **QUALIFIED FRESH MAIN ACCEPTED**:
+`e2fd620baa492b2c2ff4316d2f083ac3e78bc252`, tree
+`47ce45646315b09493d58d87ca8fce4dc867aa8d`. Повторный normal fetch подтвердил
+тот же origin/main, собственный acceptance checkout чистый. Exact push run
+37263650472 завершён SUCCESS: восемь применимых GHA jobs и Workers Builds
+= **9 SUCCESS**; ровно два прежних PR-only ADR020/032 guard штатно SKIPPED.
+Новые runtime-результаты проверены отдельно от tree identity и PR83.
+
+Независимая actual-приёмка: REC22+dense14+PUBLIC4, LIVE43 и GL13;
+для GL отдельные CODE и NUMERICS, все scopes — **0 blockers**.
+Все **46 новых оригинальных PNG** просмотрены. Whole paused RGBA,
+dimensions/alpha, pre/post API/camera/layers/revisions точны, без masks,
+tolerance или retries. Measured holds 1400.156542/1399.471010 ms сохранены
+как есть; строгая measured>=1400 и achieved FPS не приписаны. Stock
+SwiftShader WebGL2 на official pinned sandboxed Chromium не означает hardware GPU.
+
+Все **7 original ZIP** без перепаковки и frozen reviews/receipts сохранены
+в трёх закрытых evidence groups. Все size/SHA, original outer CRC и inventories
+проверены отдельным normal-network Git readback без object alternates:
+
+| Scope / branch | Commit | Tree | Files / bytes | Manifest SHA256 |
+|---|---|---|---|---|
+| GL / codex/paused-3d-main-gl-evidence-20261005 | 403b2c5a6a919d1accd605b358a34ddb1a6caff3 | 9f34719ec760a59d1f40b8b7dfb7c919f8ece56f | 14 / 48691647 | e435aac6d168a52aff88d8114af7b1cd94eedde1ec2027192a5788af96952641 |
+| REC+dense+PUBLIC / codex/paused-3d-main-rec-evidence-20261005 | 0f6a3b04536f6a0a600968b1823e5a2aa51c62e7 | 592da9deceb679b8ac26dcfa68eaf374af466da5 | 11 / 35149882 | 867727a87d9a7790d9ce8eb3c492db8c62dbdcd022198e28b12443a13b962393 |
+| LIVE / codex/paused-3d-main-live-evidence-20261005 | c08f273120a7fc645d1e3a0cfa37290304d8a989 | 4eb3f7039c32f542953fca42b8f63d0ee1a6ee96 | 7 / 41421469 | 3410afc1b3b724cbfeae8e0486384869e2b26b8654d9ec8a93bc5a4c8bfe11b2 |
+
+Каждая group <64 MiB; вместе **32 files /125262998 bytes**.
+Expanded trace bytes не смешаны с published cap. Три individual readbacks,
+initial REC receipt, source bridge и exact CI receipt сохранены рядом с
+[aggregate receipt](../experiments/handoff/paused-3d-main-archives-network-readback.json),
+SHA256 `5f639ea4228dcccc2431147bf9be0ee245c170873bdd065c207bf4c9794a2deb`.
+Separate GitDB использована повторно: новые blobs normal fetched, ранее
+скачанные unchanged original Git objects перечитаны и SHA/CRC проверены.
+Ни force-push, ни reset/clean/foreign-WIP overwrite не выполнялись.
+
+REC archive дополнен отдельным independent privacy supplement: 59 strict
+UTF8 resources /97451329 text bytes, включая 11 bounded gzip; 528 archive
+entries учтены, 468 binary images явно исключены. Caps32MiB/file,
+512MiB total read,4096 entries/depth2/180s; observed228860550 read bytes,
+12.325s, coverage gaps0/blockers0. Concrete auth/cookies и documented obvious
+secret/private-context patterns0; exact public analytics identifier выделен
+как намеренно публичный. Frozen actual reviews и 3 original ZIP неизменны;
+initial d0c6452 archive/receipt сохранены, дополненный 0f6a3b0 принят новым
+readback. Это bounded scan, не exhaustive secret guarantee; PNG/JPEG OCR,
+metadata/steganography и произвольные private phrases не проверялись.
+
+Public gate подтвердил 19 HTTPS source/metadata/final-gzip pins и default
+14 browser assets на каждом desktop/mobile viewport, реальные tick0→1
+и 1x. Exact served HTML после одной pinned367B insertion равен source;
+analytics request blocked before-transmission ACK. Full2.42GB public HTTP,
+public100k/1M rendering, новый full1M model/decode, host Git attestation и
+hardware/performance guarantees не заявлены. Отсутствующие browser JS bodies
+и 33 per-record PNG имеют точные ограничения proof scope в reviews.
+
+Неблокирующие visual findings сохранены отдельно: dense216cells/tick992
+glyphs пересекают HUD heading/counters особенно320/390px; legacy mobile
+sticky readout частично закрывает нижнюю sidebar. Controls unobscured;
+полный usability/accessibility audit не заявлен. Следующий product scope
+пока не открыт. Historical main5bea encoded-SHA FAIL остаётся unknown cause;
+новый RGBA PASS его не диагностирует.
+
+LAB21/publicLAB/LAB4/models/causal retries сохраняют Astra HOLD. После
+закрытия MAIN gates можно начать **одну SOURCE-ONLY audit session** <=60min,
+<=8target files/10MiB через existing allowed official GET. Astra уточнила
+targets: exact PW browsers.json/crNetworkManager.ts/server/network.ts;
+matching Chromium fetch_handler.cc/devtools_url_loader_interceptor.cc/
+body_stream_buffer.cc/fetch_data_loader.cc/data_pipe_bytes_consumer.cc.
+Сначала exact refs/version binding, без trunk substitution; access deny STOP.
+Никаких browser/CI/HTTP-page/model/probe/product/oracle/flag/runtime edits
+или upstream issue. Итог source matrix/citations и minimal justified plan
+либо NO_SUPPORTED_FIX. Audit здесь ещё NOT_STARTED. Пользователя не спрашиваем.

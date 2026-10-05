@@ -1,0 +1,98 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "403b2c5a6a919d1accd605b358a34ddb1a6caff3",
+  "archive_tree": "9f34719ec760a59d1f40b8b7dfb7c919f8ece56f",
+  "closed_inventory": true,
+  "manifest_sha256": "e435aac6d168a52aff88d8114af7b1cd94eedde1ec2027192a5788af96952641",
+  "file_count": 14,
+  "unique_bytes_excluding_manifest": 48687697,
+  "original_zip_count": 1,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 4773,
+      "sha256": "fd88fa46726c8b314f7af7225d4fae21fe2afcd1cd6bc166232e1440eac38e02",
+      "verified": true
+    },
+    {
+      "path": "independent-actual-code-review.json",
+      "bytes": 51757,
+      "sha256": "56fd658d38a091620006590e745c8e25bf84a91443cf51485237f794666fe2d6",
+      "verified": true
+    },
+    {
+      "path": "independent-actual-code-review.md",
+      "bytes": 6190,
+      "sha256": "23a8e8d2ccc08258bbf3074b30c8b828d3ff9325ebbed532770455b6ea1e5de6",
+      "verified": true
+    },
+    {
+      "path": "independent-actual-numerics-review.json",
+      "bytes": 27649,
+      "sha256": "2a84ee15b4d19e35b14924990d16095dded4f528f50b91cc6409cfccc1fd2af3",
+      "verified": true
+    },
+    {
+      "path": "independent-actual-numerics-review.md",
+      "bytes": 7992,
+      "sha256": "a41aa7d379741c8cd9f9c70d2e576c4a030494df92db8a44460df7bf70bc0f61",
+      "verified": true
+    },
+    {
+      "path": "main-exact-head-checks.json",
+      "bytes": 14255,
+      "sha256": "fe4c6bedcf20facc0fa3d8e1f62e9fe24293fe581e076d312c28d376d0434b4d",
+      "verified": true
+    },
+    {
+      "path": "main-source-bridge.json",
+      "bytes": 877,
+      "sha256": "e4eaca79143246791644cdc9254f401a96d8fb4c521c99761849554d732db190",
+      "verified": true
+    },
+    {
+      "path": "physical-3d-browser-e2fd620-original.zip",
+      "bytes": 48557216,
+      "sha256": "0fd16c56d8e0e7c840436c58e29fe7835b974f3911f0e05ebd7a89c05aa3a1c4",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "reconstruction-receipt.json",
+      "bytes": 8351,
+      "sha256": "53d5e9243d6b2f7d57c5478e6652f7382cf6e6769f4ac7f42b09eebe0beca10e",
+      "verified": true
+    },
+    {
+      "path": "superseded-transport-source-review.json",
+      "bytes": 930,
+      "sha256": "2782999d20d07c2704b970d592b326a659161faf398901a48108399360c5df0d",
+      "verified": true
+    },
+    {
+      "path": "superseded-transport-source-review.md",
+      "bytes": 673,
+      "sha256": "8009b7a40112221b49b9b7738916574e3aa6d09a1ff436312488b0881273d380",
+      "verified": true
+    },
+    {
+      "path": "transport-source-review.json",
+      "bytes": 4349,
+      "sha256": "a29c287fe984a79dc1287e40b30196a466e063fc7919e6671a258ff99fbd268e",
+      "verified": true
+    },
+    {
+      "path": "transport-source-review.md",
+      "bytes": 2685,
+      "sha256": "86e5a308624e239800739047de2b25ea8fdeb0eab767659f1f4113f69f3d2164",
+      "verified": true
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}
