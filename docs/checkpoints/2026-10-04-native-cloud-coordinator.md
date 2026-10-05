@@ -835,3 +835,52 @@ freshfullCI/nativeoriginalartifactacceptance/durablebytearchive/readback;
 PR21guardedmerge толькоGREEN. Пользователь не получает вопросы до утра;
 спорные решения Astra. LAB4a пока только selected bounded futureplan, models
 не запускались.
+
+### Fresh1be LAB initial FAIL: transport diagnosis без speculative production fix
+
+2026-10-05, 00:54 UTC. Exact1be0d0940ef75aa00d6152e5b718df0cc5fb446f/
+tree64bdb5f4794f48907f99886c540f6391571b1914 freshCI37248220760: recorded
+job111570284160FAIL, LIVEjob111570284210SUCCESS; Rust ещё running при
+фиксации. OriginalLAB artifact11319619204:643462B/SHA256
+21ff9f8d414b1f2346a9bdef92147eaadec2adaa95cd41a65d5b26ef404cfe4c
+скачан native, outerCRC/sourceHEAD/tree PASS. Gate1 observedargvPASS, gate2
+FAIL до sample/comparison/layout/negative gates: descriptor/results failed
+net::ERR_ABORTED, две PWNetwork.getResponseBody NoData; comparisons/manifest
+bodypins доступны и exact. Page/console/unhandled/cleanup0. ActualPNG сейчас
+содержит4complete visible plots и24matrix, но это не9gateLAB acceptance.
+
+Originaltrace: descriptorbody NoData941.006ms, results1197.849ms; ready
+1197.387ms, firstfailurePNG1298.160ms. До этих ошибок нет navigation/reload/
+screenshot/cleanup. EOFcleanup исправление не устранило наблюдаемые abort,
+причинная связь не заявляется. Source0 остаётся source0, actualFAIL сохранён;
+main5bea иdraftPR21 неизменны, public smoke/models не запускаются.
+
+Astra explicitly одобрил ОДИН evidence-only transport diagnostic в existing
+repo official protected runner безCargo/models/deploy. Candidate1be/tree64
+и8siteassets immutable; отдельные diagnosticHEAD/tree/scriptSHA. Одинinitial
+positive load, единственныйCDPFetchowner, Request-stage fixedloopback8GETguard
+передпередачей и Response-stage originalHTTP200body size/SHA через
+Fetch.getResponseBody→continueResponse безheader/body/status override,
+безroute.fetch/fulfill/takeResponseBodyAsStream/secondHTTPfetch. Bounded
+Network timeline/requestIDs/terminalerrors/PNG; любые errors diagnosticFAIL,
+безURLallowances/retry. DiagnosticнеполнаяLABacceptance инепрежнийPASS.
+Rootownsworkflow, scopedauthorowns2scripts; independentreview доsinglelaunch.
+Preparebranch `codex/lab-transport-diagnostic-prepare-20261005` не trigger;
+futureRUNbranchonly `codex/lab-transport-diagnostic-run-20261005`.
+
+Source0 combined1be reports appended ordinarynewcommit to first79archive:
+`35c590d588568e896661b3731c466a244732be21`, tree
+`45959aa3d8045ded9894867773c7cad9ab929923`, closed30files2357319B,
+manifest74781300ad700ace76281983482a81379cc7f3af9722b3b20a1f181f0c4b3c28.
+Old files/41f38a5d originalmanifest preserved; freshindependentGitDB latest
+size/SHA/CRC PASS afterone503 lazyfetch retry. Readback:
+`docs/experiments/handoff/lab-aggregate-source1be-network-readback.json`.
+Publicprep eeb0499 pinsall8candidate1be assets/source0/17controlsPASS;
+deployedSHA=null и runtimeNOTRUN. NextLAB4a designindependently0, budgets
+194000steps/99328000cellticks<unchanged100M; prereg/admission/models deferred
+untilLAB3aaccepted/public.
+
+Следующий шаг: independent original1be review/archive, diagnostic source0
+иsingleofficialrun, затем обоснованнаяQAправка/freshfullCI/runtimeacceptance.
+Не отменятьreadercontract/менятьproductstreamingнаугад и не ослаблять
+responsepins/errorgates. Пользовательотсутствуетдоутра; решенияAstra.

@@ -1,0 +1,194 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "35c590d588568e896661b3731c466a244732be21",
+  "archive_tree": "45959aa3d8045ded9894867773c7cad9ab929923",
+  "closed_inventory": true,
+  "manifest_sha256": "74781300ad700ace76281983482a81379cc7f3af9722b3b20a1f181f0c4b3c28",
+  "file_count": 30,
+  "unique_bytes_excluding_manifest": 2351597,
+  "original_zip_count": 1,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1876,
+      "sha256": "a0d75688bdfa4ea13061dfb5581652fefa0e6a2337944012f32fd4c589744b49",
+      "verified": true
+    },
+    {
+      "path": "independent-code/REVIEW.md",
+      "bytes": 3661,
+      "sha256": "487c0d75b5e90bb03722f76ca9026dd4360030df0c658ea2481230237e304f40",
+      "verified": true
+    },
+    {
+      "path": "independent-code/histogram-cssom-review.json",
+      "bytes": 1420,
+      "sha256": "116ca146d5b019ffeed7603f2a17f869cb446a433188687206e49b6d6a4c4abd",
+      "verified": true
+    },
+    {
+      "path": "independent-code/histogram-cssom-review.md",
+      "bytes": 1041,
+      "sha256": "b099960303ebafbae0710c900233f34906eaf5a23b77eb910fce98d7e7f1cbe4",
+      "verified": true
+    },
+    {
+      "path": "independent-code/lab79-failure-integrity-privacy-review.json",
+      "bytes": 1203,
+      "sha256": "43b9b2d7b0644282a72ce68728bbe8efc9e9939d2d03010382e951a7cfb2f310",
+      "verified": true
+    },
+    {
+      "path": "independent-code/lab79-failure-integrity-privacy-review.md",
+      "bytes": 974,
+      "sha256": "840919bc20a149895e9b4cd648663d5377fac113a78a6110fb442e934518a5d2",
+      "verified": true
+    },
+    {
+      "path": "independent-code/responsive-svg-delta-review.json",
+      "bytes": 3076,
+      "sha256": "0dcf62bbb7d9f6ec3245eca9f8353c2c6283c89b0389467f7a34d2bf2975458c",
+      "verified": true
+    },
+    {
+      "path": "independent-code/responsive-svg-delta-review.md",
+      "bytes": 2238,
+      "sha256": "2a55b9afbb287645ee2904a53e434bfcca41853ff2399251a68716668775d69f",
+      "verified": true
+    },
+    {
+      "path": "independent-code/source-review.json",
+      "bytes": 6247,
+      "sha256": "e9a263054c67a98090ac61b039cfa5483ce6b75cdd9c5968ca5779e7b2c75ff1",
+      "verified": true
+    },
+    {
+      "path": "independent-code/transport-79-helper-review.json",
+      "bytes": 2353,
+      "sha256": "0cedd0493574d1ee6cb4515ba8ce7b0e61d0e8b22cf896ad25bc686be8e07424",
+      "verified": true
+    },
+    {
+      "path": "independent-code/transport-79-helper-review.md",
+      "bytes": 1584,
+      "sha256": "f5512bb31016dc50d7bd12cf291b93bc2058ad3c74d1400f2a1b034cb55d819a",
+      "verified": true
+    },
+    {
+      "path": "independent-numerics/original-observation-consistency.json",
+      "bytes": 6881,
+      "sha256": "f40745fdfdf4d35b9858a2a2e844d9e0cadd9936f30a528fa129bfbb4a9c5f9e",
+      "verified": true
+    },
+    {
+      "path": "independent-numerics/review.json",
+      "bytes": 15801,
+      "sha256": "ca8fb36cf7c268694cc6c1a309f3c16eda14f6c4a58d7b4bbdbc263a5b9c7cec",
+      "verified": true
+    },
+    {
+      "path": "independent-numerics/review.md",
+      "bytes": 11033,
+      "sha256": "3041bae9d2e36c461d20a66c76d0d622069afea75b31fcb355c1a3799b97c6b3",
+      "verified": true
+    },
+    {
+      "path": "independent-numerics/source-delta-02aeab1.json",
+      "bytes": 5905,
+      "sha256": "6ae8512556e99a1cde5745b922190e4b9349aa6c8ac57cad2a90d2d36b072414",
+      "verified": true
+    },
+    {
+      "path": "independent-numerics/source-delta-02aeab1.md",
+      "bytes": 3747,
+      "sha256": "b9a83687940043e0172b134801ba5ea6322e83a5ff3d23b700085e1d435f30c1",
+      "verified": true
+    },
+    {
+      "path": "lab-browser-79df352-original.zip",
+      "bytes": 2210725,
+      "sha256": "bbd3f4dce56469c082be6e61f8d9abdd913d48987af6575620a6493e4bcb3a09",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "original-79/integrity.json",
+      "bytes": 181,
+      "sha256": "a5c7c1cdad259d79f212be74151680823e10bfba3b680083e23b2d7b321f0c28",
+      "verified": true
+    },
+    {
+      "path": "original-79/report.json",
+      "bytes": 26429,
+      "sha256": "ff3d0c18b797e8ae30121b088fcfcebe6b7117675eae3423d560b1f7362dfdc6",
+      "verified": true
+    },
+    {
+      "path": "source-1be/README.md",
+      "bytes": 1674,
+      "sha256": "33a5c7763cdd17ff8047b85023c9a92ba32433a59410323602551fc0597722ba",
+      "verified": true
+    },
+    {
+      "path": "source-1be/code-review.json",
+      "bytes": 7074,
+      "sha256": "f8585485565ff440bceda6921693556980ae0296f250360af6361642521c6bc6",
+      "verified": true
+    },
+    {
+      "path": "source-1be/code-review.md",
+      "bytes": 2881,
+      "sha256": "9310527b4f3a9d43a0cb2dd228b116726b584344971f501c316d79927a05e89f",
+      "verified": true
+    },
+    {
+      "path": "source-1be/loader-code.json",
+      "bytes": 2592,
+      "sha256": "cd418ca7e253cba88c77d43d700b0842e947e3f17e75322a52456ecd278a5de4",
+      "verified": true
+    },
+    {
+      "path": "source-1be/loader-code.md",
+      "bytes": 1556,
+      "sha256": "d6d16dbbe313493840d9bec931842edc5db40ac29ea81022c8f8b83a33d4e8dc",
+      "verified": true
+    },
+    {
+      "path": "source-1be/loader-numerics.json",
+      "bytes": 4568,
+      "sha256": "9ddbc1031eb93dd1d4b6e2cb2dba4e95c456aa032d44d0d6f25dca6e52c37f31",
+      "verified": true
+    },
+    {
+      "path": "source-1be/loader-numerics.md",
+      "bytes": 2562,
+      "sha256": "630e4c3169dd3e3c4aed68e52977806883c90ad160ecf28509cf8215a73cc81e",
+      "verified": true
+    },
+    {
+      "path": "source-1be/numerics-binding.json",
+      "bytes": 4465,
+      "sha256": "ae7fed9b37c9e4dbf64cbebb7416f3f8aa153acff73e15c66c91252d72e4642f",
+      "verified": true
+    },
+    {
+      "path": "source-1be/numerics-review.json",
+      "bytes": 9443,
+      "sha256": "2c9c2b4ad80fac5ec115cba91f80097bea91f1f1fed15dea9031b8ea95702b00",
+      "verified": true
+    },
+    {
+      "path": "source-1be/numerics-review.md",
+      "bytes": 8407,
+      "sha256": "24b48ec1c369a060e23c51b9060484ed750d2b5f801c17f160d8f0f1d84181ef",
+      "verified": true
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}
