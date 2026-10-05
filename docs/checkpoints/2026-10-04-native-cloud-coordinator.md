@@ -1189,3 +1189,50 @@ code/data-numerics binding, один новый exact-head mandatory9LAB/fullCI 
 original artifacts/actual review. Только после green — guardedmerge,
 existingdeployment и отдельная public LAB byte/browser acceptance. LAB4a
 модели остаются NOT_RUN; frozen SPEC/NORTH_STAR не меняются.
+
+
+### Native pipe production source0; один свежий mandatory CI
+
+2026-10-05, 03:26 UTC. Final clean candidate
+`c02bc689bf7014bda3bfdf346e3906a9bc536f14`, tree
+`416655a9ef6f1ba91c0556eb35fb8f300249bb15` опубликован одним обычным push
+в existing PR21 `codex/lab-aggregate-site`; draft сохраняется.
+Source author e180e0d77ccd06989667780db9d784abccca8a3f опубликован отдельно
+в `codex/lab-stream-pipe-to-20261005`. ONLY2sitefiles +root30lineACCEPTANCE/
+51linecheckpoint отличаются от1be. Module20280B/function844B точны provenB,
+prefix17530/suffix1906 literal unchanged. Root14nativeNode tests PASS;
+independent code review0 и DATA/NUMERICS binding0 подтверждены на exactcombined.
+Raw4pins/24runs/4044samples/20censored4extinct454/common400/missing500/genesisnull,
+producer21cbe907/world30/chamber1/buildattestationfalse/formulas/SVG/oracles
+и core/frozen/REC/3D bytes unchanged. No new science/performance/causeclaim.
+
+Один свежий mandatory fullCI, attempt1/eventpull_request/headexactc02:
+https://github.com/emevart/liminis/actions/runs/37259168567 — IN_PROGRESS.
+Защищённый recorded job111602519476 включает all9LAB и прежние REC/dense;
+LIVEjob111602519414 включает real13GL; Rustjob111602519427 идёт в штатнойCI.
+NativeCargo/models/causalrepeat не запускаются. OldFAIL и A/BoverallFAIL
+не переносятся вPASS; никакие gate/oracle/sandboxerror allowances не добавлены.
+
+Safe source4reports включены в новый closed evidence ref
+`codex/lab-transport-ab-evidence-20261005`,
+`d7953ff0c7c9401e139d0c1a1e1a950ded94e52d`, tree
+`509f31e84809438ef64f64d4cbefb0586e911c19`:12files971386B,
+manifestSHAee1463fc7898187640d84d30520126f27e579c88193ccd3b9507391774bc13c2.
+OriginalZIP/ABreport byte-exact retained; source0 не actualbrowserPASS.
+Normal-network separate GitDB/noalternates closedsize/SHA/CRC PASS;
+receipt `docs/experiments/handoff/lab-native-pipe-source-network-readback.json`.
+
+Publicpreparation c02repin опубликован:
+`4d78c8336e25ebb98e4e0a31db52ea2e47dfbd55`, tree
+`ed6489d67c9d645fb072b2225705b247c09f9c6f`, branch
+`codex/lab-public-smoke-preparation`. ONLYmanifest8pins +exactproductionmodule,
+script/WF/HTMLhostingexception unchanged. Sourcepreflight17 PASS, deployedSHA
+null и actualHTTP/browser refused; independentpinreview pending. Existing
+publicrunbranch не запускается до acceptedmerge/actualdeploymentSHA.
+
+Main5bea остаётся stable, productmerge/deploy NOT_DONE. Следующий шаг:
+дождаться exacthead mandatoryCI без rerun, получитьoriginal browserbytes,
+independent fullLAB/GL/regression actualreviews +boundedarchive/readback.
+ПослеGREEN — guarded PR21merge и separateexistingpublicdelivery/browser.
+Пользователь до утра отсутствует, решений от него не запрашиваем; Astra
+сохраняет спорные решения. LAB4a models ещё NOT_RUN.

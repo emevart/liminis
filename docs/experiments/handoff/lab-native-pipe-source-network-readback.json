@@ -1,0 +1,86 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "d7953ff0c7c9401e139d0c1a1e1a950ded94e52d",
+  "archive_tree": "509f31e84809438ef64f64d4cbefb0586e911c19",
+  "closed_inventory": true,
+  "manifest_sha256": "ee1463fc7898187640d84d30520126f27e579c88193ccd3b9507391774bc13c2",
+  "file_count": 12,
+  "unique_bytes_excluding_manifest": 968614,
+  "original_zip_count": 1,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 4360,
+      "sha256": "2e8fa4c081f0e0f7388abfa11967d33e64351c014bfacbc2cb168a81fd7d587e",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-ab-3b174d4-actual-review.json",
+      "bytes": 25768,
+      "sha256": "0d3f609876c0e3e0fa7f0ff70a907d6589a2a088a9f9d65e8c31f05c73a862cd",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-ab-3b174d4-actual-review.md",
+      "bytes": 6199,
+      "sha256": "32b080cc9d32559203843e5e5b3eaacd89edf6ef19f2a4b7f131fd3b21ed8be7",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-ab-3b174d4-original.zip",
+      "bytes": 805885,
+      "sha256": "f8905342189586970b4bbc5b6164b2c48cbcb34a9f013eb6bbe2637e92ad69d0",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "lab-transport-ab-source-review.json",
+      "bytes": 11194,
+      "sha256": "d34544c2c76d41c56495f08a6c3c2413c97b9513fd68ec4355d8193d1e2f8f12",
+      "verified": true
+    },
+    {
+      "path": "lab-transport-ab-source-review.md",
+      "bytes": 5343,
+      "sha256": "e159b43064bc814a2f7f005dcdd4deda1192dc57edcfc301e022849a585f0731",
+      "verified": true
+    },
+    {
+      "path": "native-pipe-data-binding-review.json",
+      "bytes": 9345,
+      "sha256": "7ad0c687e4d5dfe6753920a9fbf170c4c258db9878539dd72bd061a5f011a4dd",
+      "verified": true
+    },
+    {
+      "path": "native-pipe-data-binding-review.md",
+      "bytes": 5751,
+      "sha256": "ba9a6b742ae8be7d7ac0a85c703e55436992a470c2580a26f86e865e62a00c2e",
+      "verified": true
+    },
+    {
+      "path": "native-pipe-production-delta-review.json",
+      "bytes": 10409,
+      "sha256": "db80845266b50014c5d54a5504b3f89a70f55e6e558c36535c4178741f569397",
+      "verified": true
+    },
+    {
+      "path": "native-pipe-production-delta-review.md",
+      "bytes": 4430,
+      "sha256": "5ded54c33f170c04a44daf41bca9d0b4670ef074d4a150954d33a94be1861d9b",
+      "verified": true
+    },
+    {
+      "path": "report.json",
+      "bytes": 79930,
+      "sha256": "fb2ad75d70948cf8089110d7a26e0f3a146c5d11cab8e15247ca6447fa451abc",
+      "verified": true
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}
