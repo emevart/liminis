@@ -1695,3 +1695,34 @@ merged tree — fresh MAIN CI/affected LIVE+physical evidence и прежний 
 Любой failure/drift/skip/missing evidence/occlusion/model change → HOLD и
 scoped review, без rerun ради GREEN. LAB21/publicLAB/LAB4/models/causal retries
 HOLD. Старые refs/evidence/24science outputs/URLs/SHA не удалены/пересчитаны.
+
+
+## 2026-10-05 08:21 UTC — PR24 LIVE actual FAIL, merge HOLD
+
+Frozen final source reports сохранены byte-exact: review.json12414B/
+SHA1a6acfaeb3b446bef8a3292bce080878943503a47466b0529b4802a85ce68aa2 и
+review.md6150B/SHA7e19067e660ea8f4010ed0fce42d489c26c54fcee55abbaa5f4a80f7f9ebe396.
+Source schema blocking_findings=[]/blocker_count0, verdictQUALIFIED_SOURCE_PASS
+проверен явно. Root первая receipt helper попытка использовала неверный key
+blockers и прервалась после byte-exact copy: этой попытке не приписывается
+validation PASS. Original source reports не менялись; correct schema verified.
+
+Run37282535160 attempt1, exacta57/tree2f9: legacy LIVE actual stepFAIL;
+physical/projection/GL actual steps SKIPPED. Recorded jobSUCCESS; Rust ещё
+IN_PROGRESS, complete run conclusion пока не заявляется. Первые12 legacy
+gates PASS; desktop1440 upper stage/readout/inspector viewport captures и
+настоящий Findabsent→present ID240/tick2138/primaryfields получены. Следующий
+lowerInspector native scroll failed: Element is not attached to the DOM.
+Ни mobile width, ни complete responsive gate, ни physical actual не приняты.
+Cause пока не доказана; existing poll replacement — только hypothesis.
+
+Оригинал artifact11332948215 сохранён без перепаковки:8544954B,
+SHAc0b5cddbc1d5d520e80f079c93bbac2adffc446bff04d1b1bd1d4dac91352ba0,
+outerCRC PASS/11,208,017inflatedB. Independent failure reviewer читает original
+trace/четыреPNG/source/privacy; Astra отдельно решает только конкретный bounded
+QA fix по фактам. Physical reviewerSTOP/NOTEXECUTED. Original affected failure
+archive/readback ещё PENDING. PR24 draft, merge HOLD, автоматический rerun ради
+GREEN не разрешён; no source/browser/model changes после finding без scope.
+Accepted MAIN813/site/HUD/everytick recordings остаются прежними, old refs/raw/
+24science evidence сохранены. Следующий шаг: exact failure review/qualified
+cause, durable original archive/readback и Astra narrow disposition.
