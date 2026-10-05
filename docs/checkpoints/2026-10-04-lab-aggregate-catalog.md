@@ -137,3 +137,54 @@ FAIL archive/review и новые source fixes в работе; public QA под
 Следующий шаг: complete narrow source fixes+independent review, fresh full
 CI на едином чистом candidate, native original runtime artifacts/archives/
 readback, guarded PR21merge и existingdeployment/public LAB acceptance.
+
+
+### Bounded native pipe: отдельный UA-compatibility candidate
+
+2026-10-05, 03:19 UTC. Product1be/run37248220760 остаётся FAIL на LABgate2;
+9/10GHAjobs SUCCESS не означают overallGREEN. Original1beZIP/review сохранены
+в closed archive d6c6db823c72022ff72e6890fa1c3542a7c94f83 с networkreadback.
+Independent actual transportCASEedca/readerCASE0b52 FAIL сохранены в refs
+68419ae6b7a53fc707983491736a663f728f0dfb и
+cd7fa2c103d1e273abe79e5efeedaecf468fcaa7. ObservedEOFdone/release без adapter
+cancel в0b52 не доказали внутреннюю причину native ERR_ABORTED.
+
+Последняя approved A/B run37254028918 на exact3b174d4/tree25d34dc сохранила
+AB_PROBE_FAIL: A comparisons canceledERR_ABORTED duringmain, B8nativefinished/
+originalpins/4readyplots24matrixbaseline1tick0/unhandledallerrors0/cleanup0.
+Independent source/actual review0, оба originalPNG просмотрены. Astra явно
+разрешил EXACT B только как UA-compatibility candidate, не productacceptance.
+Furthercausalprobes закрыты. Original805885-byte ZIP и safe4review reports
+сохранены без перепаковки: branchcodex/lab-transport-ab-evidence-20261005,
+commitd9a78d218e06b65fa93de540bbf69f412b04fc9b/tree42e33b9a3ae72b2947ea924526198d85f9f4b91a,
+closed8files939228B/manifestSHA7e9f4ae35836743b7824be9691125d3013d52a397cd8574a85cb54631ad6df8b.
+Separate normal-network Git object DB безalternates closedsize/SHA/ZIPCRC PASS.
+Receipt хранится coordinatorbranch; boundedprivacy3JSON147166B+2PNG/0patterns,
+не fullsecretguarantee. OverallA/B/всеoldFAIL остаются FAIL.
+
+Root завершил isolated2file authorcommit после передачи недоступного pending
+scoped author: e180e0d77ccd06989667780db9d784abccca8a3f/treea74abd2c2c43889ce7f64b9c4a72cfdc6b70bb41.
+readBytes byte-exact provenBmodule20280B/SHA
+51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e,
+functionSHA3129290bf9cbe4eccfd8b17bdf1628547d8fde5273a12f3a5e13cbe600f59a92;
+original1be prefix/suffix неизменны. Standard native awaited pipeTo и bounded
+WritableStream сохраняют primarywrite/sizeerror, missingstreamfailclosed.
+Нет arrayBuffer fallback/таймеров/retainedResponses. Parser/hash/joins/формулы/
+raw24/source21cbe907/world30/chamber1/buildattestationfalse/CSS/UI/QA/CI/core/
+frozenSPEC/NORTHSTAR неизменны; новых научных прогонов нет.
+
+Native Node24.19 fourteen focusedtests PASS: прежние7datasetchecks и7native
+ReadableStream tests full4exactresponses/24runs/4044samples/demand-driven
+upstreamqueue≤1, delayedEOF, incrementaloversizecancelonce, awaitcancel+unlock,
+readerroridentity, primarysizeerror при secondarycancelreject/noUnhandled,
+missingstreamno fallback. Queue assertion не измеряет wholebrowserheap;
+Nodetests не browserPASS. RootACCEPTANCEappend30lines уточняет newconsumer
+и сохранность oldmanualreader evidence. Code cherry-picked2f623e98; combined
+source independentcode/data-numerics review PENDING; full9LAB/fullCI NOT_RUN.
+
+Main5bea не менялся, PR21draft не принят; publicprepareddeployedSHA=null.
+Следующий шаг: независимый source0 на едином cleanhead, один fresh protected
+mandatoryCI с all9LAB/recorded/dense/13GL gates, original artifact actualreview
+и durablearchive/readback. Только green permits guardedmerge и existing
+publicdeployment/browser delivery. Пользователь отсутствует, вопросы/спорные
+решения Astra; LAB4a/newmodels/Cargo вне нового mandatoryCI NOT_RUN.
