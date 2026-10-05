@@ -51,9 +51,11 @@ async function check(name, action) {
   catch (error) { evidence.checks.push({ name, status: "FAIL", elapsedMs: Date.now() - started, error: error.stack || String(error) }); }
 }
 
-async function screenshot(page, filename) {
+async function screenshot(page, filename, expected, genomes) {
   await page.screenshot({ path: resolve(evidenceDir, filename), fullPage: true });
   evidence.screenshots.push({ filename, sha256: digest(await readFile(resolve(evidenceDir, filename))) });
+  const current = evidence.layouts.at(-1); current.hudAfterScreenshot = await hudGeometry(page); current.stateAfterScreenshot = await archiveState(page, expected); current.inventoryAfterScreenshot = await layoutInventory(page, expected);
+  assert.deepEqual(current.inventoryAfterScreenshot, current.selection.inventoryAfter); assert.deepEqual(await layoutInspector(page, expected, genomes), current.selection.inspector);
 }
 
 async function freshPage(viewport = { width: 1440, height: 900 }) {
@@ -136,7 +138,76 @@ async function canvasDigest(page) {
     return Array.from(new Uint8Array(bytes), (value) => value.toString(16).padStart(2, "0")).join("");
   });
 }
-async function layout(page, desktop) {
+async function archiveState(page, expected) {
+  assert.equal(await shownNumber(page, 'tick'), expected.tick); assert.equal(await shownNumber(page, 'time'), expected.sim_time);
+  for (const [element, key] of [['living', 'living_cells'], ['births', 'births'], ['deaths', 'deaths'], ['divisions', 'divisions'], ['generation', 'generation_max']]) assert.equal(await shownNumber(page, element), expected.summary[key]);
+  assert.equal(await page.locator('#ledger').textContent(), expected.residual ? `M ${expected.residual.matter} · E ${expected.residual.energy}` : 'not checked');
+  assert.equal(await page.locator('#error').isVisible(), false); assert.match(await page.locator('#chamber').getAttribute('aria-label'), new RegExp(`at recorded tick ${expected.tick}\\.`));
+  return { tick: expected.tick, cells: expected.cells.length, nonblankPixels: await canvasNonblank(page), pixelSha256: await canvasDigest(page) };
+}
+async function hudGeometry(page) {
+  const observed = await page.evaluate(() => {
+    const stage = document.querySelector('.stage'), nodes = { header: document.querySelector('.stage-header'), title: document.querySelector('.stage-title'), stats: document.querySelector('.stage-stats'), footer: document.querySelector('.frame-stamp'), canvas: document.getElementById('chamber') };
+    const box = (node) => { const r = node.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }; };
+    const rows = {};
+    for (const [name, node] of Object.entries(nodes)) {
+      if (!node) throw new Error(`Missing recorded HUD ${name}`);
+      const style = getComputedStyle(node), text = [], walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT); let leaf;
+      while ((leaf = walker.nextNode())) if (leaf.textContent.trim()) { const range = document.createRange(); range.selectNodeContents(leaf); for (const r of range.getClientRects()) text.push({ value: leaf.textContent.trim(), left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }); }
+      rows[name] = { ...box(node), display: style.display, visibility: style.visibility, opacity: Number(style.opacity), clientWidth: node.clientWidth, clientHeight: node.clientHeight, scrollWidth: node.scrollWidth, scrollHeight: node.scrollHeight, text };
+    }
+    const canvas = nodes.canvas, r = canvas.getBoundingClientRect();
+    return { stage: box(stage), rows, canvasBacking: { width: canvas.width, height: canvas.height }, rendererPadding: 36, roundedInterior: { width: Math.round(r.width) - 72, height: Math.round(r.height) - 72 }, canvasUnobscured: [[.5, .5], [.01, .01], [.99, .01], [.01, .99], [.99, .99]].map(([x, y]) => document.elementFromPoint(r.left + r.width * x, r.top + r.height * y) === canvas), loadingHidden: document.getElementById('loading').hidden };
+  });
+  const contains = (outer, inner) => inner.left >= outer.left && inner.right <= outer.right && inner.top >= outer.top && inner.bottom <= outer.bottom;
+  for (const [name, row] of Object.entries(observed.rows)) {
+    assert.ok(row.width > 0 && row.height > 0 && row.display !== 'none' && row.visibility === 'visible' && row.opacity > 0 && contains(observed.stage, row), `Hidden or out-of-stage HUD ${name}: ${JSON.stringify(row)}`);
+    assert.ok(row.scrollWidth <= row.clientWidth && row.scrollHeight <= row.clientHeight, `HUD ${name} content overflows its row`);
+    for (const text of row.text) assert.ok(contains(row, text) && contains(observed.stage, text), `Clipped HUD ${name} text: ${JSON.stringify(text)}`);
+  }
+  const { header, title, stats, footer, canvas } = observed.rows;
+  assert.ok(contains(header, title) && contains(header, stats));
+  assert.ok(header.bottom <= canvas.top && title.bottom <= canvas.top && stats.bottom <= canvas.top && canvas.bottom <= footer.top, 'HUD header/footer must be disjoint from the canvas');
+  assert.ok(canvas.width > 72 && canvas.height > 72 && observed.roundedInterior.width > 0 && observed.roundedInterior.height > 0, 'Canvas must retain a positive schematic interior after the existing 36px padding');
+  assert.ok(observed.loadingHidden && observed.canvasUnobscured.every(Boolean), 'Canvas must be visible without HUD/loading overlays');
+  return observed;
+}
+function inspectorValue(value) {
+  if (typeof value === 'number') { if (value === 0) return '0'; if (Number.isInteger(value)) return value.toLocaleString('en-US'); return Math.abs(value) < 1e-4 || Math.abs(value) >= 1e6 ? value.toExponential(3) : value.toLocaleString('en-US', { maximumSignificantDigits: 4 }); }
+  if (Array.isArray(value)) return `[${value.map(inspectorValue).join(', ')}]`;
+  if (value && typeof value === 'object') return `{ ${Object.entries(value).map(([key, item]) => `${key}: ${inspectorValue(item)}`).join(', ')} }`;
+  return String(value);
+}
+async function layoutInspector(page, expected, genomes) {
+  const observed = await page.evaluate(() => { const pairs = (list) => Object.fromEntries([...list.querySelectorAll('dt')].map((term) => [term.textContent, term.nextElementSibling.textContent])); return { heading: document.querySelector('#cell-detail .selected b')?.textContent, fields: pairs(document.querySelector('#cell-detail > dl.kv')), objects: Object.fromEntries([...document.querySelectorAll('#cell-detail .subobject')].map((node) => [node.querySelector('.eyebrow').textContent, pairs(node.querySelector('dl'))])) }; });
+  const cell = expected.cells.at(-1); assert.equal(observed.fields.id, cell.id); assert.equal(observed.heading, `${cell.genome_key} · cell ${cell.id}`);
+  assert.equal(observed.fields['mass units'], cell.mass_units); assert.equal(observed.fields['energy units'], cell.energy_units); assert.equal(observed.fields.parent, cell.parent_id ?? 'founder'); assert.equal(observed.fields['birth tick'], String(cell.birth_tick));
+  const physiology = genomes[cell.genome_key], objects = {}; assert.ok(physiology);
+  for (const [label, key] of [['Genome', 'genome'], ['Phenotype', 'phenotype']]) if (physiology[key] && Object.keys(physiology[key]).length) objects[label] = Object.fromEntries(Object.entries(physiology[key]).map(([key, value]) => [key, inspectorValue(value)]));
+  assert.deepEqual(observed.objects, objects, 'Inspector genome/phenotype must remain the pinned metadata values'); return observed;
+}
+async function layoutInventory(page, expected) {
+  const observed = await page.evaluate(() => ({ readouts: Object.fromEntries(['living', 'births', 'deaths', 'divisions', 'generation', 'ledger', 'tick', 'time', 'playhead', 'frame-label', 'frame-change', 'frame-count'].map((id) => [id, document.getElementById(id).textContent])), frequencies: [...document.querySelectorAll('#frequencies .frequency')].map((row) => ({ key: row.querySelector('span').textContent, value: row.querySelector('.mono').textContent })), genomeTotal: document.getElementById('genome-total').textContent }));
+  const counts = new Map(); for (const cell of expected.cells) counts.set(cell.genome_key, (counts.get(cell.genome_key) || 0) + 1);
+  assert.deepEqual(observed.frequencies, [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([key, count]) => ({ key, value: `${count} · ${(count / expected.cells.length * 100).toFixed(1)}%` })));
+  assert.equal(observed.genomeTotal, `${counts.size} variant${counts.size === 1 ? '' : 's'}`); return observed;
+}
+async function layoutSelection(page, expected, genomes) {
+  assert.ok(expected.cells.length); const inventoryBefore = await layoutInventory(page, expected), canvas = page.locator('#chamber'); await canvas.click({ position: { x: 5, y: 5 } }); assert.equal(await shownNumber(page, 'tick'), expected.tick); assert.equal(await page.locator('#selection-label').textContent(), 'none selected');
+  // Unmodified observer uses max(0, selectedIndex). From none, ArrowLeft
+  // selects the last actual cell, which is also first in reverse hit order.
+  await canvas.focus(); await canvas.press('ArrowLeft'); const keyboard = await layoutInspector(page, expected, genomes);
+  const ring = await canvas.evaluate((node) => {
+    const r = node.getBoundingClientRect(), data = node.getContext('2d').getImageData(0, 0, node.width, node.height).data; let left = node.width, right = -1, top = node.height, bottom = -1, pixels = 0;
+    for (let y = 0; y < node.height; y++) for (let x = 0; x < node.width; x++) { const i = (y * node.width + x) * 4; if (data[i] === 255 && data[i + 1] === 255 && data[i + 2] === 255 && data[i + 3] === 255) { left = Math.min(left, x); right = Math.max(right, x); top = Math.min(top, y); bottom = Math.max(bottom, y); pixels++; } }
+    return { pixels, backingBounds: { left, right, top, bottom }, backing: { width: node.width, height: node.height }, canvasRect: { left: r.left, top: r.top, width: r.width, height: r.height }, clientX: r.left + (left + right + 1) / 2 * r.width / node.width, clientY: r.top + (top + bottom + 1) / 2 * r.height / node.height };
+  });
+  assert.ok(ring.pixels >= 4 && ring.clientX > ring.canvasRect.left && ring.clientX < ring.canvasRect.left + ring.canvasRect.width && ring.clientY > ring.canvasRect.top && ring.clientY < ring.canvasRect.top + ring.canvasRect.height, 'Actual exact-white selection ring must yield an in-canvas pointer target');
+  await page.mouse.click(ring.clientX, ring.clientY); const pointer = await layoutInspector(page, expected, genomes); assert.deepEqual(pointer, keyboard); await archiveState(page, expected); const inventoryAfter = await layoutInventory(page, expected); assert.deepEqual(inventoryAfter, inventoryBefore);
+  return { tick: expected.tick, cells: expected.cells.length, selectedId: expected.cells.at(-1).id, keyboard: 'Verified blank-padding pointer clears selection; real ArrowLeft chooses last actual frame ID', pointer: 'One actual click at the observed exact-white selection-ring bounding-box center; schematic only, no physical-coordinate claim', ring, inspector: pointer, inventoryBefore, inventoryAfter };
+}
+async function layout(page, desktop, expected, genomes, label) {
+  const httpBaseline = httpRequests.length;
   const width = await page.evaluate(() => ({ viewport: innerWidth, page: document.documentElement.scrollWidth }));
   assert.ok(width.page <= width.viewport + 1, `Horizontal overflow: ${JSON.stringify(width)}`);
   for (const id of [...controls, "duration", "sample-cadence", "clock-help"]) {
@@ -148,6 +219,9 @@ async function layout(page, desktop) {
     assert.ok(rect.width > 0 && rect.height > 0 && rect.left >= -1 && rect.right <= rect.viewportWidth + 1 && rect.top >= -1 && rect.bottom <= rect.viewportHeight + 1, `Clipped ${id}: ${JSON.stringify(rect)}`);
   }
   await page.evaluate(() => scrollTo(0, 0));
+  const before = await archiveState(page, expected), hudBefore = await hudGeometry(page), selection = await layoutSelection(page, expected, genomes); await page.evaluate(() => scrollTo(0, 0));
+  assert.equal(httpRequests.length, httpBaseline, 'HUD geometry, keyboard/pointer and resize must not request data');
+  (evidence.layouts ||= []).push({ label, viewport: page.viewportSize(), stateBefore: before, hudBefore, selection, httpRequests: httpRequests.length - httpBaseline, httpMeasurement: server ? 'local-http-server' : 'NOT_ASSERTED remote mode' });
 }
 async function errorDisabled(page, expectedMessage) {
   assert.equal(await page.locator("#error").isVisible(), true);
@@ -173,6 +247,8 @@ try {
   }
   const catalogBytes = await readFile(resolve(siteRoot, "data/catalog.json"));
   const catalog = JSON.parse(catalogBytes);
+  const archives = new Map();
+  for (const entry of catalog.entries) { const bytes = await readFile(resolve(siteRoot, entry.recording)); assert.equal(bytes.length, entry.bytes); assert.equal(digest(bytes), entry.sha256); archives.set(entry.id, JSON.parse(bytes)); }
   evidence.recordings = catalog.entries.map(({ id, sha256, bytes }) => ({ id, sha256, bytes }));
   baseUrl = process.env.LIMINIS_BASE_URL ? `${process.env.LIMINIS_BASE_URL.replace(/\/+$/, "")}/` : await serveSite();
   evidence.baseUrl = baseUrl;
@@ -209,6 +285,7 @@ try {
   for (const entry of catalog.entries) await check(`default physical overview, cadence, verified download: ${entry.id}`, async () => {
     const { page, errors, requests, httpBaseline } = await freshPage();
     try {
+      const archive = archives.get(entry.id);
       await open(page, entry.id); await ready(page);
       const horizon = entry.experiment.steps * entry.experiment.dt_seconds;
       assert.equal(Number(await page.locator("#speed").inputValue()), horizon / 120);
@@ -220,8 +297,7 @@ try {
       assert.ok(cadence.includes(`${entry.experiment.sample_every.toLocaleString("en-US")} ticks / ${(entry.experiment.sample_every * entry.experiment.dt_seconds).toLocaleString("en-US")} model s`), cadence);
       assert.equal((await page.locator("#download").getAttribute("href")), entry.recording);
       evidence.checks.push({ name: `canvas pixels: ${entry.id}`, status: "PASS", paintedPixels: await canvasNonblank(page) });
-      await layout(page, true);
-      await screenshot(page, `${entry.id}-desktop.png`);
+      await layout(page, true, archive.frames[0], archive.genomes, `${entry.id}: initial`);
       assert.equal(requests.length, 2, "Only catalog and selected recording should load");
       dataHttp(`initial load HTTP: ${entry.id}`, httpBaseline, entry.recording, 0, requests.length);
       const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#download").click()]);
@@ -229,6 +305,12 @@ try {
       assert.equal(downloaded.byteLength, entry.bytes); assert.equal(digest(downloaded), entry.sha256);
       evidence.checks.push({ name: `actual download integrity: ${entry.id}`, status: "PASS", bytes: downloaded.byteLength, sha256: digest(downloaded) });
       dataHttp(`actual download HTTP: ${entry.id}`, httpBaseline, entry.recording, 1, requests.length);
+      const endpointRequestBaseline = requests.length;
+      // Reuse the same real sparse recording endpoint for its longest tick,
+      // counter and frame-caption text; no additional observations are fetched.
+      await seek(page, horizon); await layout(page, true, archive.frames.at(-1), archive.genomes, `${entry.id}: endpoint`);
+      await screenshot(page, `${entry.id}-desktop.png`, archive.frames.at(-1), archive.genomes);
+      assert.equal(requests.length, endpointRequestBaseline); dataHttp(`endpoint HUD HTTP: ${entry.id}`, httpBaseline, entry.recording, 1, requests.length);
       assert.deepEqual(errors, []);
     } finally { await bounded(page.close(), timeouts.cleanup, "Page cleanup"); }
   });
@@ -241,7 +323,7 @@ try {
     ["mobile-narrow", { width: 320, height: 760 }, false],
   ]) await check(`responsive controls and real canvas: ${name}`, async () => {
     const { page, errors } = await freshPage(viewport);
-    try { await open(page); await ready(page); await layout(page, desktop); await canvasNonblank(page); await screenshot(page, `${name}.png`); assert.deepEqual(errors, []); }
+    try { const archive = archives.get(entry.id); await open(page); await ready(page); await layout(page, desktop, archive.frames[0], archive.genomes, `${name}: initial`); await canvasNonblank(page); await screenshot(page, `${name}.png`, archive.frames[0], archive.genomes); assert.deepEqual(errors, []); }
     finally { await bounded(page.close(), timeouts.cleanup, "Page cleanup"); }
   });
 
