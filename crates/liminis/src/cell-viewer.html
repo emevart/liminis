@@ -112,23 +112,22 @@
       .save-status[data-state="saving"] { color:var(--mint); }
       .save-status[data-state="error"] { color:var(--coral); }
       @media (max-width:800px) {
-        .shell { height:auto; min-height:100dvh; grid-template-rows:auto auto auto; }
+        .shell { height:auto; min-height:100dvh; grid-template-columns:minmax(0,1fr); grid-template-rows:repeat(5,auto); align-content:start; }
         .masthead { flex-wrap:wrap; }
         .identity { order:2; width:100%; margin:0; overflow:auto; }
         .workspace { grid-template-columns:1fr; }
         .stage { min-height:500px; height:62dvh; }
         .side { border-left:0; border-top:1px solid var(--rule); display:grid; grid-template-columns:1fr 1fr; overflow:visible; }
         .section { min-width:0; }
-        .readout { position:sticky; bottom:0; z-index:8; flex-wrap:wrap; }
+        .readout { position:static; flex-wrap:wrap; }
         .controls { width:100%; margin:0; flex-wrap:wrap; }
         /* Отдельная строка offline не занимает места, пока уведомление скрыто. */
-        .shell:has(.stage[data-physical="true"]) { grid-template-columns:minmax(0,1fr); grid-template-rows:repeat(5,auto); align-content:start; }
-        .shell:has(.stage[data-physical="true"]) > .masthead { grid-row:1; }
-        .shell:has(.stage[data-physical="true"]) > .offline { grid-row:2; }
-        .shell:has(.stage[data-physical="true"]) > .workspace { display:contents; }
-        .shell:has(.stage[data-physical="true"]) .stage { grid-row:3; }
-        .shell:has(.stage[data-physical="true"]) > .readout { grid-row:4; position:static; }
-        .shell:has(.stage[data-physical="true"]) .side { grid-row:5; }
+        .shell > .masthead { grid-row:1; }
+        .shell > .offline { grid-row:2; }
+        .shell > .workspace { display:contents; }
+        .shell .stage { grid-row:3; }
+        .shell > .readout { grid-row:4; }
+        .shell .side { grid-row:5; }
       }
       @media (max-width:520px) {
         .masthead { padding:8px 10px; }
