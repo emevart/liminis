@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "Original bounded mandatory LAB native pipe candidate failure",
+  "candidate_head": "c02bc689bf7014bda3bfdf346e3906a9bc536f14",
+  "candidate_tree": "416655a9ef6f1ba91c0556eb35fb8f300249bb15",
+  "workflow_run": 37259168567,
+  "workflow_job": 111602519476,
+  "artifact_id": 11323803358,
+  "actual_lab_status": "FAIL",
+  "lab_gates": {
+    "PASS": 1,
+    "FAIL": 1,
+    "NOT_EXECUTED": 7
+  },
+  "product_acceptance": "NOT_ACCEPTED_ASTRA_HOLD",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 732043,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3440,
+      "sha256": "983abe0de7e458a1d7d15c2d84a5edcd07344e5f862ce8cba2c820e21c884318"
+    },
+    {
+      "path": "lab-browser-c02bc68-original.zip",
+      "bytes": 674755,
+      "sha256": "b89e457fa75407d86cf5e96788615c7090e74334083544b0bb24ce2cf3364b26"
+    },
+    {
+      "path": "lab-c02-failure-review.json",
+      "bytes": 30858,
+      "sha256": "e42fc54f0dd97384dded5b3d39188672ef6c8da495ef91be276c37d44d874bbd"
+    },
+    {
+      "path": "lab-c02-failure-review.md",
+      "bytes": 5403,
+      "sha256": "66a9b99d21e4a2eb55d738390d7b24ef8dedb44cf2eadd2da654492f1a2fbd2e"
+    },
+    {
+      "path": "report.json",
+      "bytes": 17587,
+      "sha256": "941bde20eaa3822ee879fb691cf459398b068d4e7684c5637e4e1a3759f9af59"
+    }
+  ]
+}

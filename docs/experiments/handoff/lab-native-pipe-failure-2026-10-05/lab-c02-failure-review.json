@@ -1,0 +1,820 @@
+{
+  "schema_version": 1,
+  "reviewedAtUTC": "2026-10-05T03:38:03.741308+00:00",
+  "reviewerRole": "Independent read-only original artifact reviewer; not production or QA author",
+  "verdict": "CONFIRMED_ACTUAL_FAIL_NOT_ACCEPTED",
+  "acceptanceBlockers": [
+    {
+      "id": "LAB_GATE2_INITIAL_ORIGINAL_BODY_FAILED",
+      "path": "scripts/check_lab_browser.mjs:206",
+      "evidence": "results.json ERR_ABORTED in native-backed Playwright/HAR; response.body Network.getResponseBody No data. Gate2 fails and seven later gates were not executed."
+    }
+  ],
+  "additionalIntegrityOrPrivacyArchiveBlockers": [],
+  "scope": "Original bytes/CRC/source/trace/one requested PNG/privacy. No browser, HTTP, tests, Cargo, models, retry, causal run or product edit performed.",
+  "exactIdentity": {
+    "head": "c02bc689bf7014bda3bfdf346e3906a9bc536f14",
+    "tree": "416655a9ef6f1ba91c0556eb35fb8f300249bb15",
+    "run": "37259168567",
+    "job": "111602519476",
+    "artifact": "11323803358",
+    "cleanSourceHEADAndTreeIndependentlyVerified": true,
+    "all13SourcePinsIndependentlyRehashedAgainstCommittedAndWorkingBytes": [
+      {
+        "filename": "scripts/check_lab_browser.mjs",
+        "bytes": 61306,
+        "sha256": "9637ff9b10d57ded55d000e02e61d4f530f41d98e1ea94d2e942c255865c52a3"
+      },
+      {
+        "filename": "site/data/lab-2/results.json",
+        "bytes": 5294742,
+        "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+      },
+      {
+        "filename": "docs/experiments/lab-2/results.json",
+        "bytes": 5294742,
+        "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+      },
+      {
+        "filename": "site/data/lab-2/comparisons.json",
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+      },
+      {
+        "filename": "docs/experiments/lab-2/comparisons.json",
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+      },
+      {
+        "filename": "site/data/lab-2/manifest.json",
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+      },
+      {
+        "filename": "docs/experiments/lab-2/manifest.json",
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+      },
+      {
+        "filename": "site/data/lab-2/descriptor.json",
+        "bytes": 50708,
+        "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+      },
+      {
+        "filename": "site/lab.html",
+        "bytes": 5393,
+        "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+      },
+      {
+        "filename": "site/lab.js",
+        "bytes": 22571,
+        "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871"
+      },
+      {
+        "filename": "site/lab.css",
+        "bytes": 5019,
+        "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+      },
+      {
+        "filename": "site/lab-data.mjs",
+        "bytes": 20280,
+        "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e"
+      },
+      {
+        "filename": "site/data/lab-2/descriptor.json",
+        "bytes": 50708,
+        "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+      }
+    ],
+    "uniqueSourceFiles": 12,
+    "traceRetainedQASourceByteExactTo61306ByteScript": true,
+    "QAScriptSHA256": "9637ff9b10d57ded55d000e02e61d4f530f41d98e1ea94d2e942c255865c52a3",
+    "moduleBytes": 20280,
+    "moduleSHA256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+    "moduleByteExactABVariant": true,
+    "onlyReadBytesFunctionDeltaAndPrefixSuffixVerified": true,
+    "functionSHA256": "3129290bf9cbe4eccfd8b17bdf1628547d8fde5273a12f3a5e13cbe600f59a92"
+  },
+  "originalArchive": {
+    "file": "lab-browser-c02bc68-original.zip",
+    "bytes": 674755,
+    "sha256": "b89e457fa75407d86cf5e96788615c7090e74334083544b0bb24ce2cf3364b26",
+    "outerCRCErrorCount": 0,
+    "closedOuterInventory": [
+      {
+        "name": "failure.png",
+        "bytes": 429673,
+        "compressed": 391093,
+        "sha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014"
+      },
+      {
+        "name": "report.json",
+        "bytes": 17587,
+        "compressed": 4771,
+        "sha256": "941bde20eaa3822ee879fb691cf459398b068d4e7684c5637e4e1a3759f9af59"
+      },
+      {
+        "name": "trace.zip",
+        "bytes": 280337,
+        "compressed": 278531,
+        "sha256": "992a9d127a1acf839625d32faa1a3f91992f163c891d464a52b6f69d07226d5b"
+      }
+    ],
+    "outerExpandedBytes": 727597,
+    "nestedTraceCRCErrorCount": 0,
+    "closedNestedInventory": [
+      {
+        "name": "trace.trace",
+        "bytes": 739040,
+        "compressed": 74666,
+        "sha256": "ba8d4e8a52a4e2ff59750aeab0af32bc54a42c5696bbc7f4542b78fb9ea286c1"
+      },
+      {
+        "name": "trace.network",
+        "bytes": 13355,
+        "compressed": 1787,
+        "sha256": "ef9ee049194b101342648d27a0c41e0a3c9feba4401f5a949f687e0c6d0d9b26"
+      },
+      {
+        "name": "resources/page@ffd3428c2f25152d01312696ed09841f-1791170765525.jpeg",
+        "bytes": 2684,
+        "compressed": 170,
+        "sha256": "e629341910f73497e6d4bb6f9a9d5436f479f49ab43fc1162ce67aec4893c00c"
+      },
+      {
+        "name": "resources/page@ffd3428c2f25152d01312696ed09841f-1791170765554.jpeg",
+        "bytes": 6733,
+        "compressed": 3008,
+        "sha256": "199c84428b3bb330ce304498078cce2003dd629ecd89bacb00067495262e400e"
+      },
+      {
+        "name": "resources/page@ffd3428c2f25152d01312696ed09841f-1791170765795.jpeg",
+        "bytes": 61095,
+        "compressed": 53766,
+        "sha256": "a3afa2b4f344059fa1f68ad063881c5e3b10cdd22682a02a9fc26a454f2b760c"
+      },
+      {
+        "name": "resources/page@ffd3428c2f25152d01312696ed09841f-1791170766108.jpeg",
+        "bytes": 28263,
+        "compressed": 26476,
+        "sha256": "078cad67770581be1c77aacee279dc29e1bc6190ab12d28fd6e866ffd1d89522"
+      },
+      {
+        "name": "resources/7b90e653be5abbcc91f18d2d6c8c985166e210ec.html",
+        "bytes": 5393,
+        "compressed": 1901,
+        "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+      },
+      {
+        "name": "resources/556e1bf7da93250070e37e497da2f2d3ae778990.css",
+        "bytes": 5019,
+        "compressed": 1620,
+        "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+      },
+      {
+        "name": "resources/e14a4218a9025b241954b4fafd45433815cef562.json",
+        "bytes": 50708,
+        "compressed": 4414,
+        "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+      },
+      {
+        "name": "resources/c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json",
+        "bytes": 1116928,
+        "compressed": 90006,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+      },
+      {
+        "name": "resources/ef6a684fa6e196a50b302297db4c0a39d4206b0f.json",
+        "bytes": 82880,
+        "compressed": 2223,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+      },
+      {
+        "name": "trace.stacks",
+        "bytes": 1193,
+        "compressed": 310,
+        "sha256": "ca4380ff5434fbc67e3148d389b6be7b0701fc80ace750045830628307e194a7"
+      },
+      {
+        "name": "resources/src@52c053e0e9d3c02b45044359abdda3edd0ad849c.txt",
+        "bytes": 61306,
+        "compressed": 17524,
+        "sha256": "9637ff9b10d57ded55d000e02e61d4f530f41d98e1ea94d2e942c255865c52a3"
+      }
+    ],
+    "nestedExpandedBytes": 2174597,
+    "outerPlusNestedExpandedBytes": 2902194,
+    "safeBound64MiB": true,
+    "traversalDuplicateEncryptionSymlink": 0,
+    "extractedBytesMatchOriginal": true
+  },
+  "gateScope": {
+    "overallStatus": "FAIL",
+    "checks": [
+      {
+        "name": "Observed official Chromium sandbox argv with unchanged stock launch",
+        "status": "PASS",
+        "elapsedMs": 8.152837999999974
+      },
+      {
+        "name": "Original 6.5MB JSON is verified before showing the full 6×4 matrix and historical source",
+        "status": "FAIL",
+        "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   'response.body: Protocol error (Network.getResponseBody): No data found for resource with given identifier\\n' +\n+     '    at /home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:233\\n' +\n+     '    at _Page.<anonymous> (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:691)'\n+ ]\n- []\n\n    at drainResponses (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:81:249)\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:541:9)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:206:5\n    at async check (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:25:110)\n    at async main (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:205:3)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:24:72)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:242:27"
+      }
+    ],
+    "executedChecks": 2,
+    "laterSevenGates": "NOT_EXECUTED",
+    "initialPositiveOnly": true,
+    "staticRawArithmetic": {
+      "status": "PASS",
+      "scope": "Static exact-integer differences/missing pairs over exported samples; no browser/model/ledger recomputation",
+      "checkedPairs": 160,
+      "runs": 24,
+      "samples": 4044
+    },
+    "staticControls": "Synthetic oracle/batch checks only; no new biology or browser acceptance",
+    "remainingFullInteractions": "All24run/48endpoint/160pair browser checks, keyboard/history/reload,4layouts/typography,2negative controls and complete postcleanup verdict were not reached"
+  },
+  "actualInitialPage": {
+    "query": "?condition=baseline&seed=1&sample=0",
+    "requests": [
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:38009/lab.html?condition=baseline&seed=1&sample=0"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:38009/lab.css"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:38009/lab.js"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:38009/lab-data.mjs"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:38009/data/lab-2/descriptor.json"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:38009/data/lab-2/results.json"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:38009/data/lab-2/comparisons.json"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:38009/data/lab-2/manifest.json"
+      }
+    ],
+    "serverSourcePinRecords": [
+      {
+        "method": "GET",
+        "path": "/lab.html",
+        "time": 1791170765499,
+        "status": 200,
+        "bytes": 5393,
+        "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+      },
+      {
+        "method": "GET",
+        "path": "/lab.css",
+        "time": 1791170765515,
+        "status": 200,
+        "bytes": 5019,
+        "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+      },
+      {
+        "method": "GET",
+        "path": "/lab.js",
+        "time": 1791170765516,
+        "status": 200,
+        "bytes": 22571,
+        "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871"
+      },
+      {
+        "method": "GET",
+        "path": "/lab-data.mjs",
+        "time": 1791170765536,
+        "status": 200,
+        "bytes": 20280,
+        "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e"
+      },
+      {
+        "method": "GET",
+        "path": "/data/lab-2/descriptor.json",
+        "time": 1791170765547,
+        "status": 200,
+        "bytes": 50708,
+        "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+      },
+      {
+        "method": "GET",
+        "path": "/data/lab-2/results.json",
+        "time": 1791170765563,
+        "status": 200,
+        "bytes": 5294742,
+        "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+      },
+      {
+        "method": "GET",
+        "path": "/data/lab-2/comparisons.json",
+        "time": 1791170765574,
+        "status": 200,
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+      },
+      {
+        "method": "GET",
+        "path": "/data/lab-2/manifest.json",
+        "time": 1791170765576,
+        "status": 200,
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+      }
+    ],
+    "serverFinishAckAudit": "Not recorded; source/server metadata cannot replace missing actual browser body proof",
+    "actualOriginalBodyPins": [
+      {
+        "path": "/lab.html",
+        "status": 200,
+        "bytes": 5393,
+        "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+        "contentType": "text/html"
+      },
+      {
+        "path": "/lab.css",
+        "status": 200,
+        "bytes": 5019,
+        "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+        "contentType": "text/css"
+      },
+      {
+        "path": "/lab.js",
+        "status": 200,
+        "bytes": 22571,
+        "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+        "contentType": "text/javascript"
+      },
+      {
+        "path": "/lab-data.mjs",
+        "status": 200,
+        "bytes": 20280,
+        "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+        "contentType": "text/javascript"
+      },
+      {
+        "path": "/data/lab-2/descriptor.json",
+        "status": 200,
+        "bytes": 50708,
+        "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+        "contentType": "application/json"
+      },
+      {
+        "path": "/data/lab-2/comparisons.json",
+        "status": 200,
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+        "contentType": "application/json"
+      },
+      {
+        "path": "/data/lab-2/manifest.json",
+        "status": 200,
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+        "contentType": "application/json"
+      }
+    ],
+    "actualOriginalBodyPinCount": 7,
+    "resultsBodySHA": "UNAVAILABLE",
+    "failedRequests": [
+      {
+        "url": "http://127.0.0.1:38009/data/lab-2/results.json",
+        "error": "net::ERR_ABORTED"
+      }
+    ],
+    "responseErrors": [
+      "response.body: Protocol error (Network.getResponseBody): No data found for resource with given identifier\n    at /home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:233\n    at _Page.<anonymous> (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:691)"
+    ],
+    "external": [],
+    "network8PathsBijectionWithRequestsAndServerVerified": true,
+    "traceNetwork": [
+      {
+        "path": "/lab.html?condition=baseline&seed=1&sample=0",
+        "method": "GET",
+        "status": 200,
+        "continuedOriginal": true,
+        "failureText": null,
+        "bodySize": 5393,
+        "content": {
+          "size": 5393,
+          "mimeType": "text/html",
+          "compression": 0,
+          "_sha1": "7b90e653be5abbcc91f18d2d6c8c985166e210ec.html"
+        },
+        "requestTraceMonotonicMs": 839.618,
+        "HARSummaryDurationMs": 11.291,
+        "requestResponseCookiesEmpty": true
+      },
+      {
+        "path": "/lab.css",
+        "method": "GET",
+        "status": 200,
+        "continuedOriginal": true,
+        "failureText": null,
+        "bodySize": 5019,
+        "content": {
+          "size": 5019,
+          "mimeType": "text/css",
+          "compression": 0,
+          "_sha1": "556e1bf7da93250070e37e497da2f2d3ae778990.css"
+        },
+        "requestTraceMonotonicMs": 856.506,
+        "HARSummaryDurationMs": 10.579999999999998,
+        "requestResponseCookiesEmpty": true
+      },
+      {
+        "path": "/lab.js",
+        "method": "GET",
+        "status": 200,
+        "continuedOriginal": true,
+        "failureText": null,
+        "bodySize": 22571,
+        "content": {
+          "size": -1,
+          "mimeType": "text/javascript",
+          "compression": 0
+        },
+        "requestTraceMonotonicMs": 856.727,
+        "HARSummaryDurationMs": 13.949,
+        "requestResponseCookiesEmpty": true
+      },
+      {
+        "path": "/lab-data.mjs",
+        "method": "GET",
+        "status": 200,
+        "continuedOriginal": true,
+        "failureText": null,
+        "bodySize": 20280,
+        "content": {
+          "size": -1,
+          "mimeType": "text/javascript",
+          "compression": 0
+        },
+        "requestTraceMonotonicMs": 879.211,
+        "HARSummaryDurationMs": 5.889,
+        "requestResponseCookiesEmpty": true
+      },
+      {
+        "path": "/data/lab-2/descriptor.json",
+        "method": "GET",
+        "status": 200,
+        "continuedOriginal": true,
+        "failureText": null,
+        "bodySize": 50708,
+        "content": {
+          "size": 50708,
+          "mimeType": "application/json",
+          "compression": 0,
+          "_sha1": "e14a4218a9025b241954b4fafd45433815cef562.json"
+        },
+        "requestTraceMonotonicMs": 888.45,
+        "HARSummaryDurationMs": 7.385,
+        "requestResponseCookiesEmpty": true
+      },
+      {
+        "path": "/data/lab-2/results.json",
+        "method": "GET",
+        "status": 200,
+        "continuedOriginal": true,
+        "failureText": "net::ERR_ABORTED",
+        "bodySize": -1,
+        "content": {
+          "size": -1,
+          "mimeType": "application/json"
+        },
+        "requestTraceMonotonicMs": 902.891,
+        "HARSummaryDurationMs": 9.527,
+        "requestResponseCookiesEmpty": true
+      },
+      {
+        "path": "/data/lab-2/comparisons.json",
+        "method": "GET",
+        "status": 200,
+        "continuedOriginal": true,
+        "failureText": null,
+        "bodySize": 1116928,
+        "content": {
+          "size": 1116928,
+          "mimeType": "application/json",
+          "compression": 0,
+          "_sha1": "c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json"
+        },
+        "requestTraceMonotonicMs": 904.41,
+        "HARSummaryDurationMs": 20.145999999999997,
+        "requestResponseCookiesEmpty": true
+      },
+      {
+        "path": "/data/lab-2/manifest.json",
+        "method": "GET",
+        "status": 200,
+        "continuedOriginal": true,
+        "failureText": null,
+        "bodySize": 82880,
+        "content": {
+          "size": 82880,
+          "mimeType": "application/json",
+          "compression": 0,
+          "_sha1": "ef6a684fa6e196a50b302297db4c0a39d4206b0f.json"
+        },
+        "requestTraceMonotonicMs": 908.057,
+        "HARSummaryDurationMs": 22.389,
+        "requestResponseCookiesEmpty": true
+      }
+    ],
+    "retainedTraceOriginalBodies": "HTML, CSS, descriptor, comparisons, manifest byte-equal committed source and content SHA1/SHA256 verified. JS/module body pins recorded in report; separate trace bodies absent. Results body is not retained."
+  },
+  "traceScope": {
+    "eventCounts": {
+      "context-options": 1,
+      "before": 21,
+      "event": 1,
+      "after": 21,
+      "frame-snapshot": 6,
+      "log": 4,
+      "screencast-frame": 4
+    },
+    "callMethods": {
+      "newPage": 1,
+      "addInitScript": 1,
+      "goto": 1,
+      "continue": 8,
+      "body": 8,
+      "waitForFunction": 1,
+      "screenshot": 1
+    },
+    "all21BeforeAfterPairsPresent": true,
+    "eightUnchangedRouteContinues": true,
+    "routeFetchFulfillAbortCalls": 0,
+    "negativeVariantNotUsed": true,
+    "noReloadHistoryOtherNavigationInteraction": true,
+    "sourceQAArtifactUnmodified": true
+  },
+  "timing": {
+    "domain": "Saved Playwright trace monotonic ms only; not raw native CDP clock or cross-clock causal proof",
+    "initialGoto": {
+      "start": 833.243,
+      "end": 889.865
+    },
+    "initialReady": {
+      "start": 896.456,
+      "end": 1085.552
+    },
+    "failedResponseBody": {
+      "callId": "call@48",
+      "start": 928.766,
+      "end": 1139.067,
+      "error": "Protocol error (Network.getResponseBody): No data found for resource with given identifier"
+    },
+    "failurePNG": {
+      "start": 1214.002,
+      "end": 1452.135
+    },
+    "responseBodyFailureBeforeFailureScreenshot": true,
+    "laterContextCleanup": "Source publishes trace then awaits context/browser cleanup wrappers. Error already recorded before this later cleanup.",
+    "internalCause": "UNKNOWN; no raw native canceled flag/fullreceivedcount/EOF/unlock observation in this artifact"
+  },
+  "errorAndFinalizationLimits": {
+    "recordedPageErrors": [],
+    "recordedConsoleErrors": [],
+    "recordedNodeUnhandled": [],
+    "recordedCleanupErrors": [],
+    "browserLabQaUnhandled": "UNOBSERVED: init collector installed but no evaluate/read/closePage reached",
+    "regularPositiveClosedFlag": false,
+    "serializedPending": {},
+    "postCleanupPendingCount": "UNOBSERVED: Set serializes as {}; success final aggregate not executed for FAIL",
+    "cleanupQualification": "Source awaits context/browser close through wrappers and no wrapper error recorded; does not imply successful regular page-close or unhandled/pending zero proof.",
+    "failureStages": [
+      {
+        "stage": "run",
+        "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   'response.body: Protocol error (Network.getResponseBody): No data found for resource with given identifier\\n' +\n+     '    at /home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:233\\n' +\n+     '    at _Page.<anonymous> (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:691)'\n+ ]\n- []\n\n    at drainResponses (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:81:249)\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:541:9)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:206:5\n    at async check (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:25:110)\n    at async main (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:205:3)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:24:72)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:242:27"
+      }
+    ]
+  },
+  "actualFailurePNG": {
+    "file": "failure.png",
+    "bytes": 429673,
+    "sha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014",
+    "width": 1440,
+    "height": 2443,
+    "RGBAsha256": "d8bfac48aa3c1986425bfe8e6299867c0e64c47279857f9518b5c0ee08556387",
+    "viewedWithViewImage": true,
+    "byteExactToPreviousABPNG": true,
+    "visualObservation": "Four complete aggregate plots, baseline seed1 tick0, inspector/environment/provenance and all24 matrix rows visible. No obvious pending/fatal UI. This cannot waive integrity failure or prove unobserved browser unhandled state."
+  },
+  "runtime": {
+    "browser": {
+      "version": "149.0.7827.55",
+      "playwright": "1.61.1"
+    },
+    "runner": {
+      "node": "v24.21.0",
+      "os": "Linux",
+      "image": "ubuntu22"
+    },
+    "sandbox": {
+      "status": "PASS",
+      "launchSettings": {
+        "headless": true,
+        "chromiumSandbox": true,
+        "args": [
+          "--enable-automation"
+        ]
+      },
+      "observedForbiddenFlagCount": 0,
+      "qualification": "Pinned official defaults retained, including stock SwiftShader if observed; no custom GPU switch or hardware/kernel-isolation claim."
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 1
+    }
+  },
+  "boundedPrivacy": {
+    "UTF8Entries": 10,
+    "UTF8Bytes": 2093409,
+    "allOuterReportAndNestedNonJpegTextDecoded": true,
+    "credentialAndExplicitPrivateContextPatternCounts": {
+      "privateKey": 0,
+      "githubCredential": 0,
+      "apiCredential": 0,
+      "authOrCookieValue": 0,
+      "credentialURLQuery": 0,
+      "explicitPrivateContextReference": 0,
+      "secretAssignment": 0
+    },
+    "broadNegativeIdPatternMatches": 11,
+    "classifiedScientificFalsePositives": [
+      {
+        "resource": "resources/c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json",
+        "JSONPath": [
+          "landmark_comparisons",
+          17,
+          "pairs",
+          3,
+          "delta",
+          "medium_energy_units"
+        ],
+        "classification": "Published scientific decimal i128 energy delta/range; not a private chat ID",
+        "valueNotPrinted": true
+      },
+      {
+        "resource": "resources/c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json",
+        "JSONPath": [
+          "landmark_comparisons",
+          17,
+          "ranges",
+          "delta",
+          "medium_energy_units",
+          "min"
+        ],
+        "classification": "Published scientific decimal i128 energy delta/range; not a private chat ID",
+        "valueNotPrinted": true
+      },
+      {
+        "resource": "resources/c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json",
+        "JSONPath": [
+          "landmark_comparisons",
+          18,
+          "pairs",
+          3,
+          "delta",
+          "medium_energy_units"
+        ],
+        "classification": "Published scientific decimal i128 energy delta/range; not a private chat ID",
+        "valueNotPrinted": true
+      },
+      {
+        "resource": "resources/c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json",
+        "JSONPath": [
+          "landmark_comparisons",
+          18,
+          "ranges",
+          "delta",
+          "medium_energy_units",
+          "min"
+        ],
+        "classification": "Published scientific decimal i128 energy delta/range; not a private chat ID",
+        "valueNotPrinted": true
+      },
+      {
+        "resource": "resources/c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json",
+        "JSONPath": [
+          "landmark_comparisons",
+          19,
+          "pairs",
+          3,
+          "delta",
+          "medium_energy_units"
+        ],
+        "classification": "Published scientific decimal i128 energy delta/range; not a private chat ID",
+        "valueNotPrinted": true
+      },
+      {
+        "resource": "resources/c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json",
+        "JSONPath": [
+          "landmark_comparisons",
+          19,
+          "ranges",
+          "delta",
+          "medium_energy_units",
+          "min"
+        ],
+        "classification": "Published scientific decimal i128 energy delta/range; not a private chat ID",
+        "valueNotPrinted": true
+      },
+      {
+        "resource": "resources/c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json",
+        "JSONPath": [
+          "landmark_comparisons",
+          20,
+          "pairs",
+          3,
+          "delta",
+          "medium_energy_units"
+        ],
+        "classification": "Published scientific decimal i128 energy delta/range; not a private chat ID",
+        "valueNotPrinted": true
+      },
+      {
+        "resource": "resources/c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json",
+        "JSONPath": [
+          "landmark_comparisons",
+          20,
+          "ranges",
+          "delta",
+          "medium_energy_units",
+          "min"
+        ],
+        "classification": "Published scientific decimal i128 energy delta/range; not a private chat ID",
+        "valueNotPrinted": true
+      },
+      {
+        "resource": "resources/c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json",
+        "JSONPath": [
+          "landmark_comparisons",
+          34,
+          "pairs",
+          3,
+          "delta",
+          "bath_heat_units"
+        ],
+        "classification": "Published scientific decimal i128 energy delta/range; not a private chat ID",
+        "valueNotPrinted": true
+      },
+      {
+        "resource": "resources/c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json",
+        "JSONPath": [
+          "latest_common_samples",
+          11,
+          "delta",
+          "medium_energy_units"
+        ],
+        "classification": "Published scientific decimal i128 energy delta/range; not a private chat ID",
+        "valueNotPrinted": true
+      },
+      {
+        "resource": "resources/c457ed89da2a0ebc73e378fa2367ee3aabd10c13.json",
+        "JSONPath": [
+          "latest_common_samples",
+          19,
+          "delta",
+          "bath_heat_units"
+        ],
+        "classification": "Published scientific decimal i128 energy delta/range; not a private chat ID",
+        "valueNotPrinted": true
+      }
+    ],
+    "unresolvedPrivateContextMatches": 0,
+    "eightHARCookiesEmptyAndAuthCookieHeadersAbsent": true,
+    "actualRequestedFailurePNGViewed": true,
+    "nestedBinaryJPEGs": 4,
+    "nestedJPEGsSeparatelyViewed": false,
+    "nestedImageScope": "All4 frames belong to the single original local LAB page; no additional page/navigation/external request is recorded. They are not declared separately visually reviewed.",
+    "fullSecretGuarantee": false,
+    "rawJobLogsArchived": false
+  },
+  "conclusion": "Production compatibility candidate fails the unchanged mandatory LAB gate. No product/LAB/fullCI acceptance or merge/deploy. Earlier source/Node and diagnostic B PASS do not transfer. Cause remains unknown; all prior FAIL remain FAIL. HOLD/no further LAB causal run or speculative edits; Astra/coordinator defines any separately authorized scope.",
+  "qualifications": [
+    "Results source/server pin and Content-Length are present, but original actual browser results body SHA is unavailable. Do not claim eight successful response body pins.",
+    "HAR results size/bodySize/transferSize and receive timing are -1; full native received bytes/canceled flag/EOF/locks are not measured.",
+    "Visible ready UI is narrower than failed mandatory original-body proof and seven unreached browser gates.",
+    "Browser __labQaUnhandled was not read; page/console/Node arrays empty do not establish browser unhandled0.",
+    "Source trace timing shows body-error before failure capture/navigation/cleanup; no internal Chromium cause or repeatability/performance proof.",
+    "Trace publication PASS means saved trace integrity, not LAB test PASS. Other job success or still-running Rust do not rescue the mandatory LAB failure."
+  ]
+}

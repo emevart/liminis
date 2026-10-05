@@ -1,0 +1,447 @@
+{
+  "status": "FAIL",
+  "startedAt": "2026-10-05T03:26:04.707Z",
+  "limits": {
+    "run": 210000,
+    "operation": 15000,
+    "launch": 20000,
+    "cdp": 5000,
+    "cleanup": 5000,
+    "trace": 15000
+  },
+  "sourceCommit": "21cbe90732128edee61963544e414d29a7420577",
+  "pins": {
+    "results": {
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    "comparisons": {
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    "manifest": {
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    }
+  },
+  "checks": [
+    {
+      "name": "Observed official Chromium sandbox argv with unchanged stock launch",
+      "status": "PASS",
+      "elapsedMs": 8.152837999999974
+    },
+    {
+      "name": "Original 6.5MB JSON is verified before showing the full 6×4 matrix and historical source",
+      "status": "FAIL",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   'response.body: Protocol error (Network.getResponseBody): No data found for resource with given identifier\\n' +\n+     '    at /home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:233\\n' +\n+     '    at _Page.<anonymous> (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:691)'\n+ ]\n- []\n\n    at drainResponses (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:81:249)\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:541:9)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:206:5\n    at async check (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:25:110)\n    at async main (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:205:3)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:24:72)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:242:27"
+    }
+  ],
+  "sources": [
+    {
+      "filename": "scripts/check_lab_browser.mjs",
+      "bytes": 61306,
+      "sha256": "9637ff9b10d57ded55d000e02e61d4f530f41d98e1ea94d2e942c255865c52a3"
+    },
+    {
+      "filename": "site/data/lab-2/results.json",
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "filename": "docs/experiments/lab-2/results.json",
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "filename": "site/data/lab-2/comparisons.json",
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "filename": "docs/experiments/lab-2/comparisons.json",
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "filename": "site/data/lab-2/manifest.json",
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    },
+    {
+      "filename": "docs/experiments/lab-2/manifest.json",
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    },
+    {
+      "filename": "site/data/lab-2/descriptor.json",
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    },
+    {
+      "filename": "site/lab.html",
+      "bytes": 5393,
+      "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+    },
+    {
+      "filename": "site/lab.js",
+      "bytes": 22571,
+      "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871"
+    },
+    {
+      "filename": "site/lab.css",
+      "bytes": 5019,
+      "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+    },
+    {
+      "filename": "site/lab-data.mjs",
+      "bytes": 20280,
+      "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e"
+    },
+    {
+      "filename": "site/data/lab-2/descriptor.json",
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    }
+  ],
+  "serverRequests": [
+    {
+      "method": "GET",
+      "path": "/lab.html",
+      "time": 1791170765499,
+      "status": 200,
+      "bytes": 5393,
+      "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+    },
+    {
+      "method": "GET",
+      "path": "/lab.css",
+      "time": 1791170765515,
+      "status": 200,
+      "bytes": 5019,
+      "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+    },
+    {
+      "method": "GET",
+      "path": "/lab.js",
+      "time": 1791170765516,
+      "status": 200,
+      "bytes": 22571,
+      "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871"
+    },
+    {
+      "method": "GET",
+      "path": "/lab-data.mjs",
+      "time": 1791170765536,
+      "status": 200,
+      "bytes": 20280,
+      "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e"
+    },
+    {
+      "method": "GET",
+      "path": "/data/lab-2/descriptor.json",
+      "time": 1791170765547,
+      "status": 200,
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    },
+    {
+      "method": "GET",
+      "path": "/data/lab-2/results.json",
+      "time": 1791170765563,
+      "status": 200,
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "method": "GET",
+      "path": "/data/lab-2/comparisons.json",
+      "time": 1791170765574,
+      "status": 200,
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "method": "GET",
+      "path": "/data/lab-2/manifest.json",
+      "time": 1791170765576,
+      "status": 200,
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    }
+  ],
+  "pages": [
+    {
+      "url": "?condition=baseline&seed=1&sample=0",
+      "negative": false,
+      "requests": [
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:38009/lab.html?condition=baseline&seed=1&sample=0"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:38009/lab.css"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:38009/lab.js"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:38009/lab-data.mjs"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:38009/data/lab-2/descriptor.json"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:38009/data/lab-2/results.json"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:38009/data/lab-2/comparisons.json"
+        },
+        {
+          "method": "GET",
+          "url": "http://127.0.0.1:38009/data/lab-2/manifest.json"
+        }
+      ],
+      "failed": [
+        {
+          "url": "http://127.0.0.1:38009/data/lab-2/results.json",
+          "error": "net::ERR_ABORTED"
+        }
+      ],
+      "external": [],
+      "responses": [
+        {
+          "path": "/lab.html",
+          "status": 200,
+          "bytes": 5393,
+          "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+          "contentType": "text/html"
+        },
+        {
+          "path": "/lab.css",
+          "status": 200,
+          "bytes": 5019,
+          "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+          "contentType": "text/css"
+        },
+        {
+          "path": "/lab.js",
+          "status": 200,
+          "bytes": 22571,
+          "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+          "contentType": "text/javascript"
+        },
+        {
+          "path": "/lab-data.mjs",
+          "status": 200,
+          "bytes": 20280,
+          "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e",
+          "contentType": "text/javascript"
+        },
+        {
+          "path": "/data/lab-2/descriptor.json",
+          "status": 200,
+          "bytes": 50708,
+          "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+          "contentType": "application/json"
+        },
+        {
+          "path": "/data/lab-2/comparisons.json",
+          "status": 200,
+          "bytes": 1116928,
+          "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+          "contentType": "application/json"
+        },
+        {
+          "path": "/data/lab-2/manifest.json",
+          "status": 200,
+          "bytes": 82880,
+          "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+          "contentType": "application/json"
+        }
+      ],
+      "responseErrors": [
+        "response.body: Protocol error (Network.getResponseBody): No data found for resource with given identifier\n    at /home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:233\n    at _Page.<anonymous> (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:691)"
+      ],
+      "closed": false,
+      "pending": {}
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "failure.png",
+      "bytes": 429673,
+      "sha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014"
+    }
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "nodeUnhandled": [],
+  "cleanupErrors": [],
+  "sandbox": {
+    "status": "PASS",
+    "arguments": [
+      "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+      "--disable-field-trial-config",
+      "--disable-background-networking",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-back-forward-cache",
+      "--disable-breakpad",
+      "--disable-client-side-phishing-detection",
+      "--disable-component-extensions-with-background-pages",
+      "--disable-component-update",
+      "--no-default-browser-check",
+      "--disable-default-apps",
+      "--disable-dev-shm-usage",
+      "--disable-edgeupdater",
+      "--disable-extensions",
+      "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+      "--enable-features=CDPScreenshotNewSurface",
+      "--allow-pre-commit-input",
+      "--disable-hang-monitor",
+      "--disable-ipc-flooding-protection",
+      "--disable-popup-blocking",
+      "--disable-prompt-on-repost",
+      "--disable-renderer-backgrounding",
+      "--force-color-profile=srgb",
+      "--metrics-recording-only",
+      "--no-first-run",
+      "--password-store=basic",
+      "--use-mock-keychain",
+      "--no-service-autorun",
+      "--export-tagged-pdf",
+      "--disable-search-engine-choice-screen",
+      "--unsafely-disable-devtools-self-xss-warnings",
+      "--edge-skip-compat-layer-relaunch",
+      "--disable-infobars",
+      "--disable-search-engine-choice-screen",
+      "--disable-sync",
+      "--enable-unsafe-swiftshader",
+      "--headless",
+      "--hide-scrollbars",
+      "--mute-audio",
+      "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+      "--enable-automation",
+      "--user-data-dir=/tmp/playwright_chromiumdev_profile-LPJjap",
+      "--remote-debugging-pipe",
+      "--no-startup-window",
+      "--use-gl=angle",
+      "--use-angle=swiftshader-webgl",
+      "--ozone-platform=headless",
+      "--allow-pre-commit-input"
+    ],
+    "launchSettings": {
+      "headless": true,
+      "chromiumSandbox": true,
+      "args": [
+        "--enable-automation"
+      ]
+    },
+    "qualification": "Pinned official defaults retained, including stock SwiftShader if observed; no custom GPU switch or hardware/kernel-isolation claim."
+  },
+  "trace": {
+    "status": "PASS",
+    "bytes": 280337,
+    "sha256": "992a9d127a1acf839625d32faa1a3f91992f163c891d464a52b6f69d07226d5b"
+  },
+  "qualifications": [
+    "Original saved aggregate JSON only; no model replay, new experiments/comparisons, generated cells, positions or full genomes.",
+    "Source producer world30/chamber1/dt30 remains separate from the current delivery HEAD/tree.",
+    "Exact integer comparisons use BigInt; mol/J plot values are derived exported displays, not an independent per-tick ledger proof.",
+    "Four Chromium viewport sizes and keyboard/select/history controls; no native touch/full accessibility/achieved FPS or kernel-isolation attestation.",
+    "An explicitly labelled numeric-exponent spelling integrity negative control changes one transport byte only, preserving all JSON observations."
+  ],
+  "workflowRun": "https://github.com/emevart/liminis/actions/runs/37259168567",
+  "runner": {
+    "node": "v24.21.0",
+    "os": "Linux",
+    "image": "ubuntu22"
+  },
+  "sourceHead": "c02bc689bf7014bda3bfdf346e3906a9bc536f14",
+  "sourceTree": "416655a9ef6f1ba91c0556eb35fb8f300249bb15",
+  "rawArithmetic": {
+    "status": "PASS",
+    "scope": "Static exact-integer differences/missing pairs over exported samples; no browser/model/ledger recomputation",
+    "checkedPairs": 160,
+    "runs": 24,
+    "samples": 4044
+  },
+  "batchObservationOracle": {
+    "status": "PASS",
+    "kind": "Synthetic batched observation precision/duplicate/missing/null controls; not biology or browser",
+    "cases": 6
+  },
+  "integrityControlSource": {
+    "label": "Transport-only single numeric exponent e→E spelling; same length and all parsed binary64/string/structural values; no model changes",
+    "field": "runs[0].identity.volume_m3",
+    "originalToken": "1e-12",
+    "modifiedToken": "1E-12",
+    "tokenOffset": 5495,
+    "byteOffset": 5496,
+    "originalByte": 101,
+    "deliveredByte": 69,
+    "originalSha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+    "deliveredSha256": "58407c180b65782bafeeacef46dede6ced435ef2bb1f1ca0c79624f4dc313f2e",
+    "bytes": 5294742
+  },
+  "dataIdentity": {
+    "bytes": 6494550,
+    "runs": 24,
+    "samples": 4044,
+    "producer": {
+      "chamber_format": 1,
+      "dt_seconds": 30,
+      "limitations": [
+        "Uncalibrated prototype chemistry and bounded inherited kinetics.",
+        "No temperature dependence, spatial dynamics, GRN or open-ended evolution.",
+        "Finite horizons and resource stops are censored observations, not completed biological histories.",
+        "Samples contain aggregates, not resumable states or event reconstructions."
+      ],
+      "provenance": {
+        "build_attestation": false,
+        "build_requirement": "Use cargo run in this checkout. Runtime rustc and profile are observations, not proof of how a standalone binary was built.",
+        "host_arch": "x86_64",
+        "host_os": "linux",
+        "numerical_mode": "FLOAT/native f32 Q and f64 genome decoding; exact i128 ledgers",
+        "profile": "release",
+        "runner_version": "0.1.0",
+        "runtime_rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+        "source_verification": "git_head_and_clean_provenance_inputs"
+      },
+      "source_commit": "21cbe90732128edee61963544e414d29a7420577",
+      "world_format_version": 30
+    },
+    "capabilities": {
+      "aggregate_samples": true,
+      "event_reconstruction": false,
+      "full_genomes": false,
+      "individual_cells": false,
+      "resumable_states": false,
+      "spatial_positions": false
+    },
+    "descriptorSha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+  },
+  "oracle": {
+    "status": "PASS",
+    "kind": "Synthetic arithmetic/unknown-value controls, not biological observations",
+    "cases": 6
+  },
+  "origin": "http://127.0.0.1:38009",
+  "browser": {
+    "version": "149.0.7827.55",
+    "playwright": "1.61.1"
+  },
+  "failures": [
+    {
+      "stage": "run",
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   'response.body: Protocol error (Network.getResponseBody): No data found for resource with given identifier\\n' +\n+     '    at /home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:233\\n' +\n+     '    at _Page.<anonymous> (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:76:691)'\n+ ]\n- []\n\n    at drainResponses (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:81:249)\n    at runNextTicks (node:internal/process/task_queues:65:5)\n    at process.processImmediate (node:internal/timers:541:9)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:206:5\n    at async check (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:25:110)\n    at async main (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:205:3)\n    at async bounded (file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:24:72)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:242:27"
+    }
+  ],
+  "finishedAt": "2026-10-05T03:26:06.252Z"
+}
