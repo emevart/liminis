@@ -1,0 +1,39 @@
+{
+  "head": "d8e69e4d652e40409fc15bc5e9f247eb58d8c5ab",
+  "tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+  "base": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+  "scope": "exact seven agreed paths",
+  "author_blobs": [
+    {
+      "path": "site/observe.html",
+      "source": "f4207bb",
+      "bytes": 6954,
+      "sha256": "105c5a860651769c0310c4185a96d7ad2442c3726b51779a8afa1f1707d0b72e"
+    },
+    {
+      "path": "site/observer.css",
+      "source": "f4207bb",
+      "bytes": 7618,
+      "sha256": "edd0061678fa7f0f64f8fd6dfaf9ea12a94170c239b314b9a533a96cff5268f4"
+    },
+    {
+      "path": "scripts/check_dense_recording_browser.mjs",
+      "source": "7ba64bb",
+      "bytes": 75936,
+      "sha256": "75968e3ba29b68f68ff8ff2c7e58f3ab59f23854b0cb17f42478fe2bfd27ac77"
+    },
+    {
+      "path": "site/playback.browser.mjs",
+      "source": "7ba64bb",
+      "bytes": 42718,
+      "sha256": "060465374110d48d1ae1fa404b2a656d7248b9462632b68ed6cce9b672a0317b"
+    },
+    {
+      "path": "scripts/check_public_recording_browser.mjs",
+      "source": "4b7f2a0",
+      "bytes": 42579,
+      "sha256": "0d41e009ac7c8fd8feca1fd398b016a4f5dee5e8f9119f10900d150dfb0e5f7b"
+    }
+  ],
+  "status": "SOURCE_IDENTITY_PASS_NOT_BROWSER_ACCEPTANCE"
+}

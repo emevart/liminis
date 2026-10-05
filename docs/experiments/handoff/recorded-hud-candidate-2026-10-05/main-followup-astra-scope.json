@@ -1,0 +1,26 @@
+{
+  "status": "ASTRA_APPROVED_MAIN_FOLLOWUP_SCOPE",
+  "condition": "Guarded merge tree equals c5775c00a150768f2819e265a4165d8605bd48e3 and no source/runtime/guard drift",
+  "candidate_binding": {
+    "head": "d8e69e4d652e40409fc15bc5e9f247eb58d8c5ab",
+    "tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+    "run_id": 37270688687
+  },
+  "main_requirements": [
+    "New exact-head full CI with 9 SUCCESS and only two known PR-only SKIPs; six mandatory browser steps actually SUCCESS",
+    "Read new main recorded/dense reports with exact head/tree/run/artifact identities, body/source pins, complete22+14 gates, geometry/selection and all previous state/clock/network/cancel/sandbox/cleanup/error guards",
+    "Deep independent new actual public review:19HTTPS pins,14browserasset pins,4gates,desktop/mobile PNG/trace and exact fixed insertion qualification",
+    "Save source/tree bridge, receipts/new reports, main artifact IDs/digests and durable public original evidence with normal network readback"
+  ],
+  "qualification": "Candidate independent recorded/dense actual PASS; byte-identical merged tree; fresh main regression reports PASS; fresh public independent actual PASS. No new independent full-artifact main recorded/dense or GL review claimed. Independent GL review remains accepted-e2-bound with unchanged source and fresh regression steps.",
+  "stops": [
+    "Failed/not-executed mandatory gate",
+    "Source/runtime/body pin mismatch",
+    "Unexpected exception or new concern",
+    "New geometry/selection problem",
+    "Report/artifact mismatch"
+  ],
+  "retry_rule": "HOLD and scoped deep review, no repeat solely to obtain GREEN",
+  "next_stage": "Only after main/public gates close",
+  "lab": "HOLD"
+}

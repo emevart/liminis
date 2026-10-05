@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "kind": "recorded HUD exact candidate affected original artifacts",
+  "candidate_head": "d8e69e4d652e40409fc15bc5e9f247eb58d8c5ab",
+  "candidate_tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+  "workflow_run": 37270688687,
+  "artifact_ids": [
+    11328571618,
+    11327998780
+  ],
+  "actual_acceptance": "QUALIFIED_INDEPENDENT_RECORDED_DENSE_PASS_ZERO_BLOCKERS",
+  "full_ci": "SUCCESS_ALL_11_EXACT_HEAD_CHECKS",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 31425726,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2411,
+      "sha256": "dc60d4b89ccd5e5a6ac10e103c3e830fe2437a08363755d4c8d8c7a0d7129660"
+    },
+    {
+      "path": "actual-review.json",
+      "bytes": 68850,
+      "sha256": "dfab000c39153e3dc0b19375c5361e5ae221a4db0f07b364582783079c189734"
+    },
+    {
+      "path": "actual-review.md",
+      "bytes": 12362,
+      "sha256": "812a92363e823c7bff61292830ac63271597109f9bf4c2267b1c8cd34a983ddb"
+    },
+    {
+      "path": "bounded-analysis.json",
+      "bytes": 86377,
+      "sha256": "9920f0ea4aac97aacaefaa25e808bacbee0a9519b290d9e5300380312f21c3b2"
+    },
+    {
+      "path": "bounded_analysis.py",
+      "bytes": 26237,
+      "sha256": "c271f064b9885075af407229f2d86f599fe197a9d6540826d9c4ad2797107164"
+    },
+    {
+      "path": "dense-recording-browser-d8e69e4-original.zip",
+      "bytes": 15869744,
+      "sha256": "91250af490dfb9ddf0fa2776fbccc0d529ca7908fe68741eca0a8eb4fc7e6034"
+    },
+    {
+      "path": "exact-head-ci-receipt.json",
+      "bytes": 18237,
+      "sha256": "fccb4fe15fd9ec26962517340c3b6092cc3c7b5b15cd852b4021b0fecf3f4414"
+    },
+    {
+      "path": "integration-source-receipt.json",
+      "bytes": 1242,
+      "sha256": "b1e9234277dad68e414e4e8201c52c968675d9f573ca76180bef97fe1c7edc1a"
+    },
+    {
+      "path": "main-followup-astra-scope.json",
+      "bytes": 1725,
+      "sha256": "3ecf5fd8d882b58d07748d871a661061ff326ed198adfb0e9c312ba4d40f6452"
+    },
+    {
+      "path": "original-artifact-pins.json",
+      "bytes": 876,
+      "sha256": "eda136aae48af21a7dba752fb593728fd20111d6387f9fe58a50c72f38bed90f"
+    },
+    {
+      "path": "recorded-browser-d8e69e4-original.zip",
+      "bytes": 15318686,
+      "sha256": "477bf5f46b54bd58fc76a8e13c971872994657d7cdad088b0aca9c8ed45c00cb"
+    },
+    {
+      "path": "regression-source-bridge.json",
+      "bytes": 2954,
+      "sha256": "a94008794fc90fd0e5a310cd7e47274fc0c0e7f0936059ee07204661890b6dc1"
+    },
+    {
+      "path": "source-review.json",
+      "bytes": 10929,
+      "sha256": "8578a4622e4b793936f6dc3d0a4fe23b9086d00ebb900bcf308fe96725b3ef1c"
+    },
+    {
+      "path": "source-review.md",
+      "bytes": 5096,
+      "sha256": "923fbb39ac8905fa0a9ab9766f5b95a8765a9f55a6360202430b737d3c40ce26"
+    }
+  ],
+  "qualifications": [
+    "Candidate-bound independent source and recorded/dense actual acceptance; new main/public gates pending",
+    "Original ZIP bytes without repacking; metadata SHA and outer/nested CRC verified",
+    "Fresh exact-head LIVE/physical/3D regression jobs plus unchanged source bridge; independent GL actual review remains e2-bound",
+    "Bounded privacy and retained trace-body/legacy unhandled/drain limitations; no exhaustive secret or hardware-FPS guarantee",
+    "Partial large-horizon fixtures and endpoints, not full 2.424GB browser delivery; LAB HOLD"
+  ]
+}

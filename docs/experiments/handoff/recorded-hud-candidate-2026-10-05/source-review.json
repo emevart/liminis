@@ -1,0 +1,232 @@
+{
+  "schema": "liminis-independent-source-review-v1",
+  "scope": "REC recorded observer HUD; independent exact combined source review only",
+  "reviewedAt": "2026-10-05T06:07:00.606486+00:00",
+  "reviewerRole": "Independent code/reliability reviewer; did not author product, QA or root integration",
+  "verdict": "QUALIFIED_SOURCE_PASS",
+  "blockers": [],
+  "blockerCount": 0,
+  "candidate": {
+    "head": "d8e69e4d652e40409fc15bc5e9f247eb58d8c5ab",
+    "tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+    "cleanTracked": true,
+    "base": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+    "baseTree": "47ce45646315b09493d58d87ca8fce4dc867aa8d"
+  },
+  "sourceBindings": {
+    "product": {
+      "head": "f4207bb681b4d56ad2b4f4179b5a47a37d04400e",
+      "tree": "4174d8521d3ef083ae5a791adb4695687f6edf99",
+      "twoBlobsByteExact": true
+    },
+    "qa": {
+      "head": "7ba64bb68edf61ec24d1b383e366b5246051bdef",
+      "tree": "36952180b3d2c780ff431205763a442b8cee34fa",
+      "twoBlobsByteExact": true
+    },
+    "rootPublicRepin": {
+      "head": "4b7f2a0c9f8b8a0ede5d57c8614beb154058aeca",
+      "scriptByteExact": true
+    }
+  },
+  "changedFiles": [
+    {
+      "path": "docs/ACCEPTANCE.md",
+      "bytes": 159102,
+      "sha256": "277a0bcd42023c221841b036d1bd48cebecb5be40c51b88f88f5f33102b89e3c",
+      "gitBlob": "5e82d51fb00c13be1aa9e729d1697e62295a4c6b"
+    },
+    {
+      "path": "docs/checkpoints/2026-10-05-recorded-hud.md",
+      "bytes": 6091,
+      "sha256": "38245e87ce6774e1d99bc6ebb46f455a6fa766f35fe319e163e358c92ee85b9f",
+      "gitBlob": "aca3fea4126dc90949a442178f554cac23d9217b"
+    },
+    {
+      "path": "scripts/check_dense_recording_browser.mjs",
+      "bytes": 75936,
+      "sha256": "75968e3ba29b68f68ff8ff2c7e58f3ab59f23854b0cb17f42478fe2bfd27ac77",
+      "gitBlob": "2dffe118e34ddce0b7f6b766958fd315f1006709"
+    },
+    {
+      "path": "scripts/check_public_recording_browser.mjs",
+      "bytes": 42579,
+      "sha256": "0d41e009ac7c8fd8feca1fd398b016a4f5dee5e8f9119f10900d150dfb0e5f7b",
+      "gitBlob": "2440358c824db0b65e9fea4cde129211d666284c"
+    },
+    {
+      "path": "site/observe.html",
+      "bytes": 6954,
+      "sha256": "105c5a860651769c0310c4185a96d7ad2442c3726b51779a8afa1f1707d0b72e",
+      "gitBlob": "9548fe23f4c4f6b88e4ff0e2d5c93da203ee18d1"
+    },
+    {
+      "path": "site/observer.css",
+      "bytes": 7618,
+      "sha256": "edd0061678fa7f0f64f8fd6dfaf9ea12a94170c239b314b9a533a96cff5268f4",
+      "gitBlob": "30dfae4c74e0950b841d599b85cac426d361ee9b"
+    },
+    {
+      "path": "site/playback.browser.mjs",
+      "bytes": 42718,
+      "sha256": "060465374110d48d1ae1fa404b2a656d7248b9462632b68ed6cce9b672a0317b",
+      "gitBlob": "25a9f0d5246cf5bcb88c2249e1b80719328362b3"
+    }
+  ],
+  "method": {
+    "readOnlyGitSource": true,
+    "fullProductHtmlCssRead": true,
+    "fullQaDeltaAndAdjacentGuardsRead": true,
+    "gitByteAndShaProof": true,
+    "browserRun": false,
+    "httpRequests": false,
+    "testsRunByReviewer": false,
+    "cargoOrModels": false,
+    "sourceOrGitWrites": false,
+    "ownOutputOnly": [
+      "review.json",
+      "review.md"
+    ]
+  },
+  "instructionsRead": [
+    "AGENTS.md",
+    "docs/checkpoints/2026-10-05-recorded-hud.md",
+    "docs/ACCEPTANCE.md appended stage",
+    "Astra lab-interop source review and delegated stage/scope approvals"
+  ],
+  "layoutReview": {
+    "normalFlow": "stage-header/title/stats before canvas; footer after canvas in auto/minmax(0,1fr)/auto grid",
+    "canvasIntrinsicBounds": "min-width/height0 on stage/canvas and minmax0 track; rendered content remains separately measured at runtime",
+    "wrapping": "HUD text wraps without introduced ellipsis, clipping masks or hidden counters",
+    "existingIds": 44,
+    "sameIdAttributes": true,
+    "idTraversalOrder": "Changed intentionally by placing existing HUD before canvas",
+    "loadingOverlay": "Original absolute loading overlay with hidden display:none unchanged",
+    "desktopStageMinimumPx": 260,
+    "mobileStagePx": "Existing500/440 unchanged",
+    "stylesheetQuery": "recorded-hud-1",
+    "observerScriptUrl": "unchanged",
+    "glyphRendererAndSelectionHandlers": "Entire production observer.js byte exact to base"
+  },
+  "qaContract": {
+    "geometry": "Actual DOM rectangles, visibility, overflow and all nonblank text Range rectangles contained in rows/stage; header/title/stats and footer disjoint from canvas; canvas uncovered at5actual points",
+    "canvasCondition": "width>72 and height>72; rounded width-72 and height-72>0; no interior>72 condition",
+    "denseFixture": "Original pinned10k manifest/chunk, existing independent Python reference at tick992, assert216cells before all4resizes",
+    "denseViewports": [
+      {
+        "width": 1440,
+        "height": 900
+      },
+      {
+        "width": 1440,
+        "height": 720
+      },
+      {
+        "width": 390,
+        "height": 844
+      },
+      {
+        "width": 320,
+        "height": 844
+      }
+    ],
+    "selection": "Native blank click→none; ArrowLeft→actual last frame ID; read actual exact-white RGBA ring bounds; second native blank click→none and0primaryDL; one saved-target native click→exact same ID/parent/birth/mass_units/energy_units and pinned genome/phenotype",
+    "pointerGeometry": "Pixel bounding-box center scaled using actual canvas rect/backing dimensions; no production hitmap, hashed layout mirror or synthetic pointer dispatch",
+    "inventory": "Exact source-based genome counts/frequency percentages; displayed counters/tick/time/readouts preserved before and after selection/PNG",
+    "resizeHttpBaseline": "Measured before setViewportSize through PNG and final DOM reads",
+    "legacy": "Pinned sparse archives all3initial/endpoints; preserved old viewport sizes; same8PNG names/count, desktop horizon captures now endpoints; explicit3additional endpoint HTTP assertions",
+    "denseEndpoints": "Existing all3horizon endpoint checks preserved; added initial/endpoint/final HUD checks for100k/1M; 5PNG count retained",
+    "postScreenshot": "Geometry,state,inspector,inventory rechecked after actual full-page screenshots",
+    "oldStrictGuardsByteProof": {
+      "scripts/check_dense_recording_browser.mjs": {
+        "prefixBeforeOldLayout": true,
+        "standaloneAndSignalOnlyPhases": true,
+        "runAndFinalCleanup": true,
+        "literalCheckTitles": true
+      },
+      "site/playback.browser.mjs": {
+        "serverAndCheckPrefix": true,
+        "freshPageHttpCanvasHelpers": true,
+        "clockNegativeFinalCleanup": true,
+        "literalCheckTitles": true
+      }
+    }
+  },
+  "publicRepin": {
+    "exactThreeConstantOnlyByteProof": true,
+    "htmlBytes": 6954,
+    "htmlSha256": "105c5a860651769c0310c4185a96d7ad2442c3726b51779a8afa1f1707d0b72e",
+    "closingBodyOffset": 6938,
+    "closingBodySuffixExact": true,
+    "fixedInsertionBytes": 367,
+    "fixedInsertionSha256": "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
+    "allOtherScriptBytesUnchanged": true,
+    "unchangedGuards": [
+      "exact fixed analytics URL",
+      "raw+normalized body checks",
+      "same-origin GET redirect scope",
+      "pre-send CDP request guard",
+      "single attributed analytics-block acknowledgement",
+      "body pin/request correlation",
+      "late-error and cleanup aggregate",
+      "bounded budgets"
+    ],
+    "approval": "Astra explicit narrow root-owned three-source-expectation scope; recorded in checkpoint",
+    "actualPublicRun": "PENDING"
+  },
+  "protectedUnchanged": {
+    "wholeOtherRepositoryPaths": "Git diff proves no changes outside exact7approved paths",
+    "explicitFilesByteExact": [
+      ".github/workflows/ci.yml",
+      "docs/DECISIONS.md",
+      "docs/SPEC.md",
+      "docs/NORTH_STAR.md",
+      "site/observer.js",
+      "site/playback.mjs",
+      "site/recording-loader.mjs",
+      "site/dense-recording.mjs",
+      "site/data/catalog.json",
+      "site/index.html"
+    ],
+    "coreConfigsRawFixtures": "Directory object equality plus exact changed inventory; no schema/version/config/model/raw/dependency changes",
+    "ci": "Byte exact Ubuntu22.04/Node24/official playwright1.61.1 protected workflow; sandbox enabled, observed argv required, exact externalHEAD; dense externalTREE; mandatory sequential local gates and separate artifacts; productPR public skip remains existing mainpush behavior"
+  },
+  "docsReview": {
+    "acceptanceBaseExactPrefix": true,
+    "acceptanceAppendBytes": 2635,
+    "checkpoint": "New stage plus honest fixed source findings; source/fullCI/actual/public still PENDING; no prior runtime PASS transfer",
+    "frozenAdrDocs": "SPEC/NORTH_STAR/DECISIONS byte exact; no appended or edited ADR in this stage"
+  },
+  "closedFindings": [
+    {
+      "finding": "Public known-edge normalization still pinned oldHTML",
+      "resolution": "Exactly3deterministic source constants repinned with Astra approval; fixed insertion/guards unchanged",
+      "status": "SOURCE_FIXED"
+    },
+    {
+      "finding": "Pointer click checked already keyboard-selected sameID; noop pointer could pass",
+      "resolution": "7ba actualblank none/0DL before one saved-target click exact inspector",
+      "status": "SOURCE_FIXED"
+    },
+    {
+      "finding": "Dense resize noHTTP claim baseline began after resize",
+      "resolution": "7ba baseline moved before setViewportSize",
+      "status": "SOURCE_FIXED"
+    }
+  ],
+  "qualifications": [
+    "This verdict approves reviewed source for the authorized fresh protected run; it is not browser acceptance, fullCI green, merge or deployment approval.",
+    "Reviewer ran no tests, browser, HTTP, Cargo or model. Author syntax/diff claims are qualified source-only.",
+    "Runtime text/raster bounds and exact native pointer hits must be proved by new exact-head artifacts; source assertions do not prove them.",
+    "Four dense viewport images require independent actual viewing; sparse+all dense endpoints and paused30/60 oracles require new actual evidence.",
+    "Glyph positions remain schematic well-mixed inventory; no physical projection/science or hardwareFPS claim.",
+    "Legacy sticky transport/sidebar overlap is deferred, not fixed or accepted as universal usability here.",
+    "LAB21/publicLAB/LAB4/models and further causal runs remain HOLD. Historical5bea encodedPNG failure cause remains unknown."
+  ],
+  "remainingGates": [
+    "One authorized fresh protected fullCI at reviewed head/tree, with mandatory legacy and dense gates and unchanged other checks.",
+    "Independent actual source/body/trace/error/cleanup/native input/layout and allPNG review of new candidate artifacts; no prior e2/83 PASS carry.",
+    "Closed original evidence archives and independent byte readbacks before guarded merge per existing protocol.",
+    "After merge, fresh main public deployment/playback gate using exact newHTML/CSS pins; fixed analytics block remains a qualified exception, not analytics acceptance."
+  ]
+}

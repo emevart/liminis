@@ -1,0 +1,26 @@
+{
+  "head": "d8e69e4d652e40409fc15bc5e9f247eb58d8c5ab",
+  "tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+  "run_id": 37270688687,
+  "attempt": 1,
+  "rows": [
+    {
+      "artifact_id": 11328571618,
+      "name": "dense-recording-browser-d8e69e4-original.zip",
+      "bytes": 15869744,
+      "sha256": "91250af490dfb9ddf0fa2776fbccc0d529ca7908fe68741eca0a8eb4fc7e6034",
+      "zip_crc": "PASS",
+      "entries": 7
+    },
+    {
+      "artifact_id": 11327998780,
+      "name": "recorded-browser-d8e69e4-original.zip",
+      "bytes": 15318686,
+      "sha256": "477bf5f46b54bd58fc76a8e13c971872994657d7cdad088b0aca9c8ed45c00cb",
+      "zip_crc": "PASS",
+      "entries": 10
+    }
+  ],
+  "status": "ORIGINAL_ARTIFACT_DIGEST_SIZE_AND_CRC_PASS",
+  "qualification": "Original downloaded ZIP bytes, no repacking; actual independent acceptance and full CI are separate receipts."
+}

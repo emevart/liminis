@@ -1,0 +1,65 @@
+{
+  "candidate_head": "d8e69e4d652e40409fc15bc5e9f247eb58d8c5ab",
+  "candidate_tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+  "accepted_source_head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+  "accepted_source_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "approval": "Astra 2026-10-05: fresh exact-head LIVE/physical/3D mandatory regression jobs plus unchanged source-dependency identity; independent actual GL artifact review remains bound to e2",
+  "entries": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "git_entry": "100644 blob 75e81cf273d7499ed20c8eef496d7a45eadbe8a0\t.github/workflows/ci.yml",
+      "identity": "UNCHANGED"
+    },
+    {
+      "path": "crates/liminis-core",
+      "git_entry": "040000 tree 1f9031142731d138bf6de243ab2ac13d644e1553\tcrates/liminis-core",
+      "identity": "UNCHANGED"
+    },
+    {
+      "path": "crates/liminis/src",
+      "git_entry": "040000 tree 1b8ba337234f0348bf7c6d833e9123cc97359f77\tcrates/liminis/src",
+      "identity": "UNCHANGED"
+    },
+    {
+      "path": "configs",
+      "git_entry": "040000 tree 8970e88cd50ae3038d72a78dd16e9653fdf85aab\tconfigs",
+      "identity": "UNCHANGED"
+    },
+    {
+      "path": "scripts/check_live_cells_browser.mjs",
+      "git_entry": "100644 blob c9576efaa4b28bcbb7fb25b9c8def22bc6af9605\tscripts/check_live_cells_browser.mjs",
+      "identity": "UNCHANGED"
+    },
+    {
+      "path": "scripts/check_physical_projection_browser.mjs",
+      "git_entry": "100644 blob 02338c9a9bf2f1b58822b835b3b4adf289b76ff3\tscripts/check_physical_projection_browser.mjs",
+      "identity": "UNCHANGED"
+    },
+    {
+      "path": "scripts/check_physical_3d_browser.mjs",
+      "git_entry": "100644 blob 731f080aa30e4099265df54ef741ed98533159ac\tscripts/check_physical_3d_browser.mjs",
+      "identity": "UNCHANGED"
+    },
+    {
+      "path": "site/observer.js",
+      "git_entry": "100644 blob 199b8ad408ea1b2f6739fd1a9407109084b24996\tsite/observer.js",
+      "identity": "UNCHANGED"
+    }
+  ],
+  "qualification": "Git source objects, not build/binary/kernel identity; not new independent GL artifact acceptance; exact fresh job and mandatory step success still required",
+  "status": "SOURCE_DEPENDENCY_IDENTITY_PASS_FRESH_REGRESSION_JOBS_SUCCESS",
+  "all_changes_excluded_from_unchanged_scope": [
+    "docs/ACCEPTANCE.md",
+    "docs/checkpoints/2026-10-05-recorded-hud.md",
+    "scripts/check_dense_recording_browser.mjs",
+    "scripts/check_public_recording_browser.mjs",
+    "site/observe.html",
+    "site/observer.css",
+    "site/playback.browser.mjs"
+  ],
+  "global_source_proof": "Independent source review and Git diff prove every tracked path outside these seven retains its Git object identity; explicit bridge entries below cover regression dependencies. No binary identity claim.",
+  "fresh_runtime_receipt": "exact-head-ci-receipt.json",
+  "fresh_run_id": 37270688687,
+  "fresh_job_id": 111636831082,
+  "fresh_mandatory_regression_steps": 4
+}
