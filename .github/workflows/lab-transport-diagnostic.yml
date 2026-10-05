@@ -1,8 +1,8 @@
-name: LAB transport lifecycle diagnostic evidence only
+name: LAB reader EOF lifecycle diagnostic evidence only
 
 on:
   push:
-    branches: [codex/lab-transport-diagnostic-run-20261005]
+    branches: [codex/lab-reader-lifecycle-run-20261005]
 
 permissions:
   contents: read
@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   diagnostic:
-    name: protected original LAB response lifecycle diagnostic
+    name: protected original LAB reader lifecycle diagnostic
     runs-on: ubuntu-22.04
     timeout-minutes: 8
     steps:
@@ -51,7 +51,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lab-transport-diagnostic-${{ github.sha }}
+          name: lab-reader-lifecycle-diagnostic-${{ github.sha }}
           path: target/qa/lab-transport-diagnostic/
           if-no-files-found: error
           retention-days: 7
