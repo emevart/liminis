@@ -1,0 +1,9 @@
+# Fresh main LIVE, physical и projection: original evidence
+
+Head e2fd620baa492b2c2ff4316d2f083ac3e78bc252/tree47ce45646315b09493d58d87ca8fce4dc867aa8d, pushrun37263650472/LIVEjob111615835988SUCCESS. Это новые originals, прежний83PASS не перенесён. Protected fullmainCI SUCCESS:9checksSUCCESS включаяWorkers Builds,2existingPR-onlyguardsSKIPPED поunchangedpushworkflow; отдельныйCIreceipt укоординатора.
+
+НезависимыйqualifiedPASS0:43checks(15+16+12), все19actualPNG просмотрены. Original3ZIP безперепаковки иsafeownreports образуютclosedgroup<64MiB; manifest задаётsize/SHA, normalnetworkreadback публикуетсяотдельно. Outer/nestedCRC0, source/report/servedHTML/QA/config/bodypins проверены. Held LIVE/physical30/60 pairs wholeRGBA/dimensions0diff; реальныйStep2→3 изменил8positions.20geometryrecords/134markers пересчитаныизoriginalAPI, max1.61e-13CSSpx впрежнем1e-6budget. Dt30/seed42/world31, modeltime=tick×30, snapshotledger0, checkpoints иpacing проверены; каждыйтик не переизмерен.
+
+Все HTTP200/loopback, registerederrorarrays0. Legacytrace заканчиваетсядоbrowser.close инеимеетотдельныхcloseACK/draincounters: sourceboundedcleanup/report-after-cleanup иactualarrays0 подтверждены, новыеACK/drainproof невыдуманы. Exacthistory fulfilment иrealkeyboardactions сохранены. Privacy189UTF8/7,461,232B +headers/cookies: obvioushits0, PNG реальнопросмотрены; неполныйsecretguarantee. Publishedcap отдельноотexpandedtraces.
+
+StocksoftwareWebGL/officialPW1.61.1/Chromium149/sandboxtrue/observedargv сохраняются; hardware/achievedFPS неутверждены. Маркеры —центры, bodyradii/excludedvolume/localchemistry невводятся. OverallmainactualGL/REC/dense/public иallarchive/readbacks проверяютсяотдельно. Historical5beaFAILcauseunknown, LABPR21/publicLAB/modelsHOLD. Scientific24/raw/source21cbe907/world30 untouched; никакихновыхnativeCargo/browser/modelruns.

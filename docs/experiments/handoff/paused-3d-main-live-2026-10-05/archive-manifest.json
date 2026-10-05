@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "kind": "Bounded original fresh main LIVE+physical+2D projection independent evidence",
+  "candidate_head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+  "candidate_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "workflow_run": 37263650472,
+  "artifact_ids": [
+    11325424259,
+    11326140284,
+    11325517461
+  ],
+  "actual_acceptance_scope": "43newmain regression checks/19newPNG, independent code/API/geometry/privacy qualifiedPASS0; other scopes separate",
+  "actual_acceptance": "QUALIFIED_INDEPENDENT_PASS_ZERO_BLOCKERS",
+  "full_ci": "SUCCESS_EXACT_MAIN_9SUCCESS_2_EXPECTED_PR_ONLY_SKIPPED",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 41419442,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2249,
+      "sha256": "15dc843f64491ec548b3dd79f0a599ff7e0bc36cc1fcd0f59b5daeca6eac0798"
+    },
+    {
+      "path": "independent-actual-review.json",
+      "bytes": 47400,
+      "sha256": "e58273012739bff0542af464a9fab526424ae629b3dddabdd46682f3c05cc1ed"
+    },
+    {
+      "path": "independent-actual-review.md",
+      "bytes": 4748,
+      "sha256": "dd41fa5e49480de13c23e349e032607daf94a80dd2baee3e2f69779e3b2bb46e"
+    },
+    {
+      "path": "live-cells-browser-e2fd620-original.zip",
+      "bytes": 5339545,
+      "sha256": "e72b43b73602bf670dd72c6bb6cfbf5453bb5dcf7e461441a41a61dda3a2a2ae"
+    },
+    {
+      "path": "live-physical-browser-e2fd620-original.zip",
+      "bytes": 6630833,
+      "sha256": "a078c835d92c22311590cacb725fcb7ba9da0c2c65ca3b1672e2a0980f5111ea"
+    },
+    {
+      "path": "physical-projection-browser-e2fd620-original.zip",
+      "bytes": 29394667,
+      "sha256": "6f7ebea91f554ccf46da8bf0ab7b5676cafd7e8e22a9b5b4925296f7121e297f"
+    }
+  ],
+  "qualifications": [
+    "Freshmain results only; no83 runtimePASStransfer",
+    "OriginalZIP noRepack; normalnetwork closedsize/SHA/CRC readback separate",
+    "Software renderer, no achievedFPS/everytickledger/newscientificclaims",
+    "Historicalmain5beaFAIL unknown cause; LABHOLD"
+  ]
+}

@@ -1,0 +1,1404 @@
+{
+  "status": "QUALIFIED_PASS",
+  "blockers": [],
+  "mainHead": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+  "mainTree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "run": 37263650472,
+  "liveJob": 111615835988,
+  "actualChecks": 43,
+  "actualImagesViewed": 19,
+  "artifacts": [
+    {
+      "name": "live-cells-browser",
+      "artifactId": 11325424259,
+      "original": {
+        "bytes": 5339545,
+        "sha256": "e72b43b73602bf670dd72c6bb6cfbf5453bb5dcf7e461441a41a61dda3a2a2ae",
+        "members": [
+          {
+            "path": "held-30fps.png",
+            "bytes": 35250,
+            "sha256": "2fcf503356b9ff8e638e905f15b95dd6fc4ce3a37a6995fe4a38bf0c06cc1640"
+          },
+          {
+            "path": "held-60fps.png",
+            "bytes": 35250,
+            "sha256": "2fcf503356b9ff8e638e905f15b95dd6fc4ce3a37a6995fe4a38bf0c06cc1640"
+          },
+          {
+            "path": "host.log",
+            "bytes": 126,
+            "sha256": "c97d7db4ee00a2b070c2992b45756c4c3a81891fbd927d8f245c6e8cd70706bb"
+          },
+          {
+            "path": "report.json",
+            "bytes": 4344,
+            "sha256": "40771c5aee3cb4d126be4ab7b5c7732344d29c079ea29ddcc8dc82a63eea2e67"
+          },
+          {
+            "path": "trace.zip",
+            "bytes": 7394937,
+            "sha256": "6f531e0fe48294d850857e889caab71d38d9237e5b5f85f716227f193ce3c546"
+          },
+          {
+            "path": "viewer-1440.png",
+            "bytes": 370784,
+            "sha256": "11fd3bb8a90ac90a1db780ef196fb9da22bf5efca2af84a99e7ed1f358bd7064"
+          },
+          {
+            "path": "viewer-320.png",
+            "bytes": 145527,
+            "sha256": "ca2d8136958a6c9c852c5ec9dc63c53c26c768e68b6b3fd98866b28bd86283aa"
+          },
+          {
+            "path": "viewer-420.png",
+            "bytes": 168309,
+            "sha256": "17ed50341a9fe7897795139f67c5fa2f78eff28f53c3219d3f05180c0f279b11"
+          },
+          {
+            "path": "viewer-590.png",
+            "bytes": 233754,
+            "sha256": "e698662134964f2e95a24108bfd64234fa812c5e148258564c9879cd592bd778"
+          }
+        ],
+        "crc": "PASS",
+        "paths": "closed regular safe inventory",
+        "extractedByteEquality": true,
+        "repacked": false
+      },
+      "checks": [
+        "Chromium command line contains no sandbox-disabling flags",
+        "default format-1 API has no fabricated physical coordinates",
+        "real Rust cells response rendered in Chromium",
+        "Pause acknowledgment has no subsequent accumulated ticks",
+        "Step advances exactly one real tick while paused",
+        "manual 1× reports 1/30 TPS at unchanged dt=30s",
+        "presets switch multiplier without reset or ticks while paused",
+        "invalid manual speed gives visible error and leaves pacing unchanged",
+        "canvas contains real cell glyphs; keyboard selection updates inspector",
+        "30/60 FPS hold pixel-identical confirmed paused state without model advancement",
+        "Maximum advances real ticks and remains responsive to Pause",
+        "Save acknowledges persisted checkpoint without advancing paused model",
+        "desktop/mobile captions distinguish legacy schematic inventory from physical point-center projection",
+        "real desktop/mobile screenshots and no horizontal overflow at 1440/590/420/320",
+        "no Chromium page/console errors"
+      ],
+      "source": {
+        "head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+        "tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+        "script": "scripts/check_live_cells_browser.mjs",
+        "scriptSha256": "d31c26ae12f27fa68255eba452f2d36a69bd18e8ac0ae66c4017e4e6a3a50cd1",
+        "traceRetainedSourceByteEquality": true,
+        "viewerResponses": 1,
+        "viewerBytes": 62466,
+        "viewerSha256": "c8d325cd575ea12b4ec9e6be88e9db4720da510b90044e7d2d480d95aa93bb5b"
+      },
+      "trace": {
+        "bytes": 7394937,
+        "sha256": "6f531e0fe48294d850857e889caab71d38d9237e5b5f85f716227f193ce3c546",
+        "members": 206,
+        "expandedBytes": 9122004,
+        "crc": "PASS",
+        "paths": "closed regular safe inventory",
+        "pairedActions": 61,
+        "actionErrors": 0,
+        "pageCloseAcknowledgements": 0,
+        "networkRequests": 36,
+        "methods": {
+          "GET": 25,
+          "POST": 11
+        },
+        "getPaths": {
+          "/": 1,
+          "/api/state": 22,
+          "/api/history": 2
+        },
+        "origins": [
+          "http://127.0.0.1:34169"
+        ],
+        "httpStatuses": [
+          200
+        ],
+        "requestFailures": 0,
+        "postBodies": [
+          {
+            "action": "pause"
+          },
+          {
+            "action": "step"
+          },
+          {
+            "action": "speed",
+            "value": 1
+          },
+          {
+            "action": "speed",
+            "value": 10
+          },
+          {
+            "action": "speed",
+            "value": 100
+          },
+          {
+            "action": "speed",
+            "value": 1000
+          },
+          {
+            "action": "speed",
+            "value": 1
+          },
+          {
+            "action": "maximum"
+          },
+          {
+            "action": "run"
+          },
+          {
+            "action": "pause"
+          },
+          {
+            "action": "save"
+          }
+        ],
+        "allResponseBodiesRetained": true,
+        "actualStateResponses": 22,
+        "tickRange": [
+          2,
+          841
+        ],
+        "historyFulfillments": 0,
+        "keyboardEvents": 1,
+        "contentAddressedBodiesVerified": 47,
+        "stateTicks": [
+          2,
+          4,
+          4,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          209,
+          841,
+          841,
+          841,
+          841,
+          841
+        ]
+      },
+      "images": [
+        {
+          "filename": "held-30fps.png",
+          "bytes": 35250,
+          "sha256": "2fcf503356b9ff8e638e905f15b95dd6fc4ce3a37a6995fe4a38bf0c06cc1640",
+          "width": 1130,
+          "height": 852,
+          "rgbaSha256": "30aedc8ed76920237841753adbb542cabb7f97521e70758b531fb04c027f57a3",
+          "viewed": true
+        },
+        {
+          "filename": "held-60fps.png",
+          "bytes": 35250,
+          "sha256": "2fcf503356b9ff8e638e905f15b95dd6fc4ce3a37a6995fe4a38bf0c06cc1640",
+          "width": 1130,
+          "height": 852,
+          "rgbaSha256": "30aedc8ed76920237841753adbb542cabb7f97521e70758b531fb04c027f57a3",
+          "viewed": true
+        },
+        {
+          "filename": "viewer-1440.png",
+          "bytes": 370784,
+          "sha256": "11fd3bb8a90ac90a1db780ef196fb9da22bf5efca2af84a99e7ed1f358bd7064",
+          "width": 1440,
+          "height": 1000,
+          "rgbaSha256": "b1a82b1a79d6d4e8cac6ddcf9cdf670a5002abbca358916e4e996429aeedc978",
+          "viewed": true
+        },
+        {
+          "filename": "viewer-320.png",
+          "bytes": 145527,
+          "sha256": "ca2d8136958a6c9c852c5ec9dc63c53c26c768e68b6b3fd98866b28bd86283aa",
+          "width": 320,
+          "height": 1797,
+          "rgbaSha256": "413e96f8c197e7032f8bfea7c5e7dcb91ed737c6288451bec91c8b7d9a163437",
+          "viewed": true
+        },
+        {
+          "filename": "viewer-420.png",
+          "bytes": 168309,
+          "sha256": "17ed50341a9fe7897795139f67c5fa2f78eff28f53c3219d3f05180c0f279b11",
+          "width": 420,
+          "height": 1733,
+          "rgbaSha256": "32b2aa524e2b0502f6fad55494ad9d0293bd180adebd053fafe0eefaefe89175",
+          "viewed": true
+        },
+        {
+          "filename": "viewer-590.png",
+          "bytes": 233754,
+          "sha256": "e698662134964f2e95a24108bfd64234fa812c5e148258564c9879cd592bd778",
+          "width": 590,
+          "height": 1474,
+          "rgbaSha256": "19fdf6772338f5455719598e749e33ca94d82443d9c4ed15aecd1d9dc5b5df26",
+          "viewed": true
+        }
+      ],
+      "heldPair": {
+        "dimensions": [
+          1130,
+          852
+        ],
+        "pngSha256": "2fcf503356b9ff8e638e905f15b95dd6fc4ce3a37a6995fe4a38bf0c06cc1640",
+        "rgbaSha256": "30aedc8ed76920237841753adbb542cabb7f97521e70758b531fb04c027f57a3",
+        "changedPixels": 0,
+        "requests": {
+          "fps30": 2,
+          "fps60": 2,
+          "intervalMs": 1400
+        }
+      },
+      "errors": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceWarnings": [],
+        "cleanupErrors": [],
+        "failures": []
+      },
+      "browser": {
+        "version": "149.0.7827.55",
+        "playwright": "1.61.1",
+        "chromiumSandbox": true,
+        "observedArgv": [
+          "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+          "--disable-field-trial-config",
+          "--disable-background-networking",
+          "--disable-background-timer-throttling",
+          "--disable-backgrounding-occluded-windows",
+          "--disable-back-forward-cache",
+          "--disable-breakpad",
+          "--disable-client-side-phishing-detection",
+          "--disable-component-extensions-with-background-pages",
+          "--disable-component-update",
+          "--no-default-browser-check",
+          "--disable-default-apps",
+          "--disable-dev-shm-usage",
+          "--disable-edgeupdater",
+          "--disable-extensions",
+          "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+          "--enable-features=CDPScreenshotNewSurface",
+          "--allow-pre-commit-input",
+          "--disable-hang-monitor",
+          "--disable-ipc-flooding-protection",
+          "--disable-popup-blocking",
+          "--disable-prompt-on-repost",
+          "--disable-renderer-backgrounding",
+          "--force-color-profile=srgb",
+          "--metrics-recording-only",
+          "--no-first-run",
+          "--password-store=basic",
+          "--use-mock-keychain",
+          "--no-service-autorun",
+          "--export-tagged-pdf",
+          "--disable-search-engine-choice-screen",
+          "--unsafely-disable-devtools-self-xss-warnings",
+          "--edge-skip-compat-layer-relaunch",
+          "--disable-infobars",
+          "--disable-search-engine-choice-screen",
+          "--disable-sync",
+          "--enable-unsafe-swiftshader",
+          "--headless",
+          "--hide-scrollbars",
+          "--mute-audio",
+          "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+          "--enable-automation",
+          "--user-data-dir=/tmp/playwright_chromiumdev_profile-yZp7Kx",
+          "--remote-debugging-pipe",
+          "--no-startup-window",
+          "--use-gl=angle",
+          "--use-angle=swiftshader-webgl",
+          "--ozone-platform=headless",
+          "--allow-pre-commit-input"
+        ],
+        "forbiddenFlagsPresent": []
+      },
+      "finalState": {
+        "tick": 841,
+        "dt_seconds": 30,
+        "pacing": {
+          "mode": "maximum",
+          "multiplier": 1
+        }
+      },
+      "physicalStep": null,
+      "cleanupQualification": "Report is written only after bounded browser/host/temp cleanup; legacy trace stops before browser.close and has no separate close acknowledgement or callback-drain counters.",
+      "saveAcknowledgement": {
+        "tick": 841,
+        "saved_tick": 841,
+        "running": false,
+        "dt_seconds": 30
+      }
+    },
+    {
+      "name": "live-physical-browser",
+      "artifactId": 11326140284,
+      "original": {
+        "bytes": 6630833,
+        "sha256": "a078c835d92c22311590cacb725fcb7ba9da0c2c65ca3b1672e2a0980f5111ea",
+        "members": [
+          {
+            "path": "held-30fps.png",
+            "bytes": 32347,
+            "sha256": "ca7895ff56ac87d9c1bb26b2c2325e826231cd27fd233352cc85927d42f67b73"
+          },
+          {
+            "path": "held-60fps.png",
+            "bytes": 32347,
+            "sha256": "ca7895ff56ac87d9c1bb26b2c2325e826231cd27fd233352cc85927d42f67b73"
+          },
+          {
+            "path": "host.log",
+            "bytes": 126,
+            "sha256": "f5d7f1b7493953037425aa58418e11bcd994d5520249bc673bcb4c4c87c9a2e2"
+          },
+          {
+            "path": "report.json",
+            "bytes": 4823,
+            "sha256": "2efc254e0ce34743f84a55da1a4bef27ccd63e70d4147bd5a8c1320b26d85570"
+          },
+          {
+            "path": "trace.zip",
+            "bytes": 6799188,
+            "sha256": "02e9d480b6457da7518ed5d84698eba801009b87cf891688baefa9b24424caa3"
+          },
+          {
+            "path": "viewer-1440.png",
+            "bytes": 117553,
+            "sha256": "ab98087f7ef1ce2c8c6147fe14ffccd23cfe472f650f1234ee0b9d6d54e93d77"
+          },
+          {
+            "path": "viewer-320.png",
+            "bytes": 100091,
+            "sha256": "9cb41107407dcb662c40da7c22bca7b17ee1027c95e0e615ca627648f5e240f0"
+          },
+          {
+            "path": "viewer-420.png",
+            "bytes": 102472,
+            "sha256": "9b624ad94f14e45cb0ed1fcc618850af0a71ea226d063516eb24861f5e5bfceb"
+          },
+          {
+            "path": "viewer-590.png",
+            "bytes": 110818,
+            "sha256": "2a601f2c71390e09a2e76b062c07f3fee9718201111d63c40ae0cf9c44fbdb50"
+          }
+        ],
+        "crc": "PASS",
+        "paths": "closed regular safe inventory",
+        "extractedByteEquality": true,
+        "repacked": false
+      },
+      "checks": [
+        "Chromium command line contains no sandbox-disabling flags",
+        "format-2 API reports finite in-box persisted coordinates; seed/dt/model identity unchanged",
+        "real Rust cells response rendered in Chromium",
+        "Pause acknowledgment has no subsequent accumulated ticks",
+        "one real model tick advances persisted positions for surviving IDs",
+        "Step advances exactly one real tick while paused",
+        "manual 1× reports 1/30 TPS at unchanged dt=30s",
+        "presets switch multiplier without reset or ticks while paused",
+        "invalid manual speed gives visible error and leaves pacing unchanged",
+        "canvas contains real cell glyphs; keyboard selection updates inspector",
+        "30/60 FPS hold pixel-identical confirmed paused state without model advancement",
+        "Maximum advances real ticks and remains responsive to Pause",
+        "Save acknowledges persisted checkpoint without advancing paused model",
+        "desktop/mobile captions distinguish legacy schematic inventory from physical point-center projection",
+        "real desktop/mobile screenshots and no horizontal overflow at 1440/590/420/320",
+        "no Chromium page/console errors"
+      ],
+      "source": {
+        "head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+        "tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+        "script": "scripts/check_live_cells_browser.mjs",
+        "scriptSha256": "d31c26ae12f27fa68255eba452f2d36a69bd18e8ac0ae66c4017e4e6a3a50cd1",
+        "traceRetainedSourceByteEquality": true,
+        "viewerResponses": 1,
+        "viewerBytes": 62466,
+        "viewerSha256": "c8d325cd575ea12b4ec9e6be88e9db4720da510b90044e7d2d480d95aa93bb5b"
+      },
+      "trace": {
+        "bytes": 6799188,
+        "sha256": "02e9d480b6457da7518ed5d84698eba801009b87cf891688baefa9b24424caa3",
+        "members": 213,
+        "expandedBytes": 8867625,
+        "crc": "PASS",
+        "paths": "closed regular safe inventory",
+        "pairedActions": 73,
+        "actionErrors": 0,
+        "pageCloseAcknowledgements": 0,
+        "networkRequests": 35,
+        "methods": {
+          "GET": 24,
+          "POST": 11
+        },
+        "getPaths": {
+          "/": 1,
+          "/api/state": 21,
+          "/api/history": 2
+        },
+        "origins": [
+          "http://127.0.0.1:33161"
+        ],
+        "httpStatuses": [
+          200
+        ],
+        "requestFailures": 0,
+        "postBodies": [
+          {
+            "action": "pause"
+          },
+          {
+            "action": "step"
+          },
+          {
+            "action": "speed",
+            "value": 1
+          },
+          {
+            "action": "speed",
+            "value": 10
+          },
+          {
+            "action": "speed",
+            "value": 100
+          },
+          {
+            "action": "speed",
+            "value": 1000
+          },
+          {
+            "action": "speed",
+            "value": 1
+          },
+          {
+            "action": "maximum"
+          },
+          {
+            "action": "run"
+          },
+          {
+            "action": "pause"
+          },
+          {
+            "action": "save"
+          }
+        ],
+        "allResponseBodiesRetained": true,
+        "actualStateResponses": 21,
+        "tickRange": [
+          0,
+          754
+        ],
+        "historyFulfillments": 0,
+        "keyboardEvents": 1,
+        "contentAddressedBodiesVerified": 46,
+        "stateTicks": [
+          0,
+          2,
+          2,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          176,
+          754,
+          754,
+          754,
+          754,
+          754
+        ]
+      },
+      "images": [
+        {
+          "filename": "held-30fps.png",
+          "bytes": 32347,
+          "sha256": "ca7895ff56ac87d9c1bb26b2c2325e826231cd27fd233352cc85927d42f67b73",
+          "width": 1130,
+          "height": 852,
+          "rgbaSha256": "e2d66e524976b3e6f0dc45a0213c1387c28dc8efe893b0a9a1384cc1b3b6212e",
+          "viewed": true
+        },
+        {
+          "filename": "held-60fps.png",
+          "bytes": 32347,
+          "sha256": "ca7895ff56ac87d9c1bb26b2c2325e826231cd27fd233352cc85927d42f67b73",
+          "width": 1130,
+          "height": 852,
+          "rgbaSha256": "e2d66e524976b3e6f0dc45a0213c1387c28dc8efe893b0a9a1384cc1b3b6212e",
+          "viewed": true
+        },
+        {
+          "filename": "viewer-1440.png",
+          "bytes": 117553,
+          "sha256": "ab98087f7ef1ce2c8c6147fe14ffccd23cfe472f650f1234ee0b9d6d54e93d77",
+          "width": 1440,
+          "height": 1000,
+          "rgbaSha256": "4b2d7ad19b352297d92e235a4d5eb32dfb401fc27497140d03f17e2edb79a729",
+          "viewed": true
+        },
+        {
+          "filename": "viewer-320.png",
+          "bytes": 100091,
+          "sha256": "9cb41107407dcb662c40da7c22bca7b17ee1027c95e0e615ca627648f5e240f0",
+          "width": 320,
+          "height": 1917,
+          "rgbaSha256": "ab212e9caf8317537f8629b54e4e4341e8fb2f686a88ba96efbb8e10b1ee299d",
+          "viewed": true
+        },
+        {
+          "filename": "viewer-420.png",
+          "bytes": 102472,
+          "sha256": "9b624ad94f14e45cb0ed1fcc618850af0a71ea226d063516eb24861f5e5bfceb",
+          "width": 420,
+          "height": 1823,
+          "rgbaSha256": "c35696d267390bd84d9d15a77a3af06f7a82ca11b760f3441f510a3360eb3e0a",
+          "viewed": true
+        },
+        {
+          "filename": "viewer-590.png",
+          "bytes": 110818,
+          "sha256": "2a601f2c71390e09a2e76b062c07f3fee9718201111d63c40ae0cf9c44fbdb50",
+          "width": 590,
+          "height": 1474,
+          "rgbaSha256": "392c00f48a988bffd0d5510475769ecc0921d1411c3f709387e288ea7b81b068",
+          "viewed": true
+        }
+      ],
+      "heldPair": {
+        "dimensions": [
+          1130,
+          852
+        ],
+        "pngSha256": "ca7895ff56ac87d9c1bb26b2c2325e826231cd27fd233352cc85927d42f67b73",
+        "rgbaSha256": "e2d66e524976b3e6f0dc45a0213c1387c28dc8efe893b0a9a1384cc1b3b6212e",
+        "changedPixels": 0,
+        "requests": {
+          "fps30": 2,
+          "fps60": 2,
+          "intervalMs": 1400
+        }
+      },
+      "errors": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceWarnings": [],
+        "cleanupErrors": [],
+        "failures": []
+      },
+      "browser": {
+        "version": "149.0.7827.55",
+        "playwright": "1.61.1",
+        "chromiumSandbox": true,
+        "observedArgv": [
+          "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+          "--disable-field-trial-config",
+          "--disable-background-networking",
+          "--disable-background-timer-throttling",
+          "--disable-backgrounding-occluded-windows",
+          "--disable-back-forward-cache",
+          "--disable-breakpad",
+          "--disable-client-side-phishing-detection",
+          "--disable-component-extensions-with-background-pages",
+          "--disable-component-update",
+          "--no-default-browser-check",
+          "--disable-default-apps",
+          "--disable-dev-shm-usage",
+          "--disable-edgeupdater",
+          "--disable-extensions",
+          "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+          "--enable-features=CDPScreenshotNewSurface",
+          "--allow-pre-commit-input",
+          "--disable-hang-monitor",
+          "--disable-ipc-flooding-protection",
+          "--disable-popup-blocking",
+          "--disable-prompt-on-repost",
+          "--disable-renderer-backgrounding",
+          "--force-color-profile=srgb",
+          "--metrics-recording-only",
+          "--no-first-run",
+          "--password-store=basic",
+          "--use-mock-keychain",
+          "--no-service-autorun",
+          "--export-tagged-pdf",
+          "--disable-search-engine-choice-screen",
+          "--unsafely-disable-devtools-self-xss-warnings",
+          "--edge-skip-compat-layer-relaunch",
+          "--disable-infobars",
+          "--disable-search-engine-choice-screen",
+          "--disable-sync",
+          "--enable-unsafe-swiftshader",
+          "--headless",
+          "--hide-scrollbars",
+          "--mute-audio",
+          "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+          "--enable-automation",
+          "--user-data-dir=/tmp/playwright_chromiumdev_profile-sqXqLR",
+          "--remote-debugging-pipe",
+          "--no-startup-window",
+          "--use-gl=angle",
+          "--use-angle=swiftshader-webgl",
+          "--ozone-platform=headless",
+          "--allow-pre-commit-input"
+        ],
+        "forbiddenFlagsPresent": []
+      },
+      "finalState": {
+        "tick": 754,
+        "dt_seconds": 30,
+        "pacing": {
+          "mode": "maximum",
+          "multiplier": 1
+        }
+      },
+      "physicalStep": {
+        "fromTick": 2,
+        "toTick": 3,
+        "movedSurvivingCells": 8
+      },
+      "cleanupQualification": "Report is written only after bounded browser/host/temp cleanup; legacy trace stops before browser.close and has no separate close acknowledgement or callback-drain counters.",
+      "saveAcknowledgement": {
+        "tick": 754,
+        "saved_tick": 754,
+        "running": false,
+        "dt_seconds": 30
+      },
+      "physicalStepIndependent": {
+        "fromTick": 2,
+        "toTick": 3,
+        "movedSurvivingCells": 8
+      }
+    },
+    {
+      "name": "physical-projection-browser",
+      "artifactId": 11325517461,
+      "original": {
+        "bytes": 29394667,
+        "sha256": "6f7ebea91f554ccf46da8bf0ab7b5676cafd7e8e22a9b5b4925296f7121e297f",
+        "members": [
+          {
+            "path": "coincident-daughters.png",
+            "bytes": 103452,
+            "sha256": "b11b50df70e18ac9bc7aa899f728d4b5a828b2236979fb642adc1e6a69f364d0"
+          },
+          {
+            "path": "desktop-short.png",
+            "bytes": 96098,
+            "sha256": "012d4fa84845b24d640843d63f9789d37af7a9a426b7e372c253ffc1e72ec5c6"
+          },
+          {
+            "path": "desktop.png",
+            "bytes": 110326,
+            "sha256": "326d52e2e3940a7e8c1b930449cd351c39df138d158b821bc0ad02be7fda09b0"
+          },
+          {
+            "path": "first-division-state.json",
+            "bytes": 18186,
+            "sha256": "4e97fad293a079f22fb33c4dc45c4012870e5c64ec3521d4342242de2d2c3f11"
+          },
+          {
+            "path": "held-history.json",
+            "bytes": 130,
+            "sha256": "06a34f184d57e32eac80075e3f9ca214673cf89c713bf9b6cd9387ae143e81a2"
+          },
+          {
+            "path": "host.log",
+            "bytes": 413,
+            "sha256": "e6ce176b903f1e063f875f05ab592ab620e8b6b3a160d42ec201c80a1711f1ea"
+          },
+          {
+            "path": "legacy-chamber1.png",
+            "bytes": 84539,
+            "sha256": "0d164c1b74d03894874b7cb8b64a4348538fe6e7e4a1ec6820169bf4ee083f53"
+          },
+          {
+            "path": "mobile-narrow.png",
+            "bytes": 116243,
+            "sha256": "ef13b64e0ae61d18876ef2d32b923b095c5f43a99ba0ea2f5a08b30f85b0ac37"
+          },
+          {
+            "path": "mobile.png",
+            "bytes": 116711,
+            "sha256": "e847687ce889817f7f5aeec1552dab1b4305cff0569131ef54e7ae05c78fc51c"
+          },
+          {
+            "path": "nonsquare-initial-state.json",
+            "bytes": 10016,
+            "sha256": "708918c0a119c709a874321ae2e994c6c2fe5efee93a90eb269cb850ecebba25"
+          },
+          {
+            "path": "physical-nonsquare.toml",
+            "bytes": 3538,
+            "sha256": "3da686962b4c14e54d82b11559805a96d4abba4da84532dbbb291850096630f7"
+          },
+          {
+            "path": "report.json",
+            "bytes": 92746,
+            "sha256": "1fd61def311685c54cec2f43c2ab036533b9a9ea0556f60a87e27bd547e6db2b"
+          },
+          {
+            "path": "source-cube-state.json",
+            "bytes": 10028,
+            "sha256": "b1d87f5b4300aafa14a38c04625b79cf4fde5846ad9bff7d7f277f3a824e8043"
+          },
+          {
+            "path": "source-cube.png",
+            "bytes": 83102,
+            "sha256": "ef612c21bcaf99dab046290127d7af6cdff8234dbfaa5e49744803772b87793b"
+          },
+          {
+            "path": "trace.zip",
+            "bytes": 29686958,
+            "sha256": "5ec3513097a8a1e23397d43f2cfff3c9cdc69c411462e031d3fcc0381687a8fe"
+          }
+        ],
+        "crc": "PASS",
+        "paths": "closed regular safe inventory",
+        "extractedByteEquality": true,
+        "repacked": false
+      },
+      "checks": [
+        {
+          "name": "Actual CDP argv retains the protected sandbox process model",
+          "status": "PASS",
+          "elapsedMs": 6
+        },
+        {
+          "name": "Unmodified source physical scenario has real SI centers and matching cube projection",
+          "status": "PASS",
+          "elapsedMs": 393
+        },
+        {
+          "name": "State/readouts/paint/inspector commit before an unchanged delayed real history response",
+          "status": "PASS",
+          "elapsedMs": 356
+        },
+        {
+          "name": "All nonsquare planes map actual SI positions to marker pixels and pointer-selected exact IDs",
+          "status": "PASS",
+          "elapsedMs": 477
+        },
+        {
+          "name": "Exact unknown ID is not-present, not a fabricated death",
+          "status": "PASS",
+          "elapsedMs": 71
+        },
+        {
+          "name": "Actual focused arrow keys navigate exact visible IDs and wrap independently in every plane",
+          "status": "PASS",
+          "elapsedMs": 2018
+        },
+        {
+          "name": "Inclusive upper/lower boundaries, zero-width center slices and retained outside-slice selection",
+          "status": "PASS",
+          "elapsedMs": 424
+        },
+        {
+          "name": "Actual arrow keys recover outside-slice selection and retain exact selection in an empty slice",
+          "status": "PASS",
+          "elapsedMs": 756
+        },
+        {
+          "name": "Desktop, short desktop and 390/320px layouts expose controls without geometry overlays",
+          "status": "PASS",
+          "elapsedMs": 3367
+        },
+        {
+          "name": "Paused view-only controls preserve API state and single-flight poll cadence at draw30/60",
+          "status": "PASS",
+          "elapsedMs": 2957
+        },
+        {
+          "name": "Bounded real paused Steps reach first actual division; parent stays absent and coincident daughters remain individually selectable",
+          "status": "PASS",
+          "elapsedMs": 8681
+        },
+        {
+          "name": "Real legacy chamber1 retains schematic inventory without physical controls or coordinates",
+          "status": "PASS",
+          "elapsedMs": 337
+        }
+      ],
+      "source": {
+        "head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+        "tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+        "script": "scripts/check_physical_projection_browser.mjs",
+        "scriptSha256": "58bd4a87e85756ffcd214bea35fa3ce6d1224445ee4861eedd03c51b24384edf",
+        "traceRetainedSourceByteEquality": true,
+        "viewerResponses": 3,
+        "viewerBytes": 62466,
+        "viewerSha256": "c8d325cd575ea12b4ec9e6be88e9db4720da510b90044e7d2d480d95aa93bb5b"
+      },
+      "trace": {
+        "bytes": 29686958,
+        "sha256": "5ec3513097a8a1e23397d43f2cfff3c9cdc69c411462e031d3fcc0381687a8fe",
+        "members": 940,
+        "expandedBytes": 39572378,
+        "crc": "PASS",
+        "paths": "closed regular safe inventory",
+        "pairedActions": 1004,
+        "actionErrors": 0,
+        "pageCloseAcknowledgements": 3,
+        "networkRequests": 136,
+        "methods": {
+          "GET": 88,
+          "POST": 48
+        },
+        "getPaths": {
+          "/": 3,
+          "/api/state": 77,
+          "/api/history": 8
+        },
+        "origins": [
+          "http://127.0.0.1:37337",
+          "http://127.0.0.1:39073",
+          "http://127.0.0.1:40139"
+        ],
+        "httpStatuses": [
+          200
+        ],
+        "requestFailures": 0,
+        "postBodies": {
+          "count": 48,
+          "each": {
+            "action": "step"
+          }
+        },
+        "allResponseBodiesRetained": true,
+        "actualStateResponses": 77,
+        "tickRange": [
+          0,
+          48
+        ],
+        "historyFulfillments": 1,
+        "keyboardEvents": 43,
+        "contentAddressedBodiesVerified": 184,
+        "stateTicks": [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          3,
+          3,
+          4,
+          5,
+          6,
+          7,
+          7,
+          8,
+          9,
+          10,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          18,
+          19,
+          20,
+          21,
+          21,
+          22,
+          23,
+          24,
+          25,
+          25,
+          26,
+          27,
+          28,
+          29,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          41,
+          42,
+          43,
+          44,
+          45,
+          45,
+          46,
+          47,
+          47,
+          48,
+          0
+        ]
+      },
+      "images": [
+        {
+          "filename": "coincident-daughters.png",
+          "bytes": 103452,
+          "sha256": "b11b50df70e18ac9bc7aa899f728d4b5a828b2236979fb642adc1e6a69f364d0",
+          "width": 1440,
+          "height": 900,
+          "rgbaSha256": "723149adf4d944b0b15136088f0912238ca73278bd8253433e64716735c079da",
+          "viewed": true
+        },
+        {
+          "filename": "desktop-short.png",
+          "bytes": 96098,
+          "sha256": "012d4fa84845b24d640843d63f9789d37af7a9a426b7e372c253ffc1e72ec5c6",
+          "width": 1440,
+          "height": 720,
+          "rgbaSha256": "c7b2887e1a8a7a7a58e89016c5caaaf105cba11e03809008e98b80179f265b2b",
+          "viewed": true
+        },
+        {
+          "filename": "desktop.png",
+          "bytes": 110326,
+          "sha256": "326d52e2e3940a7e8c1b930449cd351c39df138d158b821bc0ad02be7fda09b0",
+          "width": 1440,
+          "height": 900,
+          "rgbaSha256": "f7e4528b72e87469e7ea62456e68a29f46af5b2f72cc82bd87a93d6c43f5f597",
+          "viewed": true
+        },
+        {
+          "filename": "legacy-chamber1.png",
+          "bytes": 84539,
+          "sha256": "0d164c1b74d03894874b7cb8b64a4348538fe6e7e4a1ec6820169bf4ee083f53",
+          "width": 1440,
+          "height": 900,
+          "rgbaSha256": "bf2fe63c01c7eb67fc94f526ea3af158476e19df99d1d04c01084ac590a958ab",
+          "viewed": true
+        },
+        {
+          "filename": "mobile-narrow.png",
+          "bytes": 116243,
+          "sha256": "ef13b64e0ae61d18876ef2d32b923b095c5f43a99ba0ea2f5a08b30f85b0ac37",
+          "width": 320,
+          "height": 2481,
+          "rgbaSha256": "c3242053d2b6b3bb70d13d788e0ffeef3e7a4047bf3496b454677765216d0a99",
+          "viewed": true
+        },
+        {
+          "filename": "mobile.png",
+          "bytes": 116711,
+          "sha256": "e847687ce889817f7f5aeec1552dab1b4305cff0569131ef54e7ae05c78fc51c",
+          "width": 390,
+          "height": 2437,
+          "rgbaSha256": "7f3a7b84767724ed737adf3d97b761f4c400bd24563a16033da4c67f8bb49e74",
+          "viewed": true
+        },
+        {
+          "filename": "source-cube.png",
+          "bytes": 83102,
+          "sha256": "ef612c21bcaf99dab046290127d7af6cdff8234dbfaa5e49744803772b87793b",
+          "width": 1440,
+          "height": 900,
+          "rgbaSha256": "22698070984bec1dddd18739a3a341c473b992b97b414f3b8d27319189c1ee3a",
+          "viewed": true
+        }
+      ],
+      "heldPair": null,
+      "errors": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceWarnings": [],
+        "cleanupErrors": [],
+        "failures": []
+      },
+      "browser": {
+        "version": "149.0.7827.55",
+        "playwright": "1.61.1",
+        "chromiumSandbox": true,
+        "observedArgv": [
+          "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+          "--disable-field-trial-config",
+          "--disable-background-networking",
+          "--disable-background-timer-throttling",
+          "--disable-backgrounding-occluded-windows",
+          "--disable-back-forward-cache",
+          "--disable-breakpad",
+          "--disable-client-side-phishing-detection",
+          "--disable-component-extensions-with-background-pages",
+          "--disable-component-update",
+          "--no-default-browser-check",
+          "--disable-default-apps",
+          "--disable-dev-shm-usage",
+          "--disable-edgeupdater",
+          "--disable-extensions",
+          "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+          "--enable-features=CDPScreenshotNewSurface",
+          "--allow-pre-commit-input",
+          "--disable-hang-monitor",
+          "--disable-ipc-flooding-protection",
+          "--disable-popup-blocking",
+          "--disable-prompt-on-repost",
+          "--disable-renderer-backgrounding",
+          "--force-color-profile=srgb",
+          "--metrics-recording-only",
+          "--no-first-run",
+          "--password-store=basic",
+          "--use-mock-keychain",
+          "--no-service-autorun",
+          "--export-tagged-pdf",
+          "--disable-search-engine-choice-screen",
+          "--unsafely-disable-devtools-self-xss-warnings",
+          "--edge-skip-compat-layer-relaunch",
+          "--disable-infobars",
+          "--disable-search-engine-choice-screen",
+          "--disable-sync",
+          "--enable-unsafe-swiftshader",
+          "--headless",
+          "--hide-scrollbars",
+          "--mute-audio",
+          "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+          "--enable-automation",
+          "--user-data-dir=/tmp/playwright_chromiumdev_profile-ejW7kn",
+          "--remote-debugging-pipe",
+          "--no-startup-window",
+          "--use-gl=angle",
+          "--use-angle=swiftshader-webgl",
+          "--ozone-platform=headless",
+          "--allow-pre-commit-input"
+        ],
+        "forbiddenFlagsPresent": []
+      },
+      "finalState": null,
+      "physicalStep": null,
+      "cleanupQualification": "Three real pages have paired close acknowledgements in trace; bounded context/browser/host/temp cleanup and final error/stop/check aggregate precede report write."
+    }
+  ],
+  "projection": {
+    "atomicStep": {
+      "fromTick": 0,
+      "toTick": 1,
+      "selectedId": "0",
+      "historyReleasedAtAssertion": false
+    },
+    "delayedHistory": {
+      "status": "RELEASED",
+      "bytes": 130,
+      "sha256": "06a34f184d57e32eac80075e3f9ca214673cf89c713bf9b6cd9387ae143e81a2",
+      "originalStatus": 200,
+      "originalHeaders": {
+        "content-type": "application/json",
+        "content-length": "130",
+        "cache-control": "no-store",
+        "connection": "close"
+      },
+      "source": "route.fetch actual host response; fulfillment uses exactly these original bytes"
+    },
+    "traffic": {
+      "stateRequests": 75,
+      "inFlight": 0,
+      "maxInFlight": 1,
+      "posts": 48,
+      "requestFailures": 0
+    },
+    "pausedDraw": {
+      "pixelSha256": "7f9be4390fbaadae79aa29a0ae8ecab6232dedd50b8062378ebeb5673db583d1",
+      "fps30StateRequests": 2,
+      "fps60StateRequests": 2,
+      "intervalMs": 1400,
+      "maxStateInFlight": 1,
+      "tick": 1
+    },
+    "division": {
+      "tick": 47,
+      "realStepCount": 46,
+      "tickLimit": 128,
+      "deadlineMs": 90000,
+      "parentId": "5",
+      "daughterIds": [
+        "16",
+        "17"
+      ],
+      "position_m": [
+        0.0001680090356467213,
+        0.00005394273663219153,
+        0.00004654609064929371
+      ],
+      "candidateIds": [
+        "16",
+        "17"
+      ],
+      "parentAbsenceIsNotDeath": true
+    },
+    "keyboard": [
+      {
+        "label": "full-xy",
+        "tick": 1,
+        "missingId": "18446744073709551615",
+        "orderedIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ],
+        "rightVisitedIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "0"
+        ],
+        "leftFromMissingId": "7"
+      },
+      {
+        "label": "full-xz",
+        "tick": 1,
+        "missingId": "18446744073709551615",
+        "orderedIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ],
+        "rightVisitedIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "0"
+        ],
+        "leftFromMissingId": "7"
+      },
+      {
+        "label": "full-yz",
+        "tick": 1,
+        "missingId": "18446744073709551615",
+        "orderedIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7"
+        ],
+        "rightVisitedIds": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "0"
+        ],
+        "leftFromMissingId": "7"
+      },
+      {
+        "label": "outside-zero-width-slice",
+        "tick": 1,
+        "missingId": "0",
+        "orderedIds": [
+          "1"
+        ],
+        "rightVisitedIds": [
+          "1",
+          "1"
+        ],
+        "leftFromMissingId": "1"
+      },
+      {
+        "label": "empty-slice-retains-selection",
+        "tick": 1,
+        "orderedIds": [],
+        "selectedId": "0",
+        "centerMeters": 0
+      }
+    ],
+    "layouts": 4,
+    "geometryIndependentRecompute": {
+      "geometries": 20,
+      "markers": 134,
+      "maxCoordinateErrorPixels": 1.6077746776921858e-13,
+      "expectedFromActualRetainedAPI": true,
+      "productionHelpersUsed": false
+    },
+    "configs": {
+      "source": {
+        "filename": "configs/scenarios/cell-chamber-physical.toml",
+        "bytes": 3538,
+        "sha256": "867b52c37b6160bb6a9076f13cac9378fc49e226ae96753596d0c5d01fe90245",
+        "dimensions_m": [
+          0.0001,
+          0.0001,
+          0.0001
+        ]
+      },
+      "nonsquare": {
+        "filename": "physical-nonsquare.toml",
+        "bytes": 3538,
+        "sha256": "3da686962b4c14e54d82b11559805a96d4abba4da84532dbbb291850096630f7",
+        "dimensions_m": [
+          0.0002,
+          0.0001,
+          0.00005
+        ],
+        "onlyChange": "dimensions_m; volume unchanged"
+      },
+      "volumes": {
+        "mathematicallyEqual": true,
+        "sourceHost": 1e-12,
+        "nonsquareHost": 1e-12,
+        "nonsquareCalculated": 1e-12,
+        "byteEqualityNotAsserted": true
+      }
+    },
+    "hostBinary": {
+      "bytes": 7390448,
+      "sha256": "e40d2e9be40939e40d73d8e5a93bded40a1c91a8efb1087d9d2dcaf0087469a5",
+      "buildProvenance": "Existing CI cargo build --locked --release -p liminis; digest is not standalone cryptographic source attestation."
+    },
+    "limits": [
+      "Chromium/Linux; desktop and 390/320px mobile viewports, not a full accessibility or device audit.",
+      "30/60 are display targets; achieved FPS and native background scheduling are not asserted.",
+      "Canvas methods observe paint arguments unchanged; geometry expectations use actual API coordinates and observed box edges, never production helpers or internal view.hits.",
+      "Public-server counters, long-run motion/statistics and new science claims are outside this local real-host gate.",
+      "An absent division parent is retained as an absent selection; absence is not a death assertion."
+    ]
+  },
+  "privacy": {
+    "files": 189,
+    "bytes": 7461232,
+    "budgetBytes": 134217728,
+    "matches": {
+      "credential_literal": [],
+      "private_key": [],
+      "credential_assignment": [],
+      "private_chat_context": [],
+      "private_vm_ipv4": []
+    },
+    "authCookieHeaders": 0,
+    "nonemptyCookieArrays": 0
+  },
+  "reviewType": "Independent fresh MAIN artifact acceptance: LIVE default, LIVE physical and 2D physical projection only",
+  "reviewedAt": "2026-10-05",
+  "sourcePreparation": {
+    "head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+    "tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+    "sources": {
+      "scripts/check_live_cells_browser.mjs": {
+        "bytes": 20042,
+        "sha256": "d31c26ae12f27fa68255eba452f2d36a69bd18e8ac0ae66c4017e4e6a3a50cd1"
+      },
+      "scripts/check_physical_projection_browser.mjs": {
+        "bytes": 49326,
+        "sha256": "58bd4a87e85756ffcd214bea35fa3ce6d1224445ee4861eedd03c51b24384edf"
+      },
+      "scripts/check_physical_3d_browser.mjs": {
+        "bytes": 65448,
+        "sha256": "59fab4f9323e240b913a3006584b402ee3586032b98efad2dfa67ca78a908730"
+      },
+      ".github/workflows/ci.yml": {
+        "bytes": 21599,
+        "sha256": "2c38bf5455fad728903901ad9850d0d96c11c6dab9b6131283c947bf9d6c1b58"
+      },
+      "crates/liminis/src/cell-viewer.html": {
+        "bytes": 62466,
+        "sha256": "c8d325cd575ea12b4ec9e6be88e9db4720da510b90044e7d2d480d95aa93bb5b"
+      },
+      "crates/liminis/src/cell-viewer-3d.mjs": {
+        "bytes": 15849,
+        "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+      },
+      "crates/liminis/src/cells_host.rs": {
+        "bytes": 37837,
+        "sha256": "caf0a290dbf7f6167204f276b7f9b496a6699c7c13b3dc2d69b0b1af95c10325"
+      },
+      "configs/scenarios/cell-chamber-physical.toml": {
+        "bytes": 3538,
+        "sha256": "867b52c37b6160bb6a9076f13cac9378fc49e226ae96753596d0c5d01fe90245"
+      }
+    }
+  },
+  "reviewBoundary": {
+    "readOnly": true,
+    "newBrowserRuns": false,
+    "networkRequestsByReviewer": false,
+    "modelsOrCargoOrTestsRun": false,
+    "productionEdits": false,
+    "prior83RuntimePassTransferred": false,
+    "overallMainCiAccepted": false
+  },
+  "qualifications": [
+    "Acceptance applies to the 43 fresh recorded checks and 19 viewed PNGs from MAIN e2fd620, not prior PR22 runtime evidence.",
+    "Legacy and physical LIVE Save proves an acknowledged saved_tick at a paused tick. Browser restart, resume and exact future replay are not tested here.",
+    "Default chamber1 remains an inventory schematic without physical coordinates. Physical markers show saved point centers; marker size is visual, and chemical resources remain well mixed.",
+    "The legacy chamber1 mobile sticky readout remains visible over part of the lower sidebar in full-page captures. This gate proves captions and no horizontal overflow, not a full mobile accessibility or all-content usability audit.",
+    "Screen30/60 are display targets. Poll cadence and exact held pixels are verified; hardware FPS, background scheduling, scientific transport statistics and public delivery are not asserted.",
+    "Stock official Chromium argv retains software-GPU/SwiftShader flags. All checked sandbox-disabling and in-process/security opt-outs are absent. These 2D gates do not prove a hardware GPU backend.",
+    "Legacy LIVE cleanup is bounded and the report is serialized after cleanup; its trace stops before browser.close and exposes no separate close ACK or callback-drain counters. The projection trace has three page-close ACKs and a final error/stop/check aggregate.",
+    "Privacy review is bounded to all identified UTF-8 outer/nested evidence text, 7,461,232 bytes in 189 files, plus all 19 PNGs. No obvious credential/private-key/private-VM/private-chat-context matches or auth/cookie headers were found; this is not an exhaustive secret guarantee.",
+    "Historical main5bea encoded-PNG mismatch remains FAIL with unknown cause. LAB PR21/public LAB/models remain on HOLD.",
+    "Fresh MAIN GL, independent numerics and REC/dense/public acceptance, required main CI completion and durable archive/readbacks are separate gates; no overall MAIN PASS is declared."
+  ],
+  "remainingGates": [
+    "Fresh MAIN GL original code/browser/privacy acceptance and separate numerics acceptance",
+    "Independent fresh MAIN REC/dense/public acceptance",
+    "Completion of all applicable exact-main CI checks; PR-only skipped guards stay explicitly skipped",
+    "Durable original/review archives and independent network readbacks"
+  ]
+}
