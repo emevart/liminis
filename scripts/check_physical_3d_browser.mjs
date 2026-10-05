@@ -70,7 +70,26 @@ function pngPixels(bytes) {
   assert.ok(width > 0 && height > 0 && width * height <= 4 * 1024 * 1024); const stride = width * channels, raw = inflateSync(Buffer.concat(blocks), { maxOutputLength: height * (stride + 1) }); assert.equal(raw.length, height * (stride + 1)); const pixels = Buffer.alloc(width * height * channels);
   const paeth = (a, b, c) => { const p = a + b - c, x = Math.abs(p - a), y = Math.abs(p - b), z = Math.abs(p - c); return x <= y && x <= z ? a : y <= z ? b : c; };
   for (let row = 0; row < height; row++) { const filter = raw[row * (stride + 1)]; assert.ok(filter <= 4); for (let col = 0; col < stride; col++) { const index = row * stride + col, a = col >= channels ? pixels[index - channels] : 0, b = row ? pixels[index - stride] : 0, c = row && col >= channels ? pixels[index - stride - channels] : 0; pixels[index] = (raw[row * (stride + 1) + col + 1] + [0, a, b, Math.floor((a + b) / 2), paeth(a, b, c)][filter]) & 255; } }
-  return { width, height, at(x, y) { const i = (Math.max(0, Math.min(height - 1, Math.floor(y))) * width + Math.max(0, Math.min(width - 1, Math.floor(x)))) * channels; return [...pixels.subarray(i, i + 3)]; } };
+  const rgba = Buffer.alloc(width * height * 4);
+  for (let pixel = 0; pixel < width * height; pixel++) {
+    pixels.copy(rgba, pixel * 4, pixel * channels, pixel * channels + 3);
+    rgba[pixel * 4 + 3] = channels === 4 ? pixels[pixel * channels + 3] : 255;
+  }
+  return { width, height, rgba, at(x, y) { const i = (Math.max(0, Math.min(height - 1, Math.floor(y))) * width + Math.max(0, Math.min(width - 1, Math.floor(x)))) * 4; return [...rgba.subarray(i, i + 3)]; } };
+}
+// Exact whole compositor pixels, including alpha. PNG encoding is retained
+// separately; no crop, mask, tolerance or repeated capture can hide a mismatch.
+function pixelDifference(expected, actual) {
+  const sameDimensions = expected.width === actual.width && expected.height === actual.height;
+  if (!sameDimensions) return { equal: false, sameDimensions, changedPixels: null, bounds: null };
+  let changedPixels = 0, left = expected.width, top = expected.height, right = -1, bottom = -1;
+  for (let pixel = 0; pixel < expected.width * expected.height; pixel++) {
+    const i = pixel * 4;
+    if (expected.rgba.subarray(i, i + 4).equals(actual.rgba.subarray(i, i + 4))) continue;
+    changedPixels++; const x = pixel % expected.width, y = Math.floor(pixel / expected.width);
+    left = Math.min(left, x); top = Math.min(top, y); right = Math.max(right, x); bottom = Math.max(bottom, y);
+  }
+  return { equal: changedPixels === 0, sameDimensions, changedPixels, bounds: changedPixels ? { left, top, right, bottom } : null };
 }
 function contrast(image, x, y, radius = 2) { let result = 0; for (let dy = -radius; dy <= radius; dy++) for (let dx = -radius; dx <= radius; dx++) result = Math.max(result, ...image.at(x + dx, y + dy).map((n, i) => Math.abs(n - [8, 13, 11][i]))); return result; }
 function glyphPixels(result, point) { const xs = [], ys = [], x = point.x * result.scaleX, y = point.y * result.scaleY; for (let dy = -10; dy <= 10; dy++) for (let dx = -10; dx <= 10; dx++) if (contrast(result.image, x + dx, y + dy, 0) > 8) { xs.push(dx); ys.push(dy); } assert.ok(xs.length); const widthCSS = (Math.max(...xs) - Math.min(...xs) + 1) / result.scaleX, heightCSS = (Math.max(...ys) - Math.min(...ys) + 1) / result.scaleY; assert.ok(widthCSS >= 5 && widthCSS <= 9 && heightCSS >= 5 && heightCSS <= 9, `Actual center Sprite screen dimensions: ${widthCSS}×${heightCSS}`); return { widthCSS, heightCSS, nominalCSS: 7, rasterToleranceCSS: 2 }; }
@@ -191,9 +210,45 @@ async function run() {
     report.sliceBoundary = { axis: edge.axis, plane, actualInputCenter_m: (await sliceFacts()).center, boundaryId: edge.cell.id, outsideId: outside.id, zeroWidthMembershipFromActualInputs: true }; await page.locator("#slice-enabled").uncheck(); await page.locator("#projection-plane").selectOption("xy");
   });
   await check("Paused target30/60 draws hold exact canvas/API state and preserve normal single-flight polling", async () => {
-    await geometry(snapshot, "paused-before-display-controls"); const digest = sha(await page.locator("#chamber-3d").screenshot()), windows = [];
-    for (const fps of [30, 60]) { await page.locator("#screen-fps").selectOption(String(fps)); await page.locator("#screen-fps").evaluate((node) => node.blur()); const requests = traffic.stateStarts.length, start = performance.now(); await sleep(1400); const measuredWallMs = performance.now() - start; assert.equal(sha(await page.locator("#chamber-3d").screenshot()), digest); assert.deepEqual(heldFacts(await state()), viewBefore); windows.push({ fps, requestedHoldMs: 1400, measuredWallMs, stateRequests: traffic.stateStarts.length - requests }); }
-    assert.ok(windows.every((w) => w.stateRequests >= 1 && w.stateRequests <= 3) && Math.abs(windows[0].stateRequests - windows[1].stateRequests) <= 1); assert.equal(traffic.maxState, 1); assert.equal(traffic.posts.length, viewPosts); report.pausedDraw = { tick: snapshot.tick, windows, compositorSha256: digest, achievedFPS: "UNASSERTED" };
+    await geometry(snapshot, "paused-before-display-controls");
+    const windows = [], captures = [];
+    report.pausedDraw = { tick: snapshot.tick, windows, captures, identity: "Exact dimensions and every decoded RGBA pixel of the whole compositor region; no tolerance or masking", achievedFPS: "UNASSERTED" };
+    const heldLayers = async () => ({ ...await sliceFacts(), box: await page.locator("#layer-box").isChecked(), slice: await page.locator("#layer-slice").isChecked() });
+    async function capture(label) {
+      const entry = { label, file: `paused-${label}.png`, startedAtMs: performance.now() };
+      captures.push(entry);
+      Object.assign(entry, { apiBefore: heldFacts(await state()), layersBefore: await heldLayers(), auditBefore: await audit() });
+      const bytes = await bounded(page.locator("#chamber-3d").screenshot(), limits.operation, `paused ${label} compositor PNG`);
+      await writeFile(join(output, entry.file), bytes);
+      Object.assign(entry, { pngBytes: bytes.length, pngSha256: sha(bytes), capturedAtMs: performance.now() });
+      const image = pngPixels(bytes);
+      Object.assign(entry, { width: image.width, height: image.height, rgbaSha256: sha(image.rgba), auditAfter: await audit(), layersAfter: await heldLayers(), apiAfter: heldFacts(await state()) });
+      await writeFile(join(output, "paused-captures.json"), JSON.stringify(report.pausedDraw, null, 2) + "\n");
+      return { entry, image };
+    }
+    const baseline = await capture("baseline");
+    for (const fps of [30, 60]) {
+      await page.locator("#screen-fps").selectOption(String(fps)); await page.locator("#screen-fps").evaluate((node) => node.blur());
+      const requests = traffic.stateStarts.length, start = performance.now(); await sleep(1400);
+      const measuredWallMs = performance.now() - start, actual = await capture(String(fps));
+      const difference = pixelDifference(baseline.image, actual.image);
+      windows.push({ fps, requestedHoldMs: 1400, measuredWallMs, stateRequests: traffic.stateStarts.length - requests, difference });
+      await writeFile(join(output, "paused-captures.json"), JSON.stringify(report.pausedDraw, null, 2) + "\n");
+    }
+    // Retain all three original captures before checking identity, even when
+    // the first hold mismatches. A mismatch remains sticky and fails the gate.
+    for (const entry of captures) {
+      assert.deepEqual(entry.apiBefore, viewBefore); assert.deepEqual(entry.apiAfter, viewBefore);
+      for (const value of [entry.auditBefore, entry.auditAfter]) {
+        assert.deepEqual(value.camera, baseline.entry.auditAfter.camera);
+        assert.deepEqual(value.viewport, baseline.entry.auditAfter.viewport);
+        for (const key of ["mode", "requestedMode", "revision", "drawnRevision", "drawnTick"]) assert.deepEqual(value[key], baseline.entry.auditAfter[key]);
+      }
+      assert.deepEqual(entry.layersBefore, baseline.entry.layersAfter); assert.deepEqual(entry.layersAfter, baseline.entry.layersAfter);
+    }
+    for (const { fps, difference } of windows) assert.equal(difference.equal, true, `Paused ${fps} exact whole-region RGBA mismatch: ${JSON.stringify(difference)}`);
+    assert.ok(windows.every((w) => w.stateRequests >= 1 && w.stateRequests <= 3) && Math.abs(windows[0].stateRequests - windows[1].stateRequests) <= 1);
+    assert.equal(traffic.maxState, 1); assert.equal(traffic.posts.length, viewPosts);
   });
   await check("Bounded actual Steps reach coincident daughters; both exact IDs are selectable and camera revision invalidates candidates", async () => {
     assert.equal(snapshot.summary.divisions, 0); const deadline = Date.now() + limits.division; let event, selectedParent, steps = 0;
