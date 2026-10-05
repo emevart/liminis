@@ -1331,3 +1331,58 @@ network byte readback IN_PROGRESS. Actual LIVE/physical/projection и две
 и normalnetwork closed readbacks; затем guardedmerge PR22 exact83fa,
 fresh main CI/actual/public scope. LABPR21c02/publicLAB/LAB4models и новые
 LABcausalprobes/retries остаются Astra HOLD. Пользователя до утра не спрашиваем.
+
+
+### QA22 OWNERSHIP release: accepted merge; fresh main в приёмке
+
+2026-10-05, 04:31 UTC. Final exact83fa source и independentactual gates
+закрыты: code/privacy13GL0, отдельныйDATA/GEOMETRY13GL0, REC22+dense14 и
+LIVE15+physical16+projection12=79regression checks0. Все44originalPNG
+реально просмотрены. Wholepaused1130×752/baseline30/60/RGBAalpha0diff и
+binary64 pre/postAPI/camera/viewport/layers/revisions exact. Numerics384centers/
+40camera records maxCSS3.60e-13px; direct6retainedGLfullpage+3pausedPNG
+cover83centers/72boxedge midpoints.33per-record digests безoriginalPNGbytes
+не названы independentdirectpixel checks. SoftwareWebGL/achievedFPS и
+snapshot-onlyledger/oldFAILcauseunknown ограничения сохранены.
+
+Все6originalZIP без перепаковки иsafeownreview/source/transport/checkreports
+durable в трёх closedgroups, каждая<64MiB,27files120828313B:
+GL codex/paused-3d-qa-evidence-20261005,
+04e3a5e459849715910b47b229ce13530828ba53/tree77a53c7b0af5f72f5d39e6c8f8fa91802479455a,
+14files48650673B/manifest3655078d6a4a5c3a299a4066b84de26513aba5cfc9bd5bc1e6c8771bc10f7717;
+REC6c646b0ca9203ed8047c62f8f504effbfe7c24d3,6files29172633B;
+LIVEa6228d62e788ce9faeff2f92d74100674ef4bc5b,7files43005007B.
+Normal-network separate GitDB/noalternates closedinventory/allsize/SHA/
+originalCRC PASS для всех3groups. Receiptaggregate
+docs/experiments/handoff/paused-3d-83-archives-network-readback.json;
+три individualreceipts и exact11checkreceipt сохранены рядом. Expandedtrace
+bytes не смешаны с publishedcap; boundedprivacy не полныйsecretguarantee.
+
+Послеall11GREEN/fullCI37260833244/source0/actual0/readbacksPASS PR22
+обновлён, ready и guardedmerge с expectedHEAD83fa выполнен existingconnector:
+https://github.com/emevart/liminis/pull/22 . Newmain
+e2fd620baa492b2c2ff4316d2f083ac3e78bc252/tree
+47ce45646315b09493d58d87ca8fce4dc867aa8d. Normalgitfetch/sourcebridge:
+parents5bea+83fa, treebyteexactacceptedcandidate, diff83fa→mainEMPTY.
+Production3D/site/core/raw/config/Cargo/frozen unchanged. ЧужойWIP/reset/
+forceoverwrite отсутствуют. Sourceidentity не переносит runtimePASS.
+
+Freshmainpush CI37263650472 IN_PROGRESS. Existingmainpublicsmoke включает
+19HTTPS source/metadata/finalgzip pins всех3horizons иdefaultdense10k
+desktop/mobile0→1/1x; неfull2.42GBpublicHTTP/notpublic100k1Mrendering.
+Новые exactmainoriginals/actualindependentreviews/boundedarchives/readbacks
+PENDING; overallmain/publicPASS ещё не объявлен. NativeCargo/models/retries
+не запускаются. Ownsparsemainacceptancecheckout clean e2, no foreignWIP.
+
+Astra послеc02/reader/ABread оставилLABPR21/publicLAB/LAB4models/newcausalprobes/
+retries/productchangesHOLD: c02FAIL не подтверждаетpipeTo какдостаточныйfix,
+orderingUNKNOWN иsingleA/BPASS не repeatability. AFTERQA22/mainacceptance
+отдельноAPPROVE ONE SOURCE-ONLYinteroperabilityaudit Fetch-intercepted path:
+exactPW1.61.1/matchingChrome149.0.7827.55 officialsource/issues, pinnedSHAs,
+max1session60min/8targetfiles/10MiB. SharedFetchinterception — недоказанная
+гипотеза, неcauseclaim. Outputevidencematrix/sourcecitations/minimalfixplan
+илиNO_SUPPORTED_FIX; draftreproducerSPEConly, неисполнение/upstreamissue.
+OnlyallowedexistingofficialsourceGET; accessdenySTOP/nobypass. No browser/CI/
+HTTPpage/models/probes/product/oracle/guard/flag/runtimeupdate/retries.
+Audit покаNOT_STARTED; новыйimplementation/runtime scope требует нового
+Astraрешенияпо новымдоказательствам. Пользовательдоутраотсутствует; вопросовнет.

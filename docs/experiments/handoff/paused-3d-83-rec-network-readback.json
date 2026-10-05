@@ -1,0 +1,51 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "6c646b0ca9203ed8047c62f8f504effbfe7c24d3",
+  "archive_tree": "32b0253600a06c16a71560e614513549aec0b335",
+  "closed_inventory": true,
+  "manifest_sha256": "711933c9bbf95dcceecd63657e1525115fdb641c405aaefe2b8bbb2e5cc72c2c",
+  "file_count": 6,
+  "unique_bytes_excluding_manifest": 29171230,
+  "original_zip_count": 2,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2276,
+      "sha256": "45d73cdefee538118bc0c4fe4af69427145844295e766b9b2d8737d345ee0981",
+      "verified": true
+    },
+    {
+      "path": "dense-browser-83fa1e5-original.zip",
+      "bytes": 16594545,
+      "sha256": "f46a89196890f683d771d6310fd4e12c411993dd190b3a6fb681f588944e4bbc",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "independent-actual-review.json",
+      "bytes": 50357,
+      "sha256": "8bcda48b827f9f35dea374d2a768db1ab6b88d75848a8b4011c8978c15e0ae36",
+      "verified": true
+    },
+    {
+      "path": "independent-actual-review.md",
+      "bytes": 4238,
+      "sha256": "2a45d9f8b79b3ea734916f28bdc0e27dc84dd374d35b79adfda56208565fe952",
+      "verified": true
+    },
+    {
+      "path": "recorded-browser-83fa1e5-original.zip",
+      "bytes": 12519814,
+      "sha256": "97564a5031f8488f8f2b5a6bf7412489d42d7dd16ff5251dca8584529a13e3c5",
+      "verified": true,
+      "zip_crc": "PASS"
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}

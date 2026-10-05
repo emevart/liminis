@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "candidate_head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+  "candidate_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "published_bytes_including_manifests": 120828313,
+  "file_count": 27,
+  "original_zip_count": 6,
+  "groups": [
+    {
+      "file": "paused-3d-83-rec-network-readback.json",
+      "receipt_sha256": "277614aced121c1be4944d59d8e3a8c48483959cfacb1d236676e03a7ee5219a",
+      "archive_commit": "6c646b0ca9203ed8047c62f8f504effbfe7c24d3",
+      "archive_tree": "32b0253600a06c16a71560e614513549aec0b335",
+      "file_count": 6,
+      "unique_bytes_excluding_manifest": 29171230,
+      "original_zip_count": 2,
+      "manifest_sha256": "711933c9bbf95dcceecd63657e1525115fdb641c405aaefe2b8bbb2e5cc72c2c"
+    },
+    {
+      "file": "paused-3d-83-live-network-readback.json",
+      "receipt_sha256": "0e29983ff9437c13915237e8ccb341bb53f0644ee9d203cc9584e0004d1cde24",
+      "archive_commit": "a6228d62e788ce9faeff2f92d74100674ef4bc5b",
+      "archive_tree": "600125077a818a1f3e5aa208e771dbd2bdfd0ff1",
+      "file_count": 7,
+      "unique_bytes_excluding_manifest": 43003439,
+      "original_zip_count": 3,
+      "manifest_sha256": "f28fac87e1e64ef40167f3806f4b5b83ae9b8039ab3aea7b007d10dd02c9de91"
+    },
+    {
+      "file": "paused-3d-83-gl-network-readback.json",
+      "receipt_sha256": "8896db0eaab11d476813ee2993752d2a3dbb7bbfb150638fd3495bc5840e6949",
+      "archive_commit": "04e3a5e459849715910b47b229ce13530828ba53",
+      "archive_tree": "77a53c7b0af5f72f5d39e6c8f8fa91802479455a",
+      "file_count": 14,
+      "unique_bytes_excluding_manifest": 48647822,
+      "original_zip_count": 1,
+      "manifest_sha256": "3655078d6a4a5c3a299a4066b84de26513aba5cfc9bd5bc1e6c8771bc10f7717"
+    }
+  ],
+  "qualifications": [
+    "Each selected published group below64MiB; expandedtraces separate",
+    "Original browser acceptance/source/reviews separate",
+    "No oldPASStransfer/fullpublic2.42GB/hardwareFPS/newscientificruns"
+  ]
+}

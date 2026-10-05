@@ -1,0 +1,58 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "a6228d62e788ce9faeff2f92d74100674ef4bc5b",
+  "archive_tree": "600125077a818a1f3e5aa208e771dbd2bdfd0ff1",
+  "closed_inventory": true,
+  "manifest_sha256": "f28fac87e1e64ef40167f3806f4b5b83ae9b8039ab3aea7b007d10dd02c9de91",
+  "file_count": 7,
+  "unique_bytes_excluding_manifest": 43003439,
+  "original_zip_count": 3,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2871,
+      "sha256": "3934f3016dabd257fc438561a0d176510da8fe1e7be0f2b274332b57462aa4c2",
+      "verified": true
+    },
+    {
+      "path": "independent-actual-review.json",
+      "bytes": 23369,
+      "sha256": "7ae5788feb3a345b1945ca6525524ec2b92cc1d352f777cc1577815d35873ae5",
+      "verified": true
+    },
+    {
+      "path": "independent-actual-review.md",
+      "bytes": 7247,
+      "sha256": "ec971844142171bbc53520e99f8c6db69f62f4cf7889da2be642dac5c80cecd1",
+      "verified": true
+    },
+    {
+      "path": "live-browser-83fa1e5-original.zip",
+      "bytes": 5667320,
+      "sha256": "f165d1522ca40e300b1b11472263f39ee9d9e3537bf2535d4d97e1788d84a4f7",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "live-physical-83fa1e5-original.zip",
+      "bytes": 7061660,
+      "sha256": "c53e9eaaf590dba51ee11061b4fd461aba6f084600a6640c71ca0f6b9a4d8905",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "physical-projection-83fa1e5-original.zip",
+      "bytes": 30240972,
+      "sha256": "195f24a659b01225ff103437810593a09bb49d98fb2681ddf3c74b672fefdb05",
+      "verified": true,
+      "zip_crc": "PASS"
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}
