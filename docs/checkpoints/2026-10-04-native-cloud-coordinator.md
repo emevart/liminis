@@ -1514,3 +1514,37 @@ oracles и runtime/time budgets не ослабляются. Root сериали
 PENDING, никаких новых runtime runs не запущено. Если нужны JS/loader/guards
 или broader product scope, STOP expansion и finding к Astra. Пользователя
 не спрашиваем, approvals на merge/deploy применяются только после gates.
+
+
+## 2026-10-05 06:06 UTC — HUD candidate опубликован, точный CI начат
+
+PR [#23](https://github.com/emevart/liminis/pull/23) draft, head
+`d8e69e4d652e40409fc15bc5e9f247eb58d8c5ab`, tree
+`c5775c00a150768f2819e265a4165d8605bd48e3`, база accepted MAIN
+`e2fd620baa492b2c2ff4316d2f083ac3e78bc252` после normal fetch неизменна.
+Семь согласованных файлов: product HTML/CSS, два existing recorded/dense QA,
+public QA только три source constants нового HTML, ACCEPTANCE и уникальный
+checkpoint. Frozen product f420 и final QA 7ba64bb интегрированы byte-exact;
+independent final source review: 0 blockers. Два QA source findings исправлены:
+pointer снимает keyboard selection перед единственным actual pixel-target
+click; HTTP baseline охватывает resize. Author syntax/diff PASS — не browser
+acceptance. Root normal push опубликован без force; writers заморожены.
+
+Единственный existing protected full CI run
+[37270688687](https://github.com/emevart/liminis/actions/runs/37270688687)
+начат на этом head; состояние IN_PROGRESS. Merge/deploy acceptance PENDING.
+Astra одобрила пропорциональную приёмку: глубокое новое независимое actual
+recorded+dense PNG/trace/body/geometry/selection review и durable originals
+с network readback; все LIVE/physical/3D regression jobs/mandatory steps
+должны исполниться и пройти на fresh exact head. Для неизменённых GL/host/
+vendor/QA/guards допустим source-dependency identity bridge к accepted e2
+плюс fresh exact job/step receipts. Independent actual GL review остаётся
+относящимся к e2; нового независимого GL artifact PASS не заявляем. Любой
+drift, failure, skipped mandatory step или новый concern требует scoped
+actual review. После merge необходим fresh MAIN и public playback gate.
+
+Уточнение от Astra: отложенный sticky transport/sidebar overlap находится
+в legacy LIVE chamber1 cell-viewer evidence, а не recorded observe.html.
+Следующий product scope пока не начат. LAB21/publicLAB/LAB4/models/causal
+retries сохраняют HOLD. До утра решения делегированы Astra; вопросы
+пользователю не отправляем. Integration receipt сохранён рядом с checkpoint.
