@@ -2,18 +2,50 @@
   "schema_version": 1,
   "scope": "public_lab_smoke_preparation",
   "public_origin": "https://liminis.dev/",
-  "product_candidate_head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
-  "product_candidate_tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+  "product_candidate_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "product_candidate_tree": "64bdb5f4794f48907f99886c540f6391571b1914",
   "deployed_product_head": null,
   "assets": [
-    { "filename": "lab.html", "bytes": 5393, "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52" },
-    { "filename": "lab.js", "bytes": 18486, "sha256": "2cb9938799d7febe066a3f377c1970d5785b09352eec0972752040d5e7c9c8b5" },
-    { "filename": "lab.css", "bytes": 5018, "sha256": "89b1e8594e68ad3224621f6c5b139677212cccec8c37806bba1b62c040045b06" },
-    { "filename": "lab-data.mjs", "bytes": 20227, "sha256": "68f31a12037c2118c1ab98366b95491b0b23756040bf645515ce2e550381e534" },
-    { "filename": "data/lab-2/descriptor.json", "bytes": 50708, "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb" },
-    { "filename": "data/lab-2/results.json", "bytes": 5294742, "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a" },
-    { "filename": "data/lab-2/comparisons.json", "bytes": 1116928, "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3" },
-    { "filename": "data/lab-2/manifest.json", "bytes": 82880, "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3" }
+    {
+      "filename": "lab.html",
+      "bytes": 5393,
+      "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+    },
+    {
+      "filename": "lab.js",
+      "bytes": 22571,
+      "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871"
+    },
+    {
+      "filename": "lab.css",
+      "bytes": 5019,
+      "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+    },
+    {
+      "filename": "lab-data.mjs",
+      "bytes": 20808,
+      "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a"
+    },
+    {
+      "filename": "data/lab-2/descriptor.json",
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    },
+    {
+      "filename": "data/lab-2/results.json",
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "filename": "data/lab-2/comparisons.json",
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "filename": "data/lab-2/manifest.json",
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    }
   ],
   "html_hosting_exception": {
     "source_body_close_offset": 5377,
