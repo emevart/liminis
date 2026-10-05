@@ -1460,3 +1460,57 @@ body_stream_buffer.cc/fetch_data_loader.cc/data_pipe_bytes_consumer.cc.
 Никаких browser/CI/HTTP-page/model/probe/product/oracle/flag/runtime edits
 или upstream issue. Итог source matrix/citations и minimal justified plan
 либо NO_SUPPORTED_FIX. Audit здесь ещё NOT_STARTED. Пользователя не спрашиваем.
+
+### Source audit закрыт; Astra открыла отдельный recorded HUD этап
+
+2026-10-05, 05:38 UTC (08:38 MSK). После всех MAIN gates выполнена одна
+SOURCE-ONLY сессия в conservative window05:20–05:28:14 UTC: **8 official
+source targets /233506 delivered UTF8 bytes**, без browser/CI/model/probe
+или product/guard/runtime edits. Exact PWv1.61.1 commit
+39e3553a4f283a41134d75d7e404484bd9e6865a и Chromium149.0.7827.55 commit
+3188f8a607ae7e067593be8aab7f02d2451fec07; PWbrowsers.json revision1228
+соответствует c02 observed version/headless-shell path. Binary Git attestation
+отсутствует и не приписана. Один wrong-path404 исправлен для того же
+fetch_data_loader target в pinned repo; permission deny/bypass отсутствуют.
+
+**NO_SUPPORTED_FIX**, Astra independent agreement, semantic blockers0.
+Все8 local source length/SHA256/GitblobSHA1 сверены. PWfinishedPromise
+разрешается и при loadingFailed; Network.getResponseBody отличается от
+Fetch Response-stage body method. Blink normalClose тоже может вызывать
+consumer.Cancel, а known-size consumer может завершиться отдельно от native
+Networkfinished. Эти факты не устанавливают observed initiator/GC/race/size
+или Chromium defect и не доказывают невозможность будущего fix. Client
+disconnect citation1651–1652 уточнена в independent sidecar review.
+
+Собственные reports, metadata/citations, draftreproducerSPEC ONLY и Astra
+review durable: **codex/lab-interop-source-evidence-20261005**,
+10f23c0cfe6b0f1e9ae0f96c4b73180f2fed79d4/tree
+90ac982155fd17c6672f30b171a21b72c0d666ec, closed8files33349B,
+manifest1451ef657e3e9a19f4bde84d98828e40f0b2c06b2a74c11713aad54a8aa1bc4a.
+Normal-network closedinventory/allsize/SHA PASS, receipt
+[lab-interop-source-network-readback.json](../experiments/handoff/lab-interop-source-network-readback.json).
+Full third-party sources/runtime не vendored в product/archive. Нового
+reproducer execution/upstream issue/official-issue search не было.
+LAB21/publicLAB/LAB4/models/causal retries остаются HOLD.
+
+Astra явно одобрила **отдельный bounded HUD implementation stage** на
+accepted e2 main: product author только site/observe.html +observer.css,
+normal-flow stage-header для existingtitle/stats, отдельные canvas middle
+и frame-stamp bottom rows. Existing aesthetics, полные переносы текста без
+ellipsis/hidden counters, min-width/min-height:0, usablecanvas>72px по
+обеим осям, loading/error функция сохраняются. observer.js/data/clock/
+decoder/schema/model/display-position algorithm/live physical3D не менять.
+Legacy sticky transport/sidebar overlap остаётся отдельным отложенным finding.
+
+Native scoped author codex/recorded-hud и отдельный QA author
+codex/recorded-hud-qa начали с чистых собственных e2 worktrees. QA scope:
+только существующие scripts/check_dense_recording_browser.mjs и
+site/playback.browser.mjs; exact DOM rectangles/nonoverlap/bounds,
+desktop/short/390/320 PNG, dense10k tick992/216 actualcells, counters и
+pointer+keyboard inspector после resize, reuseinitial/final+sparsepath.
+Прежние strict paused30/60/state/byte/sandbox/network/unhandled/cancel
+oracles и runtime/time budgets не ослабляются. Root сериализует интеграцию
+и existingfullCI; пока product implementation/source/actual/newhead acceptance
+PENDING, никаких новых runtime runs не запущено. Если нужны JS/loader/guards
+или broader product scope, STOP expansion и finding к Astra. Пользователя
+не спрашиваем, approvals на merge/deploy применяются только после gates.

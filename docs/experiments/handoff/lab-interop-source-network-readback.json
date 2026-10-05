@@ -1,0 +1,61 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "10f23c0cfe6b0f1e9ae0f96c4b73180f2fed79d4",
+  "archive_tree": "90ac982155fd17c6672f30b171a21b72c0d666ec",
+  "closed_inventory": true,
+  "manifest_sha256": "1451ef657e3e9a19f4bde84d98828e40f0b2c06b2a74c11713aad54a8aa1bc4a",
+  "file_count": 8,
+  "unique_bytes_excluding_manifest": 31923,
+  "original_zip_count": 0,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1602,
+      "sha256": "4f1e6a66d4a3e4876eda5c0cdca73684577cfc79e05f65a23b1cb7c85166c9a9",
+      "verified": true
+    },
+    {
+      "path": "astra-review.json",
+      "bytes": 3089,
+      "sha256": "228f742cd1b2866ae070a483fcfa185c17e72c4b0dc25665a517f62c5d187b1b",
+      "verified": true
+    },
+    {
+      "path": "astra-review.md",
+      "bytes": 5868,
+      "sha256": "15276f8ff9705f54990f3bbfa67fd3b6f55515129bdb74fc37629b7ce099924a",
+      "verified": true
+    },
+    {
+      "path": "audit-summary.json",
+      "bytes": 1678,
+      "sha256": "a33bf7855f4f8facf3c7a71da2c7c29946e555b943016839a0f5f9c134c19ddb",
+      "verified": true
+    },
+    {
+      "path": "audit.md",
+      "bytes": 9371,
+      "sha256": "c2108787c18e594867b108ff87f247f05f4d57265c6e96d2d20838a2ab50c061",
+      "verified": true
+    },
+    {
+      "path": "draft-reproducer.md",
+      "bytes": 3465,
+      "sha256": "3cb349a6c9efb12b95cdb29a9d8661e50d252bb6b724fd47f78a44a43e6967a6",
+      "verified": true
+    },
+    {
+      "path": "source-read-receipts.json",
+      "bytes": 6850,
+      "sha256": "d2479e3b5fd5ccf2476e0ee5260e63fd6ce49a17cfb3d6a84b6e0dba492ed757",
+      "verified": true
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}
