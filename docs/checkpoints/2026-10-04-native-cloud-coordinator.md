@@ -846,7 +846,8 @@ job111570284160FAIL, LIVEjob111570284210SUCCESS; Rust ещё running при
 скачан native, outerCRC/sourceHEAD/tree PASS. Gate1 observedargvPASS, gate2
 FAIL до sample/comparison/layout/negative gates: descriptor/results failed
 net::ERR_ABORTED, две PWNetwork.getResponseBody NoData; comparisons/manifest
-bodypins доступны и exact. Page/console/unhandled/cleanup0. ActualPNG сейчас
+bodypins доступны и exact. Page/console/Nodeunhandled/cleanup0; browser
+__labQaUnhandled array не прочитан из-за earlyexit, browser-unhandled0 не заявлен. ActualPNG сейчас
 содержит4complete visible plots и24matrix, но это не9gateLAB acceptance.
 
 Originaltrace: descriptorbody NoData941.006ms, results1197.849ms; ready
@@ -884,3 +885,32 @@ untilLAB3aaccepted/public.
 иsingleofficialrun, затем обоснованнаяQAправка/freshfullCI/runtimeacceptance.
 Не отменятьreadercontract/менятьproductstreamingнаугад и не ослаблять
 responsepins/errorgates. Пользовательотсутствуетдоутра; решенияAstra.
+
+### LAB1be original durable closed archive и diagnostic source gate
+
+2026-10-05, 01:02 UTC. FullCI37248220760 completedFAILURE:9of10GitHub
+ActionsjobsSUCCESS, recordedLABjobFAIL. Latest Workers check на том же
+sourcehead1be ещёin_progress послеevidencebranchcreate; неGREENclaim.
+OriginalsmallLABZIP643462B plus independent source/trace/PNG review appended
+to first79archive withoutrepacking original bytes. Correct finalcommit
+`d6c6db823c72022ff72e6890fa1c3542a7c94f83`, tree
+`7cc28402166fe7c9970b1167e118bc7853cb1fbb`, manifestSHA
+`2e087bedff465ece0393e113f062c4cff238babffd4ea919dd98b26c6eb291ed`,
+closed35files/2ZIP3037715B<64MiB. Independent normalnetwork Git database
+readback size/SHA/closedinventory/CRC PASS; report
+`docs/experiments/handoff/lab-aggregate-earlyfail1be-network-readback.json`.
+Intermediate2b9fb6f published newfiles beforemanifest regeneration due wrong
+oldschema key; it is NOT acceptedclosedarchive. Ordinarynewcommitd6 repaired
+manifest and newverificationPASS; previous35c/41originalversions unchanged.
+
+Native diagnostic workflowprepared root-owned SHA
+ade77f54266c73cef921fd198554fab1f469252b139bbabcdbda50e0dd5ed199.
+OfficialUbuntu22/Node24/PW1.61.1, contentsread/exactgithub.sha/persistcredFALSE,
+fixedcandidate1be fetch+8assetpreflight, noCargo/model/deploy. Independent
+workflow0; script combinedreview found final-page-ready guardgap before
+anylaunch. Authorfixing; singleofficialdiagnosticNOT_RUN. Candidateproduction
+source unchanged and publicdeployedpinNULL, main5bea stable.
+
+Следующий шаг: close diagnostic source0+finalafterPNGready guard, freeze
+clean diagnostichead/tree иодинprotectedrun, independent actualtimeline
+acceptance; only then justifiedQAchange/fullmandatoryCI beforemerge.
