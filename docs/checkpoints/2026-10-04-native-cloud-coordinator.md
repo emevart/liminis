@@ -1726,3 +1726,47 @@ GREEN не разрешён; no source/browser/model changes после finding 
 Accepted MAIN813/site/HUD/everytick recordings остаются прежними, old refs/raw/
 24science evidence сохранены. Следующий шаг: exact failure review/qualified
 cause, durable original archive/readback и Astra narrow disposition.
+
+
+## 2026-10-05 08:38 UTC — failure archive/readback и repair source0, новый CI
+
+First run37282535160 attempt1 terminal FAIL:10checksSUCCESS/1LIVEFAIL,
+9GHAjobsSUCCESS/1LIVEFAIL. Physical/projection/GL actualsteps SKIPPED,
+mobileNOTEXECUTED. Independent failure review confirms original/source/body/
+traffic/held qualification;6PNG реально просмотрены, outer/nestedCRC0.
+Exact callback/solepollcausality не доказана; observed timeline сохраняется.
+
+Closed durable failure archive codex/live-mobile-failure-evidence-20261005:
+commit052c8fa285b54a0fc6b1228e6c5e0438550476cd, tree
+3a7ecef15cc0d9196a9a862454f2a400ce3e0d60,
+prefixdocs/experiments/handoff/live-mobile-failure-2026-10-05,
+15files/8,669,807B<64MiB,1original ZIP без перепаковки. ManifestSHA256
+6fbd4a5b9f46982c1d42e65fb2342e4e99acb6fd6fb35c96af1664243ad457e4.
+Archive diff-check PASS. SeparateGitDB/noalternates normalnetworkreadback:
+closed15files/allsizes/SHA/originalZIPCRC PASS, archiveexactcommit confirmed.
+Readback+terminalCIreceipt copied alongside checkpoint; priorFAIL/ref untouched.
+
+Astra APPROVE_BOUNDED_QA_REPAIR выполнена ONLYQA upper/lower: native scroll
+persistent #cell-detail, затем one synchronous current конкретныйfield/
+inspector/rect/hit/clipping/sourcevalue observation; strictoracles/PNGs kept.
+Ни retaineddescendantawait, ни fallback/retry/timer/pollpause/productfix.
+Author d61f56d9490a38221bdf4ea046f732619c114dc9/tree6932c58e… exactQA blob
+4c1047bdae711916c962385c081fadf771995304,37657B/SHA
+fcd68b338deac36b0dd463e03a1e5a52957b4de73c67f767404cb1f397f4ea8b.
+
+New frozen ROOT candidate000e2eb6b6d42b81f4cee19eaa23e3f09c917ee6,
+treea8cdcc995fe3f6c6ec130ff5400b81d733c55286, ancestrya57; deltaONLYQA+
+appendcheckpoint, product/Acceptance/CI/site/core/raw/frozen unchanged.
+Independent repair source QUALIFIED_PASS0 on exactcandidate; frozenjson
+10643B/SHA080d8ead21df7ce2ff2615939ce06ad43ed5711d17d1ed1c0ba8d828df598d1c
+andmd4159B/SHA3713d2f0c97fca075dbf45418aacc15943ba4e05a74fb04fd17ddba0dc244b30
+copiedbyteexact. Rootverifiedsource0+failedoriginalarchive/readback+oldCIterminal
+andnormalmain813/PR24a57ref beforeordinaryfastforwardpushnewcandidate.
+
+ONEfresh protected fullCI37284723150 attempt1 nowIN_PROGRESS on exact000e2eb,
+eventpull_request verified; PR24description rewritten aroundfinalhelper.
+No rerun ofa57FAIL, no acceptance transferred, actual/merge/MAIN/publicPENDING.
+Nextstep: newLIVE/physical originals/deepindependentreview+freshactualGL/
+projectiongates; affectedclosedarchives/readbacks beforeguardedmerge and
+freshMAIN/affected/publicregressions. Anyfail/drift/skip/modelchange/occlusion/
+missingartifact→HOLD/scopedreview. LAB21/publicLAB/LAB4/models/causalretriesHOLD.

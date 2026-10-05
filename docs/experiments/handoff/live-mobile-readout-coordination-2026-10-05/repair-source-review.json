@@ -1,0 +1,180 @@
+{
+  "schema": "liminis-independent-source-review-v1",
+  "reviewed_at_utc": "2026-10-05T08:35:02.073665+00:00",
+  "stage": "LIVE mobile readout narrow QA repair after preserved a57 failure",
+  "verdict": "QUALIFIED_SOURCE_PASS",
+  "blocking_findings": [],
+  "blocker_count": 0,
+  "binding": {
+    "head": "000e2eb6b6d42b81f4cee19eaa23e3f09c917ee6",
+    "tree": "a8cdcc995fe3f6c6ec130ff5400b81d733c55286",
+    "reviewed_previous_head": "a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+    "previous_tree": "2f9f0760ada0bbd1812a232bc6a30883242c76d3",
+    "base_main_head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+    "clean_worktree_observed": true,
+    "delta_changed_paths": [
+      "docs/checkpoints/2026-10-05-live-mobile-readout.md",
+      "scripts/check_live_cells_browser.mjs"
+    ],
+    "main_base_changed_paths": [
+      "crates/liminis/src/cell-viewer.html",
+      "docs/ACCEPTANCE.md",
+      "docs/checkpoints/2026-10-05-live-mobile-readout.md",
+      "scripts/check_live_cells_browser.mjs"
+    ],
+    "qa_author_commit": "d61f56d9490a38221bdf4ea046f732619c114dc9",
+    "qa_author_tree": "6932c58eaaa35a32990447fd43652ca7a8b6ad32",
+    "final_qa_exact_author_bytes": true,
+    "qa_blob": "4c1047bdae711916c962385c081fadf771995304",
+    "qa_bytes": 37657,
+    "qa_sha256": "fcd68b338deac36b0dd463e03a1e5a52957b4de73c67f767404cb1f397f4ea8b",
+    "product_blob": "3eaeda356b01ab5a300425673769a878f82fa801",
+    "product_bytes": 62157,
+    "product_sha256": "cf12bae4142980b513375a3a173c4249e457d58e760a366b90153c676446d148"
+  },
+  "approved_plan": {
+    "decision": "APPROVE_BOUNDED_QA_REPAIR",
+    "files": [
+      "live-mobile-readout-failure-astra.json",
+      "live-mobile-readout-failure-astra.md"
+    ],
+    "json_sha256": "3e8303b83a8376d1bd08a3af7222694f603d43b0a49566ef25c962977dce5275",
+    "md_sha256": "0ac520728db6d8ce8c6d6adbf9665be34412b142f2abee70205825e5ce1c67f9",
+    "conformance": "Native persistent inspector host scroll, then one synchronous fresh field-specific read; strict bounds/hit/value preserved for upper and lower, with no broader production or timing change."
+  },
+  "method": {
+    "independent_of_qa_product_and_root_docs_authorship": true,
+    "reads": "Full narrow diff, approved Astra plan, adjacent original/final helper and inspector/data/cleanup semantics; local exact object/byte comparisons against a57 and author d61. Prior full source review reused only for byte-identical regions.",
+    "activity": "Read-only source/Git inspection and writing these two own reports only.",
+    "not_performed": [
+      "browser",
+      "HTTP",
+      "CI",
+      "tests",
+      "Cargo",
+      "model/causal probes",
+      "production/QA/Git edits"
+    ]
+  },
+  "preservation_proofs": {
+    "unchanged_qa_prefix_before_visibleTarget": {
+      "bytes": 22589,
+      "sha256": "3cd989500351e85a91bf5d340789dd35ce96a90560ea8c95d01b8ea253499679"
+    },
+    "unchanged_qa_tail_from_rawPhenotypeValue": {
+      "bytes": 6553,
+      "sha256": "f394b5fc8e0195742b468aba34722945351170839dba024ea97674acf0ef98bc"
+    },
+    "checkpoint_old_prefix_bytes": 6006,
+    "checkpoint_exact_prefix_preserved": true,
+    "checkpoint_append_bytes": 2847,
+    "unchanged_objects": [
+      {
+        "path": "crates/liminis/src/cell-viewer.html",
+        "git_object": "3eaeda356b01ab5a300425673769a878f82fa801",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": "docs/ACCEPTANCE.md",
+        "git_object": "548ac154a5878112fb3c79559103e840954ccf7a",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": ".github/workflows/ci.yml",
+        "git_object": "75e81cf273d7499ed20c8eef496d7a45eadbe8a0",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": "docs/SPEC.md",
+        "git_object": "32bf455e15a3a460590a9fa4001074e4f9512829",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": "docs/NORTH_STAR.md",
+        "git_object": "3f43d7ba6cdd3086c62b05d9aa374cba82db8048",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": "docs/DECISIONS.md",
+        "git_object": "4c4ef10f0193aafd34b90a06fdc2b640b7e073d8",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": "crates/liminis-core",
+        "git_object": "1f9031142731d138bf6de243ab2ac13d644e1553",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": "configs",
+        "git_object": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": "site",
+        "git_object": "cbc916075a0f835e2cbd6e5ab824ed4849cfeff5",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": "crates/liminis/src/cell-viewer-3d.mjs",
+        "git_object": "c9c299a89431fd76a7ccc76ef408464fe5f5f69c",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": "crates/liminis/src/cells_host.rs",
+        "git_object": "ff6f0113d9ed80c9d14e1a4782370240865ffb69",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": "crates/liminis/src/vendor/three-r180",
+        "git_object": "37a4b0a1e61dc9e76649d0b37cc50eaa8bdb55f4",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": "scripts/check_physical_projection_browser.mjs",
+        "git_object": "02338c9a9bf2f1b58822b835b3b4adf289b76ff3",
+        "unchanged_since_a57": true
+      },
+      {
+        "path": "scripts/check_physical_3d_browser.mjs",
+        "git_object": "731f080aa30e4099265df54ef741ed98533159ac",
+        "unchanged_since_a57": true
+      }
+    ]
+  },
+  "repair_assessment": [
+    "Для upper/lower native scrollIntoViewIfNeeded вызывается ровно один раз на постоянном #cell-detail; transient primaryDL/lastDD не передаётся в asynchronous scroll.",
+    "После scroll await Locator.evaluate заново разрешает постоянный host. В одном синхронном callback выбирается текущий :scope > dl либо последний .object-grid dd; там же снимаются primary inspector/ID/tick/genome/generation и конкретные field rect/style/ancestor clipping/elementFromPoint/text/group/key/value.",
+    "Concrete descendant существует только как локальная переменная синхронного browser callback; через await возвращается сериализованный evidence, не DOM node/ElementHandle. Lower value/group берутся из того же atomic observation, без второго descendant evaluate.",
+    "Полные viewport bounds, positive size, visible/enabled, field-specific native hit и clipping сохраняются. Rect/hit относятся к concrete primaryDL/lastDD, не к wrapper. Current inspector повторно сверяется с исходным actual API snapshot.",
+    "LastDD обязан принадлежать Phenotype и иметь key с numeric raw API value; прежняя rounded-value assertion сохранена в неизменном tail. Отсутствующий primary/field/name или неожиданный target бросает ошибку; нет suppression/fallback.",
+    "Остальные visibleTarget calls продолжают наблюдать исходный конкретный locator. Замена inline clipping условий на clipsX/clipsY с теми же predicates сохраняет boolean semantics; добавлен raw ancestor evidence только для inspector.",
+    "Нет retry/catch-ignore/timers/JS scroll/retained descendants/polling pause/product changes. Если один wrapper scroll не показывает requested field целиком — прежние strict assertions дадут FAIL.",
+    "Viewport set, real Find absent→present, controls/scroll evidence,30viewport+5fullpage expected PNG, held-pixel/poll/time/source/error/request/noPOST/model equality guards остаются прежними. Дополнительный current-inspector check усиливает связность наблюдения, не заменяя прежние assertions."
+  ],
+  "docs_assessment": {
+    "checkpoint_append": "38-line append честно сохраняет first actual FAIL,12 completed checks, NOT_EXECUTED mobile/later gates, limited polling-detach explanation и fresh pending gates.",
+    "acceptance_unchanged": true,
+    "no_runtime_pass_transfer": true
+  },
+  "qualifications": [
+    "Source0 разрешает новый exact frozen candidate пройти один protected CI только после failure archive/readback и старого CI terminal; reviewer не запускает его.",
+    "Wrapper-scroll robustness и field visibility на всех desktop/mobile/physical cases ещё не проверены runtime. Нет утверждения, что native persistent-host scroll обязательно покажет оба поля.",
+    "a57 actual FAIL остаётся FAIL; polling-detach explanation supported, exact mutation callback/sole cause unknown. Старые12 PASS не переносятся в новый responsive/physical/GL acceptance.",
+    "Существующие responsive650/4000 fields остаются source constants, не measured cadence assertion. Inspector scope остаётся common primary/genome/generation/last phenotype, не отдельный assertion каждого xyz/phenotype.",
+    "Old official sandbox/error/cleanup/source mechanisms сохранены; не добавлен native unhandled sampler, comprehensive post-cleanup ACK/aggregate или новый browser-body hash oracle.",
+    "Все прежние source/failure review/scanner outputs сохранены immutable. LAB/models/causal retries HOLD."
+  ],
+  "pending_status": {
+    "new_exact_head_full_ci": "PENDING",
+    "new_legacy_mobile_actual_acceptance": "PENDING",
+    "new_physical_projection_gl_regression": "PENDING",
+    "failed_original_archive_readback": "ROOT_GATE_NOT_ACCEPTED_BY_THIS_SOURCE_REVIEW",
+    "guarded_merge_main_public": "PENDING"
+  },
+  "remaining_gates": [
+    "Закрыть durable archive/readback original a57 FAIL и убедиться, что старый CI terminal.",
+    "Один новый full protected exact-head CI с обязательными browser gates под прежним budget.",
+    "Новая independent actual mobile/physical и qualified GL/projection evidence согласно прежнему acceptance plan.",
+    "Affected archive/readback, guarded merge, fresh MAIN/public gates; любой новый failure/concern возвращает HOLD."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "candidate_head": "000e2eb6b6d42b81f4cee19eaa23e3f09c917ee6",
+  "candidate_tree": "a8cdcc995fe3f6c6ec130ff5400b81d733c55286",
+  "previous_failed_head": "a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+  "previous_run_terminal": true,
+  "independent_repair_source": "QUALIFIED_SOURCE_PASS_0_BLOCKERS",
+  "source_review_sha256": "080d8ead21df7ce2ff2615939ce06ad43ed5711d17d1ed1c0ba8d828df598d1c",
+  "failure_archive_commit": "052c8fa285b54a0fc6b1228e6c5e0438550476cd",
+  "failure_archive_manifest_sha256": "6fbd4a5b9f46982c1d42e65fb2342e4e99acb6fd6fb35c96af1664243ad457e4",
+  "failure_archive_network_readback": "PASS",
+  "astra_disposition": "APPROVE_BOUNDED_QA_REPAIR",
+  "permission": "Existing ownership/write-go + concrete QA repair disposition; ONE fresh CI of new candidate, not old-run retry",
+  "actual_acceptance_declared": false,
+  "lab_status": "HOLD"
+}
