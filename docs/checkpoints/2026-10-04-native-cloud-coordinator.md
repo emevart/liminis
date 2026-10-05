@@ -1028,3 +1028,60 @@ Root не запускал native browser/Cargo/models/deploy. Предыдущ�
 Следующий шаг: original artifact и independent actual source-location/EOF/
 lock/timing review, решение Astra по доказательствам. Main5bea/PR21 не менялись,
 public smoke/LAB4a NOT_RUN; вопросов отсутствующему пользователю нет.
+
+
+### Reader EOF observed, native cancellation unresolved; last bounded A/B plan
+
+2026-10-05, 01:51 UTC. Run37252287604/job111582214941 completedFAILURE.
+Original artifact11321850249/ZIP399750 B SHA256
+`c628ee972f4ea13bc095d5decb9c8c77c542145e693c133ebd83733642b727c0`.
+Независимый actual review подтвердил compiled sourceSHA/engineHash b034…,
+четыре exactChromepossible/resolved positions131:25,139:24,142:23,144:4,
+16primitive records/paused0. Все четыре JSON достигли actual read done===true:
+completedtrue/exactlength/primaryfalse, prelockedtrue→postfalse/cleanupfalse.
+На наблюдённом positive path adapter cancel не исполнялся. Это не доказательство
+прежнего path или внутренней C++/GC причины.
+
+Все восемь body pins/ACK/serverfinish/decodedcounts точны. Native FAIL теперь
+у descriptor50708 B; семь остальных loadingFinished. Все три clock relations
+к failure148.526763: UNKNOWN_OVERLAPPING_INTERVALS. Initial/finalready4plots/
+24matrix/seed1sample0/unhandled0, actualPNG просмотрен; не остальные LABgates.
+Nativeerror и actionsPassedfalse сохраняют overallFAIL.
+
+Архив `codex/lab-reader-lifecycle-evidence-20261005`:
+`cd7fa2c103d1e273abe79e5efeedaecf468fcaa7`, tree
+`fe0dd780d614afe0817ba26c14ed8f8ed6267a31`, closed8files506195 B,
+manifestSHA `0a8985a5e4794d48992d29128e72515ad9a50896cf905db18dcd7931127709c3`.
+Оригинал не перепакован. Separate network Git object DB без alternates
+проверила refs/closedinventory/size/SHA/CRC PASS; receipt
+`docs/experiments/handoff/lab-reader-lifecycle-network-readback.json`.
+Boundedprivacy50483UTF8bytes/1PNG/patterns0, expanded480156B, не fullguarantee.
+
+Astra выбрал ОДНУ ПОСЛЕДНЮЮ bounded A/B compatibility probe без production
+правок: A exact1be manualreader; B только readBytes transport consumer через
+native body.pipeTo(new WritableStream({write:boundedaccumulate})). Прежние
+concat/SHA/parser/7siteassets/все научные JSON неизменны, B explicitvariantSHA
+и точный functiondiff. Incrementalcap beforeaccumulate/backpressure/cleanup
+и primaryerror identity обязательны. Без unboundedarrayBuffer, timers,
+keepalive, retainedResponses, Debugger или nativePromise observers.
+
+Один protected job, две свежие последовательные guarded contexts. Ошибки
+каждого arm sticky; AFAIL не превращается в overallPASS при Bsuccess.
+Только AFAIL/BстрогийPASS по восьми bodypins/finished/UI/errors0 даст будущий
+scoped compatibility candidate; не C++causeproof и не productacceptance.
+BFAIL или обаPASS/inconclusive → прекратить дальнейшие causal runs,
+сохранить Chrome149/guard/stream blocker до утреннего разбора, не merge.
+
+Author owns NEW3files check_lab_transport_ab.mjs, lab-transport-ab-assets.json,
+fixtures/lab-transport-ab/lab-data-pipe-to.mjs; root ONLY NEW workflow
+lab-transport-ab.yml. Future RUNcodex/lab-transport-ab-run-20261005,
+10min/contentsread/Ubuntu22/Node24/officialPW1.61.1; same sandbox guards,
+fixedcandidate1be/sparseassets, alwaysoriginalartifact. Source0/finalfreeze
+обязательны до ONE launch. A/B ещё NOT_RUN; новые модели/Cargo/public/deploy
+не запускались. Main5bea/product1be/PR21/raw/frozen docs сохраняются.
+
+Следующий шаг: A/B focusedsourcechecks/independentreview0/exactfreeze,
+единственнаяcomparativeprobe и independentactualreview. При candidateB
+обязательны productionfocusedtests/reviews/fresh9LAB/fullCI/public доmerge;
+при inconclusive — durableblockercheckpoint и остановка causal runs поAstra.
+Вопросы отсутствующему пользователю не отправляются.

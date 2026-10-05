@@ -1,0 +1,62 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "cd7fa2c103d1e273abe79e5efeedaecf468fcaa7",
+  "archive_tree": "fe0dd780d614afe0817ba26c14ed8f8ed6267a31",
+  "closed_inventory": true,
+  "manifest_sha256": "0a8985a5e4794d48992d29128e72515ad9a50896cf905db18dcd7931127709c3",
+  "file_count": 8,
+  "unique_bytes_excluding_manifest": 504337,
+  "original_zip_count": 1,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3110,
+      "sha256": "a2ff9aff27c3ba432d24455826c711dc8d03a11c10b79048c3a171886b734bff",
+      "verified": true
+    },
+    {
+      "path": "lab-reader-lifecycle-0b52aee-actual-review.json",
+      "bytes": 32093,
+      "sha256": "cc65780ab62a758d41b25c920a496cc78b42d0355f8b55eb86dcfd561194ae40",
+      "verified": true
+    },
+    {
+      "path": "lab-reader-lifecycle-0b52aee-actual-review.md",
+      "bytes": 4046,
+      "sha256": "01736dc118789fefb1892ba9b4516772dd16f8281efbf94970c07ad98f694c89",
+      "verified": true
+    },
+    {
+      "path": "lab-reader-lifecycle-0b52aee-original.zip",
+      "bytes": 399750,
+      "sha256": "c628ee972f4ea13bc095d5decb9c8c77c542145e693c133ebd83733642b727c0",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "lab-reader-lifecycle-source-review.json",
+      "bytes": 10746,
+      "sha256": "164e503a5629710dbf56be560f35126f87de326ae84625af27dac6a91981b07b",
+      "verified": true
+    },
+    {
+      "path": "lab-reader-lifecycle-source-review.md",
+      "bytes": 4109,
+      "sha256": "14a0b8e02dbcedb508f80010e40c34dacb04075acef19216c397d40392f89bfd",
+      "verified": true
+    },
+    {
+      "path": "report.json",
+      "bytes": 50483,
+      "sha256": "fd7325a41c49246dc03d115800bb8928c6683bdace08a51ff360f712176ff085",
+      "verified": true
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}
