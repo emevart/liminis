@@ -1815,3 +1815,31 @@ HTML/CSS served byte pins выводятся из нового source, стар�
 LAB21/publicLAB/LAB4/models сохраняют Astra HOLD; legacy mobile sticky
 transport/sidebar overlap остаётся отдельным отложенным finding.
 Scope/pending: `docs/checkpoints/2026-10-05-recorded-hud.md`.
+
+## LIVE: мобильный readout в normal flow перед инспектором
+
+Legacy chamber1 получает прежнюю chamber2 mobile row structure: stage,
+полный readout/controls, затем inspector/Population/environment/events.
+Readout не перекрывает stage или side при scroll. Desktop и physical mobile
+geometry/stacking сохраняются; DOM/IDs/JavaScript/API/model/raw/clock/dt/×N/FPS
+не меняются. Glyph placement chamber1 остаётся schematic.
+
+Существующий protected `scripts/check_live_cells_browser.mjs` проверяет
+actual320/390/590px и desktop: stage/readout/side rectangles, full readout text,
+отсутствие horizontal overflow, реальную доступность controls и Find, scroll
+upper/lower inspector/environment/events. Viewport PNG до/после scroll
+сохраняются вместе с прежними full-page PNG и всеми старыми gates.
+Absent-ID Find должен снять selection, следующий настоящий Find должен
+восстановить exact ID/полный inspector/phenotype того же actual snapshot.
+Resources/events должны совпадать с actual API. Network baseline до resize
+и scroll исключает model-control requests; final tick/state/dt/pacing/summary/
+cells/resources/residual/events должны остаться прежними. Native Node syntax
+не является browserPASS; sandbox/body/error/cleanup/time guards сохраняются.
+
+Нужны независимый exact-source review, один full protected exact-head CI,
+новый independent actual mobile/chamber1 и physical regression, durable
+affected original artifacts/readback, guarded merge и отдельный fresh MAIN/
+existing public gate. Старый accepted physical/GL source bridge подписывается
+как bridge, не новый independent artifact PASS. LAB21/publicLAB/LAB4/models
+сохраняют HOLD. Scope/pending:
+`docs/checkpoints/2026-10-05-live-mobile-readout.md`.
