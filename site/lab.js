@@ -4,28 +4,46 @@ const $ = id => document.getElementById(id);
 const names = { baseline: 'Baseline', mutation_off: 'Mutation off', starvation: 'Starvation', oxygen_low: 'Low oxygen', exchange_half: 'Half exchange', founder_k2: 'Founder kinetics +2' };
 const labels = { living_cells: 'Living cells', structural_mass_mol: 'Structural biomass · mol', food_free_mol: 'Free FOOD · mol', oxygen_free_mol: 'Free O2 · mol' };
 const colors = ['#347a58', '#6a67a2', '#b15e38', '#267f98'];
-let data = null, selected = null, ready = false, plotWidths = [];
+let data = null, selected = null, ready = false, plotWidths = [], plotsPending = true, plotResizeFrame = null, plotActive = true;
 function node(tag, text, attributes = {}) { const value = document.createElement(tag); if (text !== null) value.textContent = text; for (const [key, item] of Object.entries(attributes)) value.setAttribute(key, item); return value; }
 function svgNode(tag, attributes, text = null) { const value = document.createElementNS('http://www.w3.org/2000/svg', tag); for (const [key, item] of Object.entries(attributes)) value.setAttribute(key, item); if (text !== null) value.textContent = text; return value; }
 function display(value) { return value === null || value === undefined ? 'unavailable' : typeof value === 'number' ? Number.isInteger(value) ? value.toLocaleString('en-US') : value.toExponential(6) : String(value); }
 function pair(host, field, label, value) { const dd = node('dd', display(value), { 'data-field': field, 'data-value': value === null ? 'null' : String(value) }); host.append(node('dt', label), dd); }
 function choices(host, values, value) { host.replaceChildren(...values.map(([id, text]) => node('option', text, { value: id }))); host.value = String(value); }
-function fatal(error) { ready = false; $('lab-error').textContent = error instanceof Error ? error.message : String(error); $('lab-error').hidden = false; $('lab-status').textContent = 'LAB evidence unavailable'; $('lab-workspace').hidden = true; $('lab-workspace').setAttribute('aria-busy', 'false'); for (const id of ['condition-select', 'seed-select', 'sample-select', 'comparison-select', 'plot-window']) $(id).disabled = true; }
+function fatal(error) { ready = false; cancelPlotResize(); $('plots').setAttribute('aria-busy', 'false'); $('plots').setAttribute('data-layout', 'failed'); $('lab-error').textContent = error instanceof Error ? error.message : String(error); $('lab-error').hidden = false; $('lab-status').textContent = 'LAB evidence unavailable'; $('lab-workspace').hidden = true; $('lab-workspace').setAttribute('aria-busy', 'false'); for (const id of ['condition-select', 'seed-select', 'sample-select', 'comparison-select', 'plot-window']) $(id).disabled = true; }
 
 // Только подписи осей сокращаются; points, domains и detail используют original.
 function axisNumber(value) { const rounded = Number(value.toPrecision(3)); return rounded !== 0 && (Math.abs(rounded) < .01 || Math.abs(rounded) >= 10000) ? rounded.toExponential() : String(rounded); }
 function plotFrame(width) { if (!Number.isFinite(width) || width <= 96) throw new Error('The chart is too narrow to display observation axes.'); return { width, height: 210, x0: 72, x1: width - 12, y0: 12, y1: 178 }; }
 
-function renderPlots() {
-  const limit = Number($('plot-window').value), arms = selected.condition === 'baseline' ? ['baseline'] : ['baseline', selected.condition], host = $('plots'); host.replaceChildren();
-  const widths = [];
-  for (const metric of PLOT_METRICS) {
+function plotCharts() {
+  const host = $('plots');
+  if (!host.children.length) for (const metric of PLOT_METRICS) { const section = node('div', null, { class: 'plot' }); section.append(node('h3', labels[metric]), svgNode('svg', { height: 210, role: 'img', 'aria-label': `${labels[metric]}, four paired seeds; dots are observations`, class: 'metric-plot', 'data-metric': metric })); host.append(section); }
+  const charts = Array.from(host.querySelectorAll('.metric-plot'));
+  if (charts.length !== PLOT_METRICS.length) throw new Error('The observation chart shells are incomplete.');
+  return charts;
+}
+function renderPlotStatus() { $('lab-status').textContent = plotsPending ? 'Verified published bytes · waiting for a usable chart layout' : 'Verified published bytes · 24 runs · four paired seeds · aggregate observations'; }
+function setPlotLayout(charts, pending) {
+  plotsPending = pending; $('plots').setAttribute('aria-busy', String(pending)); $('plots').setAttribute('data-layout', pending ? 'pending' : 'ready');
+  for (const chart of charts) chart.style.visibility = pending ? 'hidden' : 'visible';
+  if (ready) renderPlotStatus();
+}
+function renderPlots(onlyWidthChange = false) {
+  if (!onlyWidthChange) plotsPending = true;
+  if ($('lab-workspace').hidden) { setPlotLayout(Array.from($('plots').querySelectorAll('.metric-plot')), true); return false; }
+  const charts = plotCharts(), widths = charts.map(chart => chart.getBoundingClientRect().width);
+  if (widths.some(width => !Number.isFinite(width) || width < 0)) throw new Error('The observation chart width is invalid.');
+  // Временный непригодный размер сохраняет узлы, но не показывает старые кривые.
+  if (widths.some(width => width <= 96)) { setPlotLayout(charts, true); return false; }
+  const frames = widths.map(plotFrame);
+  if (onlyWidthChange && !plotsPending && widths.every((width, index) => width === plotWidths[index])) return false;
+  const limit = Number($('plot-window').value), arms = selected.condition === 'baseline' ? ['baseline'] : ['baseline', selected.condition], prepared = [];
+  for (const [index, metric] of PLOT_METRICS.entries()) {
     const curves = arms.flatMap(condition => SEEDS.map(seed => { const run = data.runs.get(`seed-${seed}-${condition}`); return { run, values: run.samples.filter(sample => sample.tick <= limit) }; }));
     const ymax = Math.max(...curves.flatMap(curve => curve.values.map(sample => metricValue(sample, metric)))) || 1, xmax = limit * 30;
-    const svg = svgNode('svg', { height: 210, role: 'img', 'aria-label': `${labels[metric]}, four paired seeds; dots are observations`, class: 'metric-plot', 'data-metric': metric, 'data-x-max': xmax, 'data-y-max': ymax });
-    const section = node('div', null, { class: 'plot' }); section.append(node('h3', labels[metric]), svg); host.append(section);
-    const frame = plotFrame(svg.getBoundingClientRect().width); widths.push(frame.width);
-    svg.setAttribute('viewBox', `0 0 ${frame.width} ${frame.height}`); for (const key of ['x0', 'x1', 'y0', 'y1']) svg.setAttribute(`data-${key}`, frame[key]);
+    const svg = svgNode('svg', {}), frame = frames[index], attrs = { viewBox: `0 0 ${frame.width} ${frame.height}`, 'data-x-max': xmax, 'data-y-max': ymax };
+    for (const key of ['x0', 'x1', 'y0', 'y1']) attrs[`data-${key}`] = frame[key];
     const x = time => frame.x0 + time / xmax * (frame.x1 - frame.x0), y = value => frame.y0 + (1 - value / ymax) * (frame.y1 - frame.y0);
     svg.append(svgNode('path', { d: `M${frame.x0} ${frame.y0} V${frame.y1} H${frame.x1}`, fill: 'none', stroke: '#b8c5bc' }));
     for (const fraction of [0, .5, 1]) { const yy = y(ymax * fraction); svg.append(svgNode('line', { x1: frame.x0, y1: yy, x2: frame.x1, y2: yy, stroke: '#e1e6df' }), svgNode('text', { class: 'axis-label', 'data-axis': 'y', 'data-value': ymax * fraction, x: frame.x0 - 6, y: yy + 4, 'text-anchor': 'end' }, axisNumber(ymax * fraction)), svgNode('text', { class: 'axis-label', 'data-axis': 'x', 'data-value': xmax * fraction / 3600, x: x(xmax * fraction), y: 201, 'text-anchor': fraction === 0 ? 'start' : fraction === 1 ? 'end' : 'middle' }, `${axisNumber(xmax * fraction / 3600)} h`)); }
@@ -36,18 +54,27 @@ function renderPlots() {
       for (const sample of values) svg.append(svgNode('circle', { 'data-condition': run.condition, 'data-seed': run.seed, 'data-tick': sample.tick, class: 'observed-dot', cx: x(sample.time_seconds), cy: y(metricValue(sample, metric)), r: active ? 1.8 : 1.1, fill: color, opacity: active ? 1 : .5 }));
     }
     if (selected.sample.tick <= limit) svg.append(svgNode('line', { class: 'sample-guide', x1: x(selected.sample.time_seconds), x2: x(selected.sample.time_seconds), y1: frame.y0, y2: frame.y1, stroke: '#84978a', 'stroke-dasharray': '2 4' }));
+    prepared.push({ chart: charts[index], drawing: svg, attrs });
   }
+  const legend = SEEDS.map((seed, index) => { const button = node('button', `seed ${seed}`, { type: 'button', 'aria-pressed': seed === selected.seed, 'data-seed': seed }); button.style.setProperty('--seed-color', colors[index]); button.addEventListener('click', () => changeSelection(selected.condition, seed, selected.sample.tick)); return button; });
+  // Ширины и содержимое всех графиков готовы до общего синхронного обновления.
+  for (const { chart, drawing, attrs } of prepared) { for (const [key, value] of Object.entries(attrs)) chart.setAttribute(key, value); chart.replaceChildren(...drawing.childNodes); }
   plotWidths = widths;
-  const legend = $('seed-key'); legend.replaceChildren(...SEEDS.map((seed, index) => { const button = node('button', `seed ${seed}`, { type: 'button', 'aria-pressed': seed === selected.seed, 'data-seed': seed }); button.style.setProperty('--seed-color', colors[index]); button.addEventListener('click', () => changeSelection(selected.condition, seed, selected.sample.tick)); return button; }));
+  $('seed-key').replaceChildren(...legend); setPlotLayout(charts, false);
+  return true;
 }
 function resizePlots() {
   if (!ready || $('lab-workspace').hidden) return;
-  const charts = Array.from($('plots').querySelectorAll('.metric-plot'));
-  if (charts.length === 4 && charts.some((chart, index) => chart.getBoundingClientRect().width !== plotWidths[index])) renderPlots();
+  renderPlots(true);
 }
-const plotObserver = new ResizeObserver(resizePlots); plotObserver.observe($('plots'));
-addEventListener('pagehide', () => plotObserver.disconnect());
-addEventListener('pageshow', event => { if (event.persisted) { plotObserver.observe($('plots')); resizePlots(); } });
+function cancelPlotResize() { if (plotResizeFrame !== null) cancelAnimationFrame(plotResizeFrame); plotResizeFrame = null; }
+function schedulePlotResize() {
+  if (!ready || !plotActive || plotResizeFrame !== null) return;
+  plotResizeFrame = requestAnimationFrame(() => { plotResizeFrame = null; try { resizePlots(); } catch (error) { fatal(error); } });
+}
+const plotObserver = new ResizeObserver(schedulePlotResize); plotObserver.observe($('plots'));
+addEventListener('pagehide', () => { plotActive = false; plotObserver.disconnect(); cancelPlotResize(); });
+addEventListener('pageshow', event => { if (event.persisted) { plotActive = true; plotObserver.observe($('plots')); schedulePlotResize(); } });
 function renderSample() {
   const { run, sample } = selected, host = $('run-detail'); host.replaceChildren();
   $('sample-stamp').textContent = `${run.run_id} · tick ${sample.tick} · ${display(sample.time_seconds)} model s`;
@@ -105,16 +132,17 @@ function renderProvenance() {
 function commit(selection) {
   selected = selection; choices($('condition-select'), CONDITIONS.map(value => [value, names[value]]), selected.condition); choices($('seed-select'), SEEDS.map(value => [value, value]), selected.seed); choices($('sample-select'), selected.run.samples.map(sample => [sample.tick, `tick ${sample.tick} · ${display(sample.time_seconds)} s`]), selected.sample.tick);
   renderSample(); $('lab-workspace').hidden = false; renderPlots(); renderComparisons(); renderEnvironment(); renderMatrix(); renderProvenance();
-  $('lab-error').hidden = true; $('lab-workspace').hidden = false; $('lab-workspace').setAttribute('aria-busy', 'false'); $('lab-status').textContent = 'Verified published bytes · 24 runs · four paired seeds · aggregate observations'; ready = true;
+  $('lab-error').hidden = true; $('lab-workspace').hidden = false; $('lab-workspace').setAttribute('aria-busy', 'false'); ready = true; renderPlotStatus();
   for (const id of ['condition-select', 'seed-select', 'sample-select', 'plot-window']) $(id).disabled = false;
 }
 function changeSelection(condition, seed, tick) {
   if (!ready) return;
-  const run = data.runs.get(`seed-${seed}-${condition}`), sample = run.samples.find(value => value.tick === tick) ?? run.samples.at(-1);
-  const next = selectLab(data, `?condition=${condition}&seed=${seed}&sample=${sample.tick}`); commit(next); history.pushState(null, '', selectionURL(next, location.href));
+  try { const run = data.runs.get(`seed-${seed}-${condition}`), sample = run.samples.find(value => value.tick === tick) ?? run.samples.at(-1);
+    const next = selectLab(data, `?condition=${condition}&seed=${seed}&sample=${sample.tick}`); commit(next); history.pushState(null, '', selectionURL(next, location.href));
+  } catch (error) { fatal(error); }
 }
 for (const id of ['condition-select', 'seed-select', 'sample-select']) $(id).addEventListener('change', () => changeSelection($('condition-select').value, $('seed-select').value, Number($('sample-select').value)));
-$('comparison-select').addEventListener('change', () => { if (ready) renderComparisons(); }); $('plot-window').addEventListener('change', () => { if (ready) renderPlots(); });
+$('comparison-select').addEventListener('change', () => { if (ready) renderComparisons(); }); $('plot-window').addEventListener('change', () => { if (ready) { try { renderPlots(); } catch (error) { fatal(error); } } });
 addEventListener('popstate', () => { if (!data) return; try { commit(selectLab(data, location.search)); } catch (error) { fatal(error); } });
 choices($('comparison-select'), [['latest', 'Latest common sample per seed'], ...LANDMARKS.map(tick => [tick, `Landmark tick ${tick}`])], 'latest');
 try { const validated = await loadLab({ baseURL: document.baseURI }); const selection = selectLab(validated, location.search); data = validated; commit(selection); history.replaceState(null, '', selectionURL(selection, location.href)); }
