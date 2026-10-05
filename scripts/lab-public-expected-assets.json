@@ -2,8 +2,8 @@
   "schema_version": 1,
   "scope": "public_lab_smoke_preparation",
   "public_origin": "https://liminis.dev/",
-  "product_candidate_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
-  "product_candidate_tree": "64bdb5f4794f48907f99886c540f6391571b1914",
+  "product_candidate_head": "c02bc689bf7014bda3bfdf346e3906a9bc536f14",
+  "product_candidate_tree": "416655a9ef6f1ba91c0556eb35fb8f300249bb15",
   "deployed_product_head": null,
   "assets": [
     {
@@ -23,8 +23,8 @@
     },
     {
       "filename": "lab-data.mjs",
-      "bytes": 20808,
-      "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a"
+      "bytes": 20280,
+      "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e"
     },
     {
       "filename": "data/lab-2/descriptor.json",
