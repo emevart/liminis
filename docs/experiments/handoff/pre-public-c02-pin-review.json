@@ -1,0 +1,91 @@
+{
+  "status": "QUALIFIED_SOURCE_PIN_REVIEW_PASS",
+  "blockers": [],
+  "scope": "Independent root-authored public preparation manifest/source binding review only, not B implementation or runtime acceptance",
+  "qa_head": "4d78c8336e25ebb98e4e0a31db52ea2e47dfbd55",
+  "qa_tree": "ed6489d67c9d645fb072b2225705b247c09f9c6f",
+  "baseline_reviewed_head": "eeb0499944305592feaaf1fb16b7a08c3604b6c8",
+  "candidate_head": "c02bc689bf7014bda3bfdf346e3906a9bc536f14",
+  "candidate_tree": "416655a9ef6f1ba91c0556eb35fb8f300249bb15",
+  "deployed_product_head": null,
+  "manifest_sha256": "fe84b41fd8c40b10813eff6c27e19b982ac228a6b078fb4fab13081eab4412da",
+  "verified_changed_paths": [
+    "scripts/lab-public-expected-assets.json",
+    "site/lab-data.mjs"
+  ],
+  "checks": {
+    "clean_exact_QA_HEAD_tree_candidate_objects": "PASS",
+    "all8assets_exact_local_candidateGitbytes_length_SHA256": "PASS",
+    "lab_data20280bytes_exact_c02_and_Bfixture_SHA51dac9": "PASS",
+    "script_and_workflow_byte_identical_previous_eeb_review": "PASS",
+    "HTMLoffset5377_fixed367analytics_SHA_URL_unchanged": "PASS",
+    "scientific21cbe907_world30_chamber1_dt30_build_attestationfalse_unchanged": "PASS",
+    "deployed_NULL_and_policy_unchanged_failclosed": "PASS",
+    "node_syntax_and_git_diff_check": "PASS",
+    "native_SOURCE_preflight": {
+      "status": "PASS",
+      "assetCount": 8,
+      "sourceControls": 17,
+      "publicNetwork": "NOT_RUN",
+      "browser": "NOT_RUN"
+    }
+  },
+  "assets": [
+    {
+      "filename": "lab.html",
+      "bytes": 5393,
+      "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+    },
+    {
+      "filename": "lab.js",
+      "bytes": 22571,
+      "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871"
+    },
+    {
+      "filename": "lab.css",
+      "bytes": 5019,
+      "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+    },
+    {
+      "filename": "lab-data.mjs",
+      "bytes": 20280,
+      "sha256": "51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e"
+    },
+    {
+      "filename": "data/lab-2/descriptor.json",
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    },
+    {
+      "filename": "data/lab-2/results.json",
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "filename": "data/lab-2/comparisons.json",
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "filename": "data/lab-2/manifest.json",
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    }
+  ],
+  "unchanged_script_sha256": "f3b90d6b95c5e62e3796b5e9d94c33e9892d72ded1304548136f89f29b167d51",
+  "unchanged_workflow_sha256": "c8466ddd0cd19cef223b4d5472bedb98ba65bd2d38c9c44bfb1cc335257e1a49",
+  "html_hosting_exception": {
+    "source_body_close_offset": 5377,
+    "bytes": 367,
+    "sha256": "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
+    "script_url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495"
+  },
+  "qualifications": [
+    "Reviewer previously authored related loader changes; this verdict is restricted to independently reviewed root-authored public pins and immutable source binding, not independent B code acceptance",
+    "Product full CI37259168567 on c02 is reported running; its acceptance is not inferred or transferred",
+    "Native A/B observations do not prove root cause or full product/browser acceptance",
+    "No HTTP/browser/CI/Cargo/model run or production edits performed by reviewer",
+    "Future accepted final merge requires separate reviewed deployed-SHA binding before actual public runtime; current null pin refuses it"
+  ],
+  "reviewer_is_public_pin_author": false
+}

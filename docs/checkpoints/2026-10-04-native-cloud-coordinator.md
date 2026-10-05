@@ -1236,3 +1236,50 @@ independent fullLAB/GL/regression actualreviews +boundedarchive/readback.
 ПослеGREEN — guarded PR21merge и separateexistingpublicdelivery/browser.
 Пользователь до утра отсутствует, решений от него не запрашиваем; Astra
 сохраняет спорные решения. LAB4a models ещё NOT_RUN.
+
+
+### Mandatory LAB native pipe FAIL сохранён; отдельный 3D QA scope
+
+2026-10-05, 03:42 UTC. Exactc02 fullrun37259168567: recordedjob111602519476
+FAIL наLABgate2 resultsERR_ABORTED/Response.bodyNoData; firstsandboxPASS,
+remaining7NOT_EXECUTED. В trace failure доPNG/nav/reload/cleanup. ActualmoduleB
+20280B/SHA51dac delivered; семь прочихbodypins точны. Results actualbodySHA
+недоступен; server/sourcepins не заменяют actualdeliveryproof. FailurePNG
+реально просмотрен independentreviewer,4plots24rowsbaseline1tick0; это не
+fullLABPASS. BrowserUnhandled UNOBSERVED, serialized pendingSet{} и
+page.closedfalse не finaldrainproof. Recordedpage/console/Node/cleanuparrays0
+только их scope. Причина Chromium/repeatability/performance неизвестны.
+
+Independentactual review подтвердил1mandatory acceptance blocker,
+additionalarchiveintegrity/privacy0. Closedouter3/nested13CRC0,
+expanded2902194B; boundedprivacy10UTF8members2093409B/explicitprivatepatterns0,
+11broad-IDmatches классифицированы как scientifici128fields, не privatechat
+refs. No fullsecretguarantee. Safeownreview reports иoriginal674755-byteZIP
+безперепаковки опубликованы: branchcodex/lab-native-pipe-failure-evidence-20261005,
+archivef76cb514eb4e25463da5e1422a0d2d11766e3a4d/tree
+dce2fd7c8f10abfa12932c567d314a3021053ea4,closed6files733385B,
+manifestSHAf7296c37bb74e10206332c429df911f9305c9ca4cd28d85b9447b77311671c2d.
+Separate normal-network GitDB/noalternates closedsize/SHA/CRC PASS;
+receipt `docs/experiments/handoff/lab-native-pipe-failure-network-readback.json`.
+
+Astra HOLD PR21merge/deploy/publicLAB/LAB4models и дальнейшиеLABcausalprobes/
+retries/productchanges до новогоразбора. Draftc02/WIP/code/tests/source0/
+raw24/evidence сохранены; rollback/reset не выполняются. Publicprep4d78
+независимоqualifiedpin0/17SOURCEchecks, deployedSHA=null; safeownreport
+`docs/experiments/handoff/pre-public-c02-pin-review.json`. ActualpublicLAB
+HTTP/browser NOT_RUN. Main5bea здесь unchanged; новыйPASS не объявлен.
+
+После archive/readback Astra отдельно APPROVE QA-only paused3D наfreshmain.
+Root clean source `83fa1e52e478e2a33602a24bf83b5456e55e70a3`, tree
+`47ce45646315b09493d58d87ca8fce4dc867aa8d`, branchcodex/paused-3d-pixel-qa.
+Exact3d48f47перенесён ONLY2QAscripts; root добавил PNGtest кoldCI Nodecommand
+и2operationaldocs. Wholeproduction3D/site/core/config/raw/frozen/DECISIONS
+objects main5bea-identical; LABworkflow/assets/nav/loader/ADR112 не включены.
+Node4meaningful PNGcontrols PASS; source/code/data reviewPENDING.
+HistoricalmainFAIL не переименован, causeunknown; old79/c02PASS notcarried.
+
+Следующий шаг: source0 на83fa и завершениеужеrunningc02Rustjob перед ONEnew
+mandatoryfullCI/PR. Cargo сериализуются; nativeCargo/models не запускаются.
+Fresh13GL/allregressions/actualoriginals/archive/readback затемguardedmerge
+QA-onlyPR/existingmainfollowup/publicscope. LAB21/models остаютсяHOLD.
+РешенияAstra, пользовательдоутраотсутствует; auto-wakeup не обещается.

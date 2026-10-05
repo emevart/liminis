@@ -1,0 +1,50 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "f76cb514eb4e25463da5e1422a0d2d11766e3a4d",
+  "archive_tree": "dce2fd7c8f10abfa12932c567d314a3021053ea4",
+  "closed_inventory": true,
+  "manifest_sha256": "f7296c37bb74e10206332c429df911f9305c9ca4cd28d85b9447b77311671c2d",
+  "file_count": 6,
+  "unique_bytes_excluding_manifest": 732043,
+  "original_zip_count": 1,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3440,
+      "sha256": "983abe0de7e458a1d7d15c2d84a5edcd07344e5f862ce8cba2c820e21c884318",
+      "verified": true
+    },
+    {
+      "path": "lab-browser-c02bc68-original.zip",
+      "bytes": 674755,
+      "sha256": "b89e457fa75407d86cf5e96788615c7090e74334083544b0bb24ce2cf3364b26",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "lab-c02-failure-review.json",
+      "bytes": 30858,
+      "sha256": "e42fc54f0dd97384dded5b3d39188672ef6c8da495ef91be276c37d44d874bbd",
+      "verified": true
+    },
+    {
+      "path": "lab-c02-failure-review.md",
+      "bytes": 5403,
+      "sha256": "66a9b99d21e4a2eb55d738390d7b24ef8dedb44cf2eadd2da654492f1a2fbd2e",
+      "verified": true
+    },
+    {
+      "path": "report.json",
+      "bytes": 17587,
+      "sha256": "941bde20eaa3822ee879fb691cf459398b068d4e7684c5637e4e1a3759f9af59",
+      "verified": true
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}
