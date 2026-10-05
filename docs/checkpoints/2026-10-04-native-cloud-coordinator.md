@@ -1137,3 +1137,55 @@ merge и отдельная existing deployment/public LAB приёмка. Main5
 product1be, PR21 draft и raw24/source21cbe907 пока неизменны.
 LAB4a/models/Cargo/public smoke NOT_RUN. Пользователь отсутствует до
 утра; решения передаются Astra, вопросы пользователю не отправляются.
+
+
+### Последняя A/B probe: исходный FAIL сохранён; узкий compatibility candidate
+
+2026-10-05, 02:22 UTC. Protected run37254028918/job111587245283 завершён
+**overall AB_PROBE_FAIL** на exact diagnostic
+`3b174d480ac1be94bea543d08322f075a229ba44`, tree
+`25d34dcaf7ef6962820b4e1ed26317f3e78739dd`.
+Independent source review0 и actual integrity/scope/privacy review0 завершены.
+Original artifact11322181713/ZIP805885 B SHA256
+`f8905342189586970b4bbc5b6164b2c48cbcb34a9f013eb6bbe2637e92ad69d0`.
+
+A byte-exact product1be получил native comparisons1116928 ERR_ABORTED duringmain,
+семь прочих запросов finished. Восемь body SHA/length/decodedcounts/serverfinish
+точны. A FAIL остаётся FAIL. B меняет только readBytes на standard bounded
+WritableStream + response.body.pipeTo: восемь native finished, все original
+pins,4readyplots/24matrix/seed1/tick0 до и после PNG, unhandled/allerrors0,
+mainSettled/pageClosed true/pendingpaused0. Два свежих браузера последовательно;
+stock official Ubuntu22/Node24/PW1.61.1/Chromium149 и sandbox/argvguards сохранены.
+Нет Debugger/Promise observers/GC/deliveryretry. Оба1440×2443 PNG реально
+просмотрены reviewer; byte-exact PNG/RGBA. Это transport arm PASS, не9LABgates.
+
+Astra явно APPROVE EXACT B как UA-compatibility candidate. Инкрементный cap до
+накопления, native awaited completion/cancel/unlock, primary write error при
+secondary cancel failure обязательны. Absent stream failclosed; arrayBuffer
+fallback, timers/retainedResponses не разрешены. Source module20280 B SHA256
+`51dac9a199089718fcd5624f7ca7998867e5f924d22badbe76d8473e2b19b38e`, functionSHA
+`3129290bf9cbe4eccfd8b17bdf1628547d8fde5273a12f3a5e13cbe600f59a92`.
+Prefix/suffix к original1be byte-exact. Новый scoped author owns ONLY
+site/lab-data.mjs и site/lab-data.test.mjs на fresh isolated1be; patch/tests
+IN_PROGRESS, publication/integration pending. Формулы/raw source/24runs/core/
+CSS/UI/QA остаются прежними. Дополнительных causal probes не будет.
+
+Durable evidence branch `codex/lab-transport-ab-evidence-20261005`:
+`d9a78d218e06b65fa93de540bbf69f412b04fc9b`, tree
+`42e33b9a3ae72b2947ea924526198d85f9f4b91a`; closed8files939228 B,
+manifestSHA `7e9f4ae35836743b7824be9691125d3013d52a397cd8574a85cb54631ad6df8b`.
+Original ZIP без перепаковки; safe own source/actual reports и общий JSON.
+Отдельная Git object DB без alternates получила normal network ref/blob bytes:
+closedinventory/size/SHA/CRC PASS. Receipt
+`docs/experiments/handoff/lab-transport-ab-network-readback.json`.
+Boundedprivacy3UTF8members147166 B+2PNG/patterns0, expanded1006512 B,
+nestedZIP0; не fullsecretguarantee. Old FAIL и все прежние архивы сохраняются.
+
+Main5bea стабилен, product1be/PR21draft пока FAIL; merge/deploy не выполнены.
+C++ cause, repeatability/performance/science/fullCI этим CASE не доказаны.
+Пользователь до утра отсутствует: вопросов нет, решения переданы Astra.
+Следующий шаг: exact B production diff/native behavioral tests, independent
+code/data-numerics binding, один новый exact-head mandatory9LAB/fullCI с
+original artifacts/actual review. Только после green — guardedmerge,
+existingdeployment и отдельная public LAB byte/browser acceptance. LAB4a
+модели остаются NOT_RUN; frozen SPEC/NORTH_STAR не меняются.
