@@ -20,8 +20,8 @@ const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
 // Reviewed production-only Cloudflare insertion, including its preceding LF.
 // Its digest is pinned before execution, never learned from a new response.
 const knownEdgeInsertion = {
-  sourceBytes: 6894, sourceSha256: "6a0428e4ce738ada8cfd7e3f3586d1978dbe3f4c70fe2cd9d9dd8b8a002d640d",
-  offset: 6878, bytes: 367, sha256: "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
+  sourceBytes: 6954, sourceSha256: "105c5a860651769c0310c4185a96d7ad2442c3726b51779a8afa1f1707d0b72e",
+  offset: 6938, bytes: 367, sha256: "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
   scriptUrl: "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
 };
 const controls = ["play", "previous", "next", "scrub", "speed", "speed-preset", "draw-fps"];

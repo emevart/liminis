@@ -52,3 +52,16 @@ final candidate HEAD/tree/fullCI/actual/public/archive acceptance **PENDING**.
 protected full CI; затем independent new actual evidence/closedarchives,
 guarded merge при приёмке и свежий public gate. Не объявлять acceptance до
 закрытия соответствующего scope.
+
+05:49 UTC. Independent source reviewer нашёл обязательную зависимость
+public gate: knownEdgeInsertion закреплял прежний HTML6894B/SHA6a0428…/
+offset6878. Astra явно одобрила ROOT-owned narrow QA extension только
+трёх source expectations по новому frozen GitHTML: **6954B**, SHA256
+`105c5a860651769c0310c4185a96d7ad2442c3726b51779a8afa1f1707d0b72e`,
+единственный closing-body byteoffset**6938**. Root обновил только эти
+три constants в scripts/check_public_recording_browser.mjs. Fixed367B/
+insertionSHA/scriptURL, normalization, pre-send block и все прочие
+guards/oracles/budgets неизменны. Это deterministic source repin до run,
+не adaptive runtime learning; final independent diff review и свежий
+public gate обязательны. Product scope остаётся только2HTML/CSS files;
+LAB HOLD и прочие ограничения не изменились.
