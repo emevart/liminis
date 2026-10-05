@@ -1,0 +1,54 @@
+{
+  "status": "QUALIFIED_SOURCE_REVIEW_PASS",
+  "blockers": [],
+  "scope": "Independent fixed original paused3D artifact byte-transport workflow review only; no scientific/product/browser/main acceptance",
+  "helper_head": "efc54aaaa753e79a91427f58d4eb316eff7aabd7",
+  "helper_tree": "217e2cb8d74cd0e05e04c01e690f8b0af27839cb",
+  "workflow_bytes": 9031,
+  "workflow_sha256": "35e024d21ebbcbd48c03c9b9399af75e5edaea730c677816e4882b1261b3cfa4",
+  "source_head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+  "source_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "fixed_original": {
+    "repository": "emevart/liminis",
+    "repository_id": 1317617987,
+    "run_id": 37260833244,
+    "job_id": 111607516729,
+    "artifact_id": 11324254318,
+    "bytes": 48498615,
+    "sha256": "413f5c6ddfb79df66135f4701fbfc4fbeca11a9aa1b65270bc9870351399f671"
+  },
+  "independent_checks": {
+    "clean_exact_helper_HEAD_tree_and_sole_workflow_addition": "PASS",
+    "helper_parent_source_and_local_source_tree_pin": "PASS",
+    "workflow_length_SHA_and_inline_Python_AST": "PASS",
+    "diff_vs_previously_approved_original3D_transport": "Only fixed source/run/job/artifact/size/SHA/branch/names/partcount-tail and requested overall-run status qualification differ",
+    "HTTP_or_runtime": "NOT_RUN"
+  },
+  "reviewed_guards": [
+    "Only fixed api.github.com/repo API requests carry existing GitHub token; repository/ref/run/source/repositoryID/live-job completedSUCCESS/artifact metadata are asserted",
+    "Automatic redirects disabled; archive endpoint must yield302; HTTPS storage hostname/credentials/port validated, then fresh request without Authorization; no second redirect admitted",
+    "Original response capped at exact48498615 bytes, length+SHA verified, ZIP CRC checked before any byte-part output",
+    "Exactly three raw parts16777216/16777216/14944183 with ordered offsets and perpartSHA receipts; original run/job/source identity is separate from transport run/helperHEAD",
+    "Overall run may be in_progress or completed with null/success/failure conclusion; actual metadata is recorded and transport PASS does not assert overall workflow success",
+    "Exception-only failure logging excludes error strings, bearer headers and signed storage URL",
+    "Read-actions-only permissions, no checkout/Cargo/model/browser/deploy/security steps, unchanged approved upload-artifact@v4 protocol"
+  ],
+  "trigger": {
+    "branch": "codex/evidence-paused-3d-transport-20261005",
+    "path": ".github/workflows/evidence-paused-3d-transport.yml",
+    "procedure": "Branch without helper workflow first, then one helper push; no product PR or main merge"
+  },
+  "part_bytes": [
+    16777216,
+    16777216,
+    14944183
+  ],
+  "time_qualification": "150s deadline checked between bounded network reads; each open/socket timeout25s. Five-minute job timeout is the hard overall process limit, including CRC/upload; no exact150sCPU claim.",
+  "qualifications": [
+    "Actual official-worker HTTP metadata/download/CRC/upload/reassembly have not been executed by reviewer",
+    "Zip CRC checks the one pinned trusted original artifact; this is not a general untrusted archive extractor",
+    "Transport source PASS must not replace original browser evidence or full native CI acceptance",
+    "Main5bea,PR22,PR21LABHOLD and production source remain unchanged by this review"
+  ],
+  "reviewer_edits": "New external review report only"
+}

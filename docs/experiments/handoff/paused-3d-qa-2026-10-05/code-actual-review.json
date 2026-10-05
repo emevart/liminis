@@ -1,0 +1,1586 @@
+{
+  "schema": "independent-actual-3d-review/v1",
+  "reviewer": "/root/live2_code_review",
+  "reviewedAtUtc": "2026-10-05T04:16:59.475241+00:00",
+  "verdict": "QUALIFIED_ACTUAL_3D_CODE_BROWSER_PRIVACY_PASS_ZERO_BLOCKERS",
+  "blockers": [],
+  "original": {
+    "artifactId": 11324254318,
+    "run": 37260833244,
+    "job": 111607516729,
+    "head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+    "tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+    "zipPath": "/workspace/liminis-evidence/paused-3d-83-actual/physical-3d-browser-83fa1e5-original.zip",
+    "bytes": 48498615,
+    "sha256": "413f5c6ddfb79df66135f4701fbfc4fbeca11a9aa1b65270bc9870351399f671",
+    "crc": "PASS",
+    "closedMembers": 22,
+    "originalPreservedNoRepack": true,
+    "outerExpandedBytes": 50168114,
+    "inventory": [
+      {
+        "filename": "coincident-daughters.png",
+        "bytes": 123037,
+        "sha256": "9c8a2de379f008ab4119d4302c00c1e05fcfa0d0129d9fc63c32166dc012f9fc"
+      },
+      {
+        "filename": "desktop.png",
+        "bytes": 123425,
+        "sha256": "53579e9ecb0df84ab7efcf45b715b9f405cd2a1945aa195ef74037c691e978ce"
+      },
+      {
+        "filename": "context-loss-current-2d.png",
+        "bytes": 89454,
+        "sha256": "347001d04052153f1a387932c40e982f96fb7ea1574eb974bc483cf71f1853ac"
+      },
+      {
+        "filename": "first-division-state.json",
+        "bytes": 18198,
+        "sha256": "12f6440144a9b291922f47878e45fd545ef061082bd6d8a86d10d1a1e91fc751"
+      },
+      {
+        "filename": "held-history.json",
+        "bytes": 130,
+        "sha256": "b22ba72fb85f69b5d090343625c800742bff6f529c4c761da5bf862118d5561f"
+      },
+      {
+        "filename": "held-module.mjs",
+        "bytes": 15849,
+        "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+      },
+      {
+        "filename": "host.log",
+        "bytes": 413,
+        "sha256": "23421d6c0cfb6d38f672adc64f0d40b97100b18b65589009d4cc74dc8e3d5312"
+      },
+      {
+        "filename": "legacy-schematic.png",
+        "bytes": 97680,
+        "sha256": "d9ed84c75f6c2ff2b3acecfa523f86f66c46959321d4c4575697c908d35ab34c"
+      },
+      {
+        "filename": "mobile320.png",
+        "bytes": 128042,
+        "sha256": "8a8197231a3384cf455b45ac4bec564620f184b6d4c1754f907d5d5ad8111c10"
+      },
+      {
+        "filename": "mobile390.png",
+        "bytes": 130532,
+        "sha256": "80d4ed60f2f6edde98dbc876cc038adad6d235f866b46df4e52620001f4d593d"
+      },
+      {
+        "filename": "nonsquare-state.json",
+        "bytes": 10016,
+        "sha256": "1dbfc2ef2fd5afb862c2c92fa2e1fcb6b3f9a473ce8c61aacc5641cdf205753c"
+      },
+      {
+        "filename": "paused-30.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6"
+      },
+      {
+        "filename": "paused-60.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6"
+      },
+      {
+        "filename": "paused-baseline.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6"
+      },
+      {
+        "filename": "paused-captures.json",
+        "bytes": 78967,
+        "sha256": "9c5dc3020ee5f4007c9cd769a220cb79b3aa95951e5d4aa3cd56e515dce89c8a"
+      },
+      {
+        "filename": "physical-nonsquare.toml",
+        "bytes": 3538,
+        "sha256": "3da686962b4c14e54d82b11559805a96d4abba4da84532dbbb291850096630f7"
+      },
+      {
+        "filename": "report.json",
+        "bytes": 310796,
+        "sha256": "9f66daca75eefe87d7813e68d0d19d4733578914a35cabc36b96dd3d9ff07be5"
+      },
+      {
+        "filename": "short.png",
+        "bytes": 110295,
+        "sha256": "6850478949a08e462c1289a6f92c590ad3136171d798ac89da60de5d3f72d647"
+      },
+      {
+        "filename": "source-cube-state.json",
+        "bytes": 10016,
+        "sha256": "e9f76cf9b2f14ebdcca677337c0c77cc7d651427487b99b013646cf039f6aa09"
+      },
+      {
+        "filename": "source-cube.png",
+        "bytes": 101092,
+        "sha256": "084d073aae0524096be498b2d349284fdfa81eb3a10d0182f4a00e3b76fbcc30"
+      },
+      {
+        "filename": "trace.zip",
+        "bytes": 48543900,
+        "sha256": "d766bf9d8da999b7511e33c41610abebf2b6f4daa000413ee3009b0c6f650e24"
+      },
+      {
+        "filename": "webgl-unavailable-current-2d.png",
+        "bytes": 109684,
+        "sha256": "ac22757009f278d46821cbd7151a7c80e101965478bd43fe3d4d36f2e7cba416"
+      }
+    ]
+  },
+  "transport": {
+    "status": "PASS",
+    "scope": "Byte transport only; no browser/CI acceptance transferred",
+    "run": 37262081937,
+    "head": "efc54aaaa753e79a91427f58d4eb316eff7aabd7",
+    "receiptSha256": "3ce6965d1890b847dcaef227e92ac3ade47a5b8c02d06a8631bfbb06a3c69e8c",
+    "independentContainerShaCrcReceiptOffsetRawShaAndFullOriginalChecks": true,
+    "parts": [
+      {
+        "containerPath": "/workspace/attachments/ba116dc1-90f9-4ea1-a5dc-813cfbe7891b/paused3d83-part-11325316964.zip",
+        "containerArtifactId": 11325316964,
+        "containerBytes": 16778485,
+        "containerSha256": "8449cebe14333485e166f9df5e8c655acd1f9ffeb73445e636eac16ea50675ba",
+        "closedMembers": 2,
+        "crc": "PASS",
+        "embeddedReceiptExact": true,
+        "part": {
+          "ordinal": 1,
+          "count": 3,
+          "offset": 0,
+          "file": "original.part-001.bin",
+          "bytes": 16777216,
+          "sha256": "bde786fe071202b394dd8eb43a687c57f6550a72eb656f7f08c41d5b5e44d0a8"
+        },
+        "exactOriginalSegment": true,
+        "originalRunJobHeadTreeBinding": true
+      },
+      {
+        "containerPath": "/workspace/attachments/8ae47cbf-e86b-442f-a156-3b75f3c724b1/paused3d83-part-11324987996.zip",
+        "containerArtifactId": 11324987996,
+        "containerBytes": 16778492,
+        "containerSha256": "f7f54291617f4162c78d83e4ea00155d32702d6a6fc50663059937514dd63be9",
+        "closedMembers": 2,
+        "crc": "PASS",
+        "embeddedReceiptExact": true,
+        "part": {
+          "ordinal": 2,
+          "count": 3,
+          "offset": 16777216,
+          "file": "original.part-002.bin",
+          "bytes": 16777216,
+          "sha256": "cf8c44aa6d824a45d9988927452e468644955bd90e0115ba0f8320525ba1d676"
+        },
+        "exactOriginalSegment": true,
+        "originalRunJobHeadTreeBinding": true
+      },
+      {
+        "containerPath": "/workspace/attachments/0a38226c-9da8-49ca-9916-598fe636b6a9/paused3d83-part-11324933052.zip",
+        "containerArtifactId": 11324933052,
+        "containerBytes": 14945459,
+        "containerSha256": "b0878db91080ed3eaa35da948c2e8beed58d41d4cdcfd02f7a767c962dfb0c88",
+        "closedMembers": 2,
+        "crc": "PASS",
+        "embeddedReceiptExact": true,
+        "part": {
+          "ordinal": 3,
+          "count": 3,
+          "offset": 33554432,
+          "file": "original.part-003.bin",
+          "bytes": 14944183,
+          "sha256": "7a238e5015510f5867e7552c66dbc79fbeb513cd2b81084035c454e6c32f4c80"
+        },
+        "exactOriginalSegment": true,
+        "originalRunJobHeadTreeBinding": true
+      }
+    ],
+    "capturedOriginalWorkflowState": {
+      "status": "in_progress",
+      "conclusion": null
+    },
+    "qualification": "This is the immutable transport-time workflow snapshot. Later root-reported overall green is a separate gate; native evidence derives from the exact original LIVE job."
+  },
+  "sourceBinding": {
+    "exactExternalExpectedHeadTreeAndCleanGuards": true,
+    "qaSha256": "59fab4f9323e240b913a3006584b402ee3586032b98efad2dfa67ca78a908730",
+    "sourcePinsVerifiedAgainstCommittedObjects": [
+      {
+        "filename": "scripts/check_physical_3d_browser.mjs",
+        "bytes": 65448,
+        "sha256": "59fab4f9323e240b913a3006584b402ee3586032b98efad2dfa67ca78a908730"
+      },
+      {
+        "filename": "crates/liminis/src/cell-viewer.html",
+        "bytes": 62466,
+        "sha256": "c8d325cd575ea12b4ec9e6be88e9db4720da510b90044e7d2d480d95aa93bb5b"
+      },
+      {
+        "filename": "crates/liminis/src/cell-viewer-3d.mjs",
+        "bytes": 15849,
+        "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+      },
+      {
+        "filename": "configs/scenarios/cell-chamber-physical.toml",
+        "bytes": 3538,
+        "sha256": "867b52c37b6160bb6a9076f13cac9378fc49e226ae96753596d0c5d01fe90245"
+      },
+      {
+        "filename": "crates/liminis/src/cell-viewer-3d.mjs",
+        "bytes": 15849,
+        "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+      },
+      {
+        "filename": "crates/liminis/src/vendor/three-r180/three.module.js",
+        "bytes": 603113,
+        "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a"
+      },
+      {
+        "filename": "crates/liminis/src/vendor/three-r180/three.core.js",
+        "bytes": 1403455,
+        "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20"
+      },
+      {
+        "filename": "crates/liminis/src/vendor/three-r180/OrbitControls.js",
+        "bytes": 38703,
+        "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c"
+      },
+      {
+        "filename": "crates/liminis/src/vendor/three-r180/LICENSE",
+        "bytes": 1081,
+        "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+      },
+      {
+        "filename": "crates/liminis/src/vendor/three-r180/provenance.json",
+        "bytes": 1576,
+        "sha256": "1d507127da6b37d10a9c7c2941b2d2d7f39e1ee54a0655519706008bbed3584a"
+      }
+    ],
+    "sixServedAssetPinsVerified": [
+      {
+        "url": "/assets/cell-viewer-3d.mjs",
+        "filename": "crates/liminis/src/cell-viewer-3d.mjs",
+        "bytes": 15849,
+        "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "url": "/assets/vendor/three-r180/three.module.js",
+        "filename": "crates/liminis/src/vendor/three-r180/three.module.js",
+        "bytes": 603113,
+        "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "url": "/assets/vendor/three-r180/three.core.js",
+        "filename": "crates/liminis/src/vendor/three-r180/three.core.js",
+        "bytes": 1403455,
+        "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "url": "/assets/vendor/three-r180/OrbitControls.js",
+        "filename": "crates/liminis/src/vendor/three-r180/OrbitControls.js",
+        "bytes": 38703,
+        "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "url": "/assets/vendor/three-r180/LICENSE",
+        "filename": "crates/liminis/src/vendor/three-r180/LICENSE",
+        "bytes": 1081,
+        "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+        "contentType": "text/plain; charset=utf-8"
+      },
+      {
+        "url": "/assets/vendor/three-r180/provenance.json",
+        "filename": "crates/liminis/src/vendor/three-r180/provenance.json",
+        "bytes": 1576,
+        "sha256": "1d507127da6b37d10a9c7c2941b2d2d7f39e1ee54a0655519706008bbed3584a",
+        "contentType": "application/json"
+      }
+    ],
+    "vendor": {
+      "version": "0.180.0",
+      "commit": "0af9729d0c143a86a1d725d6e2c3ad83301f3f34",
+      "provenanceSha256": "1d507127da6b37d10a9c7c2941b2d2d7f39e1ee54a0655519706008bbed3584a"
+    },
+    "localThreeRuntimeImportClosure": "three.module→three.core; OrbitControls bare three mapped locally; MIT/provenance literal routes",
+    "upstreamVendorBytesUnchangedFromReviewedPin": true,
+    "servedViewerBodiesExactCommittedBytes": 4,
+    "hostViewerPins": [
+      {
+        "label": "source-cube",
+        "args": [
+          "cells",
+          "--seed",
+          "42",
+          "--port",
+          "42569",
+          "--data-dir",
+          "/tmp/liminis-3d-browser-LBMPXQ/source-cube",
+          "--config",
+          "/home/runner/work/liminis/liminis/configs/scenarios/cell-chamber-physical.toml"
+        ],
+        "origin": "http://127.0.0.1:42569",
+        "viewerSha256": "c8d325cd575ea12b4ec9e6be88e9db4720da510b90044e7d2d480d95aa93bb5b",
+        "initialTick": 0,
+        "model": {
+          "boundaries": "reflecting",
+          "dimensions_m": [
+            0.0001,
+            0.0001,
+            0.0001
+          ],
+          "environment": "well_mixed",
+          "excluded_volume": false,
+          "spatial_positions": true,
+          "temperature_k": 298.15,
+          "transport": "passive_dilute_brownian",
+          "viscosity_pa_s": 0.001,
+          "volume_m3": 1e-12
+        },
+        "worldFormat": 31
+      },
+      {
+        "label": "nonsquare",
+        "args": [
+          "cells",
+          "--seed",
+          "42",
+          "--port",
+          "40261",
+          "--data-dir",
+          "/tmp/liminis-3d-browser-LBMPXQ/nonsquare",
+          "--config",
+          "/tmp/liminis-3d-browser-LBMPXQ/physical-nonsquare.toml"
+        ],
+        "origin": "http://127.0.0.1:40261",
+        "viewerSha256": "c8d325cd575ea12b4ec9e6be88e9db4720da510b90044e7d2d480d95aa93bb5b",
+        "initialTick": 0,
+        "model": {
+          "boundaries": "reflecting",
+          "dimensions_m": [
+            0.0002,
+            0.0001,
+            5e-05
+          ],
+          "environment": "well_mixed",
+          "excluded_volume": false,
+          "spatial_positions": true,
+          "temperature_k": 298.15,
+          "transport": "passive_dilute_brownian",
+          "viscosity_pa_s": 0.001,
+          "volume_m3": 1e-12
+        },
+        "worldFormat": 31
+      },
+      {
+        "label": "legacy",
+        "args": [
+          "cells",
+          "--seed",
+          "42",
+          "--port",
+          "46147",
+          "--data-dir",
+          "/tmp/liminis-3d-browser-LBMPXQ/legacy"
+        ],
+        "origin": "http://127.0.0.1:46147",
+        "viewerSha256": "c8d325cd575ea12b4ec9e6be88e9db4720da510b90044e7d2d480d95aa93bb5b",
+        "initialTick": 0,
+        "model": {
+          "environment": "well_mixed",
+          "spatial_positions": false,
+          "temperature_k": 298.15,
+          "volume_m3": 1e-12
+        },
+        "worldFormat": 31
+      }
+    ],
+    "configSource": {
+      "sourceSha256": "867b52c37b6160bb6a9076f13cac9378fc49e226ae96753596d0c5d01fe90245",
+      "fixtureSha256": "3da686962b4c14e54d82b11559805a96d4abba4da84532dbbb291850096630f7",
+      "onlyChange": "dimensions [2e-4,1e-4,5e-5]; same mathematical product, binary volume recorded separately"
+    },
+    "temporaryFixtureOnlyDimensionsReplacement": true,
+    "heldModuleExactCommittedSource": true,
+    "traceQaSourceExactCommittedBytes": true,
+    "binary": {
+      "bytes": 7390448,
+      "sha256": "e40d2e9be40939e40d73d8e5a93bded40a1c91a8efb1087d9d2dcaf0087469a5",
+      "provenance": "Existing protected CI release build, not cryptographic standalone source attestation"
+    }
+  },
+  "actualBrowser": {
+    "browser": {
+      "version": "149.0.7827.55",
+      "playwright": "1.61.1",
+      "chromiumSandbox": true
+    },
+    "runner": {
+      "node": "v24.21.0",
+      "os": "Linux",
+      "image": "ubuntu22"
+    },
+    "sandbox": {
+      "status": "PASS",
+      "arguments": [
+        "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+        "--disable-field-trial-config",
+        "--disable-background-networking",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-back-forward-cache",
+        "--disable-breakpad",
+        "--disable-client-side-phishing-detection",
+        "--disable-component-extensions-with-background-pages",
+        "--disable-component-update",
+        "--no-default-browser-check",
+        "--disable-default-apps",
+        "--disable-dev-shm-usage",
+        "--disable-edgeupdater",
+        "--disable-extensions",
+        "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+        "--enable-features=CDPScreenshotNewSurface",
+        "--allow-pre-commit-input",
+        "--disable-hang-monitor",
+        "--disable-ipc-flooding-protection",
+        "--disable-popup-blocking",
+        "--disable-prompt-on-repost",
+        "--disable-renderer-backgrounding",
+        "--force-color-profile=srgb",
+        "--metrics-recording-only",
+        "--no-first-run",
+        "--password-store=basic",
+        "--use-mock-keychain",
+        "--no-service-autorun",
+        "--export-tagged-pdf",
+        "--disable-search-engine-choice-screen",
+        "--unsafely-disable-devtools-self-xss-warnings",
+        "--edge-skip-compat-layer-relaunch",
+        "--disable-infobars",
+        "--disable-search-engine-choice-screen",
+        "--disable-sync",
+        "--enable-unsafe-swiftshader",
+        "--headless",
+        "--hide-scrollbars",
+        "--mute-audio",
+        "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+        "--enable-automation",
+        "--user-data-dir=/tmp/playwright_chromiumdev_profile-Q5JVEJ",
+        "--remote-debugging-pipe",
+        "--no-startup-window",
+        "--use-gl=angle",
+        "--use-angle=swiftshader-webgl",
+        "--ozone-platform=headless",
+        "--allow-pre-commit-input"
+      ],
+      "launchSettings": {
+        "headless": true,
+        "chromiumSandbox": true,
+        "args": [
+          "--enable-automation"
+        ]
+      },
+      "stockGPUFlags": [
+        "--enable-unsafe-swiftshader",
+        "--use-gl=angle",
+        "--use-angle=swiftshader-webgl"
+      ],
+      "qualification": "Pinned official Playwright defaults may include enable-unsafe-swiftshader. No extra GPU switches supplied; actual backend is reported, hardware GPU is unasserted. Same accepted sandbox process model."
+    },
+    "backend": {
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "limits": {
+      "run": 300000,
+      "operation": 15000,
+      "api": 5000,
+      "launch": 20000,
+      "cdp": 5000,
+      "division": 90000,
+      "history": 20000,
+      "cleanup": 5000,
+      "trace": 15000
+    },
+    "checks": [
+      {
+        "name": "Observed official Chromium argv preserves sandbox; exact stock launch adds only enable-automation",
+        "status": "PASS",
+        "elapsedMs": 6
+      },
+      {
+        "name": "Actual source cube defaults to 2D; WebGL2 and independent SI centers/box match compositor pixels",
+        "status": "PASS",
+        "elapsedMs": 1129
+      },
+      {
+        "name": "A real Step commits current 2D/3D geometry and inspector before held original history; lazy activation uses latest snapshot",
+        "status": "PASS",
+        "elapsedMs": 990
+      },
+      {
+        "name": "Real orbit, zoom, pan and reset preserve paused SI data and project actual centers with equal scale",
+        "status": "PASS",
+        "elapsedMs": 2567
+      },
+      {
+        "name": "Exact ID, arrows and peak-movement/cancel gestures use current camera revision without selecting on drag",
+        "status": "PASS",
+        "elapsedMs": 964
+      },
+      {
+        "name": "Opacity and center/box/slice layers change actual pixels; hidden centers have no pointer targets",
+        "status": "PASS",
+        "elapsedMs": 3397
+      },
+      {
+        "name": "All slice axes use inclusive real centers and exact zero-width inputs; outside selection stays inspectable",
+        "status": "PASS",
+        "elapsedMs": 2985
+      },
+      {
+        "name": "Paused target30/60 draws hold exact canvas/API state and preserve normal single-flight polling",
+        "status": "PASS",
+        "elapsedMs": 4390
+      },
+      {
+        "name": "Bounded actual Steps reach coincident daughters; both exact IDs are selectable and camera revision invalidates candidates",
+        "status": "PASS",
+        "elapsedMs": 13270
+      },
+      {
+        "name": "Toggles retain one context and resources only for current population; four viewport layouts show current geometry",
+        "status": "PASS",
+        "elapsedMs": 4555
+      },
+      {
+        "name": "Actual context-loss negative control falls back to current 2D; inspector and a real Step remain usable",
+        "status": "PASS",
+        "elapsedMs": 403
+      },
+      {
+        "name": "Explicit unavailable-WebGL negative control retains current 2D and exact SI inspector",
+        "status": "PASS",
+        "elapsedMs": 685
+      },
+      {
+        "name": "Real chamber1 keeps schematic 2D without physical controls or loading WebGL vendor",
+        "status": "PASS",
+        "elapsedMs": 379
+      }
+    ],
+    "oracle": {
+      "status": "PASS",
+      "kind": "Synthetic arithmetic unit oracle, not API/model/browser states",
+      "cases": 6
+    },
+    "syntheticOracleNotRuntimeScience": true,
+    "pages": [
+      {
+        "origin": "http://127.0.0.1:42569",
+        "closed": true,
+        "maxState": 1,
+        "activeState": 0,
+        "browserPollRequests": 2,
+        "postCount": 0,
+        "failures": [],
+        "external": [],
+        "unhandled": [],
+        "nativeGL": {
+          "creations": 1,
+          "calls": [
+            {
+              "canvasId": "chamber-3d",
+              "type": "webgl2",
+              "success": true
+            }
+          ],
+          "backend": {
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+            "vendor": "Google Inc. (Google)",
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+          }
+        }
+      },
+      {
+        "origin": "http://127.0.0.1:40261",
+        "closed": true,
+        "maxState": 1,
+        "activeState": 0,
+        "browserPollRequests": 96,
+        "postCount": 48,
+        "failures": [],
+        "external": [],
+        "unhandled": [],
+        "nativeGL": {
+          "creations": 1,
+          "calls": [
+            {
+              "canvasId": "chamber-3d",
+              "type": "webgl2",
+              "success": true
+            },
+            {
+              "canvasId": "chamber-3d",
+              "type": "webgl2",
+              "success": true
+            }
+          ],
+          "backend": {
+            "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+            "vendor": "Google Inc. (Google)",
+            "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+          }
+        }
+      },
+      {
+        "origin": "http://127.0.0.1:40261",
+        "closed": true,
+        "maxState": 1,
+        "activeState": 0,
+        "browserPollRequests": 1,
+        "postCount": 0,
+        "failures": [],
+        "external": [],
+        "unhandled": [],
+        "nativeGL": {
+          "creations": 0,
+          "calls": [],
+          "backend": null
+        }
+      },
+      {
+        "origin": "http://127.0.0.1:46147",
+        "closed": true,
+        "maxState": 1,
+        "activeState": 0,
+        "browserPollRequests": 1,
+        "postCount": 0,
+        "failures": [],
+        "external": [],
+        "unhandled": [],
+        "nativeGL": {
+          "creations": 0,
+          "calls": [],
+          "backend": null
+        }
+      }
+    ],
+    "pageErrors": [],
+    "consoleErrors": [
+      {
+        "text": "THREE.WebGLRenderer: Error creating WebGL context.",
+        "location": {
+          "url": "http://127.0.0.1:40261/assets/vendor/three-r180/three.module.js",
+          "line": 15226,
+          "column": 11,
+          "lineNumber": 15226,
+          "columnNumber": 11
+        },
+        "page": 2,
+        "expectedNegativeControl": true
+      }
+    ],
+    "nodeUnhandled": [],
+    "cleanupErrors": [],
+    "routeErrors": [],
+    "prohibitedRequests": [],
+    "postCleanupFinalContractVerified": true
+  },
+  "pausedIdentity": {
+    "dimensions": [
+      1130,
+      752
+    ],
+    "wholeRegionExactRgbaIncludingAlpha": true,
+    "rawOriginalsAlsoByteExact": true,
+    "pngSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+    "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+    "changedPixelsBothHolds": 0,
+    "changedBounds": null,
+    "allThreeOriginalsSavedBeforeIdentityAssertions": true,
+    "capturesFileExactReportPausedDraw": true,
+    "captures": [
+      {
+        "label": "baseline",
+        "file": "paused-baseline.png",
+        "width": 1130,
+        "height": 752,
+        "pngSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+        "prePostApiExact": true,
+        "apiFactsSha256": "f06307c2005db313e770001c41d0ec324ba18af40075ac736d7f2e8a7f353df3",
+        "prePostLayersExact": true,
+        "prePostCameraViewportModeRevisionExact": true,
+        "startedAtMs": 13050.021085,
+        "capturedAtMs": 13222.309065
+      },
+      {
+        "label": "30",
+        "file": "paused-30.png",
+        "width": 1130,
+        "height": 752,
+        "pngSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+        "prePostApiExact": true,
+        "apiFactsSha256": "f06307c2005db313e770001c41d0ec324ba18af40075ac736d7f2e8a7f353df3",
+        "prePostLayersExact": true,
+        "prePostCameraViewportModeRevisionExact": true,
+        "startedAtMs": 14795.990178,
+        "capturedAtMs": 14934.308444
+      },
+      {
+        "label": "60",
+        "file": "paused-60.png",
+        "width": 1130,
+        "height": 752,
+        "pngSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+        "prePostApiExact": true,
+        "apiFactsSha256": "f06307c2005db313e770001c41d0ec324ba18af40075ac736d7f2e8a7f353df3",
+        "prePostLayersExact": true,
+        "prePostCameraViewportModeRevisionExact": true,
+        "startedAtMs": 16673.057285,
+        "capturedAtMs": 16834.119228
+      }
+    ],
+    "windows": [
+      {
+        "fps": 30,
+        "requestedHoldMs": 1400,
+        "measuredWallMs": 1400.1168190000008,
+        "stateRequests": 3,
+        "difference": {
+          "equal": true,
+          "sameDimensions": true,
+          "changedPixels": 0,
+          "bounds": null
+        }
+      },
+      {
+        "fps": 60,
+        "requestedHoldMs": 1400,
+        "measuredWallMs": 1400.4981909999988,
+        "stateRequests": 3,
+        "difference": {
+          "equal": true,
+          "sameDimensions": true,
+          "changedPixels": 0,
+          "bounds": null
+        }
+      }
+    ],
+    "baselineCamera": {
+      "position": [
+        2.400225924721921,
+        2.150225924721921,
+        2.025225924721921
+      ],
+      "target": [
+        0.5,
+        0.25,
+        0.125
+      ],
+      "up": [
+        0,
+        1,
+        0
+      ],
+      "quaternion": [
+        -0.2798481423331213,
+        0.3647051996310008,
+        0.11591689595929511,
+        0.8804762392171493
+      ],
+      "left": -1.8576153536423716,
+      "right": 1.8576153536423716,
+      "top": 0.71602745233685,
+      "bottom": -0.71602745233685,
+      "near": 0.01,
+      "far": 100,
+      "zoom": 1
+    },
+    "baselineViewport": {
+      "left": 24,
+      "top": 286,
+      "width": 1082,
+      "height": 417.0625,
+      "canvasWidth": 1130,
+      "canvasHeight": 751.0625,
+      "pixelRatio": 1,
+      "rect": {
+        "left": 0,
+        "top": 54,
+        "width": 1130,
+        "height": 751.0625
+      }
+    },
+    "baselineLayers": {
+      "plane": "xy",
+      "enabled": false,
+      "center": 2.5e-05,
+      "thickness": 5e-06,
+      "centers": true,
+      "opacity": 1,
+      "box": true,
+      "slice": true
+    },
+    "mode": "3d",
+    "revision": 96,
+    "drawnRevision": 96,
+    "drawnTick": 1,
+    "apiTick": 1,
+    "apiDtSeconds": 30,
+    "apiCellCount": 8,
+    "retainedBrowserApiTick1ResponsesExactSameHeldFacts": 24,
+    "browserPollingMaxSingleFlight": 1,
+    "achievedFps": "UNASSERTED",
+    "noMasksCropToleranceRetries": true
+  },
+  "actualUiContract": {
+    "atomicStep": {
+      "fromTick": 0,
+      "toTick": 1,
+      "selectedId": "0",
+      "historyReleasedAtAssertion": false,
+      "lazyActivationTick": 1
+    },
+    "camera": {
+      "actualRotate": true,
+      "actualPan": true,
+      "actualZoom": true,
+      "actualReset": true,
+      "outsideViewId": "0",
+      "pausedTick": 1
+    },
+    "gestures": {
+      "arrowIds": [
+        "0",
+        "7"
+      ],
+      "cameraUnchangedByArrow": true,
+      "dragReturnPeakCSSpx": 30,
+      "cancel": "Actual CDP touch input cancellation; input negative control, no fabricated cells"
+    },
+    "layers": {
+      "fullContrast": 212,
+      "opacity020Contrast": 42,
+      "opacityZeroContrast": 0,
+      "actualPixelChanges": true,
+      "noHiddenPointerTargets": true,
+      "glyph": {
+        "widthCSS": 8,
+        "heightCSS": 8.988779920212766,
+        "nominalCSS": 7,
+        "rasterToleranceCSS": 2
+      },
+      "zoomGlyph": {
+        "widthCSS": 8,
+        "heightCSS": 7.9900265957446805,
+        "nominalCSS": 7,
+        "rasterToleranceCSS": 2
+      }
+    },
+    "sliceBoundary": {
+      "axis": 0,
+      "plane": "yz",
+      "actualInputCenter_m": 4.181575039094887e-05,
+      "boundaryId": "1",
+      "outsideId": "0",
+      "zeroWidthMembershipFromActualInputs": true
+    },
+    "division": {
+      "tick": 47,
+      "realStepCount": 46,
+      "parentId": "5",
+      "daughterIds": [
+        "16",
+        "17"
+      ],
+      "position_m": [
+        0.0001680090356467213,
+        5.394273663219153e-05,
+        4.654609064929371e-05
+      ],
+      "candidateIds": [
+        "16",
+        "17"
+      ],
+      "parentAbsenceIsNotDeath": true
+    },
+    "resourceToggles": {
+      "toggles": 6,
+      "contextCreations": 1,
+      "currentPopulation": 15,
+      "baseline": {
+        "sprites": 15,
+        "visibleSprites": 15,
+        "selectionSprites": 1,
+        "paletteMaterials": 8,
+        "materials": 15,
+        "textures": 2,
+        "geometries": 7,
+        "rendererGeometries": 7,
+        "rendererTextures": 2,
+        "disposed": false,
+        "lost": false,
+        "contextCreations": 1
+      },
+      "resources": {
+        "sprites": 15,
+        "visibleSprites": 15,
+        "selectionSprites": 1,
+        "paletteMaterials": 8,
+        "materials": 15,
+        "textures": 2,
+        "geometries": 7,
+        "rendererGeometries": 7,
+        "rendererTextures": 2,
+        "disposed": false,
+        "lost": false,
+        "contextCreations": 1
+      }
+    },
+    "layouts": [
+      {
+        "label": "desktop",
+        "width": 1440,
+        "height": 900,
+        "layout": {
+          "overflow": false,
+          "controls": {
+            "bottom": 315.78125,
+            "left": 17,
+            "right": 1113
+          },
+          "captionBottom": 223.5625,
+          "metaTop": 778.3125,
+          "viewportTop": 340,
+          "viewportBottom": 757.0625
+        },
+        "actualViewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        }
+      },
+      {
+        "label": "short",
+        "width": 1440,
+        "height": 720,
+        "layout": {
+          "overflow": false,
+          "controls": {
+            "bottom": 315.78125,
+            "left": 17,
+            "right": 1113
+          },
+          "captionBottom": 223.5625,
+          "metaTop": 598.3125,
+          "viewportTop": 340,
+          "viewportBottom": 577.0625
+        },
+        "actualViewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 237.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 571.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 571.0625
+          }
+        }
+      },
+      {
+        "label": "mobile390",
+        "width": 390,
+        "height": 844,
+        "layout": {
+          "overflow": false,
+          "controls": {
+            "bottom": 383.71875,
+            "left": 17,
+            "right": 373
+          },
+          "captionBottom": 238.5,
+          "metaTop": 575.4375,
+          "viewportTop": 407.9375,
+          "viewportBottom": 553.9375
+        },
+        "actualViewport": {
+          "left": 24,
+          "top": 347,
+          "width": 342,
+          "height": 146,
+          "canvasWidth": 390,
+          "canvasHeight": 560,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 60.9375,
+            "width": 390,
+            "height": 560
+          }
+        }
+      },
+      {
+        "label": "mobile320",
+        "width": 320,
+        "height": 844,
+        "layout": {
+          "overflow": false,
+          "controls": {
+            "bottom": 428.90625,
+            "left": 17,
+            "right": 303
+          },
+          "captionBottom": 284.078125,
+          "metaTop": 605.625,
+          "viewportTop": 453.125,
+          "viewportBottom": 584.125
+        },
+        "actualViewport": {
+          "left": 24,
+          "top": 362,
+          "width": 272,
+          "height": 131,
+          "canvasWidth": 320,
+          "canvasHeight": 560,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 91.125,
+            "width": 320,
+            "height": 560
+          }
+        }
+      }
+    ],
+    "contextLoss": {
+      "label": "Synthetic GPU-loss negative control via actual native extension; no fabricated model state",
+      "current2DTick": 48,
+      "realStepFrom": 47,
+      "resources": {
+        "sprites": 0,
+        "visibleSprites": 0,
+        "selectionSprites": 0,
+        "paletteMaterials": 8,
+        "materials": 0,
+        "textures": 0,
+        "geometries": 0,
+        "rendererGeometries": 0,
+        "rendererTextures": 0,
+        "disposed": true,
+        "lost": true,
+        "contextCreations": 1
+      }
+    },
+    "unavailable": {
+      "label": "Synthetic allocation-negative control: only target canvas WebGL getContext returns null; actual API is unchanged",
+      "shownTick": 48,
+      "contextCreations": 0
+    },
+    "legacy": {
+      "chamberFormat": 1,
+      "tick": 0,
+      "schematic": true,
+      "no3DRequests": true
+    },
+    "delayedHistory": {
+      "status": "RELEASED",
+      "path": "/api/history",
+      "bytes": 130,
+      "sha256": "b22ba72fb85f69b5d090343625c800742bff6f529c4c761da5bf862118d5561f",
+      "originalStatus": 200,
+      "originalHeaders": {
+        "content-type": "application/json",
+        "content-length": "130",
+        "cache-control": "no-store",
+        "connection": "close"
+      },
+      "qualification": "Delayed route.fetch original response; only exact original bytes are fulfilled"
+    },
+    "delayedModule": {
+      "status": "RELEASED",
+      "path": "/assets/cell-viewer-3d.mjs",
+      "bytes": 15849,
+      "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac",
+      "originalStatus": 200,
+      "originalHeaders": {
+        "content-type": "text/javascript; charset=utf-8",
+        "content-length": "15849",
+        "cache-control": "no-store",
+        "connection": "close"
+      },
+      "qualification": "Delayed route.fetch original response; only exact original bytes are fulfilled"
+    },
+    "twoTraceFulfillBodiesExactOriginal": true,
+    "geometryRecords": 40,
+    "detailedNumericsGeometryAcceptance": "Separate independent numerics reviewer; not duplicated here"
+  },
+  "images": {
+    "allTwelveActualPngViewed": true,
+    "files": [
+      {
+        "filename": "coincident-daughters.png",
+        "width": 1440,
+        "height": 900,
+        "bytes": 123037,
+        "pngSha256": "9c8a2de379f008ab4119d4302c00c1e05fcfa0d0129d9fc63c32166dc012f9fc",
+        "rgbaSha256": "753e45dc62a4c63c3bae6155249c76056bf362707647580f0aca1cb9d02c9dbd",
+        "viewImageObserved": true
+      },
+      {
+        "filename": "desktop.png",
+        "width": 1440,
+        "height": 900,
+        "bytes": 123425,
+        "pngSha256": "53579e9ecb0df84ab7efcf45b715b9f405cd2a1945aa195ef74037c691e978ce",
+        "rgbaSha256": "3771f89f67808bfd26cc31f8ad3760965bdaec1e9c748ff1dd812277e72c3755",
+        "viewImageObserved": true
+      },
+      {
+        "filename": "context-loss-current-2d.png",
+        "width": 1440,
+        "height": 900,
+        "bytes": 89454,
+        "pngSha256": "347001d04052153f1a387932c40e982f96fb7ea1574eb974bc483cf71f1853ac",
+        "rgbaSha256": "845a77dbc0de90f3d19a6b1178ad05e1f53db1fa5e1e996782f9c0301fc8f056",
+        "viewImageObserved": true
+      },
+      {
+        "filename": "legacy-schematic.png",
+        "width": 1440,
+        "height": 900,
+        "bytes": 97680,
+        "pngSha256": "d9ed84c75f6c2ff2b3acecfa523f86f66c46959321d4c4575697c908d35ab34c",
+        "rgbaSha256": "5a972eee164d2a64d5726e315bea935b095bfd906a0741027509215ef53dc379",
+        "viewImageObserved": true
+      },
+      {
+        "filename": "mobile320.png",
+        "width": 320,
+        "height": 2520,
+        "bytes": 128042,
+        "pngSha256": "8a8197231a3384cf455b45ac4bec564620f184b6d4c1754f907d5d5ad8111c10",
+        "rgbaSha256": "b65679ad72ef76f6f3291f0a34f513e31e285f157d2f2d3256475c4854263196",
+        "viewImageObserved": true
+      },
+      {
+        "filename": "mobile390.png",
+        "width": 390,
+        "height": 2476,
+        "bytes": 130532,
+        "pngSha256": "80d4ed60f2f6edde98dbc876cc038adad6d235f866b46df4e52620001f4d593d",
+        "rgbaSha256": "a7b0b9e9562c545541a47fd8cbb3dd085fc1df2d8f4b47b0ae56fd067933ed56",
+        "viewImageObserved": true
+      },
+      {
+        "filename": "paused-30.png",
+        "width": 1130,
+        "height": 752,
+        "bytes": 54350,
+        "pngSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+        "viewImageObserved": true
+      },
+      {
+        "filename": "paused-60.png",
+        "width": 1130,
+        "height": 752,
+        "bytes": 54350,
+        "pngSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+        "viewImageObserved": true
+      },
+      {
+        "filename": "paused-baseline.png",
+        "width": 1130,
+        "height": 752,
+        "bytes": 54350,
+        "pngSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+        "viewImageObserved": true
+      },
+      {
+        "filename": "short.png",
+        "width": 1440,
+        "height": 720,
+        "bytes": 110295,
+        "pngSha256": "6850478949a08e462c1289a6f92c590ad3136171d798ac89da60de5d3f72d647",
+        "rgbaSha256": "6e8b8b92801ba813813e85328e51e06de22b595959631f9dcfbf84bf9eeb463d",
+        "viewImageObserved": true
+      },
+      {
+        "filename": "source-cube.png",
+        "width": 1440,
+        "height": 900,
+        "bytes": 101092,
+        "pngSha256": "084d073aae0524096be498b2d349284fdfa81eb3a10d0182f4a00e3b76fbcc30",
+        "rgbaSha256": "4bbd87cb13572fd6d1f159d4eea5b08c96cfd951d5ca84b5dff98287f2011057",
+        "viewImageObserved": true
+      },
+      {
+        "filename": "webgl-unavailable-current-2d.png",
+        "width": 1440,
+        "height": 900,
+        "bytes": 109684,
+        "pngSha256": "ac22757009f278d46821cbd7151a7c80e101965478bd43fe3d4d36f2e7cba416",
+        "rgbaSha256": "961c4f5072664a4948793bfd7d3fb7b6cc375a17e95479186a73bb481d9a3b55",
+        "viewImageObserved": true
+      }
+    ],
+    "observations": "Source cube and nonsquare orthographic centers/µm box, coincident exact daughters16/17 at tick47, desktop/short/mobile390/320 ordinary-flow controls+inspector, exact paused originals, current2D context-loss/unavailable at tick48, legacy schematic with explicit nonspatial caption."
+  },
+  "trace": {
+    "status": "PASS",
+    "bytes": 48543900,
+    "sha256": "d766bf9d8da999b7511e33c41610abebf2b6f4daa000413ee3009b0c6f650e24",
+    "crc": "PASS",
+    "closedMembers": 1348,
+    "expandedBytes": 59090353,
+    "inventorySha256": "abeb29ff92f7f79976f989c68dd7f97a1ebe71db5a6ca8f20f034a3679c20abb",
+    "inventoryEncoding": "canonical compact sorted-key JSON + LF, original nested member order",
+    "suffixCounts": {
+      ".trace": 1,
+      ".network": 1,
+      ".jpeg": 1234,
+      ".html": 1,
+      ".json": 108,
+      ".dat": 1,
+      ".stacks": 1,
+      ".txt": 1
+    },
+    "actionsBefore": 1281,
+    "actionsAfter": 1281,
+    "actionErrors": 0,
+    "actualPageNewCloseAcks": [
+      4,
+      4
+    ],
+    "networkRequests": 177,
+    "onlyLoopbackOrigins": true,
+    "getRequests": 129,
+    "postRequests": 48,
+    "allPostBodiesExactStep": true,
+    "allStatuses200": true,
+    "retainedApiStateResponses": 100,
+    "retainedApiStatesByTick": [
+      {
+        "chamberFormat": 1,
+        "tick": 0,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 0,
+        "count": 3
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 1,
+        "count": 24
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 2,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 3,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 4,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 5,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 6,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 7,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 8,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 9,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 10,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 11,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 12,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 13,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 14,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 15,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 16,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 17,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 18,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 19,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 20,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 21,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 22,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 23,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 24,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 25,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 26,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 27,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 28,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 29,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 30,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 31,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 32,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 33,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 34,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 35,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 36,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 37,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 38,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 39,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 40,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 41,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 42,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 43,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 44,
+        "count": 2
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 45,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 46,
+        "count": 1
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 47,
+        "count": 12
+      },
+      {
+        "chamberFormat": 2,
+        "tick": 48,
+        "count": 2
+      }
+    ],
+    "warnings": "Stock ReadPixels performance warnings; Context Lost log; one exact labelled unavailable-WebGL creation error. No unexpected error or failed action."
+  },
+  "privacy": {
+    "status": "BOUNDED_SCAN_ZERO_FINDINGS",
+    "utf8Files": 124,
+    "utf8Bytes": 6884428,
+    "includes": [
+      "original report/captures/API snapshots/config/held module/history/host log",
+      "all UTF8 nested trace/network/stacks/source/data resources",
+      "reconstruction receipt"
+    ],
+    "obviousCredentialPrivateKeyAuthPrivateContextSignedUrlPrivateIpNegativeChatIdPatterns": 0,
+    "actualNetworkCookies": 0,
+    "actualAuthorizationProxyAuthorizationCookieSetCookieHeaders": 0,
+    "decodedTextBudgetBytes": 134217728,
+    "individualTraceJpegFramesViewed": false,
+    "allOuterPngViewed": true,
+    "qualification": "Bounded explicit-pattern/header scan; no exhaustive secret guarantee. No signed storage URL/token was printed or added to own reports."
+  },
+  "qualifications": [
+    "Actual acceptance is scoped to original exact83fa LIVE-3b code/browser/privacy evidence. It is not an independent overallCI/merge/public-delivery verdict.",
+    "Pinned official Playwright stock SwiftShader WebGL2 observed. No extra GPU switches or sandbox opt-outs; hardwareFPS/native GPU/kernel-isolation attestation is unasserted.",
+    "Physical markers are saved SI centers and visual glyphs, not body radius/morphology/collision/new science. Detailed geometry numerics have a separate independent reviewer.",
+    "GPU-loss and unavailable allocation are explicit negative controls; one exact expected console error is retained and attributed. Normal pages/native unhandled/request/cleanup errors are zero.",
+    "Historical main5bea/run37241483046 remains FAIL of unknown cause. This new exact-RGBA PASS does not establish equality of absent historical canvas captures or encoding cause.",
+    "No old79/c02 PASS transfers; LAB PR21/publicLAB/models HOLD remains. No full public2.42GB/hardware/achievedFPS/native-background claim."
+  ],
+  "reviewerActions": {
+    "all12PngViewImage": true,
+    "nativeCompanionAndOriginalShaCrc": true,
+    "nestedInventoryCrcAndTrace": true,
+    "gitSourceVendorHostConfigPins": true,
+    "pausedPixelsAndAuditStateIndependentChecks": true,
+    "sourceReadsOnlyNoBrowserHttpTestsModelCargoRuns": true,
+    "productionOriginalSharedFilesEdited": false,
+    "ownWrites": [
+      "review.json",
+      "review.md"
+    ]
+  },
+  "remainingGates": [
+    "Independent detailed numerics and remaining LIVE regression reviews.",
+    "Durable original/review archives and independent readbacks before guardedmerge.",
+    "Overall fullCI required; parent reports all11 exact83fa green, not independently queried by this no-network reviewer.",
+    "Existing main/public follow-up scope after guardedmerge; LAB remains HOLD."
+  ]
+}

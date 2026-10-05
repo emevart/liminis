@@ -1,0 +1,244 @@
+{
+  "status": "PASS",
+  "scope": "Byte transport/reconstruction only; no browser acceptance assertion",
+  "original_artifact_id": 11324254318,
+  "original_run": 37260833244,
+  "original_job": 111607516729,
+  "original_bytes": 48498615,
+  "original_sha256": "413f5c6ddfb79df66135f4701fbfc4fbeca11a9aa1b65270bc9870351399f671",
+  "source_head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+  "source_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "original_zip_crc": "PASS",
+  "repacked": false,
+  "transport_run": 37262081937,
+  "part_receipts": [
+    {
+      "container_artifact_id": 11325316964,
+      "container_bytes": 16778485,
+      "container_sha256": "8449cebe14333485e166f9df5e8c655acd1f9ffeb73445e636eac16ea50675ba",
+      "receipt": {
+        "schema": "liminis-original-artifact-byte-part-v1",
+        "purpose": "transport only; browser acceptance belongs to original run",
+        "repository": "emevart/liminis",
+        "original": {
+          "artifact_id": 11324254318,
+          "run_id": 37260833244,
+          "source_head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+          "source_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+          "bytes": 48498615,
+          "sha256": "413f5c6ddfb79df66135f4701fbfc4fbeca11a9aa1b65270bc9870351399f671",
+          "zip_crc": "PASS",
+          "zip_members": 22,
+          "job_id": 111607516729,
+          "job_conclusion": "success",
+          "workflow_status": "in_progress",
+          "workflow_conclusion": null
+        },
+        "transport": {
+          "run_id": 37262081937,
+          "run_attempt": 1,
+          "source_head": "efc54aaaa753e79a91427f58d4eb316eff7aabd7"
+        },
+        "part": {
+          "ordinal": 1,
+          "count": 3,
+          "offset": 0,
+          "file": "original.part-001.bin",
+          "bytes": 16777216,
+          "sha256": "bde786fe071202b394dd8eb43a687c57f6550a72eb656f7f08c41d5b5e44d0a8"
+        }
+      }
+    },
+    {
+      "container_artifact_id": 11324987996,
+      "container_bytes": 16778492,
+      "container_sha256": "f7f54291617f4162c78d83e4ea00155d32702d6a6fc50663059937514dd63be9",
+      "receipt": {
+        "schema": "liminis-original-artifact-byte-part-v1",
+        "purpose": "transport only; browser acceptance belongs to original run",
+        "repository": "emevart/liminis",
+        "original": {
+          "artifact_id": 11324254318,
+          "run_id": 37260833244,
+          "source_head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+          "source_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+          "bytes": 48498615,
+          "sha256": "413f5c6ddfb79df66135f4701fbfc4fbeca11a9aa1b65270bc9870351399f671",
+          "zip_crc": "PASS",
+          "zip_members": 22,
+          "job_id": 111607516729,
+          "job_conclusion": "success",
+          "workflow_status": "in_progress",
+          "workflow_conclusion": null
+        },
+        "transport": {
+          "run_id": 37262081937,
+          "run_attempt": 1,
+          "source_head": "efc54aaaa753e79a91427f58d4eb316eff7aabd7"
+        },
+        "part": {
+          "ordinal": 2,
+          "count": 3,
+          "offset": 16777216,
+          "file": "original.part-002.bin",
+          "bytes": 16777216,
+          "sha256": "cf8c44aa6d824a45d9988927452e468644955bd90e0115ba0f8320525ba1d676"
+        }
+      }
+    },
+    {
+      "container_artifact_id": 11324933052,
+      "container_bytes": 14945459,
+      "container_sha256": "b0878db91080ed3eaa35da948c2e8beed58d41d4cdcfd02f7a767c962dfb0c88",
+      "receipt": {
+        "schema": "liminis-original-artifact-byte-part-v1",
+        "purpose": "transport only; browser acceptance belongs to original run",
+        "repository": "emevart/liminis",
+        "original": {
+          "artifact_id": 11324254318,
+          "run_id": 37260833244,
+          "source_head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+          "source_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+          "bytes": 48498615,
+          "sha256": "413f5c6ddfb79df66135f4701fbfc4fbeca11a9aa1b65270bc9870351399f671",
+          "zip_crc": "PASS",
+          "zip_members": 22,
+          "job_id": 111607516729,
+          "job_conclusion": "success",
+          "workflow_status": "in_progress",
+          "workflow_conclusion": null
+        },
+        "transport": {
+          "run_id": 37262081937,
+          "run_attempt": 1,
+          "source_head": "efc54aaaa753e79a91427f58d4eb316eff7aabd7"
+        },
+        "part": {
+          "ordinal": 3,
+          "count": 3,
+          "offset": 33554432,
+          "file": "original.part-003.bin",
+          "bytes": 14944183,
+          "sha256": "7a238e5015510f5867e7552c66dbc79fbeb513cd2b81084035c454e6c32f4c80"
+        }
+      }
+    }
+  ],
+  "outer_members": [
+    {
+      "path": "coincident-daughters.png",
+      "bytes": 123037,
+      "sha256": "9c8a2de379f008ab4119d4302c00c1e05fcfa0d0129d9fc63c32166dc012f9fc"
+    },
+    {
+      "path": "desktop.png",
+      "bytes": 123425,
+      "sha256": "53579e9ecb0df84ab7efcf45b715b9f405cd2a1945aa195ef74037c691e978ce"
+    },
+    {
+      "path": "context-loss-current-2d.png",
+      "bytes": 89454,
+      "sha256": "347001d04052153f1a387932c40e982f96fb7ea1574eb974bc483cf71f1853ac"
+    },
+    {
+      "path": "first-division-state.json",
+      "bytes": 18198,
+      "sha256": "12f6440144a9b291922f47878e45fd545ef061082bd6d8a86d10d1a1e91fc751"
+    },
+    {
+      "path": "held-history.json",
+      "bytes": 130,
+      "sha256": "b22ba72fb85f69b5d090343625c800742bff6f529c4c761da5bf862118d5561f"
+    },
+    {
+      "path": "held-module.mjs",
+      "bytes": 15849,
+      "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+    },
+    {
+      "path": "host.log",
+      "bytes": 413,
+      "sha256": "23421d6c0cfb6d38f672adc64f0d40b97100b18b65589009d4cc74dc8e3d5312"
+    },
+    {
+      "path": "legacy-schematic.png",
+      "bytes": 97680,
+      "sha256": "d9ed84c75f6c2ff2b3acecfa523f86f66c46959321d4c4575697c908d35ab34c"
+    },
+    {
+      "path": "mobile320.png",
+      "bytes": 128042,
+      "sha256": "8a8197231a3384cf455b45ac4bec564620f184b6d4c1754f907d5d5ad8111c10"
+    },
+    {
+      "path": "mobile390.png",
+      "bytes": 130532,
+      "sha256": "80d4ed60f2f6edde98dbc876cc038adad6d235f866b46df4e52620001f4d593d"
+    },
+    {
+      "path": "nonsquare-state.json",
+      "bytes": 10016,
+      "sha256": "1dbfc2ef2fd5afb862c2c92fa2e1fcb6b3f9a473ce8c61aacc5641cdf205753c"
+    },
+    {
+      "path": "paused-30.png",
+      "bytes": 54350,
+      "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6"
+    },
+    {
+      "path": "paused-60.png",
+      "bytes": 54350,
+      "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6"
+    },
+    {
+      "path": "paused-baseline.png",
+      "bytes": 54350,
+      "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6"
+    },
+    {
+      "path": "paused-captures.json",
+      "bytes": 78967,
+      "sha256": "9c5dc3020ee5f4007c9cd769a220cb79b3aa95951e5d4aa3cd56e515dce89c8a"
+    },
+    {
+      "path": "physical-nonsquare.toml",
+      "bytes": 3538,
+      "sha256": "3da686962b4c14e54d82b11559805a96d4abba4da84532dbbb291850096630f7"
+    },
+    {
+      "path": "report.json",
+      "bytes": 310796,
+      "sha256": "9f66daca75eefe87d7813e68d0d19d4733578914a35cabc36b96dd3d9ff07be5"
+    },
+    {
+      "path": "short.png",
+      "bytes": 110295,
+      "sha256": "6850478949a08e462c1289a6f92c590ad3136171d798ac89da60de5d3f72d647"
+    },
+    {
+      "path": "source-cube-state.json",
+      "bytes": 10016,
+      "sha256": "e9f76cf9b2f14ebdcca677337c0c77cc7d651427487b99b013646cf039f6aa09"
+    },
+    {
+      "path": "source-cube.png",
+      "bytes": 101092,
+      "sha256": "084d073aae0524096be498b2d349284fdfa81eb3a10d0182f4a00e3b76fbcc30"
+    },
+    {
+      "path": "trace.zip",
+      "bytes": 48543900,
+      "sha256": "d766bf9d8da999b7511e33c41610abebf2b6f4daa000413ee3009b0c6f650e24"
+    },
+    {
+      "path": "webgl-unavailable-current-2d.png",
+      "bytes": 109684,
+      "sha256": "ac22757009f278d46821cbd7151a7c80e101965478bd43fe3d4d36f2e7cba416"
+    }
+  ],
+  "qualifications": [
+    "Native authorized file downloads were each below32MiB",
+    "Overall original CI acceptance requires separate final workflow status",
+    "Actual browser/source/privacy review is separate"
+  ]
+}

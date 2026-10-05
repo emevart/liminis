@@ -1,0 +1,586 @@
+{
+  "status": "EXACT_HEAD_FULLCI_PASS",
+  "scope": "CI/check statuses only; independent actual artifacts and durable readbacks separate",
+  "candidate_head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+  "candidate_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "base_head": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+  "run": {
+    "id": 37260833244,
+    "head_sha": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "pull_request",
+    "run_attempt": 1
+  },
+  "jobs": [
+    {
+      "id": 111607516475,
+      "name": "recorded player browser acceptance",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install pinned official recorded browser runtime",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Real recorded player desktop and mobile browser acceptance",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Real every-tick dense playback and transport acceptance",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Attach exact-head dense screenshots, trace and transport evidence",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Attach exact-head screenshots, trace, and browser evidence",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify actual public deployment and playback",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Attach public deployment browser evidence",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-node@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111607516626,
+      "name": "build, lint, test",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Toolchain",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Format",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Clippy",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Test",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Recorded exporter tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111607516629,
+      "name": "no bare arithmetic over Q (ADR-022)",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Kernels and WGSL templates go through the wrappers",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111607516636,
+      "name": "hook tests (macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Toolchain",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "python3 in PATH (Windows)",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Hook tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111607516644,
+      "name": "recorded observer data contract",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate recordings, catalog freshness, and download integrity",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Validate exact dense codec and Linux publication boundaries",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111607516677,
+      "name": "hook tests (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Toolchain",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "python3 in PATH (Windows)",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Hook tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111607516687,
+      "name": "frozen documents (ADR-032)",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "SPEC and NORTH_STAR are frozen once the first kernel exists",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "docs/archive stays superseded",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111607516700,
+      "name": "world semantics version (ADR-020)",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "WORLD_FORMAT_VERSION must move with the semantics",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111607516729,
+      "name": "live cells browser acceptance",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build actual pinned release host",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install pinned official browser test runtime",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Real live cells desktop and mobile browser acceptance",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Real opt-in physical cells desktop and mobile browser acceptance",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Real physical projections, slice, selection and atomic snapshot acceptance",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Real Three.js centers, camera, layers and snapshot acceptance",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Attach screenshots and exact-head browser evidence",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Attach exact-head physical browser evidence",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Attach exact-head physical projection browser evidence",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Attach exact-head Three.js browser evidence",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v6",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 111607516743,
+      "name": "hook tests (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Toolchain",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "python3 in PATH (Windows)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Hook tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v7",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": 111611927179,
+      "name": "Workers Builds: liminis",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "83fa1e52e478e2a33602a24bf83b5456e55e70a3"
+    },
+    {
+      "id": 111607516743,
+      "name": "hook tests (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "83fa1e52e478e2a33602a24bf83b5456e55e70a3"
+    },
+    {
+      "id": 111607516729,
+      "name": "live cells browser acceptance",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "83fa1e52e478e2a33602a24bf83b5456e55e70a3"
+    },
+    {
+      "id": 111607516700,
+      "name": "world semantics version (ADR-020)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "83fa1e52e478e2a33602a24bf83b5456e55e70a3"
+    },
+    {
+      "id": 111607516687,
+      "name": "frozen documents (ADR-032)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "83fa1e52e478e2a33602a24bf83b5456e55e70a3"
+    },
+    {
+      "id": 111607516677,
+      "name": "hook tests (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "83fa1e52e478e2a33602a24bf83b5456e55e70a3"
+    },
+    {
+      "id": 111607516644,
+      "name": "recorded observer data contract",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "83fa1e52e478e2a33602a24bf83b5456e55e70a3"
+    },
+    {
+      "id": 111607516636,
+      "name": "hook tests (macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "83fa1e52e478e2a33602a24bf83b5456e55e70a3"
+    },
+    {
+      "id": 111607516629,
+      "name": "no bare arithmetic over Q (ADR-022)",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "83fa1e52e478e2a33602a24bf83b5456e55e70a3"
+    },
+    {
+      "id": 111607516626,
+      "name": "build, lint, test",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "83fa1e52e478e2a33602a24bf83b5456e55e70a3"
+    },
+    {
+      "id": 111607516475,
+      "name": "recorded player browser acceptance",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "83fa1e52e478e2a33602a24bf83b5456e55e70a3"
+    }
+  ],
+  "qualifications": [
+    "No carryover of earlier candidate PASS",
+    "Historical main5bea encodedPNG FAIL cause remains unknown",
+    "LAB21c02/publicLAB/LAB4 models remain Astra HOLD"
+  ]
+}

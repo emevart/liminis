@@ -1,0 +1,789 @@
+{
+  "kind": "independent_actual_3d_numerics_review/v1",
+  "verdict": "QUALIFIED_PASS",
+  "findings": [],
+  "blocking_findings": 0,
+  "other_findings": 0,
+  "reviewed_source_head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+  "reviewed_source_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "workflow_run": 37260833244,
+  "live_job": 111607516729,
+  "original_artifact_id": 11324254318,
+  "transport_run": 37262081937,
+  "original_filename": "physical-3d-browser-83fa1e5-original.zip",
+  "original_bytes": 48498615,
+  "original_sha256": "413f5c6ddfb79df66135f4701fbfc4fbeca11a9aa1b65270bc9870351399f671",
+  "total_reported_checks_passed": 13,
+  "all_original_PNGs_visually_reviewed": 12,
+  "artifact_and_state_evidence": {
+    "artifact_id": 11324254318,
+    "original_bytes": 48498615,
+    "original_sha256": "413f5c6ddfb79df66135f4701fbfc4fbeca11a9aa1b65270bc9870351399f671",
+    "outer_members": [
+      {
+        "filename": "coincident-daughters.png",
+        "bytes": 123037,
+        "sha256": "9c8a2de379f008ab4119d4302c00c1e05fcfa0d0129d9fc63c32166dc012f9fc"
+      },
+      {
+        "filename": "desktop.png",
+        "bytes": 123425,
+        "sha256": "53579e9ecb0df84ab7efcf45b715b9f405cd2a1945aa195ef74037c691e978ce"
+      },
+      {
+        "filename": "context-loss-current-2d.png",
+        "bytes": 89454,
+        "sha256": "347001d04052153f1a387932c40e982f96fb7ea1574eb974bc483cf71f1853ac"
+      },
+      {
+        "filename": "first-division-state.json",
+        "bytes": 18198,
+        "sha256": "12f6440144a9b291922f47878e45fd545ef061082bd6d8a86d10d1a1e91fc751"
+      },
+      {
+        "filename": "held-history.json",
+        "bytes": 130,
+        "sha256": "b22ba72fb85f69b5d090343625c800742bff6f529c4c761da5bf862118d5561f"
+      },
+      {
+        "filename": "held-module.mjs",
+        "bytes": 15849,
+        "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+      },
+      {
+        "filename": "host.log",
+        "bytes": 413,
+        "sha256": "23421d6c0cfb6d38f672adc64f0d40b97100b18b65589009d4cc74dc8e3d5312"
+      },
+      {
+        "filename": "legacy-schematic.png",
+        "bytes": 97680,
+        "sha256": "d9ed84c75f6c2ff2b3acecfa523f86f66c46959321d4c4575697c908d35ab34c"
+      },
+      {
+        "filename": "mobile320.png",
+        "bytes": 128042,
+        "sha256": "8a8197231a3384cf455b45ac4bec564620f184b6d4c1754f907d5d5ad8111c10"
+      },
+      {
+        "filename": "mobile390.png",
+        "bytes": 130532,
+        "sha256": "80d4ed60f2f6edde98dbc876cc038adad6d235f866b46df4e52620001f4d593d"
+      },
+      {
+        "filename": "nonsquare-state.json",
+        "bytes": 10016,
+        "sha256": "1dbfc2ef2fd5afb862c2c92fa2e1fcb6b3f9a473ce8c61aacc5641cdf205753c"
+      },
+      {
+        "filename": "paused-30.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6"
+      },
+      {
+        "filename": "paused-60.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6"
+      },
+      {
+        "filename": "paused-baseline.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6"
+      },
+      {
+        "filename": "paused-captures.json",
+        "bytes": 78967,
+        "sha256": "9c5dc3020ee5f4007c9cd769a220cb79b3aa95951e5d4aa3cd56e515dce89c8a"
+      },
+      {
+        "filename": "physical-nonsquare.toml",
+        "bytes": 3538,
+        "sha256": "3da686962b4c14e54d82b11559805a96d4abba4da84532dbbb291850096630f7"
+      },
+      {
+        "filename": "report.json",
+        "bytes": 310796,
+        "sha256": "9f66daca75eefe87d7813e68d0d19d4733578914a35cabc36b96dd3d9ff07be5"
+      },
+      {
+        "filename": "short.png",
+        "bytes": 110295,
+        "sha256": "6850478949a08e462c1289a6f92c590ad3136171d798ac89da60de5d3f72d647"
+      },
+      {
+        "filename": "source-cube-state.json",
+        "bytes": 10016,
+        "sha256": "e9f76cf9b2f14ebdcca677337c0c77cc7d651427487b99b013646cf039f6aa09"
+      },
+      {
+        "filename": "source-cube.png",
+        "bytes": 101092,
+        "sha256": "084d073aae0524096be498b2d349284fdfa81eb3a10d0182f4a00e3b76fbcc30"
+      },
+      {
+        "filename": "trace.zip",
+        "bytes": 48543900,
+        "sha256": "d766bf9d8da999b7511e33c41610abebf2b6f4daa000413ee3009b0c6f650e24"
+      },
+      {
+        "filename": "webgl-unavailable-current-2d.png",
+        "bytes": 109684,
+        "sha256": "ac22757009f278d46821cbd7151a7c80e101965478bd43fe3d4d36f2e7cba416"
+      }
+    ],
+    "outer_crc_errors": 0,
+    "nested_trace_members": 1348,
+    "nested_trace_inflated_bytes": 59090353,
+    "nested_crc_errors": 0,
+    "reconstruction_receipt_sha256": "3ce6965d1890b847dcaef227e92ac3ade47a5b8c02d06a8631bfbb06a3c69e8c",
+    "part_sizes": [
+      16777216,
+      16777216,
+      14944183
+    ],
+    "repacked": false,
+    "report_sha256": "9f66daca75eefe87d7813e68d0d19d4733578914a35cabc36b96dd3d9ff07be5",
+    "trace_sha256": "d766bf9d8da999b7511e33c41610abebf2b6f4daa000413ee3009b0c6f650e24",
+    "checks_PASS": 13,
+    "PNG_inventory": [
+      {
+        "filename": "coincident-daughters.png",
+        "bytes": 123037,
+        "sha256": "9c8a2de379f008ab4119d4302c00c1e05fcfa0d0129d9fc63c32166dc012f9fc",
+        "width": 1440,
+        "height": 900,
+        "rgba_sha256": "753e45dc62a4c63c3bae6155249c76056bf362707647580f0aca1cb9d02c9dbd",
+        "visually_reviewed": true
+      },
+      {
+        "filename": "context-loss-current-2d.png",
+        "bytes": 89454,
+        "sha256": "347001d04052153f1a387932c40e982f96fb7ea1574eb974bc483cf71f1853ac",
+        "width": 1440,
+        "height": 900,
+        "rgba_sha256": "845a77dbc0de90f3d19a6b1178ad05e1f53db1fa5e1e996782f9c0301fc8f056",
+        "visually_reviewed": true
+      },
+      {
+        "filename": "desktop.png",
+        "bytes": 123425,
+        "sha256": "53579e9ecb0df84ab7efcf45b715b9f405cd2a1945aa195ef74037c691e978ce",
+        "width": 1440,
+        "height": 900,
+        "rgba_sha256": "3771f89f67808bfd26cc31f8ad3760965bdaec1e9c748ff1dd812277e72c3755",
+        "visually_reviewed": true
+      },
+      {
+        "filename": "legacy-schematic.png",
+        "bytes": 97680,
+        "sha256": "d9ed84c75f6c2ff2b3acecfa523f86f66c46959321d4c4575697c908d35ab34c",
+        "width": 1440,
+        "height": 900,
+        "rgba_sha256": "5a972eee164d2a64d5726e315bea935b095bfd906a0741027509215ef53dc379",
+        "visually_reviewed": true
+      },
+      {
+        "filename": "mobile320.png",
+        "bytes": 128042,
+        "sha256": "8a8197231a3384cf455b45ac4bec564620f184b6d4c1754f907d5d5ad8111c10",
+        "width": 320,
+        "height": 2520,
+        "rgba_sha256": "b65679ad72ef76f6f3291f0a34f513e31e285f157d2f2d3256475c4854263196",
+        "visually_reviewed": true
+      },
+      {
+        "filename": "mobile390.png",
+        "bytes": 130532,
+        "sha256": "80d4ed60f2f6edde98dbc876cc038adad6d235f866b46df4e52620001f4d593d",
+        "width": 390,
+        "height": 2476,
+        "rgba_sha256": "a7b0b9e9562c545541a47fd8cbb3dd085fc1df2d8f4b47b0ae56fd067933ed56",
+        "visually_reviewed": true
+      },
+      {
+        "filename": "paused-30.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "width": 1130,
+        "height": 752,
+        "rgba_sha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+        "visually_reviewed": true
+      },
+      {
+        "filename": "paused-60.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "width": 1130,
+        "height": 752,
+        "rgba_sha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+        "visually_reviewed": true
+      },
+      {
+        "filename": "paused-baseline.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "width": 1130,
+        "height": 752,
+        "rgba_sha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+        "visually_reviewed": true
+      },
+      {
+        "filename": "short.png",
+        "bytes": 110295,
+        "sha256": "6850478949a08e462c1289a6f92c590ad3136171d798ac89da60de5d3f72d647",
+        "width": 1440,
+        "height": 720,
+        "rgba_sha256": "6e8b8b92801ba813813e85328e51e06de22b595959631f9dcfbf84bf9eeb463d",
+        "visually_reviewed": true
+      },
+      {
+        "filename": "source-cube.png",
+        "bytes": 101092,
+        "sha256": "084d073aae0524096be498b2d349284fdfa81eb3a10d0182f4a00e3b76fbcc30",
+        "width": 1440,
+        "height": 900,
+        "rgba_sha256": "4bbd87cb13572fd6d1f159d4eea5b08c96cfd951d5ca84b5dff98287f2011057",
+        "visually_reviewed": true
+      },
+      {
+        "filename": "webgl-unavailable-current-2d.png",
+        "bytes": 109684,
+        "sha256": "ac22757009f278d46821cbd7151a7c80e101965478bd43fe3d4d36f2e7cba416",
+        "width": 1440,
+        "height": 900,
+        "rgba_sha256": "961c4f5072664a4948793bfd7d3fb7b6cc375a17e95479186a73bb481d9a3b55",
+        "visually_reviewed": true
+      }
+    ],
+    "network_entries": 177,
+    "network_body_references_resolved": 165,
+    "state_responses": 100,
+    "nonnull_zero_residual_records": 96,
+    "unique_API_ticks": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48
+    ],
+    "all_HTTP_200_loopback": true,
+    "served_HTML_source_equal": true,
+    "source_and_asset_pins_equal_git": true,
+    "held_original_bytes_verified": true,
+    "actual_sandbox_guard": true,
+    "software_backend": "SwiftShader WebGL 2",
+    "unexpected_errors": 0,
+    "expected_allocation_negative_console_errors": 1,
+    "post_cleanup_pages_closed_drained": 4,
+    "GL_context_creations": [
+      1,
+      1,
+      0,
+      0
+    ],
+    "original_compositor_digests_found_in_trace": 0,
+    "unique_reported_compositor_digests": 33,
+    "paused_RGBA": {
+      "dimensions": [
+        1130,
+        752
+      ],
+      "all_three_exact": true,
+      "changed_pixels": [
+        0,
+        0
+      ],
+      "rgba_sha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+      "full_API_binary64_and_exact_strings_preserved": true,
+      "full_audit_camera_viewport_revision_layers_preserved": true,
+      "tick": 1,
+      "dt_seconds": 30,
+      "pacing": {
+        "mode": "manual",
+        "multiplier": 90
+      },
+      "state_requests": [
+        3,
+        3
+      ],
+      "wall_ms": [
+        1400.1168190000008,
+        1400.4981909999988
+      ]
+    }
+  },
+  "independent_geometry_and_pixel_evidence": {
+    "geometry_records": 40,
+    "projected_API_centers": 384,
+    "max_independent_CSS_point_error": 3.595093471822542e-13,
+    "max_quaternion_lookat_basis_error": 2.220446049250313e-16,
+    "right_handed_orthonormal_basis": true,
+    "common_SI_scene_scale": true,
+    "orthographic_equal_CSS_scale": true,
+    "inclusive_slice_and_frustum_and_layer_membership": true,
+    "actual_current_tick_revision_checked": true,
+    "reset_fit_radius_aspect_midpoint_and_iso_pose_checked": true,
+    "geometry_summary": [
+      {
+        "label": "source-cube",
+        "tick": 0,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 6
+      },
+      {
+        "label": "atomic-after-lazy-import-before-history",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 7
+      },
+      {
+        "label": "nonsquare-reset",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 9
+      },
+      {
+        "label": "actual-pointer-orbit",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 17
+      },
+      {
+        "label": "actual-wheel-zoom",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 18
+      },
+      {
+        "label": "actual-right-pointer-pan",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 26
+      },
+      {
+        "label": "actual-reset",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 29
+      },
+      {
+        "label": "pan-outside-current-view",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 0,
+        "revision": 37
+      },
+      {
+        "label": "keyboard-camera",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 40
+      },
+      {
+        "label": "centers-only-full-opacity",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 59
+      },
+      {
+        "label": "centers-only-zoom-fixed-glyph",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 60
+      },
+      {
+        "label": "centers-opacity-020",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 63
+      },
+      {
+        "label": "zero-opacity",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 0,
+        "revision": 64
+      },
+      {
+        "label": "centers-layer-off",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 0,
+        "revision": 66
+      },
+      {
+        "label": "box-layer-on",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 68
+      },
+      {
+        "label": "box-layer-off",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 69
+      },
+      {
+        "label": "slice-boundaries-on",
+        "tick": 1,
+        "projected_count": 4,
+        "displayed_count": 4,
+        "revision": 72
+      },
+      {
+        "label": "slice-boundaries-off",
+        "tick": 1,
+        "projected_count": 4,
+        "displayed_count": 4,
+        "revision": 73
+      },
+      {
+        "label": "full-inclusive-xy",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 81
+      },
+      {
+        "label": "full-inclusive-xz",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 84
+      },
+      {
+        "label": "full-inclusive-yz",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 87
+      },
+      {
+        "label": "inclusive-upper",
+        "tick": 1,
+        "projected_count": 2,
+        "displayed_count": 2,
+        "revision": 90
+      },
+      {
+        "label": "inclusive-lower",
+        "tick": 1,
+        "projected_count": 2,
+        "displayed_count": 2,
+        "revision": 92
+      },
+      {
+        "label": "exact-zero-width",
+        "tick": 1,
+        "projected_count": 1,
+        "displayed_count": 1,
+        "revision": 94
+      },
+      {
+        "label": "outside-slice-selected",
+        "tick": 1,
+        "projected_count": 1,
+        "displayed_count": 1,
+        "revision": 94
+      },
+      {
+        "label": "paused-before-display-controls",
+        "tick": 1,
+        "projected_count": 8,
+        "displayed_count": 8,
+        "revision": 96
+      },
+      {
+        "label": "first-real-division",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 142
+      },
+      {
+        "label": "coincident-xy",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 154
+      },
+      {
+        "label": "coincident-xz",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 155
+      },
+      {
+        "label": "coincident-yz",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 156
+      },
+      {
+        "label": "toggle-0",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 160
+      },
+      {
+        "label": "toggle-1",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 164
+      },
+      {
+        "label": "toggle-2",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 168
+      },
+      {
+        "label": "toggle-3",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 172
+      },
+      {
+        "label": "toggle-4",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 176
+      },
+      {
+        "label": "toggle-5",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 180
+      },
+      {
+        "label": "desktop",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 182
+      },
+      {
+        "label": "short",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 186
+      },
+      {
+        "label": "mobile390",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 190
+      },
+      {
+        "label": "mobile320",
+        "tick": 47,
+        "projected_count": 15,
+        "displayed_count": 15,
+        "revision": 195
+      }
+    ],
+    "independent_retained_PNG_pixel_checks": [
+      {
+        "filename": "source-cube.png",
+        "API_marker_centers": 8,
+        "min_marker_contrast": 212,
+        "box_edges": 12,
+        "min_edge_contrast": 55
+      },
+      {
+        "filename": "coincident-daughters.png",
+        "API_marker_centers": 15,
+        "min_marker_contrast": 212,
+        "box_edges": 12,
+        "min_edge_contrast": 83
+      },
+      {
+        "filename": "desktop.png",
+        "API_marker_centers": 15,
+        "min_marker_contrast": 212,
+        "box_edges": 12,
+        "min_edge_contrast": 83
+      },
+      {
+        "filename": "short.png",
+        "API_marker_centers": 15,
+        "min_marker_contrast": 212,
+        "box_edges": 12,
+        "min_edge_contrast": 83
+      },
+      {
+        "filename": "mobile390.png",
+        "API_marker_centers": 15,
+        "min_marker_contrast": 210,
+        "box_edges": 12,
+        "min_edge_contrast": 55
+      },
+      {
+        "filename": "mobile320.png",
+        "API_marker_centers": 15,
+        "min_marker_contrast": 202,
+        "box_edges": 12,
+        "min_edge_contrast": 110
+      }
+    ],
+    "independent_retained_PNG_marker_count": 83,
+    "independent_retained_PNG_box_edge_count": 72,
+    "box_label_max_CSS_error": 0.00048661404085237336,
+    "axis_labels": [
+      "x · 200 µm",
+      "y · 100 µm",
+      "z · 50 µm"
+    ],
+    "candidate_hit_radius_CSS": 8,
+    "coincident_daughter_candidates_independent": [
+      "16",
+      "17"
+    ],
+    "division_tick": 47,
+    "division_real_steps_after_tick1": 46,
+    "atomic_current_snapshot_before_history_release": true,
+    "lazy_activation_current_tick": 1,
+    "saved_API_subset_binding": true,
+    "actual_orbit_zoom_pan_reset_reported_and_geometry_checked": true,
+    "six_toggles_resources_equal": true,
+    "context_loss_current2D_tick": 48,
+    "allocation_negative_current2D_tick": 48,
+    "legacy_chamber1_no_XYZ_no3D": true,
+    "glyph_dimensions_report_observations": {
+      "before_zoom": {
+        "widthCSS": 8,
+        "heightCSS": 8.988779920212766,
+        "nominalCSS": 7,
+        "rasterToleranceCSS": 2
+      },
+      "after_zoom": {
+        "widthCSS": 8,
+        "heightCSS": 7.9900265957446805,
+        "nominalCSS": 7,
+        "rasterToleranceCSS": 2
+      }
+    }
+  },
+  "unchanged_production_objects": {
+    "base_head": "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+    "git_objects": {
+      "crates/liminis-core": "1f9031142731d138bf6de243ab2ac13d644e1553",
+      "configs": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+      "crates/liminis/src": "1b8ba337234f0348bf7c6d833e9123cc97359f77",
+      "site": "ee6bd108839c418e07c29d79a9b8fbd897b30093",
+      "docs/experiments": "76aba23510e19899755aeff7771e0d8063f4bca8",
+      "Cargo.toml": "4b7bef5047fafbdd10526a90de4a18952678a6a6",
+      "Cargo.lock": "224f065c1bbf103a5cfec139a2f3313e2bf80559",
+      "rust-toolchain.toml": "1fd6f1afaf9c17073863c2b9a9f50f90572a7edb",
+      "docs/SPEC.md": "32bf455e15a3a460590a9fa4001074e4f9512829",
+      "docs/NORTH_STAR.md": "3f43d7ba6cdd3086c62b05d9aa374cba82db8048",
+      "docs/DECISIONS.md": "4c4ef10f0193aafd34b90a06fdc2b640b7e073d8",
+      "scripts/check_live_cells_browser.mjs": "c9576efaa4b28bcbb7fb25b9c8def22bc6af9605",
+      "scripts/check_physical_projection_browser.mjs": "02338c9a9bf2f1b58822b835b3b4adf289b76ff3"
+    }
+  },
+  "methods": {
+    "protocol": "AGENTS.md and .claude/agents/numerics-reviewer.md",
+    "source": "Exact-head Git object bytes compared to report source/assets pins and captured viewer HTTP bodies. Producer binary hash is reported from existing protected CI build, not a standalone cryptographic source attestation.",
+    "reference_API": "Original trace response body resources, matched to retained source cube/nonsquare/first-division JSON by config hash and tick.",
+    "projection": "Independent Python arithmetic derives camera right/up/back from actual camera pose and up vector, separately compares quaternion rotation matrix, multiplies actual position_m by common sceneScale, applies actual orthographic frustum/zoom and maps to observed CSS viewport.",
+    "pixels": "Pillow decodes original retained full-page PNGs. Independent API projections locate six-frame marker and 12-edge midpoint neighborhoods; original pixel contrast thresholds 8/12, radius 2 raster pixels. Whole paused images compared as complete RGBA plus dimensions, with no crop, mask or tolerance.",
+    "paused_state": "Recursive binary64 fingerprint for every number, exact strings and types for counter/ID strings; compare full pre/post API snapshots, full audits and layer records to baseline, then bind baseline API to captured real state response.",
+    "archive": "External original ZIP size/SHA256; every original/nested trace member CRC, path/size bounds and byte bijection to extracted originals; all report/PNG/trace pins and reconstruction receipt outer member pins verified.",
+    "archive_bounds": {
+      "outer_members": 22,
+      "nested_trace_members": 1348,
+      "individual_member_bytes_max": 67108864,
+      "nested_aggregate_bytes_max": 134217728
+    },
+    "privacy": "Full binary/text/trace privacy review is owned by the separate code reviewer; this report contains safe filenames, source pins and aggregate numerical findings only.",
+    "new_model_runs": 0,
+    "new_browser_runs": 0,
+    "new_Cargo_runs": 0,
+    "new_recording_decodes": 0,
+    "no_author_or_source_or_shared_document_edits": true
+  },
+  "qualifications": [
+    "Accepts only this original exact-83fa actual 3D artifact and its 13 reported gates, together with the numerical and retained-pixel checks detailed here. No previous source-head PASS is transferred.",
+    "Protected stock Playwright 1.61.1/Chromium 149.0.7827.55 with sandbox and stock SwiftShader WebGL 2 is observed. No hardware GPU, other browser, platform, driver or universal raster claim.",
+    "40 geometry records and 384 actual API centers are independently recalculated from saved pose/frustum/API facts. Their 33 unique per-record compositor PNG digests have no matching original PNG byte resources in the trace; independent direct pixel checks use six retained GL full-page PNGs (83 marker locations and 72 edge midpoints), plus three complete paused captures.",
+    "Glyph dimensions across zoom (8x8.98878 and 8x7.99003 CSS px) are retained gate observations within existing 7±2 CSS px raster budget. The unretained per-geometry compositor PNGs were not independently remeasured.",
+    "Marker contrast neighborhoods and edge midpoint checks use the existing raster thresholds; the paused identity check is exact over all RGBA pixels and dimensions with no tolerance.",
+    "Paused target 30/60 holds measure 1400.116819/1400.498191 ms and 3/3 actual state polls. Display targets are not achieved FPS claims; API tick 1, dt 30 seconds, pacing manual x90, camera/viewport/revision/layers/full cells/summary/residual remain exact.",
+    "Chamber 2 centers have saved actual SI coordinates in reflecting cube/nonsquare boxes; visual glyph radius/overlap brightness are not body radius, concentration, excluded volume or local chemistry. Shared chemical resources remain well-mixed.",
+    "Nonsquare fixture changes only dimensions to 200x100x50 µm from 100x100x100 µm; mathematical volume 1e-12 m^3. No bitwise volume or causal biological comparison claim.",
+    "100 retained real API state responses have world31/seed42/dt30/error null; their 96 nonnull ledger residual records are exact zero strings. This does not assert all ticks or certify new scientific results.",
+    "Actual Step 0->1 and lazy activation commit current tick before original held history release. Real daughters 16/17 at tick47 are coincident, selectable and ordered by integer ID; absent parent5 is not called death. Context-loss and allocation-negative controls keep actual current 2D tick48 and inspector/Step access.",
+    "One expected WebGL allocation error is explicitly scoped to the allocation-negative page; unexpected page/console/unhandled/route/cleanup errors are zero and all four pages end closed and drained with single-flight state polling.",
+    "Three-part helper provides byte transport only; acceptance belongs to original run37260833244/head83fa. Receipt metadata's in-progress workflow snapshot is historical, not an assertion about current overall CI.",
+    "Overall CI and other regression artifacts are separate gates. Old main5bea failure remains preserved with unknown cause; no encoding-only diagnosis is asserted. LAB21/public LAB/model work remains HOLD.",
+    "No new model, browser, Cargo or full recording decode was run for this review."
+  ]
+}
