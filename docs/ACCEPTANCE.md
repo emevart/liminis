@@ -1829,3 +1829,37 @@ getScreenCTM, labels внутри SVG и без перекрытия. Axis value
 привязываются к raw observed quantities и model-time domain, каждый sample
 path/dot — к raw данным с прежним1e-5. Свежий exact protected CI обязателен;
 прежний FAIL и новый source-only review не считаются actual LAB PASS.
+
+### LAB fullPage capture, streaming EOF и полный browser verdict
+
+Original LAB600/run37245225939 остаётся FAIL: first6gates PASS не принимают
+все9gates. Два ResizeObserver исключения произошли внутри fullPage captures
+starvation/desktop, до short viewport. Destructive clear оставлял один пустой
+SVG; измеренное transient width не записано. Новый render должен сохранять
+все4 attached plot shells, измерять все usable widths до изменения curves,
+собирать полное новое содержимое отдельно и публиковать синхронно. Hidden
+layout сохраняет целые графики до следующего RO/pageshow, без fake width или
+циклического retry. Неожиданная ошибка отображается явно. Fresh protected
+browser сверяет4raw curves и typography ПОСЛЕ каждого fullPage capture,
+далее desktop→short→390→320; снимки и sticky page errors обязательны.
+
+Stream cleanup: actual done=true означает успешный EOF; releaseLock без
+cancel. При unfinished/read/oversize failure — один awaited cancel, затем
+releaseLock; исходная ошибка сохраняется, cleanup rejection потребляется,
+самостоятельный cleanup failure виден. Bytes/hash/parser/size limits не
+ослабляются. Original initial comparisons abort предшествует reload примерно
+на3min; navigation-only/URL allowance отвергнут. Корректность EOF lifecycle
+не доказывает причину прежнего abort. Actual responses всех raw файлов
+должны иметь size/SHA pins; failed/body/protocol/page/unhandled/cleanup
+errors остаются итоговыми gates после закрытия контекстов.
+
+QA batching читает один DOM snapshot для detail/comparison, сохраняет
+независимые assertions по исходным raw данным,48endpoints/all24runs/160pairs/
+9gates/реальные keyboard/history/210s. Node/source controls не browser PASS.
+Compact results JSON не имеет предполагаемого LF; прежний unreached LF
+negative control не объявляется успешным. Transport negative меняет ровно
+один pinned numeric exponent byte e→E: записаны field/token/offset и обе
+SHA; длина и полный JSON.parse результат сохраняются, SHA отличается.
+Positive файлы остаются byte-exact; отрицательный case проверяет integrity
+transport, не новую биологию. Свежий exact-head artifact и независимый review
+обязательны; старые FAIL и старые PASS не переносятся на новую базу.

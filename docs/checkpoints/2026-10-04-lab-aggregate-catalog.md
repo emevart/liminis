@@ -111,3 +111,29 @@ same raw+RGBA SHA,changedPixels0/statepoll3each. Independent actual review
 запрещает runtime. Preparation branch не запускает QA. После acceptedmerge/
 existingdeployment root закрепит actualproductSHA и запустит protected smoke.
 Новая infrastructure/secrets/spend/security bypass не создаётся.
+
+### Original600 FAIL: узкий lifecycle/layout/QA repair
+
+2026-10-05, 00:23 UTC. Candidate60015b28a42e222fcdafd33ed80da6c81f57c6db/
+tree117583151afcc3e6326971f87c44f3e41bc56eac fullrun37245225939FAIL;
+10checksSUCCESS, recordedjobFAIL. ActualLAB first6gatesPASS, gate7layoutFAIL;
+остальные не выполнены. Original49,316,006-byte artifact11319250919/SHA
+bdc0b53a6543c560b505737a83c1dcae214f74d79bdad05ecdb9793307b06b80
+доставлен reviewed fixed helper5148bfea/run37246516009 как3raw ranges и
+exact originalreport companion; native size/SHA/CRC/reportbytes PASS.
+Independent numerical coverage подтверждает24runs/48endpoints/160pairs,
+но actual PNG пустые/partial plots, comparisons responsepins отсутствуют.
+FullPage captures вызывают ROerrors до сменыviewport; конкретная width не
+записана. Astra approved permanent4shell/atomic render, conditional EOF
+cleanup и QA batching без уменьшения9gates/210s. Narrow authors используют
+свои ветки и file ownership; shared CI/ADR/navigation сериализует root.
+
+Original79 LABFAIL и qualified physical3D13PASS сохранены в раздельных
+проверенных Git evidence refs41f38a5d иe43cb056 соответственно. Новый LAB600
+FAIL archive/review и новые source fixes в работе; public QA подготовлен
+64bf8213/source0, runtimeNOT_RUN/deployedSHA=null. Raw24/scientific source
+21cbe907/world30/chamber1 неизменны, новых model runs нет.
+
+Следующий шаг: complete narrow source fixes+independent review, fresh full
+CI на едином чистом candidate, native original runtime artifacts/archives/
+readback, guarded PR21merge и existingdeployment/public LAB acceptance.
