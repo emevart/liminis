@@ -1,0 +1,202 @@
+{
+  "kind": "independent_actual_3d_paused_numerics_review/v1",
+  "verdict": "QUALIFIED_PASS_EXACT79_3D_GATE",
+  "blocking_findings": 0,
+  "other_findings": 0,
+  "findings": [],
+  "source": {
+    "head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+    "tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+    "browser_workflow_run": 37243706546,
+    "browser_artifact_id": 11318935319,
+    "browser_job_status": "SUCCESS",
+    "whole_workflow_status": "FAIL due separate LAB gate; not overallCIgreen",
+    "transport_only_head": "fb3a5b47d80b7f586dffb9990f380e8362635a1e",
+    "transport_only_run": 37244552112,
+    "transport_parts": 4
+  },
+  "evidence": {
+    "original_file": "physical-3d-browser-79df352-original.zip",
+    "original_zip": {
+      "bytes": 59183146,
+      "sha256": "8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60",
+      "members": 22,
+      "expanded_bytes": 60534926,
+      "crc": "PASS",
+      "unique_safe_paths": true
+    },
+    "report_sha256": "e0a7282980b76e9df7ec7e7428182b9edf935860e6fed671f2eb48897ba194de",
+    "trace": {
+      "bytes": 58910444,
+      "sha256": "5e042f68c5e3c8100808c502f3519ba19bcade2a6a8f72be2dc1798d14499a62",
+      "members": 1595,
+      "expanded_bytes": 70672212,
+      "crc": "PASS",
+      "unique_safe_paths": true
+    },
+    "mandatory_report_checks": 13,
+    "source_hash_checks": 10,
+    "saved_report_screenshot_hash_checks": 9,
+    "additional_paused_pngs_checked": 3
+  },
+  "paused_raster": {
+    "scope": "Independent PIL decoding and exact byte comparison of complete compositor PNGs, no crop/mask/tolerance.",
+    "complete_pngs": [
+      {
+        "filename": "paused-baseline.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "dimensions": [
+          1130,
+          752
+        ],
+        "rgba_sha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28"
+      },
+      {
+        "filename": "paused-30.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "dimensions": [
+          1130,
+          752
+        ],
+        "rgba_sha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28"
+      },
+      {
+        "filename": "paused-60.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "dimensions": [
+          1130,
+          752
+        ],
+        "rgba_sha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28"
+      }
+    ],
+    "all_dimensions_equal": true,
+    "changed_pixels_30_60": [
+      0,
+      0
+    ],
+    "all_encoded_bytes_also_equal": true,
+    "actual_tick": 1,
+    "living_cells": 8,
+    "selected_id": "0",
+    "model_dt_seconds": 30,
+    "model_time_seconds": 30,
+    "state_requests_30_60": [
+      3,
+      3
+    ],
+    "single_flight_max": 1,
+    "requested_hold_ms": 1400,
+    "measured_hold_ms": [
+      1400.0736959999995,
+      1400.0116780000008
+    ],
+    "achieved_fps": "UNASSERTED"
+  },
+  "paused_facts": {
+    "six_actual_api_before_after_snapshots": "MATCH exact structure, identifiers/counter strings and JavaScript binary64 numeric bits",
+    "camera_viewport_mode_revision_drawn_tick": "MATCH before/after all3captures",
+    "all_layer_and_slice_flags": "MATCH before/after all3captures",
+    "actual_trace_tick1_states_matched": 24,
+    "number_encoding_qualification": "JSON integer-looking30 and30.0 both represent the same JavaScript binary64 Number; compare bits rather than their Python lexical parsing class. Exact IDs/counters stay strings.",
+    "actual_model_identity": {
+      "seed": "42",
+      "world_format_version": 31,
+      "chamber_format": 2,
+      "dimensions_m": [
+        0.0002,
+        0.0001,
+        5e-05
+      ],
+      "well_mixed": true,
+      "excluded_volume": false,
+      "matter_energy_residual_strings": [
+        "0",
+        "0"
+      ]
+    }
+  },
+  "independent_geometry": {
+    "observations": 40,
+    "real_api_responses": 102,
+    "api_si_center_projections": 384,
+    "maximum_projection_error_css_pixels": 4.547473508864641e-13,
+    "maximum_camera_basis_error": 2.220446049250313e-16,
+    "method": "Saved API states and camera facts -> inverse quaternion -> explicit orthographic frustum/zoom -> CSS. No production projector, Three.js math, hit map, model or browser executed.",
+    "representative_saved_pixel_center_probes": 38,
+    "representative_saved_box_edge_probes": 36,
+    "axis_labels_checked": 3,
+    "units": "Source cube100/100/100µm and nonsquare200/100/50µm use one common SIscale. Inclusive slice/frustum/visible membership and current revisions match actual savedAPI states.",
+    "representative_pngs_viewed": [
+      "paused-baseline.png",
+      "mobile320.png"
+    ]
+  },
+  "biology_and_state_contract": {
+    "only_fixture_difference": "Physical nonsquare config differs from source only in dimensions; recorded source and fixture volumes both1e-12m3, no new causal comparison claimed.",
+    "atomic_update": "Current real tick0→1 inspector/geometry committed before held original history, lazyactivation uses current tick1. Held module/history bytes retained original.",
+    "division": {
+      "tick": 47,
+      "parent_id": "5",
+      "daughter_ids": [
+        "16",
+        "17"
+      ],
+      "equal_actual_positions": true,
+      "inherited_parent_id": "5",
+      "birth_tick": 47,
+      "candidate_exact_integer_tie_order": [
+        "16",
+        "17"
+      ],
+      "living": 15,
+      "births": 14,
+      "deaths": 0,
+      "divisions": 7,
+      "parent_absence_is_not_death": true
+    },
+    "fallbacks": "Explicit context loss/unavailable renderer controls retain current2D/SI inspector; real chamber1 remains schematic and makes no3D requests. Full legacy2D regression acceptance remains separate."
+  },
+  "runtime_limits": {
+    "browser": {
+      "version": "149.0.7827.55",
+      "playwright": "1.61.1",
+      "chromiumSandbox": true
+    },
+    "backend": "WebGL2 ANGLE/Vulkan SwiftShader softwareGPU",
+    "protected_sandbox_and_observed_argv": "PASS in saved report; no sandbox optout or hardware/kernel-isolation assertion",
+    "page_unhandled_cleanup_errors": 0,
+    "console_creation_error": {
+      "count": 1,
+      "expected_negative_control": true,
+      "scope": "THREE.WebGLRenderer context creation error on explicitly unavailableWebGL page only"
+    }
+  },
+  "bounded_integrity_and_privacy": {
+    "archive_crc": "Outer andnested PASS, uniquebounded safe paths",
+    "utf8_members": 124,
+    "utf8_bytes": 7138786,
+    "obvious_credential_matches": 0,
+    "obvious_private_old_context_matches": 0,
+    "sensitive_nonempty_headers": 0,
+    "limits": {
+      "entries_per_archive": 5000,
+      "expanded_bytes_per_archive": 350000000,
+      "member_bytes": 64000000
+    },
+    "qualification": "Bounded obvious UTF8 token/context/structured header inspection only. Binary/PNG contents are not comprehensively secret-audited.",
+    "vendor_trace_body_qualification": "Fulfilled vendor requests preserve status/URL in trace, with no stored body. Their exact served-byte hashes are recorded by the pinned acceptance script; the held module also has an independently checked trace body."
+  },
+  "acceptance_qualifications": [
+    "This accepts saved actual3D79 evidence only. It does not accept later LAB/UI/QAheads, all regressions or overallCI. Exact79 workflow isFAIL because LAB independentlyfailed.",
+    "Original main5bea run37241483046 remainsFAIL with unresolved encodedPNG mismatch. Matching newrun PNG/RGBA does not establish that oldfailure was encoding-only orflaky.",
+    "No model/browser/Cargo execution, newscience, fullmillion decode, producer run or repeated LAB difference arithmetic occurred here.",
+    "Three exact complete pausedPNG captures prove recorded held raster identity. Requested30/60 screensettings and~1400ms wallholds do not measureachievedFPS.",
+    "Center Sprite glyphs are display markers, not cellbodies/radii/collisions. Shared wellmixed chemistry, absentexcludedvolume and softwareGPU qualifications remainexplicit.",
+    "Saved-api projection/pixel evidence is limited to actual host/camera/viewports/controlstates; no hardwareGPU/crossplatform/background/fullaccessibility claim.",
+    "Publish only review.json, review.md andgeometry-integrity.json from revieweroutput; helper scripts and duplicatePNG copies are not part of the public review artifact."
+  ]
+}

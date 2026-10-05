@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "kind": "original candidate physical 3D archive and independent acceptance",
+  "source_head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+  "source_tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+  "workflow_run": 37243706546,
+  "overall_workflow_conclusion": "FAILURE",
+  "live_job_id": 111557322570,
+  "live_job_conclusion": "SUCCESS",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 59544317,
+  "original_artifacts": [
+    {
+      "artifact_id": 11318935319,
+      "path": "physical-3d-browser-79df352-original.zip",
+      "bytes": 59183146,
+      "sha256": "8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60",
+      "qualification": "QUALIFIED_PASS"
+    }
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1934,
+      "sha256": "d897fb0ca2636ddaa01543d6780f25d363a2821c77f6557a9414ac469f7ee058"
+    },
+    {
+      "path": "code-review/review.json",
+      "bytes": 12240,
+      "sha256": "8c29d7c14cc7c4bf63f3fc853738f82fc569e665e8ac8d339f8b1d0ec00aebd6"
+    },
+    {
+      "path": "code-review/review.md",
+      "bytes": 3755,
+      "sha256": "75621392459ddd0422b30fb690b3aa512bf8a3929a3a2a67f2f28a906fc83570"
+    },
+    {
+      "path": "numerics-review/geometry-integrity.json",
+      "bytes": 2968,
+      "sha256": "6aac558176d2b6dfdd65c51f4184d4c644b4294d120344f6a2d611a75e07cd4a"
+    },
+    {
+      "path": "numerics-review/review.json",
+      "bytes": 8498,
+      "sha256": "e2993a381672db9a3f7d53aa8126468be6167cc1a7453ca107b3bde39b5f6a43"
+    },
+    {
+      "path": "numerics-review/review.md",
+      "bytes": 6464,
+      "sha256": "82b6334dc1936c6fd36f88389d14b899b74ca67f0701c5142faab985a8ac1415"
+    },
+    {
+      "path": "original/reconstruction-receipt.json",
+      "bytes": 4902,
+      "sha256": "a8527bf4de1b63edea1eb27f32ebe5a2987f6ed69510af0f5f58f79ec28361ca"
+    },
+    {
+      "path": "original/report.json",
+      "bytes": 311095,
+      "sha256": "e0a7282980b76e9df7ec7e7428182b9edf935860e6fed671f2eb48897ba194de"
+    },
+    {
+      "path": "physical-3d-browser-79df352-original.zip",
+      "bytes": 59183146,
+      "sha256": "8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60"
+    },
+    {
+      "path": "transport-workflow.yml",
+      "bytes": 9315,
+      "sha256": "4d86e94ba70ebb444630cf5d742c185c533f36ada4d804fea049a7416eec8a2e"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+# LAB candidate 79 physical 3D evidence
+
+Original GitHub Actions artifact 11318935319 is retained without repacking: 59,183,146 bytes, SHA256 8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60. Source head 79df352a045cf7dd0efc14a232e867365c7b75a7, tree 0c9b9a5530111e418e49a675a946b5f007367c21; original run 37243706546, successful LIVE job 111557322570. The overall workflow failed in the separate LAB job. This archive does not turn that workflow green.
+
+The original ZIP exceeded the native 32MiB download limit. The fixed official evidence-only transport fb3a5b47d80b7f586dffb9990f380e8362635a1e/run37244552112 copied four byte ranges, verified full size/SHA/CRC, and uploaded bounded containers. The native reconstruction receipt binds every part to the original and retains both workflow FAILURE and LIVE job SUCCESS. The published original is the reconstructed byte-exact original, not a repacked ZIP.
+
+Independent code and numerics acceptance: 13 physical 3D gates PASS, 0 blockers. All 12 PNGs viewed; 22 outer and 1,595 nested trace ZIP CRC entries checked. Three paused original PNGs have identical encoded bytes and decoded RGBA; every pixel, all six before/after API/camera/layer audits and 24 real trace states checked. Geometry and SI projection reviewed independently. Original main 5bea paused-PNG failure remains preserved with unknown cause; this later PASS is not transferred to it.
+
+Qualified software WebGL2 under pinned Chromium 149 and the guarded stock SwiftShader argv. No hardware FPS or kernel isolation claim. Expanded trace bytes exceed 64MiB; the cap applies to this closed published-byte archive group. A bounded text pattern scan and viewed images found no obvious privacy candidates; this is not a complete secret guarantee. The original ZIP contains all screenshots and traces; duplicate extracted images, wrapper containers, local helper scripts and private local paths are excluded.

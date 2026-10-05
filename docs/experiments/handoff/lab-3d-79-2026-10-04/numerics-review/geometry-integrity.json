@@ -1,0 +1,86 @@
+{
+  "status": "PASS",
+  "source_head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+  "source_tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+  "original_zip": {
+    "bytes": 59183146,
+    "sha256": "8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60",
+    "members": 22,
+    "expanded_bytes": 60534926,
+    "crc": "PASS",
+    "unique_safe_paths": true
+  },
+  "report_sha256": "e0a7282980b76e9df7ec7e7428182b9edf935860e6fed671f2eb48897ba194de",
+  "trace": {
+    "bytes": 58910444,
+    "sha256": "5e042f68c5e3c8100808c502f3519ba19bcade2a6a8f72be2dc1798d14499a62",
+    "members": 1595,
+    "expanded_bytes": 70672212,
+    "crc": "PASS",
+    "unique_safe_paths": true
+  },
+  "mandatory_checks": 13,
+  "paused_complete_pngs": [
+    {
+      "filename": "paused-baseline.png",
+      "bytes": 54350,
+      "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+      "dimensions": [
+        1130,
+        752
+      ],
+      "rgba_sha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28"
+    },
+    {
+      "filename": "paused-30.png",
+      "bytes": 54350,
+      "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+      "dimensions": [
+        1130,
+        752
+      ],
+      "rgba_sha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28"
+    },
+    {
+      "filename": "paused-60.png",
+      "bytes": 54350,
+      "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+      "dimensions": [
+        1130,
+        752
+      ],
+      "rgba_sha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28"
+    }
+  ],
+  "paused_pixel_dimensions_equal": true,
+  "paused_rgba_changed_pixels": [
+    0,
+    0
+  ],
+  "paused_exact_api_camera_layers_before_after": true,
+  "paused_state_requests": [
+    3,
+    3
+  ],
+  "paused_tick1_trace_states_exact": 24,
+  "source_hash_checks": 10,
+  "geometry_observations": 40,
+  "independently_recomputed_points": 384,
+  "maximum_projection_error_css_pixels": 4.547473508864641e-13,
+  "maximum_camera_basis_error": 2.220446049250313e-16,
+  "actual_trace_api_state_responses": 102,
+  "exact_source_asset_trace_response_checks": 1,
+  "source_asset_trace_success_responses": 13,
+  "trace_asset_body_qualification": "Fulfilled vendor requests preserve status/URL in trace, with no stored body. Their exact served-byte hashes are recorded by the pinned acceptance script; the held module also has an independently checked trace body.",
+  "representative_pixel_center_probes": 38,
+  "representative_pixel_box_edge_probes": 36,
+  "axis_labels": 3,
+  "archive_screenshot_hash_checks": 9,
+  "privacy_scan": {
+    "utf8_members": 124,
+    "utf8_bytes": 7138786,
+    "credential_token": 0,
+    "private_context": 0
+  },
+  "method": "Saved API states and camera facts -> inverse quaternion -> explicit orthographic frustum/zoom -> CSS. No production projector, Three.js math, hit map, model or browser executed."
+}

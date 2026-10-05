@@ -1,0 +1,139 @@
+{
+  "status": "PASS",
+  "purpose": "byte-exact original reconstruction, not overall CI or independent browser acceptance",
+  "artifact_id": 11318935319,
+  "original_file": "physical-3d-browser-79df352-original.zip",
+  "bytes": 59183146,
+  "sha256": "8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60",
+  "outer_crc": "PASS",
+  "part_receipts": [
+    {
+      "schema": "liminis-original-artifact-byte-part-v1",
+      "purpose": "transport only; browser acceptance belongs to original run",
+      "repository": "emevart/liminis",
+      "original": {
+        "artifact_id": 11318935319,
+        "run_id": 37243706546,
+        "source_head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+        "source_tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+        "bytes": 59183146,
+        "sha256": "8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60",
+        "zip_crc": "PASS",
+        "zip_members": 22,
+        "job_id": 111557322570,
+        "job_conclusion": "success",
+        "workflow_status": "completed",
+        "workflow_conclusion": "failure"
+      },
+      "transport": {
+        "run_id": 37244552112,
+        "run_attempt": 1,
+        "source_head": "fb3a5b47d80b7f586dffb9990f380e8362635a1e"
+      },
+      "part": {
+        "ordinal": 1,
+        "count": 4,
+        "offset": 0,
+        "file": "original.part-001.bin",
+        "bytes": 16777216,
+        "sha256": "8984ac19dc9f0bb6861d0ef8bafc5844db668440e75731989fd9bdd140176c49"
+      }
+    },
+    {
+      "schema": "liminis-original-artifact-byte-part-v1",
+      "purpose": "transport only; browser acceptance belongs to original run",
+      "repository": "emevart/liminis",
+      "original": {
+        "artifact_id": 11318935319,
+        "run_id": 37243706546,
+        "source_head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+        "source_tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+        "bytes": 59183146,
+        "sha256": "8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60",
+        "zip_crc": "PASS",
+        "zip_members": 22,
+        "job_id": 111557322570,
+        "job_conclusion": "success",
+        "workflow_status": "completed",
+        "workflow_conclusion": "failure"
+      },
+      "transport": {
+        "run_id": 37244552112,
+        "run_attempt": 1,
+        "source_head": "fb3a5b47d80b7f586dffb9990f380e8362635a1e"
+      },
+      "part": {
+        "ordinal": 2,
+        "count": 4,
+        "offset": 16777216,
+        "file": "original.part-002.bin",
+        "bytes": 16777216,
+        "sha256": "b887fddacd4a3b1567c1978b75bd450a6a1319d786e8ebb8625a12aaf8ea4db9"
+      }
+    },
+    {
+      "schema": "liminis-original-artifact-byte-part-v1",
+      "purpose": "transport only; browser acceptance belongs to original run",
+      "repository": "emevart/liminis",
+      "original": {
+        "artifact_id": 11318935319,
+        "run_id": 37243706546,
+        "source_head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+        "source_tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+        "bytes": 59183146,
+        "sha256": "8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60",
+        "zip_crc": "PASS",
+        "zip_members": 22,
+        "job_id": 111557322570,
+        "job_conclusion": "success",
+        "workflow_status": "completed",
+        "workflow_conclusion": "failure"
+      },
+      "transport": {
+        "run_id": 37244552112,
+        "run_attempt": 1,
+        "source_head": "fb3a5b47d80b7f586dffb9990f380e8362635a1e"
+      },
+      "part": {
+        "ordinal": 3,
+        "count": 4,
+        "offset": 33554432,
+        "file": "original.part-003.bin",
+        "bytes": 16777216,
+        "sha256": "016cc1e5544a90f8fb6dc85c6018d778331aca751408f4b14cd5f442a1435858"
+      }
+    },
+    {
+      "schema": "liminis-original-artifact-byte-part-v1",
+      "purpose": "transport only; browser acceptance belongs to original run",
+      "repository": "emevart/liminis",
+      "original": {
+        "artifact_id": 11318935319,
+        "run_id": 37243706546,
+        "source_head": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+        "source_tree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+        "bytes": 59183146,
+        "sha256": "8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60",
+        "zip_crc": "PASS",
+        "zip_members": 22,
+        "job_id": 111557322570,
+        "job_conclusion": "success",
+        "workflow_status": "completed",
+        "workflow_conclusion": "failure"
+      },
+      "transport": {
+        "run_id": 37244552112,
+        "run_attempt": 1,
+        "source_head": "fb3a5b47d80b7f586dffb9990f380e8362635a1e"
+      },
+      "part": {
+        "ordinal": 4,
+        "count": 4,
+        "offset": 50331648,
+        "file": "original.part-004.bin",
+        "bytes": 8851498,
+        "sha256": "29108dabbf7cd2b019825c7549796981b01a7354ba514af7fcad2b2658cdf707"
+      }
+    }
+  ]
+}

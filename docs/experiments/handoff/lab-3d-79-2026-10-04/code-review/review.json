@@ -1,0 +1,365 @@
+{
+  "schema": "liminis-independent-gl79-artifact-review-v1",
+  "reviewerRole": "Independent code/reliability reviewer; not source or QA author",
+  "verdict": "QUALIFIED_ARTIFACT_PASS",
+  "blockers": 0,
+  "sourceHead": "79df352a045cf7dd0efc14a232e867365c7b75a7",
+  "sourceTree": "0c9b9a5530111e418e49a675a946b5f007367c21",
+  "workflowRun": 37243706546,
+  "liveJob": 111557322570,
+  "originalArtifactId": 11318935319,
+  "overallWorkflowConclusion": "failure",
+  "original": {
+    "filename": "physical-3d-browser-79df352-original.zip",
+    "bytes": 59183146,
+    "sha256": "8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60",
+    "members": 22,
+    "crc": "PASS",
+    "closedInventory": "PASS"
+  },
+  "trace": {
+    "bytes": 58910444,
+    "sha256": "5e042f68c5e3c8100808c502f3519ba19bcade2a6a8f72be2dc1798d14499a62",
+    "members": 1595,
+    "crc": "PASS",
+    "networkEntries": 179,
+    "allObservedOriginsLoopback": true,
+    "allObservedStatuses": 200,
+    "successfulFullAuditReturns": 77,
+    "heldAuditMatches": 7,
+    "heldTraceAuditStartMs": [
+      12361.641,
+      12704.102,
+      12973.541,
+      14509.292,
+      14730.361,
+      16423.937,
+      16668.436
+    ]
+  },
+  "sourcePins": {
+    "gitBlobSizeShaPinsVerified": 10,
+    "sourceTreeVerifiedAgainstGit": true,
+    "threeVersion": "0.180.0",
+    "threeCommit": "0af9729d0c143a86a1d725d6e2c3ad83301f3f34",
+    "hostBinaryPinRecordedOnly": {
+      "bytes": 7390448,
+      "sha256": "e40d2e9be40939e40d73d8e5a93bded40a1c91a8efb1087d9d2dcaf0087469a5",
+      "provenance": "Existing protected CI release build, not cryptographic standalone source attestation"
+    }
+  },
+  "checks": [
+    {
+      "name": "Observed official Chromium argv preserves sandbox; exact stock launch adds only enable-automation",
+      "status": "PASS"
+    },
+    {
+      "name": "Actual source cube defaults to 2D; WebGL2 and independent SI centers/box match compositor pixels",
+      "status": "PASS"
+    },
+    {
+      "name": "A real Step commits current 2D/3D geometry and inspector before held original history; lazy activation uses latest snapshot",
+      "status": "PASS"
+    },
+    {
+      "name": "Real orbit, zoom, pan and reset preserve paused SI data and project actual centers with equal scale",
+      "status": "PASS"
+    },
+    {
+      "name": "Exact ID, arrows and peak-movement/cancel gestures use current camera revision without selecting on drag",
+      "status": "PASS"
+    },
+    {
+      "name": "Opacity and center/box/slice layers change actual pixels; hidden centers have no pointer targets",
+      "status": "PASS"
+    },
+    {
+      "name": "All slice axes use inclusive real centers and exact zero-width inputs; outside selection stays inspectable",
+      "status": "PASS"
+    },
+    {
+      "name": "Paused target30/60 draws hold exact canvas/API state and preserve normal single-flight polling",
+      "status": "PASS"
+    },
+    {
+      "name": "Bounded actual Steps reach coincident daughters; both exact IDs are selectable and camera revision invalidates candidates",
+      "status": "PASS"
+    },
+    {
+      "name": "Toggles retain one context and resources only for current population; four viewport layouts show current geometry",
+      "status": "PASS"
+    },
+    {
+      "name": "Actual context-loss negative control falls back to current 2D; inspector and a real Step remain usable",
+      "status": "PASS"
+    },
+    {
+      "name": "Explicit unavailable-WebGL negative control retains current 2D and exact SI inspector",
+      "status": "PASS"
+    },
+    {
+      "name": "Real chamber1 keeps schematic 2D without physical controls or loading WebGL vendor",
+      "status": "PASS"
+    }
+  ],
+  "hold": {
+    "tick": 1,
+    "originals": [
+      {
+        "filename": "paused-baseline.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "width": 1130,
+        "height": 752,
+        "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28"
+      },
+      {
+        "filename": "paused-30.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "width": 1130,
+        "height": 752,
+        "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28"
+      },
+      {
+        "filename": "paused-60.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "width": 1130,
+        "height": 752,
+        "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28"
+      }
+    ],
+    "windows": [
+      {
+        "fps": 30,
+        "requestedHoldMs": 1400,
+        "measuredWallMs": 1400.0736959999995,
+        "stateRequests": 3,
+        "difference": {
+          "equal": true,
+          "sameDimensions": true,
+          "changedPixels": 0,
+          "bounds": null
+        }
+      },
+      {
+        "fps": 60,
+        "requestedHoldMs": 1400,
+        "measuredWallMs": 1400.0116780000008,
+        "stateRequests": 3,
+        "difference": {
+          "equal": true,
+          "sameDimensions": true,
+          "changedPixels": 0,
+          "bounds": null
+        }
+      }
+    ],
+    "allPrePostApiCameraViewportRevisionResourcesAndLayersEqual": true,
+    "rawTick1ApiResponses": 24,
+    "rawStateFieldsBitAndTypeEqual": [
+      "tick",
+      "dt_seconds",
+      "sim_time",
+      "model",
+      "pacing",
+      "cells",
+      "summary",
+      "residual",
+      "running",
+      "world_format_version",
+      "chamber_format"
+    ],
+    "rawModelRunning": false,
+    "allFullRgbaPixelsEqual": true
+  },
+  "lifecycle": {
+    "pages": 4,
+    "allClosed": true,
+    "allActiveStateZero": true,
+    "maxStateConcurrency": 1,
+    "unexpectedPageErrors": 0,
+    "unhandled": 0,
+    "cleanupErrors": 0,
+    "expectedAllocationConsoleError": 1,
+    "performanceWarnings": "Four ReadPixels driver warnings retained; not a hardware FPS result",
+    "nativeResources": {
+      "toggles": 6,
+      "contextCreations": 1,
+      "currentPopulation": 15,
+      "baseline": {
+        "sprites": 15,
+        "visibleSprites": 15,
+        "selectionSprites": 1,
+        "paletteMaterials": 8,
+        "materials": 15,
+        "textures": 2,
+        "geometries": 7,
+        "rendererGeometries": 7,
+        "rendererTextures": 2,
+        "disposed": false,
+        "lost": false,
+        "contextCreations": 1
+      },
+      "resources": {
+        "sprites": 15,
+        "visibleSprites": 15,
+        "selectionSprites": 1,
+        "paletteMaterials": 8,
+        "materials": 15,
+        "textures": 2,
+        "geometries": 7,
+        "rendererGeometries": 7,
+        "rendererTextures": 2,
+        "disposed": false,
+        "lost": false,
+        "contextCreations": 1
+      }
+    },
+    "lossFallback": {
+      "label": "Synthetic GPU-loss negative control via actual native extension; no fabricated model state",
+      "current2DTick": 48,
+      "realStepFrom": 47,
+      "resources": {
+        "sprites": 0,
+        "visibleSprites": 0,
+        "selectionSprites": 0,
+        "paletteMaterials": 8,
+        "materials": 0,
+        "textures": 0,
+        "geometries": 0,
+        "rendererGeometries": 0,
+        "rendererTextures": 0,
+        "disposed": true,
+        "lost": true,
+        "contextCreations": 1
+      }
+    },
+    "unavailableFallback": {
+      "label": "Synthetic allocation-negative control: only target canvas WebGL getContext returns null; actual API is unchanged",
+      "shownTick": 48,
+      "contextCreations": 0
+    },
+    "legacy": {
+      "chamberFormat": 1,
+      "tick": 0,
+      "schematic": true,
+      "no3DRequests": true
+    }
+  },
+  "browser": {
+    "playwright": "1.61.1",
+    "version": "149.0.7827.55",
+    "chromiumSandbox": true,
+    "actualArgvChecked": true,
+    "extraLaunchArguments": [
+      "--enable-automation"
+    ],
+    "forbiddenFlagsAbsent": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-seccomp-filter-sandbox",
+      "--disable-seccomp-sandbox",
+      "--disable-gpu-sandbox",
+      "--disable-namespace-sandbox",
+      "--single-process",
+      "--no-zygote",
+      "--ignore-gpu-blocklist",
+      "--disable-web-security"
+    ],
+    "backend": {
+      "vendor": "Google Inc. (Google)",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "qualification": "Official stock SwiftShader software WebGL2 baseline; no hardware performance or kernel isolation claim"
+  },
+  "parts": [
+    {
+      "ordinal": 1,
+      "offset": 0,
+      "bytes": 16777216,
+      "sha256": "8984ac19dc9f0bb6861d0ef8bafc5844db668440e75731989fd9bdd140176c49",
+      "containerBytes": 16778488,
+      "containerSha256": "eb23f9bf89257af2c5f5b67a8cc149f72e036562870b91eb87b71004bd575d2d",
+      "crc": "PASS",
+      "exactOriginalSlice": "PASS"
+    },
+    {
+      "ordinal": 2,
+      "offset": 16777216,
+      "bytes": 16777216,
+      "sha256": "b887fddacd4a3b1567c1978b75bd450a6a1319d786e8ebb8625a12aaf8ea4db9",
+      "containerBytes": 16778495,
+      "containerSha256": "c75a80bfb6de87f40f6aa839e068d8b8f4b7ce1b21cd9694a1c25e378bc3eee6",
+      "crc": "PASS",
+      "exactOriginalSlice": "PASS"
+    },
+    {
+      "ordinal": 3,
+      "offset": 33554432,
+      "bytes": 16777216,
+      "sha256": "016cc1e5544a90f8fb6dc85c6018d778331aca751408f4b14cd5f442a1435858",
+      "containerBytes": 16778495,
+      "containerSha256": "e48710f30ba6d6187e122bd5bb5e5f4190e85e1fa4e736a316f536983b681bcc",
+      "crc": "PASS",
+      "exactOriginalSlice": "PASS"
+    },
+    {
+      "ordinal": 4,
+      "offset": 50331648,
+      "bytes": 8851498,
+      "sha256": "29108dabbf7cd2b019825c7549796981b01a7354ba514af7fcad2b2658cdf707",
+      "containerBytes": 8852776,
+      "containerSha256": "4e6a1ae926ecf643439199ec184b5de6e7e625563d934db57c7add3c9d309bf8",
+      "crc": "PASS",
+      "exactOriginalSlice": "PASS"
+    }
+  ],
+  "transportRun": 37244552112,
+  "transportHead": "fb3a5b47d80b7f586dffb9990f380e8362635a1e",
+  "imagesViewed": [
+    "source-cube.png",
+    "coincident-daughters.png",
+    "desktop.png",
+    "short.png",
+    "mobile390.png",
+    "mobile320.png",
+    "context-loss-current-2d.png",
+    "webgl-unavailable-current-2d.png",
+    "legacy-schematic.png",
+    "paused-baseline.png",
+    "paused-30.png",
+    "paused-60.png"
+  ],
+  "privacy": {
+    "method": "Bounded strict UTF8 member decoding and obvious credential/auth/cookie/private-old-context patterns, plus all 12 actual PNG visual inspection",
+    "utf8Files": 124,
+    "utf8Bytes": 7138786,
+    "binarySkipped": 1492,
+    "memberDecodeCapBytes": 16777216,
+    "candidateCounts": {
+      "credentials": 0,
+      "authorization": 0,
+      "cookieHeaders": 0,
+      "privateOldContext": 0
+    },
+    "qualification": "No full-secret guarantee; no secret values copied to review"
+  },
+  "expansion": {
+    "outerExpandedBytes": 60534926,
+    "nestedExpandedBytes": 70672212,
+    "combinedExpandedBytes": 131207138,
+    "archiveQualification": "64MiB group cap concerns published unique compressed originals/reviews, not combined expanded bytes"
+  },
+  "qualifications": [
+    "Artifact-only acceptance of exact 79 head/tree and 13 protected 3D checks; the enclosing LAB run remains FAIL.",
+    "No transfer of this PASS to any later source candidate.",
+    "Old main5bea encoded PNG mismatch remains FAIL with unresolved cause; this equal-byte result does not diagnose it.",
+    "All 12 retained original PNGs viewed. Geometry report has 40 checkpoints; individual transient canvas screenshots for every checkpoint are not retained and were not independently rederived here.",
+    "Source/git and saved delayed module/history byte pins verified. Trace retains actual source HTML and held module; all vendor bodies are not separately retained in trace. Vendor Git pins and reported host byte checks are distinct proof.",
+    "No model, new browser, Cargo, native simulation, full recorded dataset decode or tests run during review.",
+    "Physical glyphs are center markers; no body radius, collision, new biological or achieved FPS claim."
+  ]
+}
