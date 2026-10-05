@@ -1770,3 +1770,45 @@ Nextstep: newLIVE/physical originals/deepindependentreview+freshactualGL/
 projectiongates; affectedclosedarchives/readbacks beforeguardedmerge and
 freshMAIN/affected/publicregressions. Anyfail/drift/skip/modelchange/occlusion/
 missingartifact→HOLD/scopedreview. LAB21/publicLAB/LAB4/models/causalretriesHOLD.
+
+
+## 2026-10-05 09:10 UTC — финальный checkpoint и network readback PR24
+
+Итоговый run37284723150 attempt1 terminal FAILURE на exact candidate
+000e2eb6b6d42b81f4cee19eaa23e3f09c917ee6/tree
+a8cdcc995fe3f6c6ec130ff5400b81d733c55286. 10/11 check-runs и 9/10 workflow
+jobs SUCCESS; LIVE desktop1440 Events clipping assertion FAIL (`clipped=true`).
+Отчёт и trace не содержат exact target/ancestor geometry, axis/amount либо
+сохранённый результат `ElementHandle.evaluate`. Mobile cases, физический
+viewer, projection и Three.js actual gates не выполнены. Причину и repair не
+утверждаем. Astra: HOLD_NO_SUPPORTED_REPAIR; third full CI/diagnostic runtime
+не разрешены.
+
+Второй original ZIP artifact11333771997 сохранён byte-exact, без перепаковки:
+16511492B, SHA256
+`50020b72346f1902848a1a5b1f65dd84320c0da17dfd0598479df44e8ee08f79`.
+Архивная ветка `codex/live-mobile-second-failure-evidence-20261005`, commit
+95eacbbff7d7c3ef7b88250a92d297859ae18ff8, tree
+4ee3e3ca747a0937e06a2b0ba306dec857474a6e, 13 files,
+manifest SHA256 32fa5a6dcfccb5e3491538175843a024a898d50976db9bdcfdc2dfe077f727ad.
+Отдельная normal Git fetch в object database без alternates и closed-inventory
+проверка завершилась PASS: все 13 размеров/SHA совпали, оригинальный ZIP и
+вложенный archive CRC прошли. Readback receipt и точные CI/Astra sidecars
+лежат рядом с integration checkpoint. Первый failure archive
+052c8fa285b54a0fc6b1228e6c5e0438550476cd и его прежний readback сохранены.
+
+PR24 `LIVE mobile readout: приёмка HOLD после двух browser failures` закрыт
+без merge (GitHub state `closed`, `merged=false`). Публичный integration ref
+после закрытия PR получил только финальный documentation checkpoint:
+`codex/live-mobile-readout-integration` HEAD
+8a8d5a857e586dc1ffe2177ac977644caff44388, tree
+27cbb0f3662c3fc599fc019de6910a2e6bba7f5f, parent
+000e2eb6b6d42b81f4cee19eaa23e3f09c917ee6. Тестированный product candidate
+остаётся именно 000e2eb6; documentation commit не является новой product
+приёмкой. Accepted main и deployed site остались на
+813be1efad29569a3011f00697bd5d41b7397dc6. Никаких merge/deploy, нового CI,
+model/science run, пересчёта recordings или raw24 не делали.
+
+Final evidence: `docs/experiments/handoff/live-mobile-readout-coordination-
+2026-10-05/`. Follow-up только в отдельном scoped task с измерением Events
+геометрии до строгой oracle; не ослаблять oracle по отсутствующим данным.

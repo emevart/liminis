@@ -1,0 +1,92 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "95eacbbff7d7c3ef7b88250a92d297859ae18ff8",
+  "archive_tree": "4ee3e3ca747a0937e06a2b0ba306dec857474a6e",
+  "closed_inventory": true,
+  "manifest_sha256": "32fa5a6dcfccb5e3491538175843a024a898d50976db9bdcfdc2dfe077f727ad",
+  "file_count": 13,
+  "unique_bytes_excluding_manifest": 16690934,
+  "original_zip_count": 1,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2480,
+      "sha256": "5f807c741f12b8599732bfe5dd17133c94aa00c57e6a772459914622617828e9",
+      "verified": true
+    },
+    {
+      "path": "astra-disposition.json",
+      "bytes": 2603,
+      "sha256": "2335c780f18c2e7485ee9707ed52ea6707eef80db17ccc7e343a6103dbd83bc9",
+      "verified": true
+    },
+    {
+      "path": "astra-disposition.md",
+      "bytes": 4667,
+      "sha256": "6aa78378be654202583a2ee7da3ca072549dd5116a47b9b8f0214dec09e86ddb",
+      "verified": true
+    },
+    {
+      "path": "bounded-analysis.json",
+      "bytes": 113806,
+      "sha256": "a2a7b872fee47d50740cc6b12a37f2114cbec5da819df5a4681ba67e6a701d5c",
+      "verified": true
+    },
+    {
+      "path": "bounded-analysis.py",
+      "bytes": 9916,
+      "sha256": "9349ff3b6748ef11073038adc01c6f509b01b9e2186f44ad7bbcfc5b3651ad32",
+      "verified": true
+    },
+    {
+      "path": "exact-head-ci-receipt.json",
+      "bytes": 15641,
+      "sha256": "8c74a6add0051d26d30b297a223c24577f6d08a66c464140fa23fc4672efbb7f",
+      "verified": true
+    },
+    {
+      "path": "failed-candidate-source-pins.json",
+      "bytes": 2432,
+      "sha256": "be41874ee52f809e34670d1b890d13cf49f9851b7aa41a093a3457dc86a68b31",
+      "verified": true
+    },
+    {
+      "path": "live-cells-browser-000e2eb6-original.zip",
+      "bytes": 16511492,
+      "sha256": "50020b72346f1902848a1a5b1f65dd84320c0da17dfd0598479df44e8ee08f79",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "original-artifact-pin.json",
+      "bytes": 323,
+      "sha256": "303ad3a0545e9199984a2a4c26bf618a3b28603677076f5fd67a48cc09f05eb4",
+      "verified": true
+    },
+    {
+      "path": "previous-failed-candidate-ci-receipt.json",
+      "bytes": 15816,
+      "sha256": "18c20899158c37c7a1a762da9286c0a5d4893ce275abb3c73c94c8b1c637f2cf",
+      "verified": true
+    },
+    {
+      "path": "repaired-QA-source-review.json",
+      "bytes": 10643,
+      "sha256": "080d8ead21df7ce2ff2615939ce06ad43ed5711d17d1ed1c0ba8d828df598d1c",
+      "verified": true
+    },
+    {
+      "path": "workflow-artifact-index.json",
+      "bytes": 1115,
+      "sha256": "90c5c9fc1ce658c7025a55583fe801a451a0874e1a766148da10e24e6116f921",
+      "verified": true
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}
