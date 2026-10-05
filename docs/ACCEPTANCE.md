@@ -1863,3 +1863,33 @@ SHA; длина и полный JSON.parse результат сохраняют
 Positive файлы остаются byte-exact; отрицательный case проверяет integrity
 transport, не новую биологию. Свежий exact-head artifact и независимый review
 обязательны; старые FAIL и старые PASS не переносятся на новую базу.
+
+### LAB bounded native pipe и отдельная приёмка совместимости
+
+Original product1be/run37248220760 остаётся FAIL. Два отдельных diagnostic
+CASE edca/0b52 также остаются FAIL; observed EOF/release без adapter cancel
+не объяснили native ERR_ABORTED. Последняя A/B probe3b17/run37254028918
+сохранила overall AB_PROBE_FAIL: A получил comparisons ERR_ABORTED, B
+завершил восемь native requests с exact original body pins и без ошибок.
+Independent source/actual review0 и решение Astra разрешают только узкий
+UA-compatibility candidate. Причина Chromium, повторяемость, скорость и
+девять LAB gates этой probe не доказаны; дополнительные causal runs закрыты.
+
+Для нового consumer успешный EOF, cancellation и unlock выполняет стандартный
+awaited `response.body.pipeTo(new WritableStream(...))`. Sink проверяет прежний
+size cap до сохранения очередного chunk, сохраняет исходную write/size error
+при secondary cancellation rejection. Прежние concat/SHA/parser/joins
+не меняются. Missing stream явно отвергается; unbounded arrayBuffer fallback,
+timers/retainedResponses и allowances для native errors запрещены. Это
+заменяет описанный выше manual-reader cleanup только для нового consumer;
+исторические исходники и FAIL evidence сохраняются.
+
+Native ReadableStream/WritableStream tests подтверждают full exact bytes/SHA,
+delayed EOF, отсутствие success cancel, incremental oversize refusal,
+awaited cancellation/lock release, primary error identity/no unhandled,
+read failure/backpressure и missing-stream refusal. Все original data/source
+pins и24runs/4044samples сохраняются; Node tests не browser PASS. Exact B
+function/prefix/suffix binding и independent code/data-numerics review
+обязательны. Новый exact head проходит прежние все9LABgates/fullCI с
+неизменёнными oracle/security/negative controls и независимым actualartifact
+review, затем отдельную public delivery/browser приёмку после merge/deploy.
