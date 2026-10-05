@@ -123,7 +123,13 @@ async function run() {
   tracing = true;
   page = await context.newPage();
   let stateRequests = 0;
-  page.on('request', request => { if (new URL(request.url()).pathname === '/api/state') stateRequests++; });
+  const requests = [];
+  page.on('request', request => {
+    const url = new URL(request.url());
+    if (url.pathname === '/api/state') stateRequests++;
+    if (requests.length >= 1024) { fail(new Error('Browser request evidence exceeded 1024 records'), 'request evidence'); return; }
+    requests.push({ method: request.method(), origin: url.origin, path: url.pathname, atMs: Date.now() });
+  });
   page.on('console', message => {
     if (message.type() !== 'error') return;
     const entry = { text: message.text(), location: message.location() };
@@ -254,13 +260,131 @@ async function run() {
     return !s.save_pending && !s.persistence.saving && s.persistence.saved_tick >= afterMaximum.tick;
   }, 'checkpoint persisted');
   await page.waitForFunction(() => document.querySelector('#save-status').textContent.startsWith('saved '));
-  assert.equal((await state()).tick, afterMaximum.tick);
+  const layoutSnapshot = await state();
+  assert.equal(layoutSnapshot.tick, afterMaximum.tick);
   check('Save acknowledges persisted checkpoint without advancing paused model');
 
-  for (const width of [1440, 590, 420, 320]) {
+  // All responsive actions use this already confirmed paused population. Find,
+  // scrolling and resizing must not submit a model control or alter its state.
+  assert.ok(layoutSnapshot.cells.length > 0, 'responsive Find needs a real living cell');
+  const selectedCell = layoutSnapshot.cells[0];
+  const absentId = '18446744073709551615';
+  assert.ok(!layoutSnapshot.cells.some(cell => cell.id === absentId), 'absent-ID UI query must be absent in the actual API snapshot');
+  const displayNumber = value => {
+    if (value === 0) return '0';
+    const magnitude = Math.abs(value);
+    return magnitude >= 1e4 || magnitude < 1e-3 ? value.toExponential(2) : value.toLocaleString('en-US', { maximumSignificantDigits: 3 });
+  };
+  const expectedInspector = {
+    id: selectedCell.id, 'shown snapshot tick': String(layoutSnapshot.tick), parent: selectedCell.parent_id ?? 'founder',
+    'birth tick': String(selectedCell.birth_tick), age: `${displayNumber(selectedCell.age_s)} s`,
+    mass: `${displayNumber(selectedCell.mass_mol)} mol`, 'division mass': `${displayNumber(selectedCell.division_mass_mol)} mol`, energy: `${displayNumber(selectedCell.energy_j)} J`,
+  };
+  const inspector = () => page.locator('#cell-detail').evaluate(host => {
+    const list = host.querySelector('dl');
+    const fields = Object.fromEntries([...list.querySelectorAll('dt')].map(label => [label.textContent, label.nextElementSibling.textContent]));
+    return { fields, genomeKey: host.querySelector('.selected-code b').textContent, selection: document.querySelector('#selection-state').textContent };
+  });
+  const assertInspector = current => {
+    for (const [key, value] of Object.entries(expectedInspector)) assert.equal(current.fields[key], value, `Find inspector ${key} must match the actual paused API cell`);
+    assert.equal(current.genomeKey, selectedCell.genome_key);
+    assert.equal(current.selection, `generation ${selectedCell.generation}`);
+  };
+  const geometry = () => page.evaluate(() => {
+    const rect = element => {
+      const box = element.getBoundingClientRect();
+      return { left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height };
+    };
+    const stage = document.querySelector('.stage'), readout = document.querySelector('.readout'), side = document.querySelector('.side');
+    const text = [];
+    const walker = document.createTreeWalker(readout, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (!node.textContent.trim()) continue;
+      const range = document.createRange(); range.selectNodeContents(node);
+      for (const box of range.getClientRects()) if (box.width > 0 && box.height > 0) text.push({ value: node.textContent.trim(), left: box.left, top: box.top, right: box.right, bottom: box.bottom });
+    }
+    return {
+      stage: rect(stage), canvas: rect(document.querySelector('#chamber')), readout: rect(readout), side: rect(side),
+      readoutPosition: getComputedStyle(readout).position, workspaceDisplay: getComputedStyle(document.querySelector('.workspace')).display,
+      rows: { stage: getComputedStyle(stage).gridRowStart, readout: getComputedStyle(readout).gridRowStart, side: getComputedStyle(side).gridRowStart },
+      stageMinHeight: getComputedStyle(stage).minHeight, readoutText: text,
+      readoutOverflow: readout.scrollWidth > readout.clientWidth, horizontalOverflow: document.documentElement.scrollWidth > innerWidth,
+      tick: document.querySelector('#tick').textContent, dt: document.querySelector('#dt').textContent,
+      target: document.querySelector('#target-speed').textContent, live: document.querySelector('#live-label').textContent,
+      generation: document.querySelector('#generation').textContent, matter: document.querySelector('#matter').textContent, energy: document.querySelector('#energy').textContent,
+    };
+  });
+  const assertGeometry = (current, width) => {
+    assert.equal(current.horizontalOverflow, false, `horizontal overflow at ${width}px`);
+    assert.equal(current.readoutOverflow, false, `readout horizontal clipping at ${width}px`);
+    assert.ok(current.stage.width > 0 && current.stage.height > 0 && current.readout.height > 0 && current.side.height > 0);
+    assert.ok(current.stage.bottom <= current.readout.top || current.readout.bottom <= current.stage.top, 'readout must not cover the stage or its canvas');
+    assert.ok(current.side.bottom <= current.readout.top || current.readout.bottom <= current.side.top, 'readout must not cover the sidebar');
+    for (const text of current.readoutText) assert.ok(text.left >= current.readout.left && text.right <= current.readout.right && text.top >= current.readout.top && text.bottom <= current.readout.bottom, `readout text must be completely in its normal-flow rectangle: ${text.value}`);
+    assert.equal(current.tick, layoutSnapshot.tick.toLocaleString('en-US'));
+    assert.equal(current.dt, 'dt 30 s');
+    assert.equal(current.target, 'Maximum');
+    assert.equal(current.live, 'paused');
+    assert.equal(current.generation, String(layoutSnapshot.summary.generation_max));
+    assert.equal(current.matter, String(layoutSnapshot.residual?.matter ?? '—'));
+    assert.equal(current.energy, String(layoutSnapshot.residual?.energy ?? '—'));
+    if (width <= 800) {
+      assert.equal(current.readoutPosition, 'static', 'mobile readout must use normal flow');
+      assert.equal(current.workspaceDisplay, 'contents');
+      assert.deepEqual(current.rows, { stage: '3', readout: '4', side: '5' });
+      assert.ok(current.stage.bottom <= current.readout.top && current.readout.bottom <= current.side.top, 'mobile order must be stage, complete readout, sidebar');
+      const minimum = scenarioConfig ? 560 : width <= 520 ? 470 : 500;
+      assert.equal(current.stageMinHeight, `${minimum}px`, 'existing chamber-specific mobile stage minimum must be preserved');
+      assert.equal(current.stage.height, width <= 520 ? minimum : Math.max(minimum, 620), 'existing 470px/62dvh stage rule and physical minimum must be preserved');
+    }
+  };
+  // Only real browser rectangles and native hit tests are observed. No CSS,
+  // production state, layout helpers, or hit maps are installed by this gate.
+  const visibleTarget = async locator => {
+    const beforeScroll = await page.evaluate(() => ({ scrollY, sideScrollTop: document.querySelector('.side').scrollTop }));
+    await locator.scrollIntoViewIfNeeded();
+    const evidence = await locator.evaluate(element => {
+      const box = element.getBoundingClientRect(), css = getComputedStyle(element);
+      const x = (box.left + box.right) / 2, y = (box.top + box.bottom) / 2;
+      const target = document.elementFromPoint(x, y);
+      let clipped = false;
+      for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+        const style = getComputedStyle(ancestor), boundary = ancestor.getBoundingClientRect();
+        if (['auto', 'scroll', 'hidden', 'clip'].includes(style.overflowX) && (box.left < boundary.left || box.right > boundary.right)) clipped = true;
+        if (['auto', 'scroll', 'hidden', 'clip'].includes(style.overflowY) && (box.top < boundary.top || box.bottom > boundary.bottom)) clipped = true;
+      }
+      return { left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height,
+        viewport: { width: innerWidth, height: innerHeight }, scrollY, sideScrollTop: document.querySelector('.side').scrollTop,
+        visible: css.display !== 'none' && css.visibility === 'visible' && box.width > 0 && box.height > 0,
+        disabled: Boolean(element.disabled), unobscured: target === element || element.contains(target), clipped };
+    });
+    assert.equal(evidence.visible, true, 'scroll target must be rendered');
+    assert.equal(evidence.disabled, false, 'scroll target must remain usable');
+    assert.equal(evidence.unobscured, true, 'native hit test must reach the requested control or content');
+    assert.equal(evidence.clipped, false, 'scroll target must not be clipped by an ancestor');
+    assert.ok(evidence.left >= 0 && evidence.right <= evidence.viewport.width && evidence.top >= 0 && evidence.bottom <= evidence.viewport.height, 'complete scroll target must fit in the real viewport');
+    evidence.beforeScroll = beforeScroll;
+    return evidence;
+  };
+  const captureViewport = async (width, label) => {
+    const filename = `viewer-${width}-viewport-${label}.png`;
+    await page.screenshot({ path: resolve(output, filename), fullPage: false });
+    report.screenshots.push(filename);
+    return filename;
+  };
+  report.responsive = { snapshot: { tick: layoutSnapshot.tick, dt_seconds: layoutSnapshot.dt_seconds, pacing: layoutSnapshot.pacing, cells: layoutSnapshot.cells.length },
+    selectedCell, absentId, controls: 'Native hit tests only; no model control is clicked during responsive checks', cases: [] };
+  for (const width of [1440, 590, 420, 390, 320]) {
+    const requestsBeforeLayout = requests.length, layoutStartedMs = Date.now();
     await page.setViewportSize({ width, height: 1000 });
     await delay(150);
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `horizontal overflow at ${width}px`);
+    await page.evaluate(() => { window.scrollTo(0, 0); document.querySelector('.side').scrollTop = 0; });
+    const evidence = { width, height: 1000, before: await geometry(), targets: {}, screenshots: [] };
+    report.responsive.cases.push(evidence);
+    assertGeometry(evidence.before, width);
+    evidence.targets.stageCanvas = await visibleTarget(chamber);
+    evidence.screenshots.push(await captureViewport(width, 'stage'));
     const disclaimer = page.locator('#schematic-caption');
     assert.equal(await disclaimer.isVisible(), !scenarioConfig, `schematic caption visibility at ${width}px`);
     if (!scenarioConfig) assert.match(await disclaimer.textContent(), /Icon placement does not represent physical coordinates/);
@@ -272,12 +396,64 @@ async function run() {
       assert.match(await physicalNote.textContent(), /Chemical resources remain shared and well mixed/);
       assert.equal(await page.locator('#projection-controls').isVisible(), true);
     }
+    evidence.targets.readout = await visibleTarget(page.locator('.readout'));
+    for (const selector of ['#play', '#step', '#speed', '#speed-form button[type=submit]', '[data-speed="1"]', '[data-speed="10"]', '[data-speed="100"]', '[data-speed="1000"]', '#maximum', '#screen-fps', '#reset-seed', '#seed-form button[type=submit]', '#save']) {
+      evidence.targets[selector] = await visibleTarget(page.locator(selector));
+    }
+    assertGeometry(await geometry(), width);
+    evidence.screenshots.push(await captureViewport(width, 'readout'));
+    evidence.targets.cellId = await visibleTarget(page.locator('#cell-id'));
+    evidence.targets.find = await visibleTarget(page.locator('#cell-search button[type=submit]'));
+    await page.locator('#cell-id').fill(absentId);
+    await page.locator('#cell-search button[type=submit]').click();
+    await page.waitForFunction(id => document.querySelector('#selection-state').textContent === 'not present' && document.querySelector('#cell-detail').textContent.includes(`ID ${id} is not present`), absentId);
+    assert.equal(await page.locator('#cell-detail dl').count(), 0, 'absent-ID Find must clear the prior inspector');
+    evidence.findAbsent = { id: absentId, status: await page.locator('#selection-state').textContent(), inspectorLists: 0 };
+    await page.locator('#cell-id').fill(selectedCell.id);
+    await page.locator('#cell-search button[type=submit]').click();
+    await page.waitForFunction(id => document.querySelector('#cell-detail dl dt')?.nextElementSibling?.textContent === id, selectedCell.id);
+    evidence.findPresent = await inspector();
+    assertInspector(evidence.findPresent);
+    evidence.targets.upperInspector = await visibleTarget(page.locator('#cell-detail > dl'));
+    evidence.screenshots.push(await captureViewport(width, 'inspector-upper'));
+    const lowerInspector = page.locator('#cell-detail .object-grid dd').last();
+    evidence.targets.lowerInspector = await visibleTarget(lowerInspector);
+    evidence.lowerInspector = await lowerInspector.evaluate(field => ({ key: field.previousElementSibling.textContent, value: field.textContent, group: field.closest('.object').querySelector('.micro').textContent }));
+    assert.equal(evidence.lowerInspector.group, 'Phenotype');
+    const rawPhenotypeValue = selectedCell.phenotype[evidence.lowerInspector.key];
+    assert.equal(typeof rawPhenotypeValue, 'number');
+    const phenotypeMagnitude = Math.abs(rawPhenotypeValue);
+    const expectedPhenotype = Number.isInteger(rawPhenotypeValue) ? String(rawPhenotypeValue) : phenotypeMagnitude !== 0 && (phenotypeMagnitude < 1e-4 || phenotypeMagnitude >= 1e6) ? rawPhenotypeValue.toExponential(3) : rawPhenotypeValue.toLocaleString('en-US', { maximumSignificantDigits: 4 });
+    assert.equal(evidence.lowerInspector.value, expectedPhenotype, 'lower inspector must match a real paused API phenotype value');
+    evidence.screenshots.push(await captureViewport(width, 'inspector-lower'));
+    evidence.targets.environment = await visibleTarget(page.locator('#resources').locator('..'));
+    evidence.resources = await page.locator('#resources').evaluate(host => [...host.querySelectorAll('.resource')].map(row => ({ id: row.children[0].textContent, concentration: row.children[1].textContent })));
+    assert.deepEqual(evidence.resources, layoutSnapshot.resources.map(resource => ({ id: resource.id, concentration: `${displayNumber(resource.concentration)} mol/m³` })));
+    evidence.screenshots.push(await captureViewport(width, 'environment'));
+    evidence.targets.events = await visibleTarget(page.locator('#events').locator('..'));
+    evidence.events = await page.locator('#events').evaluate(host => [...host.querySelectorAll('.event')].map(row => [...row.children].map(item => item.textContent)));
+    const shownEvents = layoutSnapshot.events.slice(-6).reverse().map(event => [String(event.tick), event.kind, event.children?.length ? `${event.parent_id || event.cell_id || '—'} → ${event.children.join(', ')}${event.mutated ? ' · mutated' : ''}` : event.cell_id || event.parent_id || '—']);
+    assert.deepEqual(evidence.events, shownEvents);
+    if (!shownEvents.length) assert.equal(await page.locator('#events .empty').textContent(), 'No events recorded.');
+    evidence.screenshots.push(await captureViewport(width, 'events'));
     const filename = `viewer-${width}.png`;
     await page.screenshot({ path: resolve(output, filename), fullPage: true });
     report.screenshots.push(filename);
+    evidence.after = await geometry();
+    assertGeometry(evidence.after, width);
+    assertInspector(await inspector());
+    evidence.elapsedMs = Date.now() - layoutStartedMs;
+    evidence.requests = requests.slice(requestsBeforeLayout);
+    for (const request of evidence.requests) assert.ok(request.origin === origin && request.method === 'GET' && ['/api/state', '/api/history'].includes(request.path), `resize/scroll/Find must not add a model control or asset request: ${request.method} ${request.path}`);
+    evidence.pollRequests = { state: evidence.requests.filter(request => request.path === '/api/state').length, history: evidence.requests.filter(request => request.path === '/api/history').length, stateCadenceMs: 650, historyMinimumMs: 4000 };
+    assert.ok(Object.values(evidence.targets).some(target => target.scrollY !== target.beforeScroll.scrollY || target.sideScrollTop !== target.beforeScroll.sideScrollTop), 'responsive phase must produce actual document or sidebar scrolling');
   }
+  const afterLayout = await state();
+  for (const key of ['tick', 'running', 'dt_seconds', 'pacing', 'target_tps', 'sim_time', 'model', 'summary', 'cells', 'resources', 'residual', 'events']) assert.deepEqual(afterLayout[key], layoutSnapshot[key], `responsive actions must preserve paused API ${key}`);
+  check('mobile static stage/readout/sidebar order; complete readout text, accessible controls and real upper/lower inspector/environment/event scrolls');
+  check('real absent-ID then present-ID Find changes selection and matches the already confirmed paused API; resize/scroll/Find make no control POST or model change');
   check('desktop/mobile captions distinguish legacy schematic inventory from physical point-center projection');
-  check('real desktop/mobile screenshots and no horizontal overflow at 1440/590/420/320');
+  check('real full-page and viewport screenshots with no horizontal overflow at 1440/590/420/390/320');
   assert.deepEqual(report.pageErrors, []);
   assert.deepEqual(report.consoleErrors, []);
   check('no Chromium page/console errors');
