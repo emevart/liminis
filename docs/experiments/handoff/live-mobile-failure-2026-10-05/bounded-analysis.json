@@ -1,0 +1,1338 @@
+{
+  "original": {
+    "artifact_id": 11332948215,
+    "name": "live-cells-browser-a57a6854-original.zip",
+    "bytes": 8544954,
+    "sha256": "c0b5cddbc1d5d520e80f079c93bbac2adffc446bff04d1b1bd1d4dac91352ba0",
+    "outer_crc_ok": true,
+    "outer_entries": 9,
+    "outer_expanded_bytes": 11208017,
+    "nested_crc_ok": true,
+    "nested_entries": 260,
+    "nested_expanded_bytes": 12058539,
+    "combined_expanded_bytes": 23266556,
+    "cap_bytes": 67108864,
+    "safe_unique_inventory": true
+  },
+  "outer_inventory": [
+    {
+      "name": "failure.png",
+      "bytes": 249017,
+      "sha256": "b1e9d8281d81d3b577c8f276f3dfa332614a09a9a97a70025e08bc43e5e851e1"
+    },
+    {
+      "name": "held-30fps.png",
+      "bytes": 35164,
+      "sha256": "5031642b14da96b9b996fc521ffd4aec7e92a21fa94525bf2c41821198cb81fb"
+    },
+    {
+      "name": "held-60fps.png",
+      "bytes": 35164,
+      "sha256": "5031642b14da96b9b996fc521ffd4aec7e92a21fa94525bf2c41821198cb81fb"
+    },
+    {
+      "name": "host.log",
+      "bytes": 126,
+      "sha256": "ce680d3331541c6586354ac7144ee9e9705cf60b06d8795f99edbc2eb279791f"
+    },
+    {
+      "name": "report.json",
+      "bytes": 23321,
+      "sha256": "ac42b74f34c81d4a538ce17559b3f0963b89b67d94f30c3f33670940dfdef461"
+    },
+    {
+      "name": "trace.zip",
+      "bytes": 10142752,
+      "sha256": "fc7e6719264b1cc176535a88eeace7257a52f344405113126deaf0d66ae6c9e9"
+    },
+    {
+      "name": "viewer-1440-viewport-inspector-upper.png",
+      "bytes": 249038,
+      "sha256": "b33d7ac8a65ff61b329ae3fc3a8de4daf65b7c732497e094a32cef6b9d8b8f87"
+    },
+    {
+      "name": "viewer-1440-viewport-readout.png",
+      "bytes": 236722,
+      "sha256": "9a08690225ed576916150d58524e8a8f98f5fa44c2b4a2c8ee1ea3280e46d486"
+    },
+    {
+      "name": "viewer-1440-viewport-stage.png",
+      "bytes": 236713,
+      "sha256": "e1fa8a2df3a62599a458d4e0744fd6751e7fbb88826c3f8cd3cd203cce81063a"
+    }
+  ],
+  "trace": {
+    "events": 1014,
+    "frame_snapshots": 244,
+    "network_records": 37,
+    "late_actions": [
+      {
+        "call_id": "call@297",
+        "start_ms": 8022.978,
+        "method": "waitForFunction",
+        "selector": null,
+        "title": null,
+        "full_page": null
+      },
+      {
+        "call_id": "call@299",
+        "start_ms": 8034.242,
+        "method": "waitForSelector",
+        "selector": "#cell-detail",
+        "title": "Evaluate",
+        "full_page": null
+      },
+      {
+        "call_id": "call@303",
+        "start_ms": 8046.801,
+        "method": "evaluateExpression",
+        "selector": null,
+        "title": null,
+        "full_page": null
+      },
+      {
+        "call_id": "call@305",
+        "start_ms": 8050.245,
+        "method": "waitForSelector",
+        "selector": "#cell-detail > dl",
+        "title": "Scroll into view",
+        "full_page": null
+      },
+      {
+        "call_id": "call@309",
+        "start_ms": 8077.349,
+        "method": "waitForSelector",
+        "selector": "#cell-detail > dl",
+        "title": "Evaluate",
+        "full_page": null
+      },
+      {
+        "call_id": "call@313",
+        "start_ms": 8084.797,
+        "method": "screenshot",
+        "selector": null,
+        "title": null,
+        "full_page": false
+      },
+      {
+        "call_id": "call@315",
+        "start_ms": 8202.786,
+        "method": "evaluateExpression",
+        "selector": null,
+        "title": null,
+        "full_page": null
+      },
+      {
+        "call_id": "call@317",
+        "start_ms": 8206.554,
+        "method": "waitForSelector",
+        "selector": "#cell-detail .object-grid dd >> nth=-1",
+        "title": "Scroll into view",
+        "full_page": null
+      },
+      {
+        "call_id": "call@321",
+        "start_ms": 8265.387,
+        "method": "screenshot",
+        "selector": null,
+        "title": null,
+        "full_page": true
+      }
+    ],
+    "late_snapshot_evidence": [
+      {
+        "name": "after@call@313",
+        "time_ms": 8201.796,
+        "raw_root_is_prior_snapshot_reference": true,
+        "raw_serialized_inspector_present": false,
+        "raw_serialized_inspector_sha256": null
+      },
+      {
+        "name": "before@call@315",
+        "time_ms": 8204.195,
+        "raw_root_is_prior_snapshot_reference": true,
+        "raw_serialized_inspector_present": false,
+        "raw_serialized_inspector_sha256": null
+      },
+      {
+        "name": "after@call@315",
+        "time_ms": 8206.237,
+        "raw_root_is_prior_snapshot_reference": true,
+        "raw_serialized_inspector_present": false,
+        "raw_serialized_inspector_sha256": null
+      },
+      {
+        "name": "before@call@317",
+        "time_ms": 8207.785,
+        "raw_root_is_prior_snapshot_reference": true,
+        "raw_serialized_inspector_present": false,
+        "raw_serialized_inspector_sha256": null
+      },
+      {
+        "name": "after@call@317",
+        "time_ms": 8221.634,
+        "raw_root_is_prior_snapshot_reference": true,
+        "raw_serialized_inspector_present": false,
+        "raw_serialized_inspector_sha256": null
+      },
+      {
+        "name": "before@call@321",
+        "time_ms": 8267.967,
+        "raw_root_is_prior_snapshot_reference": false,
+        "raw_serialized_inspector_present": true,
+        "raw_serialized_inspector_sha256": "4bbb0f2da9c8376d72db243df5b4accec87a0d7e93542e07fe17f4eb856d4aac"
+      },
+      {
+        "name": "after@call@321",
+        "time_ms": 8396.044,
+        "raw_root_is_prior_snapshot_reference": true,
+        "raw_serialized_inspector_present": false,
+        "raw_serialized_inspector_sha256": null
+      }
+    ],
+    "network": [
+      {
+        "method": "GET",
+        "path": "/",
+        "origin_class": "loopback",
+        "start_ms": 1043.89,
+        "duration_ms": 3.5389999999999997,
+        "status": 200,
+        "declared_content_bytes": 62157,
+        "retained_body_bytes": 62157,
+        "retained_body_sha256": "cf12bae4142980b513375a3a173c4249e457d58e760a366b90153c676446d148",
+        "exact_final_git_html": true
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 1066.592,
+        "duration_ms": 4.595000000000001,
+        "status": 200,
+        "declared_content_bytes": 5800,
+        "retained_body_bytes": 5800,
+        "retained_body_sha256": "be9c67bae680a3e980569cabdbc15b8e2c51d87abce7b4eedf4e011db9c2434b",
+        "state_tick": 0,
+        "state_running": true,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "GET",
+        "path": "/api/history",
+        "origin_class": "loopback",
+        "start_ms": 1128.588,
+        "duration_ms": 3.1149999999999998,
+        "status": 200,
+        "declared_content_bytes": 946,
+        "retained_body_bytes": 946,
+        "retained_body_sha256": "2548fd1f6ff3b0870933cb7c941618ae7138a181c09dc534a9d0bd3593f86d04"
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 1715.044,
+        "duration_ms": 2.9330000000000003,
+        "status": 200,
+        "declared_content_bytes": 5858,
+        "retained_body_bytes": 5858,
+        "retained_body_sha256": "07886709fa948d041e7b731ec4377bfdf5596424b2f34963b102f5d599069146",
+        "state_tick": 2,
+        "state_running": true,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "POST",
+        "path": "/api/control",
+        "origin_class": "loopback",
+        "start_ms": 1758.012,
+        "duration_ms": 2.777,
+        "status": 200,
+        "declared_content_bytes": 5828,
+        "retained_body_bytes": 5828,
+        "retained_body_sha256": "55027657975c8b82b12468c8d8c23dbbb251307f3ab9970104969579eb04d22b"
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 1768.344,
+        "duration_ms": 2.641,
+        "status": 200,
+        "declared_content_bytes": 5829,
+        "retained_body_bytes": 5829,
+        "retained_body_sha256": "177d264920716397d89fa43ac3487e98802b6ad04dc2b77264abd0010f6dd390",
+        "state_tick": 2,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "POST",
+        "path": "/api/control",
+        "origin_class": "loopback",
+        "start_ms": 2117.575,
+        "duration_ms": 3.02,
+        "status": 200,
+        "declared_content_bytes": 5822,
+        "retained_body_bytes": 5822,
+        "retained_body_sha256": "043cf475f24522fd29dd16253e07f05fa0e6288e97854146a663e733160151f4"
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 2136.314,
+        "duration_ms": 5.212,
+        "status": 200,
+        "declared_content_bytes": 5823,
+        "retained_body_bytes": 5823,
+        "retained_body_sha256": "01aeea4978ad644337e2edfb1a91d0c369500e0c0e794c2d2f50c30a16fd39bd",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "POST",
+        "path": "/api/control",
+        "origin_class": "loopback",
+        "start_ms": 2182.004,
+        "duration_ms": 3.2089999999999996,
+        "status": 200,
+        "declared_content_bytes": 5838,
+        "retained_body_bytes": 5838,
+        "retained_body_sha256": "c5f5b8351f0b91eb56b5126742e71a6019bde19ca39c5ad4b544eb99f7355507"
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 2197.452,
+        "duration_ms": 2.617,
+        "status": 200,
+        "declared_content_bytes": 5838,
+        "retained_body_bytes": 5838,
+        "retained_body_sha256": "c5f5b8351f0b91eb56b5126742e71a6019bde19ca39c5ad4b544eb99f7355507",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "POST",
+        "path": "/api/control",
+        "origin_class": "loopback",
+        "start_ms": 2247.511,
+        "duration_ms": 2.864,
+        "status": 200,
+        "declared_content_bytes": 5838,
+        "retained_body_bytes": 5838,
+        "retained_body_sha256": "378aa7a1039720cbc4052c740d7e3294e42f1fc99496f8ea3624833d63dcb868"
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 2261.673,
+        "duration_ms": 3.9510000000000005,
+        "status": 200,
+        "declared_content_bytes": 5838,
+        "retained_body_bytes": 5838,
+        "retained_body_sha256": "378aa7a1039720cbc4052c740d7e3294e42f1fc99496f8ea3624833d63dcb868",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "POST",
+        "path": "/api/control",
+        "origin_class": "loopback",
+        "start_ms": 2281.511,
+        "duration_ms": 2.921,
+        "status": 200,
+        "declared_content_bytes": 5839,
+        "retained_body_bytes": 5839,
+        "retained_body_sha256": "05317b57e64082707bb9583031926b6fcecf12b668aa4dbf8e17c49dbb41b302"
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 2294.058,
+        "duration_ms": 2.671,
+        "status": 200,
+        "declared_content_bytes": 5839,
+        "retained_body_bytes": 5839,
+        "retained_body_sha256": "05317b57e64082707bb9583031926b6fcecf12b668aa4dbf8e17c49dbb41b302",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "POST",
+        "path": "/api/control",
+        "origin_class": "loopback",
+        "start_ms": 2329.943,
+        "duration_ms": 2.519,
+        "status": 200,
+        "declared_content_bytes": 5840,
+        "retained_body_bytes": 5840,
+        "retained_body_sha256": "d9a00eab7d982996fe529cfd40991879a7fb9efd6cad081d5425694ac7eeee6c"
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 2343.623,
+        "duration_ms": 2.776,
+        "status": 200,
+        "declared_content_bytes": 5840,
+        "retained_body_bytes": 5840,
+        "retained_body_sha256": "d9a00eab7d982996fe529cfd40991879a7fb9efd6cad081d5425694ac7eeee6c",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 2365.023,
+        "duration_ms": 2.769,
+        "status": 200,
+        "declared_content_bytes": 5840,
+        "retained_body_bytes": 5840,
+        "retained_body_sha256": "d9a00eab7d982996fe529cfd40991879a7fb9efd6cad081d5425694ac7eeee6c",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "POST",
+        "path": "/api/control",
+        "origin_class": "loopback",
+        "start_ms": 2458.473,
+        "duration_ms": 2.955,
+        "status": 200,
+        "declared_content_bytes": 5838,
+        "retained_body_bytes": 5838,
+        "retained_body_sha256": "c5f5b8351f0b91eb56b5126742e71a6019bde19ca39c5ad4b544eb99f7355507"
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 2472.799,
+        "duration_ms": 2.685,
+        "status": 200,
+        "declared_content_bytes": 5838,
+        "retained_body_bytes": 5838,
+        "retained_body_sha256": "c5f5b8351f0b91eb56b5126742e71a6019bde19ca39c5ad4b544eb99f7355507",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 3015.023,
+        "duration_ms": 2.794,
+        "status": 200,
+        "declared_content_bytes": 5838,
+        "retained_body_bytes": 5838,
+        "retained_body_sha256": "c5f5b8351f0b91eb56b5126742e71a6019bde19ca39c5ad4b544eb99f7355507",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 3664.825,
+        "duration_ms": 2.634,
+        "status": 200,
+        "declared_content_bytes": 5838,
+        "retained_body_bytes": 5838,
+        "retained_body_sha256": "c5f5b8351f0b91eb56b5126742e71a6019bde19ca39c5ad4b544eb99f7355507",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 4314.853,
+        "duration_ms": 2.6430000000000002,
+        "status": 200,
+        "declared_content_bytes": 5838,
+        "retained_body_bytes": 5838,
+        "retained_body_sha256": "c5f5b8351f0b91eb56b5126742e71a6019bde19ca39c5ad4b544eb99f7355507",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 4965.44,
+        "duration_ms": 3.2300000000000004,
+        "status": 200,
+        "declared_content_bytes": 5838,
+        "retained_body_bytes": 5838,
+        "retained_body_sha256": "c5f5b8351f0b91eb56b5126742e71a6019bde19ca39c5ad4b544eb99f7355507",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 5624.124,
+        "duration_ms": 2.6199999999999997,
+        "status": 200,
+        "declared_content_bytes": 5838,
+        "retained_body_bytes": 5838,
+        "retained_body_sha256": "c5f5b8351f0b91eb56b5126742e71a6019bde19ca39c5ad4b544eb99f7355507",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "GET",
+        "path": "/api/history",
+        "origin_class": "loopback",
+        "start_ms": 5632.73,
+        "duration_ms": 3.425,
+        "status": 200,
+        "declared_content_bytes": 2636,
+        "retained_body_bytes": 2636,
+        "retained_body_sha256": "61707a44235225abf43cd8a879b7edc5c04bc2e4c7eac420a840f3d53aa66854"
+      },
+      {
+        "method": "POST",
+        "path": "/api/control",
+        "origin_class": "loopback",
+        "start_ms": 5665.007,
+        "duration_ms": 2.7390000000000003,
+        "status": 200,
+        "declared_content_bytes": 5824,
+        "retained_body_bytes": 5824,
+        "retained_body_sha256": "4f8baa2361505347455539f518c1c439bb1e6f019579fedc649d775a5b0744d5"
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 5679.595,
+        "duration_ms": 2.7190000000000003,
+        "status": 200,
+        "declared_content_bytes": 5824,
+        "retained_body_bytes": 5824,
+        "retained_body_sha256": "4f8baa2361505347455539f518c1c439bb1e6f019579fedc649d775a5b0744d5",
+        "state_tick": 3,
+        "state_running": false,
+        "state_cells": 8,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "POST",
+        "path": "/api/control",
+        "origin_class": "loopback",
+        "start_ms": 5732.076,
+        "duration_ms": 2.624,
+        "status": 200,
+        "declared_content_bytes": 5823,
+        "retained_body_bytes": 5823,
+        "retained_body_sha256": "1bb1973c826d546072e7c4da49708a36d5ef4e5886a3e190a395cf3c3cea7201"
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 5749.407,
+        "duration_ms": 10.881,
+        "status": 200,
+        "declared_content_bytes": 69042,
+        "retained_body_bytes": 69042,
+        "retained_body_sha256": "f0a2d3a267af3fdaee6636ecc752f185f1a1aab84a71935a86c4ce908839a203",
+        "state_tick": 266,
+        "state_running": true,
+        "state_cells": 111,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "POST",
+        "path": "/api/control",
+        "origin_class": "loopback",
+        "start_ms": 5820.267,
+        "duration_ms": 224.907,
+        "status": 200,
+        "declared_content_bytes": 55112,
+        "retained_body_bytes": 55112,
+        "retained_body_sha256": "d3f5698689c421b8f5cecf712414ef2140be0f3c84fa5c4e93dcaa7d9d4e0e06"
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 6047.112,
+        "duration_ms": 5.1049999999999995,
+        "status": 200,
+        "declared_content_bytes": 55116,
+        "retained_body_bytes": 55116,
+        "retained_body_sha256": "1705d2a23e96a0340a257dba176f55e0e2fd03e01765c02950f5352784598009",
+        "state_tick": 2138,
+        "state_running": false,
+        "state_cells": 91,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 6264.805,
+        "duration_ms": 3.936,
+        "status": 200,
+        "declared_content_bytes": 55116,
+        "retained_body_bytes": 55116,
+        "retained_body_sha256": "1705d2a23e96a0340a257dba176f55e0e2fd03e01765c02950f5352784598009",
+        "state_tick": 2138,
+        "state_running": false,
+        "state_cells": 91,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "POST",
+        "path": "/api/control",
+        "origin_class": "loopback",
+        "start_ms": 6433.474,
+        "duration_ms": 5.601999999999999,
+        "status": 200,
+        "declared_content_bytes": 55115,
+        "retained_body_bytes": 55115,
+        "retained_body_sha256": "0352cbda4866c5399f40c567a64185586231d3a0134d2ce73256df5934df7cb8"
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 6447.705,
+        "duration_ms": 4.758,
+        "status": 200,
+        "declared_content_bytes": 55116,
+        "retained_body_bytes": 55116,
+        "retained_body_sha256": "fbcf8330e90171fabf191f74e9af2fc11bec66023456bb21b74351ce4abd5a26",
+        "state_tick": 2138,
+        "state_running": false,
+        "state_cells": 91,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 6916.997,
+        "duration_ms": 4.084,
+        "status": 200,
+        "declared_content_bytes": 55116,
+        "retained_body_bytes": 55116,
+        "retained_body_sha256": "fbcf8330e90171fabf191f74e9af2fc11bec66023456bb21b74351ce4abd5a26",
+        "state_tick": 2138,
+        "state_running": false,
+        "state_cells": 91,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 7564.79,
+        "duration_ms": 3.899,
+        "status": 200,
+        "declared_content_bytes": 55116,
+        "retained_body_bytes": 55116,
+        "retained_body_sha256": "fbcf8330e90171fabf191f74e9af2fc11bec66023456bb21b74351ce4abd5a26",
+        "state_tick": 2138,
+        "state_running": false,
+        "state_cells": 91,
+        "state_dt_seconds": 30.0
+      },
+      {
+        "method": "GET",
+        "path": "/api/state",
+        "origin_class": "loopback",
+        "start_ms": 8218.488,
+        "duration_ms": 4.128,
+        "status": 200,
+        "declared_content_bytes": 55116,
+        "retained_body_bytes": 55116,
+        "retained_body_sha256": "fbcf8330e90171fabf191f74e9af2fc11bec66023456bb21b74351ce4abd5a26",
+        "state_tick": 2138,
+        "state_running": false,
+        "state_cells": 91,
+        "state_dt_seconds": 30.0
+      }
+    ],
+    "late_paused_state_checks": [
+      {
+        "start_ms": 6916.997,
+        "tick": 2138,
+        "paused": true,
+        "selected_cell_exact_to_report": true,
+        "body_sha256": "fbcf8330e90171fabf191f74e9af2fc11bec66023456bb21b74351ce4abd5a26"
+      },
+      {
+        "start_ms": 7564.79,
+        "tick": 2138,
+        "paused": true,
+        "selected_cell_exact_to_report": true,
+        "body_sha256": "fbcf8330e90171fabf191f74e9af2fc11bec66023456bb21b74351ce4abd5a26"
+      },
+      {
+        "start_ms": 8218.488,
+        "tick": 2138,
+        "paused": true,
+        "selected_cell_exact_to_report": true,
+        "body_sha256": "fbcf8330e90171fabf191f74e9af2fc11bec66023456bb21b74351ce4abd5a26"
+      }
+    ],
+    "recorded_page_error_events": 0,
+    "recorded_navigation_events": 0
+  },
+  "pngs": [
+    {
+      "name": "failure.png",
+      "bytes": 249017,
+      "sha256": "b1e9d8281d81d3b577c8f276f3dfa332614a09a9a97a70025e08bc43e5e851e1",
+      "width": 1440,
+      "height": 1000,
+      "mandated_viewed": true
+    },
+    {
+      "name": "held-30fps.png",
+      "bytes": 35164,
+      "sha256": "5031642b14da96b9b996fc521ffd4aec7e92a21fa94525bf2c41821198cb81fb",
+      "width": 1130,
+      "height": 852,
+      "mandated_viewed": false
+    },
+    {
+      "name": "held-60fps.png",
+      "bytes": 35164,
+      "sha256": "5031642b14da96b9b996fc521ffd4aec7e92a21fa94525bf2c41821198cb81fb",
+      "width": 1130,
+      "height": 852,
+      "mandated_viewed": false
+    },
+    {
+      "name": "viewer-1440-viewport-inspector-upper.png",
+      "bytes": 249038,
+      "sha256": "b33d7ac8a65ff61b329ae3fc3a8de4daf65b7c732497e094a32cef6b9d8b8f87",
+      "width": 1440,
+      "height": 1000,
+      "mandated_viewed": true
+    },
+    {
+      "name": "viewer-1440-viewport-readout.png",
+      "bytes": 236722,
+      "sha256": "9a08690225ed576916150d58524e8a8f98f5fa44c2b4a2c8ee1ea3280e46d486",
+      "width": 1440,
+      "height": 1000,
+      "mandated_viewed": true
+    },
+    {
+      "name": "viewer-1440-viewport-stage.png",
+      "bytes": 236713,
+      "sha256": "e1fa8a2df3a62599a458d4e0744fd6751e7fbb88826c3f8cd3cd203cce81063a",
+      "width": 1440,
+      "height": 1000,
+      "mandated_viewed": true
+    }
+  ],
+  "held_encoded_bytes_equal": true,
+  "sandbox_observation": {
+    "reported_enabled": true,
+    "browser_version": "149.0.7827.55",
+    "playwright": "1.61.1 (pinned by CI)",
+    "observed_forbidden_flags_absent": [
+      "--no-sandbox",
+      "--disable-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-namespace-sandbox",
+      "--disable-seccomp-filter-sandbox",
+      "--disable-gpu-sandbox",
+      "--single-process",
+      "--in-process-gpu",
+      "--disable-web-security",
+      "--ignore-gpu-blocklist"
+    ],
+    "software_gpu_args_present": [
+      "--enable-unsafe-swiftshader",
+      "--use-gl=angle",
+      "--use-angle=swiftshader-webgl"
+    ]
+  },
+  "privacy": {
+    "method": "Bounded complete UTF-8 decoding of outer non-ZIP and nested trace entries plus explicit HAR cookie/auth-header check; values not emitted. All four report PNG visually inspected separately.",
+    "decoded_text_entries": 35,
+    "decoded_text_bytes": 994970,
+    "pattern_counts": {
+      "github_token": 0,
+      "openai_like_token": 0,
+      "aws_access_key": 0,
+      "private_key_material": 0,
+      "credential_bearing_url": 0,
+      "bearer_credential": 0,
+      "private_chat_or_old_context_marker": 0,
+      "attachment_or_download_handle": 0
+    },
+    "nonempty_auth_cookie_headers": [],
+    "text_inventory": [
+      {
+        "name": "outer/host.log",
+        "bytes": 126,
+        "sha256": "ce680d3331541c6586354ac7144ee9e9705cf60b06d8795f99edbc2eb279791f",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "outer/report.json",
+        "bytes": 23321,
+        "sha256": "ac42b74f34c81d4a538ce17559b3f0963b89b67d94f30c3f33670940dfdef461",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/trace.trace",
+        "bytes": 430561,
+        "sha256": "ff0df64e179807a81f93e2a81918763b47e00cd4739d3f4baba8a4943ba74dbe",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/trace.network",
+        "bytes": 70700,
+        "sha256": "572f797c20e07ed5a3b2584dac177acebd59cefab568061b42793acd1c05ad6a",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/b8d0c90ceb6859d9eaf355c59481c797d91a15af.html",
+        "bytes": 62157,
+        "sha256": "cf12bae4142980b513375a3a173c4249e457d58e760a366b90153c676446d148",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/ce816630ed7e2b67b90211ed971ef743c78297c1.json",
+        "bytes": 5800,
+        "sha256": "be9c67bae680a3e980569cabdbc15b8e2c51d87abce7b4eedf4e011db9c2434b",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/7084d1e8418e7b4f55939645f5954bf81e6378a8.json",
+        "bytes": 946,
+        "sha256": "2548fd1f6ff3b0870933cb7c941618ae7138a181c09dc534a9d0bd3593f86d04",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/82b297f113c0eca8e20c594025b6ccd24fb70cde.json",
+        "bytes": 5858,
+        "sha256": "07886709fa948d041e7b731ec4377bfdf5596424b2f34963b102f5d599069146",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/7c217ad0f31911230ec4c3179ccefe60f226cb32.json",
+        "bytes": 18,
+        "sha256": "0c4351cc87a128e40b4ecbcaea98d80f8d53909c398cde86c3e38540f82ee7dd",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/0ae418dc843d8f4ec67ecf7e1af12dc628f08aa1.json",
+        "bytes": 5828,
+        "sha256": "55027657975c8b82b12468c8d8c23dbbb251307f3ab9970104969579eb04d22b",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/94414fb7741399a00e2f1e242e459ae47f7f2422.json",
+        "bytes": 5829,
+        "sha256": "177d264920716397d89fa43ac3487e98802b6ad04dc2b77264abd0010f6dd390",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/016b923329c1da83b41508d76021f3e792aa0438.json",
+        "bytes": 17,
+        "sha256": "bfa313e4f3452b71f5040b95fac343b0f6afedba150fb8f8481b49f594cadc62",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/43fe7914199666c724a3521dea93bfcf6f88cab2.json",
+        "bytes": 5822,
+        "sha256": "043cf475f24522fd29dd16253e07f05fa0e6288e97854146a663e733160151f4",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/334178fc641f8918149a15d0ec57404d5f358448.json",
+        "bytes": 5823,
+        "sha256": "01aeea4978ad644337e2edfb1a91d0c369500e0c0e794c2d2f50c30a16fd39bd",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/a5d24fef9d0ed7a5a38e79277f24452f4301600e.json",
+        "bytes": 28,
+        "sha256": "917bbd1eef4e4fcebd41666ce28f80c3782d60d7eb84f3423ea56ccc8582dc02",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/8d671b3dd5b4cc4657b7e08efcd2295831c06dbc.json",
+        "bytes": 5838,
+        "sha256": "c5f5b8351f0b91eb56b5126742e71a6019bde19ca39c5ad4b544eb99f7355507",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/66595507e2e1e0bd71ac4463d30347b37538618d.json",
+        "bytes": 29,
+        "sha256": "40ffc1fd439cde0119b7a6ad1957d88d466bb6cfe66e1c9205ddcac7a097b929",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/4087294da9a97ada9ee18ddd20f9e3856f5e6700.json",
+        "bytes": 5838,
+        "sha256": "378aa7a1039720cbc4052c740d7e3294e42f1fc99496f8ea3624833d63dcb868",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/ba20ef87cfb1737ca3de928e367fc00efa3a2141.json",
+        "bytes": 30,
+        "sha256": "8637041f6121158f71997068938569bc967a2efc99dcac65f93ee7e0b3bb7d44",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/067a05cf94ddf9b256f7e1f01d319addc9e219a9.json",
+        "bytes": 5839,
+        "sha256": "05317b57e64082707bb9583031926b6fcecf12b668aa4dbf8e17c49dbb41b302",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/213b1bc8733f107110b477b29556b095c2d0768b.json",
+        "bytes": 31,
+        "sha256": "57120acd775d555a1eec0cc00ac436fcd0f8d17dd68d703d66f2a1e382296164",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/1511fab9caed99ca5124b82f95f842413f1349e5.json",
+        "bytes": 5840,
+        "sha256": "d9a00eab7d982996fe529cfd40991879a7fb9efd6cad081d5425694ac7eeee6c",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/5eb839014a8749fe9318c64469d033da17158443.json",
+        "bytes": 2636,
+        "sha256": "61707a44235225abf43cd8a879b7edc5c04bc2e4c7eac420a840f3d53aa66854",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/3c1fe911c9538b677416006aafb775e932bfed51.json",
+        "bytes": 20,
+        "sha256": "d0a71ac0e1c93d99f569332543d27029e99d7a9480ad0c0d9669dec8af6b36e9",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/75e3194280e883ce2035551011857e3fcff888bb.json",
+        "bytes": 5824,
+        "sha256": "4f8baa2361505347455539f518c1c439bb1e6f019579fedc649d775a5b0744d5",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/d0b255931a51f8e07a49daaf2a42c441445fdec1.json",
+        "bytes": 16,
+        "sha256": "ad3c2a08c5c85ca19511fa98f4c129be3b8ef474023f0e2209e7affbdd6cfb72",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/9773db3dff74bd002e8078f182bd63caf75c240c.json",
+        "bytes": 5823,
+        "sha256": "1bb1973c826d546072e7c4da49708a36d5ef4e5886a3e190a395cf3c3cea7201",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/6b99b0a1321d4bf12f93602c3519df2aa31069f3.json",
+        "bytes": 69042,
+        "sha256": "f0a2d3a267af3fdaee6636ecc752f185f1a1aab84a71935a86c4ce908839a203",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/e005f890392b354a6224de20e6e5cbda3ad268e5.json",
+        "bytes": 55112,
+        "sha256": "d3f5698689c421b8f5cecf712414ef2140be0f3c84fa5c4e93dcaa7d9d4e0e06",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/00f8ba96440989c6ed18fd41320ef78dbde622ae.json",
+        "bytes": 55116,
+        "sha256": "1705d2a23e96a0340a257dba176f55e0e2fd03e01765c02950f5352784598009",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/a947a4b180e1b5872e2d2e6042c6a26be55110ef.json",
+        "bytes": 17,
+        "sha256": "9428c49b91cf9095d4068dacd4aa4dac61d878b51431efd0f3af6a34b2aed89f",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/23f5ad1ac26019938905c1455a952e72deab4a47.json",
+        "bytes": 55115,
+        "sha256": "0352cbda4866c5399f40c567a64185586231d3a0134d2ce73256df5934df7cb8",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/cb35969b6919b761c5b64fdf5035a382f99eedbb.json",
+        "bytes": 55116,
+        "sha256": "fbcf8330e90171fabf191f74e9af2fc11bec66023456bb21b74351ce4abd5a26",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/trace.stacks",
+        "bytes": 9218,
+        "sha256": "493f47b9aa0ef95a1df7b1f36cf7fcb400be0020f994d1d2ef4d669707e43a5c",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      },
+      {
+        "name": "trace/resources/src@33fb52e146d7d1a636cc9ee40cb0418c9907511a.txt",
+        "bytes": 35636,
+        "sha256": "691aa72ec7145a21b9c22df22394f5c47ac59d192254157902960ac56bd81ac0",
+        "pattern_counts": {
+          "github_token": 0,
+          "openai_like_token": 0,
+          "aws_access_key": 0,
+          "private_key_material": 0,
+          "credential_bearing_url": 0,
+          "bearer_credential": 0,
+          "private_chat_or_old_context_marker": 0,
+          "attachment_or_download_handle": 0
+        }
+      }
+    ],
+    "qualification": "Heuristic obvious-credential/private-context scan, not exhaustive secret detection."
+  }
+}

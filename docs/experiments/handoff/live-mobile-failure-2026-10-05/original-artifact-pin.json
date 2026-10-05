@@ -1,0 +1,11 @@
+{
+  "artifact_id": 11332948215,
+  "name": "live-cells-browser-a57a6854-original.zip",
+  "bytes": 8544954,
+  "sha256": "c0b5cddbc1d5d520e80f079c93bbac2adffc446bff04d1b1bd1d4dac91352ba0",
+  "run_id": 37282535160,
+  "head": "a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+  "tree": "2f9f0760ada0bbd1812a232bc6a30883242c76d3",
+  "outer_crc_pass": true,
+  "inflated_bytes": 11208017
+}

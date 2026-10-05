@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "run_id": 37282535160,
+  "head": "a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+  "tree": "2f9f0760ada0bbd1812a232bc6a30883242c76d3",
+  "artifacts": [
+    {
+      "id": 11332948215,
+      "name": "live-cells-browser-a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+      "bytes": 8544954,
+      "digest": "sha256:c0b5cddbc1d5d520e80f079c93bbac2adffc446bff04d1b1bd1d4dac91352ba0",
+      "expired": false
+    },
+    {
+      "id": 11332742768,
+      "name": "dense-recording-browser-a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+      "bytes": 15861743,
+      "digest": "sha256:dedbdb10d7e3b9ab5b8a1e504cc0077c1662ab2bc8bdac73bb2b06e966bce5b8",
+      "expired": false
+    },
+    {
+      "id": 11332123954,
+      "name": "recorded-browser-a57a6854b633c8e272eb4012ff11a0ec125e6fc2-1",
+      "bytes": 15148582,
+      "digest": "sha256:b868053a3962f78117fe33da2fd569ac7f560f904252893eccc77bfe37ad2380",
+      "expired": false
+    }
+  ],
+  "qualification": "Artifact metadata only. Original LIVE failure saved; other original ZIPs not downloaded or independently reviewed."
+}

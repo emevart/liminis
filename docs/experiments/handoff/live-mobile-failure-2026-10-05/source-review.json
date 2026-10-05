@@ -1,0 +1,207 @@
+{
+  "schema": "liminis-independent-source-review-v1",
+  "reviewed_at_utc": "2026-10-05T08:18:01.669441+00:00",
+  "stage": "LIVE mobile readout; source review only",
+  "verdict": "QUALIFIED_SOURCE_PASS",
+  "blocking_findings": [],
+  "blocker_count": 0,
+  "binding": {
+    "head": "a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+    "tree": "2f9f0760ada0bbd1812a232bc6a30883242c76d3",
+    "base_head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+    "base_tree": "c5775c00a150768f2819e265a4165d8605bd48e3",
+    "clean_worktree_observed": true,
+    "changed_paths": [
+      "crates/liminis/src/cell-viewer.html",
+      "docs/ACCEPTANCE.md",
+      "docs/checkpoints/2026-10-05-live-mobile-readout.md",
+      "scripts/check_live_cells_browser.mjs"
+    ],
+    "product_author_commit": "f939521c7999f5f2d226db462c4d0ad2900eb877",
+    "qa_author_commit": "a973b25b47b7bf66330d280a199aee4b1544f07b",
+    "author_file_bytes_match_final": true
+  },
+  "review_method": {
+    "independent_of_product_qa_and_root_docs_authorship": true,
+    "read_only_source_review": "AGENTS и относящиеся к scope ADR/acceptance/checkpoint; полный изменённый HTML и QA script, полный diff, adjacent semantics и frozen combined bindings. Последняя a57 поправка только двух docs перечитана отдельно.",
+    "performed": "Локальные Git/object/byte сравнения и чтение исходников; запись только этих двух собственных отчётов.",
+    "not_performed": [
+      "browser execution",
+      "HTTP probes",
+      "CI launches",
+      "Cargo or model execution",
+      "test reruns",
+      "artifact acceptance",
+      "author/source/Git mutations"
+    ]
+  },
+  "source_files": [
+    {
+      "path": "crates/liminis/src/cell-viewer.html",
+      "bytes": 62157,
+      "sha256": "cf12bae4142980b513375a3a173c4249e457d58e760a366b90153c676446d148",
+      "git_blob": "3eaeda356b01ab5a300425673769a878f82fa801"
+    },
+    {
+      "path": "docs/ACCEPTANCE.md",
+      "bytes": 161664,
+      "sha256": "209d1d7b74594d23adfe0515fb18a40e7b338a9fd41f6f4039ba955c74d0fc9e",
+      "git_blob": "548ac154a5878112fb3c79559103e840954ccf7a"
+    },
+    {
+      "path": "docs/checkpoints/2026-10-05-live-mobile-readout.md",
+      "bytes": 6006,
+      "sha256": "05dc7f2d716105e9145ca8222911ef2e121a1e9794d961e58f479b3b14cd9ae9",
+      "git_blob": "1fc91f9bffe7df4bb549cbb521408074176b14d2"
+    },
+    {
+      "path": "scripts/check_live_cells_browser.mjs",
+      "bytes": 35636,
+      "sha256": "691aa72ec7145a21b9c22df22394f5c47ac59d192254157902960ac56bd81ac0",
+      "git_blob": "f3262c693b34dc55d0b106e47916c8ac01a767c6"
+    }
+  ],
+  "byte_proofs": {
+    "product_change_confined_to_800px_media_block": true,
+    "prefix_before_media": {
+      "bytes": 8990,
+      "sha256": "05e5ec1731d6b8e279646e13d535ef75cbf38e603ac66b6efed94a0d957d2b4f",
+      "identical_to_base": true
+    },
+    "suffix_from_520px_media": {
+      "bytes": 52090,
+      "sha256": "819527b6c9dcb7e6671eb516345ae23975acf435fb1989a8116bbffd86fdbe0a",
+      "identical_to_base": true
+    },
+    "old_800px_block_bytes": 1386,
+    "new_800px_block_bytes": 1077,
+    "acceptance_old_prefix": {
+      "bytes": 159102,
+      "exact_preserved": true
+    },
+    "acceptance_append_bytes": 2562,
+    "unchanged_protected_objects": [
+      {
+        "path": ".github/workflows/ci.yml",
+        "git_object": "75e81cf273d7499ed20c8eef496d7a45eadbe8a0",
+        "identical_to_base": true
+      },
+      {
+        "path": "docs/SPEC.md",
+        "git_object": "32bf455e15a3a460590a9fa4001074e4f9512829",
+        "identical_to_base": true
+      },
+      {
+        "path": "docs/NORTH_STAR.md",
+        "git_object": "3f43d7ba6cdd3086c62b05d9aa374cba82db8048",
+        "identical_to_base": true
+      },
+      {
+        "path": "docs/DECISIONS.md",
+        "git_object": "4c4ef10f0193aafd34b90a06fdc2b640b7e073d8",
+        "identical_to_base": true
+      },
+      {
+        "path": "crates/liminis-core",
+        "git_object": "1f9031142731d138bf6de243ab2ac13d644e1553",
+        "identical_to_base": true
+      },
+      {
+        "path": "configs",
+        "git_object": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+        "identical_to_base": true
+      },
+      {
+        "path": "site",
+        "git_object": "cbc916075a0f835e2cbd6e5ab824ed4849cfeff5",
+        "identical_to_base": true
+      },
+      {
+        "path": "crates/liminis/src/cell-viewer-3d.mjs",
+        "git_object": "c9c299a89431fd76a7ccc76ef408464fe5f5f69c",
+        "identical_to_base": true
+      },
+      {
+        "path": "crates/liminis/src/cells_host.rs",
+        "git_object": "ff6f0113d9ed80c9d14e1a4782370240865ffb69",
+        "identical_to_base": true
+      },
+      {
+        "path": "crates/liminis/src/vendor/three-r180",
+        "git_object": "37a4b0a1e61dc9e76649d0b37cc50eaa8bdb55f4",
+        "identical_to_base": true
+      },
+      {
+        "path": "scripts/check_physical_projection_browser.mjs",
+        "git_object": "02338c9a9bf2f1b58822b835b3b4adf289b76ff3",
+        "identical_to_base": true
+      },
+      {
+        "path": "scripts/check_physical_3d_browser.mjs",
+        "git_object": "731f080aa30e4099265df54ef741ed98533159ac",
+        "identical_to_base": true
+      },
+      {
+        "path": "scripts/cell-viewer-3d.test.mjs",
+        "git_object": "42234e3e59aa4c364ddf2caf297cbee56a251edc",
+        "identical_to_base": true
+      }
+    ]
+  },
+  "product_assessment": [
+    "Изменение ограничено общим mobile CSS <=800px: существующие chamber2 rows stage → static readout → side теперь применяются и chamber1; masthead/offline rows и workspace display:contents сохранены.",
+    "Прежние physical mobile bottom:0 и z-index:8 возвращены в static readout. Physical stage min-height:560 и ранее действовавшие height/minimum rules не изменены. Их новые фактические computed geometry/pixels требуют runtime regression.",
+    "Desktop CSS, <=520px специальные rules, весь DOM/IDs/JavaScript/control/polling/rendering вне изменённого media block побайтно прежние. dt, ×N/FPS/model/API/code/config не меняются.",
+    "Весь общий HTML изменён: whole-file identity или перенос старого GL artifact PASS не заявляются. Корректный bridge — explicit CSS impact + прежние renderer/vendor/host/QA/guards + fresh actual GL/projection gates.",
+    "Chamber1 glyph placement остаётся schematic; изменение layout не является новым физическим projection proof."
+  ],
+  "qa_assessment": [
+    "В прежнюю paused responsive phase добавлены реальные DOM bounds, полный readout text, horizontal overflow, clipping-ancestor checks и native elementFromPoint hit tests. Native scroll/Find используют уже подтверждённый живой actual API cell; нет substituted API/fixtures/hitmaps.",
+    "Viewport cases 1440/590/420/390/320 при height1000 сохраняют старые размеры и добавляют390. Проверяются stage dimensions и mobile stage/readout/side order; physical minimum560 и <=520 chamber1 minimum470 не перенастроены.",
+    "Absent exact u64 ID снимает selection; следующий native Find восстанавливает exact saved cell ID и восемь common primary inspector fields, genome key/generation, последний нижний phenotype field. Полные bounds/scroll подтверждают доступность inspector; каждое physical xyz/phenotype поле отдельно здесь не assert-ится.",
+    "Resources/events сравниваются с actual paused API; display precision учитывается. Final raw model fields tick/running/dt/pacing/target/sim_time/model/summary/cells/resources/residual/events deepStrictEqual исходному snapshot.",
+    "Request baseline до resize; новые окна допускают только same-origin GET /api/state и /api/history. Model-control POST/другие запросы запрещены; capture ограничен1024, overflow даёт sticky failure.",
+    "650ms/4000ms в responsive evidence — прежние source constants, не assertion измеренной responsive cadence. Прежний actual30/60 polling guard сохранён.",
+    "Прежние caption/API/atomic Step/pacing/manual speed/invalid speed/held state+pixels/Maximum/Save acknowledgement gates и final error/source/stopping/time/cleanup logic сохранены. Official runtime/config/launch guards не ослаблены.",
+    "Новая нормальная responsive phase ожидает35 layout/full-page PNG плюс2 прежних held PNG; actual count и полнота будут проверяться по будущему оригинальному artifact, здесь изображения не существуют и не приняты."
+  ],
+  "closed_findings": [
+    {
+      "finding": "Сохранить bottom:0/z-index:8 для прежнего physical static grid readout.",
+      "resolution": "Narrow product follow-up f939521c; exact final author bytes подтверждены.",
+      "status": "CLOSED"
+    },
+    {
+      "finding": "Docs не должны утверждать отдельный exact assertion каждого inspector/xyz/phenotype поля или измеренной responsive polling cadence.",
+      "resolution": "Root docs-only e2e1aff квалифицируют primary fields/genome/generation/last phenotype и source constants.",
+      "status": "CLOSED"
+    },
+    {
+      "finding": "Общий HTML меняется; GL bridge нельзя называть whole-source identity к старому e2.",
+      "resolution": "Final docs-only a57a6854 описывает change-impact bridge и требует fresh actual GL/projection gates.",
+      "status": "CLOSED"
+    }
+  ],
+  "qualifications": [
+    "Это разрешение перейти к одному protected exact-head CI, не browser/CI/UX acceptance и не merge approval.",
+    "Источник подтверждает сохранность прежних деклараций/guards. Computed geometry, scroll usability, PNG stability, runtime cadence/traffic, source served bytes и отсутствие новых ошибок требуют actual evidence.",
+    "QA сохраняет прежний sandbox/argv и error/cleanup механизм; этот source review не приписывает ему новый eight-option assertion, native unhandled sampler, comprehensive post-cleanup aggregate или новый browser-body SHA oracle.",
+    "Browser Save проверяет acknowledgement; host restart/resume здесь не доказаны.",
+    "Предыдущие runtime PASS привязаны к старым HEAD/tree/run. Исторический5bea encoded-PNG FAIL остаётся с неизвестной причиной. LAB21/publicLAB/LAB4/models/causal retries сохраняют HOLD.",
+    "No hardware FPS, new scientific validation, full public dataset delivery or exhaustive security/secret-scan claim."
+  ],
+  "remaining_gates": [
+    "Один full protected exact-head CI со всеми обязательными browser steps.",
+    "Независимая новая actual chamber1 mobile320/390/590+desktop и physical mobile regression, оригинальные source-bound PNG/trace/request/state/error/cleanup proofs.",
+    "Fresh actual GL/projection PASS под явно квалифицированным CSS change-impact bridge; старый GL artifact review остаётся историческим.",
+    "Closed durable affected originals/reviews archive и normal network readback до guarded merge.",
+    "После guarded merge отдельные fresh MAIN regression и existing public gate."
+  ],
+  "pending_status": {
+    "ci": "NOT_STARTED_AT_REVIEW",
+    "actual_browser_acceptance": "PENDING",
+    "artifact_archive_readback": "PENDING",
+    "merge": "PENDING",
+    "fresh_main_public_acceptance": "PENDING"
+  }
+}

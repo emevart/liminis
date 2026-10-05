@@ -1,0 +1,285 @@
+{
+  "schema": "liminis-independent-browser-failure-review-v1",
+  "reviewed_at_utc": "2026-10-05T08:29:55.564567+00:00",
+  "verdict": "CONFIRMED_FAIL_HOLD",
+  "failure_artifact_integrity_and_bounded_privacy_review": "QUALIFIED_PASS",
+  "acceptance_pass": false,
+  "binding": {
+    "head": "a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+    "tree": "2f9f0760ada0bbd1812a232bc6a30883242c76d3",
+    "run_id": 37282535160,
+    "attempt": 1,
+    "artifact_id": 11332948215,
+    "scenario": "default legacy cell-chamber",
+    "chamber_format": 1,
+    "original": {
+      "artifact_id": 11332948215,
+      "name": "live-cells-browser-a57a6854-original.zip",
+      "bytes": 8544954,
+      "sha256": "c0b5cddbc1d5d520e80f079c93bbac2adffc446bff04d1b1bd1d4dac91352ba0",
+      "outer_crc_ok": true,
+      "outer_entries": 9,
+      "outer_expanded_bytes": 11208017,
+      "nested_crc_ok": true,
+      "nested_entries": 260,
+      "nested_expanded_bytes": 12058539,
+      "combined_expanded_bytes": 23266556,
+      "cap_bytes": 67108864,
+      "safe_unique_inventory": true
+    },
+    "tracked_clean_start_reported": true,
+    "git_served_html_exact": true,
+    "html_bytes": 62157,
+    "html_sha256": "cf12bae4142980b513375a3a173c4249e457d58e760a366b90153c676446d148",
+    "late_end_head_tree_assertions": "NOT_EXECUTED"
+  },
+  "scope": {
+    "performed": [
+      "original ZIP size/SHA/closed inventory/CRC",
+      "nested trace inventory/CRC and complete bounded UTF-8 scan",
+      "passive trace action/network/snapshot inspection",
+      "exact retained HTML body versus final Git source",
+      "actual API bodies around failure",
+      "all four report PNG via view_image",
+      "both retained held PNG via view_image and exact encoded byte comparison",
+      "read-only source control flow inspection"
+    ],
+    "not_performed": [
+      "browser or HTTP execution",
+      "CI rerun",
+      "model/Cargo/test execution",
+      "product/QA/CI/Git/source edits",
+      "new causal probe"
+    ],
+    "source_review_files": "Previously frozen source review remains unchanged."
+  },
+  "failure": {
+    "location": "scripts/check_live_cells_browser.mjs:420 calls visibleTarget at346",
+    "target": "#cell-detail .object-grid dd >> nth=-1",
+    "message": "locator.scrollIntoViewIfNeeded: Element is not attached to the DOM",
+    "phase": "first responsive case1440x1000, lower inspector native scroll stability wait",
+    "completed_check_count": 12,
+    "completed_checks": [
+      "Chromium command line contains no sandbox-disabling flags",
+      "default format-1 API has no fabricated physical coordinates",
+      "real Rust cells response rendered in Chromium",
+      "Pause acknowledgment has no subsequent accumulated ticks",
+      "Step advances exactly one real tick while paused",
+      "manual 1× reports 1/30 TPS at unchanged dt=30s",
+      "presets switch multiplier without reset or ticks while paused",
+      "invalid manual speed gives visible error and leaves pacing unchanged",
+      "canvas contains real cell glyphs; keyboard selection updates inspector",
+      "30/60 FPS hold pixel-identical confirmed paused state without model advancement",
+      "Maximum advances real ticks and remains responsive to Pause",
+      "Save acknowledges persisted checkpoint without advancing paused model"
+    ],
+    "failed_responsive_case": 1440,
+    "responsive_complete": false,
+    "mobile_cases": "NOT_EXECUTED:590/420/390/320",
+    "later_physical_projection_gl_steps": "SKIPPED according to supplied CI task metadata; no independent runtime PASS"
+  },
+  "established_evidence": [
+    {
+      "fact": "Original report retains failed status and only one run-stage failure; no cleanup failure was appended.",
+      "qualification": "Reported absence of teardown error is not a separately logged closure/drain ACK."
+    },
+    {
+      "fact": "Native absent-ID Find and present-ID Find actually clicked; exact id240, shown tick2138, parent122, birth793, age/mass/division mass/energy, genomeK+0 and generation5 matched saved actual API snapshot.",
+      "qualification": "Lower phenotype assertion/resources/events/end-model equality and final responsive gates were not reached."
+    },
+    {
+      "fact": "Trace call@317 resolved the requested last dd visible with text0.05 at8210.152ms; waitForSelector returned ElementHandle at8219.276ms.",
+      "qualification": "This attached-node resolution is a trace fact; failed scroll itself is recorded in report/error stack, not a separate complete trace action."
+    },
+    {
+      "fact": "GET /api/state starts8218.488ms, duration4.128ms, computed response end8222.616ms; this overlaps lower-scroll action after resolution.",
+      "qualification": "HAR monotonic start+duration is trace timing, not a recorded exact JavaScript commit timestamp."
+    },
+    {
+      "fact": "before-failure snapshot8267.967ms serializes new inspector/Genome/Phenotype DOM whereas8221.634ms snapshot still refers to prior root; visible values remain id240/tick2138.",
+      "qualification": "Snapshot serializer indicates DOM recreation, but does not record the exact mutating JS stack/node identity at detach."
+    },
+    {
+      "fact": "All three late retained API bodies are byte-identical, paused tick2138/dt30/cells91; selected cell equals report raw API fields.",
+      "qualification": "Final whole-model deep comparison was not executed; this is retained browser-body evidence around the failure."
+    },
+    {
+      "fact": "Actual resize action starts6474.415ms; only three later traced requests, all loopback GET /api/state200.",
+      "qualification": "No control POST appears in this observed window. Per-case final request audit was not reached; no claim about unrecorded traffic after trace stop."
+    },
+    {
+      "fact": "Source commitState calls renderInspector for every successfully committed state, even same paused tick; renderInspector calls host.replaceChildren and constructs fresh dl/dd.",
+      "qualification": "This deterministic source mechanism and overlapping request strongly support polling-detach explanation, but no direct mutation/call-stack causal proof was captured."
+    }
+  ],
+  "diagnosis": {
+    "established": "A transient lower inspector dd detached during the native stability/scroll operation. The failure is genuine QA execution failure and remains FAIL.",
+    "supported_hypothesis": "Periodic successful paused-state poll rebuilt inspector descendants while Playwright held a resolved dd handle.",
+    "not_established": [
+      "exact mutating JavaScript call responsible for this specific detach",
+      "a mobile CSS layout defect",
+      "model advancement or changed selected cell data at failure",
+      "completed responsive/model-immutability acceptance",
+      "generic flaky/encoding/network root cause"
+    ],
+    "no_retry_for_green": true
+  },
+  "narrow_qa_suggestion": {
+    "status": "Suggestion only; Astra/root must approve exact scope before code change.",
+    "approach": "Avoid multi-turn stability scrolling of replaceable dl/dd. Keep native scroll and strict target bounds/hit/value proof by synchronously resolving the current leaf under stable #cell-detail and observing it with its exact expected inspector/group/key/value in one browser evaluation; alternatively native-scroll a persistent suitable ancestor, then freshly resolve and atomically inspect the requested leaf. The action must retain real document/sidebar scroll evidence and fail if the current exact target is missing, clipped, obscured or mismatched.",
+    "preserve": [
+      "real absent→present Find",
+      "exact API inspector/phenotype proof",
+      "native scroll/hit checks and full rect bounds",
+      "request/noPOST/model equality gates",
+      "all old body/source/sandbox/errors/cleanup/time budgets",
+      "all viewport PNG requirements"
+    ],
+    "prohibited_workarounds": [
+      "catch-and-ignore detached error",
+      "rerun or retry loop",
+      "disable/pause polling",
+      "replace API/model state",
+      "weaken native clipping/hit/value assertions",
+      "product changes based solely on this artifact"
+    ]
+  },
+  "screenshots": {
+    "all_four_report_png_genuinely_viewed": true,
+    "held_pair_genuinely_viewed": true,
+    "inventory": [
+      {
+        "name": "failure.png",
+        "bytes": 249017,
+        "sha256": "b1e9d8281d81d3b577c8f276f3dfa332614a09a9a97a70025e08bc43e5e851e1",
+        "width": 1440,
+        "height": 1000,
+        "mandated_viewed": true
+      },
+      {
+        "name": "held-30fps.png",
+        "bytes": 35164,
+        "sha256": "5031642b14da96b9b996fc521ffd4aec7e92a21fa94525bf2c41821198cb81fb",
+        "width": 1130,
+        "height": 852,
+        "mandated_viewed": false
+      },
+      {
+        "name": "held-60fps.png",
+        "bytes": 35164,
+        "sha256": "5031642b14da96b9b996fc521ffd4aec7e92a21fa94525bf2c41821198cb81fb",
+        "width": 1130,
+        "height": 852,
+        "mandated_viewed": false
+      },
+      {
+        "name": "viewer-1440-viewport-inspector-upper.png",
+        "bytes": 249038,
+        "sha256": "b33d7ac8a65ff61b329ae3fc3a8de4daf65b7c732497e094a32cef6b9d8b8f87",
+        "width": 1440,
+        "height": 1000,
+        "mandated_viewed": true
+      },
+      {
+        "name": "viewer-1440-viewport-readout.png",
+        "bytes": 236722,
+        "sha256": "9a08690225ed576916150d58524e8a8f98f5fa44c2b4a2c8ee1ea3280e46d486",
+        "width": 1440,
+        "height": 1000,
+        "mandated_viewed": true
+      },
+      {
+        "name": "viewer-1440-viewport-stage.png",
+        "bytes": 236713,
+        "sha256": "e1fa8a2df3a62599a458d4e0744fd6751e7fbb88826c3f8cd3cd203cce81063a",
+        "width": 1440,
+        "height": 1000,
+        "mandated_viewed": true
+      }
+    ],
+    "visual_observations": [
+      "Stage/readout captures show1440 desktop,91 living cells, paused tick2138, dt30, Maximum and saved2138; full bottom controls are visible without readout covering stage/sidebar.",
+      "Upper inspector capture shows ID240 and raw-derived rounded primary/genome/phenotype values plus selected glyph ring; last phenotype0.05 is visually present.",
+      "Failure capture retains same selected cell/tick and desktop layout; no visible fatal/disconnect. It does not prove a successful completed lower native-scroll assertion.",
+      "Both earlier held canvases show8 living cells at model time90s/dt30 with selected ring; they are exact encoded-byte equal."
+    ],
+    "mobile_pngs": 0,
+    "qualification": "Desktop captures do not establish mobile normal flow, all-width usability or physical projection."
+  },
+  "held_and_runtime": {
+    "held_pngs_byte_identical": true,
+    "held_bytes": 35164,
+    "held_sha256": "5031642b14da96b9b996fc521ffd4aec7e92a21fa94525bf2c41821198cb81fb",
+    "reported_paused_state_requests": {
+      "fps30": 2,
+      "fps60": 2,
+      "intervalMs": 1400
+    },
+    "sandbox": {
+      "reported_enabled": true,
+      "browser_version": "149.0.7827.55",
+      "playwright": "1.61.1 (pinned by CI)",
+      "observed_forbidden_flags_absent": [
+        "--no-sandbox",
+        "--disable-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-namespace-sandbox",
+        "--disable-seccomp-filter-sandbox",
+        "--disable-gpu-sandbox",
+        "--single-process",
+        "--in-process-gpu",
+        "--disable-web-security",
+        "--ignore-gpu-blocklist"
+      ],
+      "software_gpu_args_present": [
+        "--enable-unsafe-swiftshader",
+        "--use-gl=angle",
+        "--use-angle=swiftshader-webgl"
+      ]
+    },
+    "trace_runtime": "Chromium149.0.7827.55, official Playwright1.61.1, Linux, deviceScaleFactor1",
+    "qualification": "Stock software GPU flags are observed; no hardware FPS/scientific throughput claim. Held equality belongs to this initial executed legacy phase, not new responsive acceptance."
+  },
+  "errors_cleanup": {
+    "final_serialized_report_page_errors": [],
+    "final_serialized_report_console_errors": [],
+    "resource_warnings": [],
+    "failure_count": 1,
+    "cleanup_failures_reported": 0,
+    "separate_callback_drain_or_closed_ack_fields": "NOT_RECORDED",
+    "native_unhandled_sampler": "NOT_INSTALLED; no native unhandled0 claim",
+    "final_no_error_acceptance_assertion": "NOT_EXECUTED",
+    "qualification": "Report is written after bounded trace/browser/host/temp cleanup. Empty recorded error arrays are qualified telemetry, not successful final acceptance."
+  },
+  "privacy": {
+    "decoded_utf8_entries": 35,
+    "decoded_utf8_bytes": 994970,
+    "pattern_counts": {
+      "github_token": 0,
+      "openai_like_token": 0,
+      "aws_access_key": 0,
+      "private_key_material": 0,
+      "credential_bearing_url": 0,
+      "bearer_credential": 0,
+      "private_chat_or_old_context_marker": 0,
+      "attachment_or_download_handle": 0
+    },
+    "nonempty_auth_cookie_headers": [],
+    "visible_png_obvious_private_context_found": false,
+    "verdict": "No obvious credentials/private-chat/old-context/download-handle matches in bounded scan; safe to archive with qualification.",
+    "qualification": "Heuristic UTF-8/text + actual six PNG visual review; not exhaustive secret detection or review of every binary trace screencast frame."
+  },
+  "supplemental_files": [
+    {
+      "file": "bounded-analysis.py",
+      "bytes": 9296,
+      "sha256": "50cbcc4c447cae9a2068a45c6b71168c3f60fe52e6ed614d253912a43d488e48"
+    },
+    {
+      "file": "bounded-analysis.json",
+      "bytes": 44686,
+      "sha256": "4422c6574eaafa8f6517ae4bc8e727c4cc1c85d162b2cc834d8cf1e98b13be47"
+    }
+  ],
+  "remaining": "Preserve original FAIL and archive/readback. Any QA adjustment needs scoped independent source review and one newly authorized fresh protected run; no current mobile/physical/projection/GL acceptance or merge approval. LAB/models/causal retries remain HOLD."
+}

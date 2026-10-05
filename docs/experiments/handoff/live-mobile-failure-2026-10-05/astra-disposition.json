@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "decision": "APPROVE_BOUNDED_QA_REPAIR",
+  "pr24_status": "HOLD_PENDING_NEW_CANDIDATE_GATES",
+  "failed_head": "a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+  "failed_tree": "2f9f0760ada0bbd1812a232bc6a30883242c76d3",
+  "run": "37282535160",
+  "attempt": 1,
+  "original_zip_sha256_verified": "c0b5cddbc1d5d520e80f079c93bbac2adffc446bff04d1b1bd1d4dac91352ba0",
+  "completed_legacy_checks": 12,
+  "failed_phase": "First responsive case, desktop 1440, lowerInspector native scroll",
+  "mobile_cases_executed": false,
+  "physical_projection_gl_steps_executed": false,
+  "actual_failure": "Element is not attached to the DOM",
+  "evidence": {
+    "selector": "#cell-detail .object-grid dd >> nth=-1",
+    "trace_call": "call@317",
+    "visible_dd_resolved_ms": 8210.152,
+    "element_handle_returned_ms": 8219.276,
+    "nearby_state_get_start_ms": 8218.488,
+    "nearby_state_get_duration_ms": 4.128,
+    "nearby_state_get_status": 200,
+    "failure_selected_id": "240",
+    "failure_paused_tick": 2138,
+    "initiating_mutation_stack_available": false,
+    "poll_as_unique_proven_cause": false,
+    "source_proves_descendants_replaced_on_state_commit": true,
+    "persistent_wrapper": "#cell-detail"
+  },
+  "authorized_file": "scripts/check_live_cells_browser.mjs",
+  "authorized_change": "Native scroll on persistent inspector wrapper; synchronous re-query and field-specific observation for both upper/lower current descendants",
+  "required_preservation": [
+    "Exact current ID/tick and API-derived primary and last-phenotype values",
+    "Field-specific viewport bounds, clipping, visibility and native hit checks",
+    "Actual scroll evidence and viewport/full-page screenshots",
+    "Absent-to-present Find and final unchanged paused model fields",
+    "No responsive model-control POST; original request/sandbox/poll/pixel/error/cleanup/time guards"
+  ],
+  "not_authorized": [
+    "Production, model, polling or renderer changes",
+    "JavaScript scroll fallback, retries, timers or timeout increase",
+    "Descendant retention across await or suppression of detachment errors",
+    "Wrapper-only visibility substituted for current field assertions",
+    "Unchanged-candidate rerun or repeat-until-green"
+  ],
+  "next_runtime_condition": "Independent failure review/archive and narrow source review, new exact frozen candidate, then one existing full protected CI under unchanged budget",
+  "previous_plan_files_modified": false,
+  "lab_status": "HOLD",
+  "review_activity": {
+    "browser_test_model_build_ci_http_runs": 0,
+    "git_or_product_mutations": 0,
+    "written_files": ["live-mobile-readout-failure-astra.md", "live-mobile-readout-failure-astra.json"]
+  }
+}

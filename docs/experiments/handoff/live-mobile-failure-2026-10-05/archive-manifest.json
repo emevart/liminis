@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "kind": "legacy LIVE mobile original failure evidence",
+  "candidate_head": "a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+  "candidate_tree": "2f9f0760ada0bbd1812a232bc6a30883242c76d3",
+  "workflow_run": 37282535160,
+  "attempt": 1,
+  "actual_acceptance": "CONFIRMED_FAILURE_HOLD",
+  "full_ci": "CONFIRMED_EXACT_CANDIDATE_CI_FAILURE_10SUCCESS_1FAIL",
+  "artifact_ids": [
+    11332948215
+  ],
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 8666713,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1592,
+      "sha256": "7ec0e78511f3b241f55925db7e9d008f0d5fa054603137d63d723906d75ce70c"
+    },
+    {
+      "path": "astra-disposition.json",
+      "bytes": 2700,
+      "sha256": "3e8303b83a8376d1bd08a3af7222694f603d43b0a49566ef25c962977dce5275"
+    },
+    {
+      "path": "astra-disposition.md",
+      "bytes": 4999,
+      "sha256": "0ac520728db6d8ce8c6d6adbf9665be34412b142f2abee70205825e5ce1c67f9"
+    },
+    {
+      "path": "bounded-analysis.json",
+      "bytes": 44686,
+      "sha256": "4422c6574eaafa8f6517ae4bc8e727c4cc1c85d162b2cc834d8cf1e98b13be47"
+    },
+    {
+      "path": "bounded-analysis.py",
+      "bytes": 9296,
+      "sha256": "50cbcc4c447cae9a2068a45c6b71168c3f60fe52e6ed614d253912a43d488e48"
+    },
+    {
+      "path": "candidate-source-pins.json",
+      "bytes": 2432,
+      "sha256": "be41874ee52f809e34670d1b890d13cf49f9851b7aa41a093a3457dc86a68b31"
+    },
+    {
+      "path": "exact-head-ci-receipt.json",
+      "bytes": 15816,
+      "sha256": "18c20899158c37c7a1a762da9286c0a5d4893ce275abb3c73c94c8b1c637f2cf"
+    },
+    {
+      "path": "failure-review.json",
+      "bytes": 13850,
+      "sha256": "0fd367e4a76c3cbf6b79656f5fcc5f32c2519a13b37fa5d098a4108ab30d0c9b"
+    },
+    {
+      "path": "failure-review.md",
+      "bytes": 6365,
+      "sha256": "9e5ccb38e4ffa462c04d4a23659eeac9b44b7af9c2832039cee858052b399fcd"
+    },
+    {
+      "path": "live-cells-browser-a57a6854-original.zip",
+      "bytes": 8544954,
+      "sha256": "c0b5cddbc1d5d520e80f079c93bbac2adffc446bff04d1b1bd1d4dac91352ba0"
+    },
+    {
+      "path": "original-artifact-pin.json",
+      "bytes": 376,
+      "sha256": "47cf0dc307c02a8f18cbcbe9de5e984c305eaf7ddba9f0bbc01a29173d972234"
+    },
+    {
+      "path": "source-review.json",
+      "bytes": 12414,
+      "sha256": "1a6acfaeb3b446bef8a3292bce080878943503a47466b0529b4802a85ce68aa2"
+    },
+    {
+      "path": "source-review.md",
+      "bytes": 6150,
+      "sha256": "7e19067e660ea8f4010ed0fce42d489c26c54fcee55abbaa5f4a80f7f9ebe396"
+    },
+    {
+      "path": "workflow-artifact-index.json",
+      "bytes": 1083,
+      "sha256": "7b78f637c98c76f7569ebf43f925eab2a525e4cc419aed25c2ff4a712e3e5a45"
+    }
+  ],
+  "qualifications": [
+    "Original failure retained, no mobile or physical/projection/GL acceptance.",
+    "Source0 does not replace actual acceptance.",
+    "Polling-detach consistent with source/trace; exact mutating callback not proved.",
+    "Bounded privacy screen, not exhaustive secret guarantee.",
+    "No recorded/dense original ZIP republication or new independent review."
+  ]
+}
