@@ -29,9 +29,15 @@ paused phase. Сохранены старые viewport/PNG/gates, добавле
 captures stage/readout/upper+lower inspector/environment/events. Actual rects,
 full readout text, clipping/elementFromPoint native hit tests и настоящий
 scroll проверяют доступность. Find absent→present требует exact snapshot ID,
-всех inspector полей и phenotype; resources/events сравниваются с actual API.
+основных inspector полей/genome/generation и последнего нижнего phenotype
+field; полные bounds и scroll подтверждают доступ к верхнему/нижнему inspector.
+Это не отдельный assertion каждого physical xyz/phenotype поля;
+resources/events сравниваются с actual API.
 Request baseline ставится до resize/scroll; только прежние GET state/history
-допускаются, model-control POST не допускается. Final actual snapshot должен
+допускаются, model-control POST не допускается. Responsive counts/timestamps
+сохраняются;650/4000ms обозначают прежние source constants, не новый measured
+cadence assertion. Прежний actual30/60 polling guard остаётся неизменным.
+Final actual snapshot должен
 быть byte-equivalent по model fields. Никакие ответы/fixtures не фабрикуются.
 Прежние held pixels/state/pacing/clock/Save/sandbox/error/cleanup/time budgets
 не ослабляются. Node syntax/source checks не являются browserPASS.

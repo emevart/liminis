@@ -1830,7 +1830,10 @@ actual320/390/590px и desktop: stage/readout/side rectangles, full readout text
 upper/lower inspector/environment/events. Viewport PNG до/после scroll
 сохраняются вместе с прежними full-page PNG и всеми старыми gates.
 Absent-ID Find должен снять selection, следующий настоящий Find должен
-восстановить exact ID/полный inspector/phenotype того же actual snapshot.
+восстановить exact ID/основные inspector поля/genome/generation и последний
+нижний phenotype field того же actual snapshot. Полные bounds/scroll
+подтверждают доступ к inspector; каждый physical xyz/phenotype field здесь
+отдельно не проверяется.
 Resources/events должны совпадать с actual API. Network baseline до resize
 и scroll исключает model-control requests; final tick/state/dt/pacing/summary/
 cells/resources/residual/events должны остаться прежними. Native Node syntax
