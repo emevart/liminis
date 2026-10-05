@@ -1,0 +1,182 @@
+name: Original paused3D evidence byte transport
+
+# Evidence-only branch. No product PR, checkout, build, browser or model run.
+# This workflow is never merged into main; the product candidate stays unchanged.
+on:
+  push:
+    branches: [codex/evidence-paused-3d-transport-20261005]
+    paths: [.github/workflows/evidence-paused-3d-transport.yml]
+
+permissions:
+  actions: read
+
+jobs:
+  original-byte-parts:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - name: Read one pinned original GitHub artifact and split its bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import io
+          import json
+          import os
+          import pathlib
+          import time
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          import zipfile
+
+          REPO = 'emevart/liminis'
+          REPO_ID = 1317617987
+          RUN = 37260833244
+          JOB = 111607516729
+          ARTIFACT = 11324254318
+          HEAD = '83fa1e52e478e2a33602a24bf83b5456e55e70a3'
+          TREE = '47ce45646315b09493d58d87ca8fce4dc867aa8d'
+          SIZE = 48498615
+          SHA = '413f5c6ddfb79df66135f4701fbfc4fbeca11a9aa1b65270bc9870351399f671'
+          PART = 16777216
+          deadline = time.monotonic() + 150
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+
+          opener = urllib.request.build_opener(NoRedirect())
+
+          def bounded_read(response, cap):
+              chunks, count = [], 0
+              while True:
+                  if time.monotonic() > deadline:
+                      raise TimeoutError('bounded evidence transport deadline')
+                  chunk = response.read(min(1048576, cap + 1 - count))
+                  if not chunk:
+                      break
+                  count += len(chunk)
+                  if count > cap:
+                      raise ValueError('evidence byte bound exceeded')
+                  chunks.append(chunk)
+              return b''.join(chunks)
+
+          def api_request(path):
+              # The bearer token is sent only to fixed api.github.com URLs.
+              return urllib.request.Request(
+                  'https://api.github.com/repos/' + REPO + path,
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                           'Accept': 'application/vnd.github+json',
+                           'X-GitHub-Api-Version': '2022-11-28'})
+
+          def api_json(path):
+              with opener.open(api_request(path), timeout=25) as response:
+                  return json.loads(bounded_read(response, 1048576))
+
+          try:
+              assert os.environ['GITHUB_REPOSITORY'] == REPO
+              assert os.environ['GITHUB_REF'] == 'refs/heads/codex/evidence-paused-3d-transport-20261005'
+              run = api_json('/actions/runs/' + str(RUN))
+              assert run['id'] == RUN and run['head_sha'] == HEAD
+              assert run['repository']['id'] == run['head_repository']['id'] == REPO_ID
+              assert run['head_branch'] == 'codex/paused-3d-pixel-qa'
+              assert run['event'] == 'pull_request'
+              # Read the completed LIVE job even while Rust is finishing.
+              # Transport never declares the whole workflow successful.
+              assert run['status'] in ('in_progress', 'completed') and run['conclusion'] in (None, 'success', 'failure')
+              job = api_json('/actions/jobs/' + str(JOB))
+              assert job['id'] == JOB and job['run_id'] == RUN
+              assert job['head_sha'] == HEAD and job['name'] == 'live cells browser acceptance'
+              assert job['status'] == 'completed' and job['conclusion'] == 'success'
+              meta = api_json('/actions/artifacts/' + str(ARTIFACT))
+              assert meta['id'] == ARTIFACT and not meta['expired']
+              assert meta['name'] == 'physical-3d-browser-' + HEAD
+              assert meta['size_in_bytes'] == SIZE and meta['digest'] == 'sha256:' + SHA
+              assert meta['workflow_run']['id'] == RUN
+              assert meta['workflow_run']['head_sha'] == HEAD
+              assert meta['workflow_run']['repository_id'] == REPO_ID
+              try:
+                  opener.open(api_request('/actions/artifacts/' + str(ARTIFACT) + '/zip'), timeout=25)
+                  raise ValueError('expected official artifact storage redirect')
+              except urllib.error.HTTPError as redirect:
+                  if redirect.code != 302:
+                      raise
+                  location = redirect.headers['Location']
+                  redirect.close()
+              parsed = urllib.parse.urlsplit(location)
+              host = parsed.hostname or ''
+              assert parsed.scheme == 'https' and not parsed.username and not parsed.password
+              assert parsed.port in (None, 443)
+              assert host.endswith('.blob.core.windows.net') or host.endswith('.actions.githubusercontent.com')
+              # New request has NO Authorization header. Redirects remain disabled.
+              with opener.open(urllib.request.Request(location), timeout=25) as response:
+                  original = bounded_read(response, SIZE)
+              assert len(original) == SIZE and hashlib.sha256(original).hexdigest() == SHA
+              with zipfile.ZipFile(io.BytesIO(original)) as archive:
+                  assert archive.testzip() is None
+                  members = len(archive.infolist())
+              root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'liminis-original-3d-parts'
+              assert not root.exists()
+              root.mkdir()
+              parts = []
+              for ordinal, offset in enumerate(range(0, SIZE, PART), 1):
+                  raw = original[offset:offset + PART]
+                  folder = root / ('part-' + str(ordinal).zfill(3))
+                  folder.mkdir()
+                  name = 'original.part-' + str(ordinal).zfill(3) + '.bin'
+                  (folder / name).write_bytes(raw)
+                  receipt = {
+                      'schema': 'liminis-original-artifact-byte-part-v1',
+                      'purpose': 'transport only; browser acceptance belongs to original run',
+                      'repository': REPO,
+                      'original': {'artifact_id': ARTIFACT, 'run_id': RUN, 'source_head': HEAD,
+                                   'source_tree': TREE, 'bytes': SIZE, 'sha256': SHA,
+                                   'zip_crc': 'PASS', 'zip_members': members,
+                                   'job_id': JOB, 'job_conclusion': job['conclusion'],
+                                   'workflow_status': run['status'], 'workflow_conclusion': run['conclusion']},
+                      'transport': {'run_id': int(os.environ['GITHUB_RUN_ID']),
+                                    'run_attempt': int(os.environ['GITHUB_RUN_ATTEMPT']),
+                                    'source_head': os.environ['GITHUB_SHA']},
+                      'part': {'ordinal': ordinal, 'count': 3, 'offset': offset,
+                               'file': name, 'bytes': len(raw),
+                               'sha256': hashlib.sha256(raw).hexdigest()}}
+                  (folder / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+                  parts.append(receipt['part'])
+              assert [p['bytes'] for p in parts] == [16777216, 16777216, 14944183]
+              print(json.dumps({'status': 'PASS', 'original_id': ARTIFACT,
+                                'original_sha256': SHA, 'parts': parts}))
+          except Exception as error:
+              # Never print signed locations, request headers or bearer token.
+              print(json.dumps({'status': 'FAIL', 'exception_class': type(error).__name__,
+                                'http_status': getattr(error, 'code', None)}))
+              raise SystemExit(1)
+          PY
+
+      - name: Attach original bytes part 1
+        uses: actions/upload-artifact@v4
+        with:
+          name: physical-3d-original-83fa1e5-part-001-${{ github.sha }}
+          path: ${{ runner.temp }}/liminis-original-3d-parts/part-001/
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Attach original bytes part 2
+        uses: actions/upload-artifact@v4
+        with:
+          name: physical-3d-original-83fa1e5-part-002-${{ github.sha }}
+          path: ${{ runner.temp }}/liminis-original-3d-parts/part-002/
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Attach original bytes part 3
+        uses: actions/upload-artifact@v4
+        with:
+          name: physical-3d-original-83fa1e5-part-003-${{ github.sha }}
+          path: ${{ runner.temp }}/liminis-original-3d-parts/part-003/
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
