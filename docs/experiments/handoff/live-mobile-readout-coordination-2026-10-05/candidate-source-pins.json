@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "candidate_head": "a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+  "candidate_tree": "2f9f0760ada0bbd1812a232bc6a30883242c76d3",
+  "base_head": "813be1efad29569a3011f00697bd5d41b7397dc6",
+  "changed_files": [
+    {
+      "path": "crates/liminis/src/cell-viewer.html",
+      "git_blob": "3eaeda356b01ab5a300425673769a878f82fa801",
+      "bytes": 62157,
+      "sha256": "cf12bae4142980b513375a3a173c4249e457d58e760a366b90153c676446d148"
+    },
+    {
+      "path": "docs/ACCEPTANCE.md",
+      "git_blob": "548ac154a5878112fb3c79559103e840954ccf7a",
+      "bytes": 161664,
+      "sha256": "209d1d7b74594d23adfe0515fb18a40e7b338a9fd41f6f4039ba955c74d0fc9e"
+    },
+    {
+      "path": "docs/checkpoints/2026-10-05-live-mobile-readout.md",
+      "git_blob": "1fc91f9bffe7df4bb549cbb521408074176b14d2",
+      "bytes": 6006,
+      "sha256": "05dc7f2d716105e9145ca8222911ef2e121a1e9794d961e58f479b3b14cd9ae9"
+    },
+    {
+      "path": "scripts/check_live_cells_browser.mjs",
+      "git_blob": "f3262c693b34dc55d0b106e47916c8ac01a767c6",
+      "bytes": 35636,
+      "sha256": "691aa72ec7145a21b9c22df22394f5c47ac59d192254157902960ac56bd81ac0"
+    }
+  ],
+  "unchanged_component_pins": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "git_blob": "75e81cf273d7499ed20c8eef496d7a45eadbe8a0"
+    },
+    {
+      "path": "scripts/check_physical_3d_browser.mjs",
+      "git_blob": "731f080aa30e4099265df54ef741ed98533159ac"
+    },
+    {
+      "path": "scripts/check_physical_projection_browser.mjs",
+      "git_blob": "02338c9a9bf2f1b58822b835b3b4adf289b76ff3"
+    },
+    {
+      "path": "scripts/check_public_recording_browser.mjs",
+      "git_blob": "2440358c824db0b65e9fea4cde129211d666284c"
+    },
+    {
+      "path": "site/observe.html",
+      "git_blob": "9548fe23f4c4f6b88e4ff0e2d5c93da203ee18d1"
+    },
+    {
+      "path": "site/observer.css",
+      "git_blob": "30dfae4c74e0950b841d599b85cac426d361ee9b"
+    },
+    {
+      "path": "site/observer.js",
+      "git_blob": "199b8ad408ea1b2f6739fd1a9407109084b24996"
+    },
+    {
+      "path": "docs/SPEC.md",
+      "git_blob": "32bf455e15a3a460590a9fa4001074e4f9512829"
+    },
+    {
+      "path": "docs/NORTH_STAR.md",
+      "git_blob": "3f43d7ba6cdd3086c62b05d9aa374cba82db8048"
+    }
+  ],
+  "qualification": "Shared HTML mobile CSS changed; these component identities are not whole HTML identity or browser acceptance.",
+  "actual_acceptance_declared": false
+}

@@ -1,0 +1,13 @@
+{
+  "status": "IN_PROGRESS_EXACT_CANDIDATE_CI",
+  "candidate_head": "a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+  "candidate_tree": "2f9f0760ada0bbd1812a232bc6a30883242c76d3",
+  "accepted_base": "813be1efad29569a3011f00697bd5d41b7397dc6",
+  "pr": 24,
+  "run_id": 37282535160,
+  "attempt": 1,
+  "event": "pull_request",
+  "source_review": "QUALIFIED_ZERO_BLOCKERS_INDEPENDENT_EXACT_SOURCE; frozen reports in preparation",
+  "actual_acceptance_declared": false,
+  "lab_status": "HOLD"
+}

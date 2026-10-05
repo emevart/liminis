@@ -1655,3 +1655,43 @@ broader source needs/failure/newconcern STOP и finding к Astra. Product/QA
 будут в отдельных codex branches/worktrees, независимый review и один
 protected exactCI сериализует root. LAB21/publicLAB/LAB4/models/causal retries
 HOLD; пользователя до утра не спрашиваем.
+
+
+## 2026-10-05 08:16 UTC — LIVE mobile candidate / PR24 CI начат
+
+Пользователь вернулся и получил status. Root продолжает текущий bounded LIVE
+stage; прежние ownership/write-go права сохраняются. Authors заморожены:
+product f939521c7999f5f2d226db462c4d0ad2900eb877/tree0b1eff0a…,
+QA a973b25b47b7bf66330d280a199aee4b1544f07b/treec4e38990….
+Independent source finding о physical bottom0/z-index8 устранён до CI;
+оба source blobs exact, DOM/JS/model/desktop/stage minima unchanged.
+Docs честно ограничивают primary inspector/genome/generation/last phenotype
+assertions и responsive source cadence constants, не полный xyz/phenotype
+oracle или новый measured-rate gate.
+
+Frozen combined a57a6854b633c8e272eb4012ff11a0ec125e6fc2, tree
+2f9f0760ada0bbd1812a232bc6a30883242c76d3, base accepted813be1…,
+ровно4paths: mobile cell-viewer CSS, existing LIVE browser QA, operational
+ACCEPTANCE и unique checkpoint. Independent exact-source qualified0;
+final frozen reviewer sidecars оформляются, actual PASS ещё не заявлен.
+[Draft PR24](https://github.com/emevart/liminis/pull/24), один protected exact
+full CI [37282535160](https://github.com/emevart/liminis/actions/runs/37282535160)
+attempt1 IN_PROGRESS; GitHub run head/event проверены. Ни native browser,
+ни models/Cargo/new science root/authors здесь не запускали.
+
+Astra scope сохранён byte-exact sidecars на e2e1aff/tree8401; последний
+parent→a57 меняет только две docs, явно применяя её change-impact ruling.
+Root measured product/QA identity bridge к этому plan сохранён отдельно.
+Общий HTML изменён: whole-source GL identity к e2 не заявляется. Fresh actual
+projection/GL gates обязательны; unchanged renderer/vendor/host/QA/guards +
+mobile CSS delta образуют qualified change-impact bridge. Старый e2 full
+independent GL artifact review остаётся историческим, новый не заявляется.
+
+Следующий шаг: complete fresh full CI, deep independent affected LIVE/
+physical originals/PNG/trace/geometry/scroll/Find/noPOST/state/body/guards;
+closed original archive + network readback до guarded merge. При identical
+merged tree — fresh MAIN CI/affected LIVE+physical evidence и прежний public
+19HTTPS/14browserassets/4gates с новым report/twoPNG review/archive/readback.
+Любой failure/drift/skip/missing evidence/occlusion/model change → HOLD и
+scoped review, без rerun ради GREEN. LAB21/publicLAB/LAB4/models/causal retries
+HOLD. Старые refs/evidence/24science outputs/URLs/SHA не удалены/пересчитаны.

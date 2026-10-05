@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "status": "SAME_PRODUCT_QA_WITH_DOCS_CHANGE_IMPACT_QUALIFICATION",
+  "candidate_head": "a57a6854b633c8e272eb4012ff11a0ec125e6fc2",
+  "candidate_tree": "2f9f0760ada0bbd1812a232bc6a30883242c76d3",
+  "astra_plan_head": "e2e1aff2aa1632b25c04d2e7efe90cc5e9dc8f35",
+  "astra_plan_tree": "8401e6c41903bf63467bdfa8c23b28529327b24f",
+  "astra_plan_sha256": "445ef5662f0285b84ac41a53eed449aed4fa14203cb64d7c70120ee29c43469a",
+  "docs_only_paths": [
+    "docs/ACCEPTANCE.md",
+    "docs/checkpoints/2026-10-05-live-mobile-readout.md"
+  ],
+  "product_qa_blobs_identical_to_astra_plan": true,
+  "delta": "Two docs explicitly qualify shared HTML change-impact bridge, historical e2 independent GL review; follows Astra ruling. No product, QA or acceptance gate changes.",
+  "actual_acceptance_declared": false,
+  "lab_status": "HOLD"
+}

@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "decision": "APPROVED_ACCEPTANCE_SCOPE",
+  "actual_acceptance_declared": false,
+  "candidate_head": "e2e1aff2aa1632b25c04d2e7efe90cc5e9dc8f35",
+  "candidate_tree": "8401e6c41903bf63467bdfa8c23b28529327b24f",
+  "product_qa_parent": "666f048074cf90454c7caa952e6c5c45a49f93ee",
+  "accepted_base": "813be1efad29569a3011f00697bd5d41b7397dc6",
+  "source_review": {
+    "base_to_candidate_paths": 4,
+    "product_change": "Shared cell-viewer.html mobile CSS only",
+    "html_outside_style_identical_to_base": true,
+    "candidate_html_sha256": "cf12bae4142980b513375a3a173c4249e457d58e760a366b90153c676446d148",
+    "final_commit_only_narrows_two_documents": true,
+    "whole_gl_source_identity_to_e2": false,
+    "bridge": "Unchanged renderer/vendor/host/JavaScript/GL-QA components plus explicit shared CSS delta and fresh responsive regression gates"
+  },
+  "candidate_gates": [
+    "Independent final source review",
+    "Fresh exact-candidate full protected CI with every mandatory browser step executed",
+    "Deep independent actual LIVE and physical affected-artifact review",
+    "Fresh projection and GL gates, including current responsive geometry and controls",
+    "Affected original archives and verified readback before guarded merge"
+  ],
+  "main_gates": [
+    "Merge tree equals accepted candidate tree",
+    "Fresh full MAIN CI, six executed browser steps, only two expected PR-only skips",
+    "Fresh LIVE/physical report and affected mobile artifact review, not a relabelled candidate verdict",
+    "Fresh projection/GL regression receipts with the qualified change-impact bridge",
+    "Fresh existing public smoke and independent report, pin, error, qualification and two-PNG review",
+    "Durable affected originals and public evidence with readback"
+  ],
+  "large_gl_transport_and_full_repeat_review_required_by_default": false,
+  "historical_independent_gl_review_remains_e2_bound": true,
+  "public": {
+    "site_source_unchanged_from_hud_base": true,
+    "live_html_served_by_recorded_site": false,
+    "https_pins": 19,
+    "browser_assets_per_checked_viewport": 14,
+    "existing_gates": 4,
+    "new_desktop_and_mobile_png_review": true,
+    "full_trace_replay_without_new_concern_required": false,
+    "raw_html_and_exact_insertion_qualification_preserved": true,
+    "analytics_blocked_before_transmission": true
+  },
+  "responsive_claim_limits": [
+    "Primary inspector fields, genome/generation and last lower phenotype field; not individual assertion of every xyz/phenotype field",
+    "Complete bounds and actual scroll/hit access; not a full accessibility audit",
+    "650/4000 ms are source constants; prior actual 30/60 polling guard remains separate",
+    "One already confirmed paused population; no new biological experiment"
+  ],
+  "stop_conditions": [
+    "Failure, unexecuted mandatory gate or unexpected skip",
+    "Source/tree/runtime/guard drift or incomplete evidence",
+    "Unexpected request, body mismatch, control occlusion or physical layout regression",
+    "Changed paused model fields or report/artifact inconsistency",
+    "Need for new JavaScript/DOM/host/renderer/model/runtime/guard scope"
+  ],
+  "lab_status": "HOLD",
+  "review_activity": {
+    "external_requests": 0,
+    "browser_test_model_build_ci_runs": 0,
+    "product_or_qa_edits": 0,
+    "written_files": ["live-mobile-readout-astra-plan.md", "live-mobile-readout-astra-plan.json"]
+  }
+}
