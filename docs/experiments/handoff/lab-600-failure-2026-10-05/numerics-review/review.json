@@ -1,0 +1,209 @@
+{
+  "kind": "independent_actual_lab600_failed_run_review/v1",
+  "overall_verdict": "FAIL_RETAINED",
+  "source_head": "60015b28a42e222fcdafd33ed80da6c81f57c6db",
+  "source_tree": "117583151afcc3e6326971f87c44f3e41bc56eac",
+  "workflow_run": 37245225939,
+  "artifact_id": 11319250919,
+  "protocol": ".claude/agents/numerics-reviewer.md",
+  "numerical_accounting_blockers": 0,
+  "acceptance_issues": 2,
+  "findings": [
+    {
+      "number": 1,
+      "file": "site/lab.js",
+      "line": 19,
+      "adr": "ADR-112",
+      "acceptance_gate_blocking": true,
+      "issue": "Destructive responsive redraw clears retained graph output before verifying usable measured width. Real fullPage screenshot/resize produced two plotFrame errors and three original blank/incomplete chart PNGs.",
+      "why": "Published observations disappear from the product; completed DOM checks do not establish retained rendered charts.",
+      "check_needed": "Validate widths and build replacement geometry before replacing accepted charts; retain prior validated charts through transient/zero-width observations, then require fresh actual captures at all four layouts."
+    },
+    {
+      "number": 2,
+      "file": "scripts/check_lab_browser.mjs",
+      "line": 69,
+      "adr": "ADR-112",
+      "acceptance_gate_blocking": true,
+      "issue": "Both comparisons.json browser response observations were aborted and lack independent response-body pins; two responseErrors remain.",
+      "why": "Source/server digests and loaded DOM do not replace completed independent transport observations across navigation/reload.",
+      "check_needed": "Settle each required original response observation before destructive navigation/reload and retain final strict failure guards. Fresh exact-head run must include both comparisons pins without ignored aborts."
+    }
+  ],
+  "qualified_first_six_gates": {
+    "reported_statuses": [
+      "PASS",
+      "PASS",
+      "PASS",
+      "PASS",
+      "PASS",
+      "PASS"
+    ],
+    "independent_coverage_status": "CONFIRMED_FOR_RETAINED_REPORT_OBSERVATIONS_WITH_LIMITATIONS",
+    "matrix_real_runs": 24,
+    "complete_genesis_terminal_endpoints": 48,
+    "saved_sample_observations": 58,
+    "unique_sample_states": 53,
+    "saved_histogram_observations": 58,
+    "complete_unique_published_pairs": 160,
+    "additional_pair_control_observations": 4,
+    "displayed_metrics_per_pair": 9,
+    "original_pair_values_and_ranges": "Pinned QA asserts DOM values; bounded independent review confirms record coverage/availability and original source/data pins. Does not independently recalculate floating pairs or rescan every DOM event.",
+    "saved_svg_curve_groups": 9,
+    "curve_paths_independently_matched": 272,
+    "retained_svg_points_checked": 39152,
+    "curve_sha_proof": {
+      "file": "lab600-svg-path-consistency.json",
+      "sha256": "32a3c9a2d8e3d1cff2dd0828d96e6d274961f436f3220de4aaf6b1b140d65e39"
+    },
+    "curves_scope": "Correct actual recorded SVG paths before screenshots/resize; does not accept blank captured images or unfinished layouts.",
+    "boundaries": {
+      "terminal": 454,
+      "latestCommon": 400,
+      "landmark": 500,
+      "available": 0,
+      "expected": 4,
+      "missingRange": "null/unavailable",
+      "baseline1800CurrentAlleles": 2,
+      "historicalRichness": 3
+    },
+    "navigation": {
+      "back": true,
+      "reload": true,
+      "actualKeyboardSample": 100,
+      "actualKeyboardSeed": "7",
+      "realMatrixLinkRun": "seed-2026-starvation",
+      "retainedSampleOnly": true
+    }
+  },
+  "remaining_gates": {
+    "seventh_layout_gate": "FAIL",
+    "eighth_transport_integrity_negative": "NOT_EXECUTED",
+    "ninth_absent_sample_negative": "NOT_EXECUTED",
+    "actual_layout_records": 1,
+    "completed_typography_layouts": 1,
+    "short390320_acceptance": "NOT_PROVEN"
+  },
+  "integrity": {
+    "zip_file": "lab-browser-60015b2-original.zip",
+    "zip_bytes": 49316006,
+    "zip_sha256": "bdc0b53a6543c560b505737a83c1dcae214f74d79bdad05ecdb9793307b06b80",
+    "outer_members": 5,
+    "outer_crc": "PASS",
+    "report_bytes": 447851,
+    "report_sha256": "71fbd63939909923428559ee1e97cca065030334c2fda323c51a1cc79b527c5f",
+    "source_records_matched": 13,
+    "source_raw_bytes": 6494550,
+    "raw_pins": {
+      "results": {
+        "bytes": 5294742,
+        "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+      },
+      "comparisons": {
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+      },
+      "manifest": {
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+      }
+    },
+    "server_response_records_matched": 16,
+    "browser_response_records_matched": 14,
+    "missing_comparisons_response_pins": 2,
+    "trace": {
+      "bytes": 49037620,
+      "sha256": "0d447b17a426422e43bdc168108f8346b8059477b1fdbf60fbb9487923930e11",
+      "members": 416,
+      "expanded_bytes": 336850385,
+      "largest_member_bytes": 308011146,
+      "streamed_crc": "PASS",
+      "network_bytes_inspected": 26808,
+      "network_entries": 16,
+      "stored_body_pins_matched": 10,
+      "full_308MB_event_text_rescanned": false
+    },
+    "screenshots": [
+      {
+        "filename": "starvation-terminal454-missing500.png",
+        "bytes": 489295,
+        "sha256": "6e8bad1e2e499bdad089a61dcee755155d8c08432699e7d76633f86183ec73a3",
+        "dimensions": [
+          1440,
+          3463
+        ],
+        "viewed": true,
+        "charts_visible": "blank/incomplete; cannot substantiate graph rendering PASS"
+      },
+      {
+        "filename": "desktop.png",
+        "bytes": 400447,
+        "sha256": "dff6bc871c0f1baa2e72190dfbbdb382fbce731d2145918c6342fbf0343cff79",
+        "dimensions": [
+          1440,
+          2585
+        ],
+        "viewed": true,
+        "charts_visible": "blank/incomplete; cannot substantiate graph rendering PASS"
+      },
+      {
+        "filename": "failure.png",
+        "bytes": 399442,
+        "sha256": "0af1dadffed9815744d7a74479f6de1fcba1fd5e327e34a4a90c944303e7858f",
+        "dimensions": [
+          1440,
+          2509
+        ],
+        "viewed": true,
+        "charts_visible": "blank/incomplete; cannot substantiate graph rendering PASS"
+      }
+    ]
+  },
+  "raw_observation_identity": {
+    "scientific_source": "21cbe90732128edee61963544e414d29a7420577",
+    "world_format_version": 30,
+    "chamber_format": 1,
+    "dt_seconds": 30,
+    "build_attestation": false,
+    "retained_samples": 4044,
+    "raw_descriptor_adapter_and_frozen_science_unchanged": true,
+    "immutable_git_objects": {
+      "crates/liminis-core": "1f9031142731d138bf6de243ab2ac13d644e1553",
+      "configs": "8970e88cd50ae3038d72a78dd16e9653fdf85aab",
+      "Cargo.toml": "4b7bef5047fafbdd10526a90de4a18952678a6a6",
+      "Cargo.lock": "224f065c1bbf103a5cfec139a2f3313e2bf80559",
+      "rust-toolchain.toml": "1fd6f1afaf9c17073863c2b9a9f50f90572a7edb",
+      "docs/experiments/lab-2": "246f2cce3ba9bf6612753267a24574f7a043add4",
+      "site/data/catalog.json": "07eabcff860ef15e7b84a315e4b870c715744fff",
+      "site/data/dense-cell-chamber": "01b9b066dc56be0aa75cb325398ba0aef97e70de",
+      "site/recording.mjs": "75e36b0e47f0c8323d84bb5942c6bac21a21c37f",
+      "site/dense-recording.mjs": "aa9b99b90e35797d7ae16cad62dbaf40401da802",
+      "site/playback.mjs": "19e198964ba31aa8801fed58e9f48eec60fc9ed9",
+      "site/observer.js": "199b8ad408ea1b2f6739fd1a9407109084b24996",
+      "crates/liminis/src/cell-viewer-3d.mjs": "c9c299a89431fd76a7ccc76ef408464fe5f5f69c",
+      "crates/liminis/src/vendor/three-r180": "37a4b0a1e61dc9e76649d0b37cc50eaa8bdb55f4",
+      "crates/liminis/src/cells_host.rs": "ff6f0113d9ed80c9d14e1a4782370240865ffb69",
+      "crates/liminis/src/cell-viewer.html": "fcab3f21526a10617067ce93d67ded19765e7521",
+      "site/observe.html": "87f30258d13440bb1204b42ccab88424c49e2edd",
+      "scripts/check_public_recording_browser.mjs": "7ad588601f09e2dd3f50a913e050a84c67b9a0dd"
+    },
+    "previous3672difference2835range_checks_not_repeated": true
+  },
+  "errors": {
+    "page_errors": 2,
+    "response_body_errors": 2,
+    "request_aborts": 2,
+    "console_errors": 0,
+    "node_unhandled": 0,
+    "cleanup_errors": 0
+  },
+  "qualifications": [
+    "Firstsix PASS describes completed assertions and retained numerical coverage before the destructive fullPage/resize failure; entire run remainsFAIL.",
+    "Allthree saved PNGs were viewed and do not prove complete chart rendering. Pre-capture typography/curve observations cannot substitute for actual final screenshots.",
+    "Server/raw source pins match but twoactual comparisons body pins aremissing; complete transport acceptance isnotgiven.",
+    "The eighth/ninth negative controls and completed short390/320 rendering were never accepted inthisrun.",
+    "No newmodel, Cargo, browser, simulations, original-output replacement, fullmilliondecode or oldscientificdifference recalculation.",
+    "TraceCRC is checked in bounded streaming form. Only small network metadata/stored response bodies, report/source and PNG scope were inspected; no comprehensive308MB event/secret/DOM replay audit.",
+    "New source fixes require independent source review and fresh exact-head actual artifacts; older PASS evidence doesnot transfer."
+  ]
+}

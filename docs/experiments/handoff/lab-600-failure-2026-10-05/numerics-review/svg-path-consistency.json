@@ -1,0 +1,57 @@
+{
+  "kind": "independent_saved_actual_lab600_svg_path_consistency",
+  "curves": 272,
+  "matching_path_sha256": 272,
+  "mismatches": [],
+  "retained_points_checked": 39152,
+  "groups": [
+    {
+      "label": "all-seeds-baseline",
+      "window": 20000,
+      "curves": 16
+    },
+    {
+      "label": "all-seeds-mutation_off",
+      "window": 20000,
+      "curves": 32
+    },
+    {
+      "label": "all-seeds-starvation",
+      "window": 20000,
+      "curves": 32
+    },
+    {
+      "label": "all-seeds-oxygen_low",
+      "window": 20000,
+      "curves": 32
+    },
+    {
+      "label": "all-seeds-exchange_half",
+      "window": 20000,
+      "curves": 32
+    },
+    {
+      "label": "all-seeds-founder_k2",
+      "window": 20000,
+      "curves": 32
+    },
+    {
+      "label": "terminal454-never-carried-forward",
+      "window": 20000,
+      "curves": 32
+    },
+    {
+      "label": "first1000-observations-only",
+      "window": 1000,
+      "curves": 32
+    },
+    {
+      "label": "layout-desktop.png",
+      "window": 20000,
+      "curves": 32
+    }
+  ],
+  "width_css": 453,
+  "width_basis": "Recorded desktop bounds453; first default context and complete report curve groups use1440px desktop. Not a claim of short/mobile acceptance.",
+  "method": "Independent original exported observations -> x72+t/xmax*369,y178-raw/ymax*166 -> six-decimal M/L serialization -> SHA256. No production helper, browser or model executed."
+}

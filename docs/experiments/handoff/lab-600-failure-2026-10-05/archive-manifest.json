@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "kind": "original failed LAB artifact and independent failure diagnosis",
+  "source_head": "60015b28a42e222fcdafd33ed80da6c81f57c6db",
+  "source_tree": "117583151afcc3e6326971f87c44f3e41bc56eac",
+  "workflow_run": 37245225939,
+  "overall_workflow_conclusion": "FAILURE",
+  "recorded_job_id": 111561676382,
+  "recorded_job_conclusion": "FAILURE",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 49821483,
+  "original_artifacts": [
+    {
+      "artifact_id": 11319250919,
+      "path": "lab-browser-60015b2-original.zip",
+      "bytes": 49316006,
+      "sha256": "bdc0b53a6543c560b505737a83c1dcae214f74d79bdad05ecdb9793307b06b80",
+      "qualification": "CONFIRMED_FAIL"
+    }
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3445,
+      "sha256": "771e5289892671c57d3006d0914aa3182de18f8248f55ac1f7287f0d74a7f6d9"
+    },
+    {
+      "path": "code-review/review.json",
+      "bytes": 15069,
+      "sha256": "026bf37f5cdd50ccbe86bc44958c87df27fe44edff9d42648e8956fef9acf49c"
+    },
+    {
+      "path": "code-review/review.md",
+      "bytes": 4293,
+      "sha256": "b40763ff13ab6a4cfdcd124f5449e5c4635e785e1d6f7e7e62ab181d1b848d29"
+    },
+    {
+      "path": "lab-browser-60015b2-original.zip",
+      "bytes": 49316006,
+      "sha256": "bdc0b53a6543c560b505737a83c1dcae214f74d79bdad05ecdb9793307b06b80"
+    },
+    {
+      "path": "numerics-review/review.json",
+      "bytes": 9355,
+      "sha256": "f7c2c20d1fcac140eb7f811a9ad4f70b4ed8628b4329f43c357e8ddcd0bbc2ae"
+    },
+    {
+      "path": "numerics-review/review.md",
+      "bytes": 5393,
+      "sha256": "c8ba3586e16f3c062c2923f5cb410c0cedc4934e28fb93b7acfd7f65646cde2c"
+    },
+    {
+      "path": "numerics-review/svg-path-consistency.json",
+      "bytes": 1426,
+      "sha256": "32a3c9a2d8e3d1cff2dd0828d96e6d274961f436f3220de4aaf6b1b140d65e39"
+    },
+    {
+      "path": "original/reconstruction-receipt.json",
+      "bytes": 3738,
+      "sha256": "6d083da703dae53f072ce5bd84c555084d968e9f7ec079093e74143b3662e5d9"
+    },
+    {
+      "path": "original/report-receipt.json",
+      "bytes": 463,
+      "sha256": "93c029ac565c9010740ba7454c53061b18697fe52be17f46e66a217975d3e4ba"
+    },
+    {
+      "path": "original/report.json",
+      "bytes": 447851,
+      "sha256": "71fbd63939909923428559ee1e97cca065030334c2fda323c51a1cc79b527c5f"
+    },
+    {
+      "path": "transport-source-review/lab600-transport-helper-review.json",
+      "bytes": 2613,
+      "sha256": "967093bdf6799ab919f3028f121a83f6dcedcbd4ea8ac858360ce34e9dbb7c13"
+    },
+    {
+      "path": "transport-source-review/lab600-transport-helper-review.md",
+      "bytes": 1551,
+      "sha256": "fa1efe0879c1d612596351bb585709d5bda34f552f6a48065a87f8de588ba28d"
+    },
+    {
+      "path": "transport-workflow.yml",
+      "bytes": 10280,
+      "sha256": "6482721599e16a26714fe50f3ce373932ed83a25a9ee4f046a3f4c063dee25ee"
+    }
+  ]
+}

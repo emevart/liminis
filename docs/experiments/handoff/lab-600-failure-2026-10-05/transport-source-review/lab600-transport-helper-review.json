@@ -1,0 +1,48 @@
+{
+  "schema": "liminis-independent-lab600-transport-source-review-v1",
+  "verdict": "SOURCE_ZERO_BLOCKERS",
+  "blockers": 0,
+  "reviewedUnpublishedSource": "/workspace/liminis-evidence-transport-3d/.github/workflows/evidence-lab-transport.yml",
+  "fileBytes": 10280,
+  "fileSha256": "6482721599e16a26714fe50f3ce373932ed83a25a9ee4f046a3f4c063dee25ee",
+  "baseHead": "fb3a5b47d80b7f586dffb9990f380e8362635a1e",
+  "old3dWorkflowUnchanged": true,
+  "yamlAndPythonAst": "PASS",
+  "codeNotExecuted": true,
+  "constants": {
+    "REPO": "emevart/liminis",
+    "REPO_ID": 1317617987,
+    "RUN": 37245225939,
+    "JOB": 111561676382,
+    "ARTIFACT": 11319250919,
+    "HEAD": "60015b28a42e222fcdafd33ed80da6c81f57c6db",
+    "TREE": "117583151afcc3e6326971f87c44f3e41bc56eac",
+    "SIZE": 49316006,
+    "SHA": "bdc0b53a6543c560b505737a83c1dcae214f74d79bdad05ecdb9793307b06b80",
+    "PART": 16777216
+  },
+  "partsBytes": [
+    16777216,
+    16777216,
+    15761574
+  ],
+  "permissions": {
+    "actions": "read"
+  },
+  "trigger": "Fixed evidence-only branch push/path; no PR or main merge",
+  "guards": [
+    "Same repository and original head/run/job/artifact identities, exact published original size and SHA.",
+    "Completed failed recorded player browser job required. Overall run may be in progress or completed, conclusion None/failure only; PASS is disallowed.",
+    "Bearer token only fixed api.github.com endpoints; no automatic redirects. Official HTTPS artifact storage URL only, no userinfo, port default/443, unsigned fresh GET.",
+    "150s read deadline, 25s socket requests, API JSON1MiB, original49,316,006 byte cap, whole job5min.",
+    "Original SHA and ZIP CRC before three contiguous raw parts; exact part sizes, offsets, SHA, identity receipts.",
+    "Separate original report bytes<4MiB; JSON statusFAIL and exact original head/tree required, SHA receipt retained.",
+    "No checkout, build, browser, model, source or product write. No signed URLs, tokens or request headers logged; failure log class/httpstatus only."
+  ],
+  "qualifications": [
+    "This is static source approval to transport one fixed FAIL artifact, not actual browser or original artifact acceptance.",
+    "The helper may observe an unfinished overall Rust run. It requires completedFAIL recorded job and records observed original workflow status/conclusion in every part receipt.",
+    "Source tree is a fixed expected pin corroborated by original report; actual artifact source/closed inventory/privacy acceptance follows native delivery.",
+    "A successful helper status means byte transport, never original browser PASS."
+  ]
+}

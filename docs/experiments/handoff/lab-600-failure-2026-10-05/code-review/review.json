@@ -1,0 +1,378 @@
+{
+  "schema": "liminis-independent-lab600-failure-review-v1",
+  "reviewerRole": "Independent source/reliability/artifact reviewer; not LAB UI or QA author",
+  "verdict": "CONFIRMED_FAIL",
+  "releaseAcceptance": "NOT_ACCEPTED",
+  "sourceHead": "60015b28a42e222fcdafd33ed80da6c81f57c6db",
+  "sourceTree": "117583151afcc3e6326971f87c44f3e41bc56eac",
+  "workflowRun": 37245225939,
+  "jobId": 111561676382,
+  "artifactId": 11319250919,
+  "transportRun": 37246516009,
+  "transportHead": "5148bfea758292f0d67babc941d38ba4ba993ac2",
+  "original": {
+    "filename": "lab-browser-60015b2-original.zip",
+    "bytes": 49316006,
+    "sha256": "bdc0b53a6543c560b505737a83c1dcae214f74d79bdad05ecdb9793307b06b80",
+    "members": 5,
+    "crc": "PASS",
+    "closedInventory": "PASS",
+    "originalUnmodified": true
+  },
+  "trace": {
+    "bytes": 49037620,
+    "sha256": "0d447b17a426422e43bdc168108f8346b8059477b1fdbf60fbb9487923930e11",
+    "members": 416,
+    "crc": "PASS",
+    "textBytes": 308011146,
+    "outerExpandedBytes": 50774655,
+    "nestedExpandedBytes": 336850385,
+    "combinedExpandedBytes": 387625040,
+    "qualification": "Compressed original49.3MB; expanded total387,625,040 bytes is not within64MiB."
+  },
+  "parts": [
+    {
+      "ordinal": 1,
+      "offset": 0,
+      "rawBytes": 16777216,
+      "rawSha256": "fc872577db5baf4d858550291bbb4bf23a982267af0c870f6b5c98568e66a9ef",
+      "containerBytes": 16778487,
+      "containerSha256": "b563c6be3072de5e37fdf4535e34b7fad784ec216981a2b259bab19c11dd5228",
+      "crc": "PASS",
+      "exactSlice": "PASS"
+    },
+    {
+      "ordinal": 2,
+      "offset": 16777216,
+      "rawBytes": 16777216,
+      "rawSha256": "264785be24cf9c40f09cff03833dea26bb5868b7592c89667885f5862d7ac63f",
+      "containerBytes": 16778494,
+      "containerSha256": "6240558615cb9e4e651dc71f833e8a300c374ee0500b872c3c2b51ebe13cb399",
+      "crc": "PASS",
+      "exactSlice": "PASS"
+    },
+    {
+      "ordinal": 3,
+      "offset": 33554432,
+      "rawBytes": 15761574,
+      "rawSha256": "4b83ec0f5acef009eee71e5509917b9a5fb32d3d29ee261a614ee9589553e4dd",
+      "containerBytes": 15762852,
+      "containerSha256": "d78b33664a0ecda2e2bbc8eb6d72344ed43db8224ac4a26696df2560a0e0624c",
+      "crc": "PASS",
+      "exactSlice": "PASS"
+    }
+  ],
+  "reportCompanion": {
+    "containerBytes": 20172,
+    "containerSha256": "e70fd55b675956b2734446d5114c74a5628e080269ebf1d640f51834f4a5ee28",
+    "crc": "PASS",
+    "reportExactOriginalBytes": "PASS",
+    "reportBytes": 447851,
+    "reportSha256": "71fbd63939909923428559ee1e97cca065030334c2fda323c51a1cc79b527c5f"
+  },
+  "sourceEntriesVerified": [
+    {
+      "filename": "scripts/check_lab_browser.mjs",
+      "bytes": 54084,
+      "sha256": "f8f4bc424406e1104c1a321cbd9dbb584165c4c59eb4052d6b3025a5b00b6231"
+    },
+    {
+      "filename": "site/data/lab-2/results.json",
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "filename": "docs/experiments/lab-2/results.json",
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+    },
+    {
+      "filename": "site/data/lab-2/comparisons.json",
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "filename": "docs/experiments/lab-2/comparisons.json",
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+    },
+    {
+      "filename": "site/data/lab-2/manifest.json",
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    },
+    {
+      "filename": "docs/experiments/lab-2/manifest.json",
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+    },
+    {
+      "filename": "site/data/lab-2/descriptor.json",
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    },
+    {
+      "filename": "site/lab.html",
+      "bytes": 5393,
+      "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+    },
+    {
+      "filename": "site/lab.js",
+      "bytes": 20139,
+      "sha256": "4d55cc9811dcaff292179138f3404ae4ddf3ceb3ce98bab085338955bb8444fd"
+    },
+    {
+      "filename": "site/lab.css",
+      "bytes": 5019,
+      "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+    },
+    {
+      "filename": "site/lab-data.mjs",
+      "bytes": 20227,
+      "sha256": "68f31a12037c2118c1ab98366b95491b0b23756040bf645515ce2e550381e534"
+    },
+    {
+      "filename": "site/data/lab-2/descriptor.json",
+      "bytes": 50708,
+      "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "starvation-terminal454-missing500.png",
+      "bytes": 489295,
+      "sha256": "6e8bad1e2e499bdad089a61dcee755155d8c08432699e7d76633f86183ec73a3",
+      "dimensions": [
+        1440,
+        3463
+      ],
+      "independentlyViewed": true,
+      "visualFinding": "Partial first Living cells chart with no plotted axes/dots; other panels and raw terminal/missing landmark text remain visible."
+    },
+    {
+      "filename": "desktop.png",
+      "bytes": 400447,
+      "sha256": "dff6bc871c0f1baa2e72190dfbbdb382fbce731d2145918c6342fbf0343cff79",
+      "dimensions": [
+        1440,
+        2585
+      ],
+      "independentlyViewed": true,
+      "visualFinding": "Partial first Living cells chart with no plotted axes/dots; other panels and raw terminal/missing landmark text remain visible."
+    },
+    {
+      "filename": "failure.png",
+      "bytes": 399442,
+      "sha256": "0af1dadffed9815744d7a74479f6de1fcba1fd5e327e34a4a90c944303e7858f",
+      "dimensions": [
+        1440,
+        2509
+      ],
+      "independentlyViewed": true,
+      "visualFinding": "Partial first Living cells chart with no plotted axes/dots; other panels and raw terminal/missing landmark text remain visible."
+    }
+  ],
+  "actualChecks": [
+    {
+      "name": "Observed official Chromium sandbox argv with unchanged stock launch",
+      "status": "PASS",
+      "elapsedMs": 5.295966000000021
+    },
+    {
+      "name": "Original 6.5MB JSON is verified before showing the full 6×4 matrix and historical source",
+      "status": "PASS",
+      "elapsedMs": 1791.7864530000002
+    },
+    {
+      "name": "Every real run exposes genesis and terminal samples/counters/environment; all four seed curves match raw observations",
+      "status": "PASS",
+      "elapsedMs": 125534.266717
+    },
+    {
+      "name": "Published pair records retain exact differences/ranges and missing 0/4 across every condition and seed",
+      "status": "PASS",
+      "elapsedMs": 42044.61630799998
+    },
+    {
+      "name": "Baseline/mutation-off/starvation controls distinguish living alleles, historical richness, terminal454 and common400",
+      "status": "PASS",
+      "elapsedMs": 6567.841604999994
+    },
+    {
+      "name": "Real URL/back/reload and keyboard selectors retain only exported observations without creating comparisons",
+      "status": "PASS",
+      "elapsedMs": 14824.347419999976
+    },
+    {
+      "name": "Desktop/short/390/320 layouts keep selectors and four actual observation charts visible without page overflow",
+      "status": "FAIL",
+      "error": "page.waitForFunction: Timeout 15000ms exceeded.\n    at curves (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:104:14)\n    at layout (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:158:118)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:191:342\n    at async check (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:25:110)\n    at async main (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:191:3)\n    at async bounded (/home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:24:72)\n    at async file:///home/runner/work/liminis/liminis/scripts/check_lab_browser.mjs:203:27"
+    }
+  ],
+  "diagnostic": {
+    "primary": "Genuine destructive responsive plot update; observed first within full-page screenshot and surviving as partial blank UI. Short-layout timeout is downstream.",
+    "codePaths": {
+      "destructiveClear": "site/lab.js:20 host.replaceChildren() before validating all measured chart widths",
+      "measureAndThrow": "site/lab.js:27 plotFrame(svg.getBoundingClientRect().width), guard defined at17",
+      "noAutomaticRecovery": "site/lab.js:46 resizePlots requires charts.length===4, but failed rebuild leaves one new SVG"
+    },
+    "timeline": [
+      {
+        "call": "call@12200",
+        "event": "starvation original fullPage screenshot begins",
+        "ms": 176411.875
+      },
+      {
+        "event": "first ResizeObserver→renderPlots→plotFrame narrow pageError",
+        "ms": 176446.058
+      },
+      {
+        "call": "call@12200",
+        "event": "screenshot finishes with blank partial plots",
+        "ms": 176688.516
+      },
+      {
+        "call": "call@13270",
+        "event": "desktop original fullPage screenshot begins",
+        "ms": 192263.125
+      },
+      {
+        "event": "second ResizeObserver→renderPlots→plotFrame narrow pageError",
+        "ms": 192287.47
+      },
+      {
+        "call": "call@13270",
+        "event": "post screenshot snapshot contains new living_cells SVG without viewBox or circles",
+        "ms": 192454.685
+      },
+      {
+        "call": "call@13272",
+        "event": "requested viewport changes to1440×720",
+        "ms": 192455.869
+      },
+      {
+        "call": "call@13274",
+        "event": "ready predicate succeeds despite missing plots",
+        "ms": 192465.011
+      },
+      {
+        "call": "call@13278",
+        "event": "four-plot/viewBox predicate begins",
+        "ms": 192474.39
+      },
+      {
+        "call": "call@13278",
+        "event": "15s timeout fails actual seventh check",
+        "ms": 207481.779
+      }
+    ],
+    "qualification": "The temporary measured width value and exact Chromium screenshot/layout mechanism are not recorded. No flake, navigation-cause or encoding-cause claim. Source/report and actual PNG prove a real destructive UI failure."
+  },
+  "comparisonsTransport": {
+    "classification": "UNCLASSIFIED_IN_ORIGINAL_ARTIFACT",
+    "requests": [
+      {
+        "phase": "initial",
+        "requestStartMs": 663.321,
+        "status": 200,
+        "failure": "net::ERR_ABORTED",
+        "declaredContentLength": "1116928",
+        "retainedBody": false,
+        "rawResponseSize": -1
+      },
+      {
+        "phase": "reload",
+        "requestStartMs": 181893.728,
+        "status": 200,
+        "failure": "net::ERR_ABORTED",
+        "declaredContentLength": "1116928",
+        "retainedBody": false,
+        "rawResponseSize": -1
+      }
+    ],
+    "pwBodyErrors": 2,
+    "sourceFinally": "site/lab-data.mjs:130–137 read loop reaches done then reader.cancel() in finally before SHA/validateLab/commit",
+    "evidence": "Both initial and reload later show fully validated UI state under exact source SHA guards; later selections/pairs pass. These aborts precede final failure/cleanup.",
+    "limit": "Source implies completed pinned bytes before commit, but no independently observed native EOF/count/cancel timestamp or reason exists in this run. Trace has no comparisons body; cannot certify a native complete-body cleanup class or permit all ERR_ABORTED/URLs.",
+    "futureGateRequirement": "Preserve fail-closed unknown abort/body-read handling; require source correction or actual narrowly classified completion/cancellation proof."
+  },
+  "partialScope": {
+    "passedCheckCount": 6,
+    "failedCheckCount": 1,
+    "unexecutedMandatoryChecks": "Two negative controls and remaining short/mobile layouts were not reached; no full nine-check acceptance.",
+    "verifiedEndpointLoop": {
+      "runs": 24,
+      "checkedEndpoints": 48,
+      "dataRequestsDuringSelection": 0
+    },
+    "verifiedPairLoop": {
+      "publishedLandmarkPairs": 140,
+      "publishedLatestCommonPairs": 20,
+      "newComparisons": 0
+    },
+    "boundaryFacts": {
+      "terminal": 454,
+      "latestCommon": 400,
+      "landmark": 500,
+      "available": 0,
+      "expected": 4,
+      "missingRange": "null/unavailable",
+      "baseline1800CurrentAlleles": 2,
+      "historicalRichness": 3
+    },
+    "desktopTypographyBeforeCaptureOnly": 1,
+    "pageErrors": [
+      "Error: The chart is too narrow to display observation axes.\n    at plotFrame (http://127.0.0.1:43033/lab.js:17:79)\n    at renderPlots (http://127.0.0.1:43033/lab.js:27:19)\n    at ResizeObserver.resizePlots (http://127.0.0.1:43033/lab.js:46:120)",
+      "Error: The chart is too narrow to display observation axes.\n    at plotFrame (http://127.0.0.1:43033/lab.js:17:79)\n    at renderPlots (http://127.0.0.1:43033/lab.js:27:19)\n    at ResizeObserver.resizePlots (http://127.0.0.1:43033/lab.js:46:120)"
+    ],
+    "unexpectedConsoleErrors": [],
+    "nodeUnhandled": [],
+    "cleanupErrors": [],
+    "pageClosedField": false,
+    "qualification": "Cleanup reports no exception, but normal per-page close/aggregate was not completed; closed=false retained as failure evidence."
+  },
+  "sandbox": {
+    "actualArgvInspected": true,
+    "launchSettings": {
+      "headless": true,
+      "chromiumSandbox": true,
+      "args": [
+        "--enable-automation"
+      ]
+    },
+    "forbiddenFlagsAbsent": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-seccomp-filter-sandbox",
+      "--disable-seccomp-sandbox",
+      "--disable-gpu-sandbox",
+      "--disable-namespace-sandbox",
+      "--single-process",
+      "--no-zygote",
+      "--ignore-gpu-blocklist",
+      "--disable-web-security"
+    ],
+    "qualification": "Official Chromium sandbox launch contract only, no kernel isolation or performance claim"
+  },
+  "privacy": {
+    "strictUtf8SegmentsAndMembers": 11,
+    "strictUtf8Bytes": 40492506,
+    "binaryMembersSkipped": 410,
+    "traceAsciiPatternScanBytes": 308011146,
+    "traceUtf8Samples": "first and last16MiB, boundary trim<=3bytes",
+    "patterns": {
+      "credential": 0,
+      "authorization": 0,
+      "cookieHeaders": 0,
+      "privateOldContext": 0
+    },
+    "sensitiveNetworkHeaderNames": [],
+    "qualification": "Bounded obvious-pattern review, not full-secret guarantee. Entire308MB trace is streamed as raw bytes; only selected UTF8 samples decoded."
+  },
+  "necessaryGates": [
+    "Independent narrow source review of atomic responsive update and comparisons cleanup behavior.",
+    "Fresh exact-head protected browser run completing all9LAB checks,4typography/layout records,7original PNG,negative controls and final cleanup aggregate.",
+    "Preserve LAB600 FAIL and oldLAB79 FAIL originals; no release acceptance from partial check statuses."
+  ],
+  "reviewActions": "Read-only original/source/trace/Pillow and all3actualPNG view_image; only these two public-safe own reports written; no native browser/Cargo/model/test rerun."
+}
