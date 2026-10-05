@@ -1,0 +1,80 @@
+{
+  "status": "PASS",
+  "kind": "closed selected-archive Git network byte readback",
+  "archive_commit": "e43cb056ba61f38822b1a3f21815bb73eda9d169",
+  "archive_tree": "ab86c981875bd8670961106e9d6988c71d6da4f3",
+  "closed_inventory": true,
+  "manifest_sha256": "4444c926a8eb800e88cea2e71057073068497b4c5f7e0c699067095e9dbd6a96",
+  "file_count": 11,
+  "unique_bytes_excluding_manifest": 59544317,
+  "original_zip_count": 1,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1934,
+      "sha256": "d897fb0ca2636ddaa01543d6780f25d363a2821c77f6557a9414ac469f7ee058",
+      "verified": true
+    },
+    {
+      "path": "code-review/review.json",
+      "bytes": 12240,
+      "sha256": "8c29d7c14cc7c4bf63f3fc853738f82fc569e665e8ac8d339f8b1d0ec00aebd6",
+      "verified": true
+    },
+    {
+      "path": "code-review/review.md",
+      "bytes": 3755,
+      "sha256": "75621392459ddd0422b30fb690b3aa512bf8a3929a3a2a67f2f28a906fc83570",
+      "verified": true
+    },
+    {
+      "path": "numerics-review/geometry-integrity.json",
+      "bytes": 2968,
+      "sha256": "6aac558176d2b6dfdd65c51f4184d4c644b4294d120344f6a2d611a75e07cd4a",
+      "verified": true
+    },
+    {
+      "path": "numerics-review/review.json",
+      "bytes": 8498,
+      "sha256": "e2993a381672db9a3f7d53aa8126468be6167cc1a7453ca107b3bde39b5f6a43",
+      "verified": true
+    },
+    {
+      "path": "numerics-review/review.md",
+      "bytes": 6464,
+      "sha256": "82b6334dc1936c6fd36f88389d14b899b74ca67f0701c5142faab985a8ac1415",
+      "verified": true
+    },
+    {
+      "path": "original/reconstruction-receipt.json",
+      "bytes": 4902,
+      "sha256": "a8527bf4de1b63edea1eb27f32ebe5a2987f6ed69510af0f5f58f79ec28361ca",
+      "verified": true
+    },
+    {
+      "path": "original/report.json",
+      "bytes": 311095,
+      "sha256": "e0a7282980b76e9df7ec7e7428182b9edf935860e6fed671f2eb48897ba194de",
+      "verified": true
+    },
+    {
+      "path": "physical-3d-browser-79df352-original.zip",
+      "bytes": 59183146,
+      "sha256": "8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60",
+      "verified": true,
+      "zip_crc": "PASS"
+    },
+    {
+      "path": "transport-workflow.yml",
+      "bytes": 9315,
+      "sha256": "4d86e94ba70ebb444630cf5d742c185c533f36ada4d804fea049a7416eec8a2e",
+      "verified": true
+    }
+  ],
+  "qualifications": [
+    "Selected archive bytes only; no model, browser or full dense dataset run",
+    "Separate Git object database without object alternates; normal network blob fetch",
+    "Outer original ZIP CRC checked; nested trace/acceptance/privacy reviewed separately",
+    "Published-byte 64MiB group cap does not bound combined expanded trace bytes"
+  ]
+}

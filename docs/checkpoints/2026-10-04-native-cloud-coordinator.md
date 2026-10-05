@@ -711,3 +711,83 @@ qualified PASS остаются раздельными. Новый незави�
 Small readback: `docs/experiments/handoff/main-3d-followup-network-readback.json`.
 Следующий шаг — exactCI и originalfixed3D/LAB artifact acceptance;
 public LAB QA подготовка обсуждается с Astra отдельно от production candidate.
+
+### LAB-3a реальные два FAIL сохранены; 3D принят отдельно, narrow repair в работе
+
+2026-10-05, 00:22 UTC. OWNERSHIP ACCEPTED. Пользователь до утра отсутствует;
+вопросы и спорные решения передаются реальному Astra. Active native turn
+продолжается; подтверждённого механизма вечного auto-resume нет. Main остаётся
+`5beaafb2c4f717862b62e67fd3e23e7d81860535`; draft PR21 не объединён.
+
+Первый LAB candidate79 run37243706546 FAILURE: exact counters/histogram
+прошли до проверки CSSOM bar96.7391% против unrounded89/92*100. Узкое
+QA исправление сравнивает exact actual CSSOM с independently constructed
+CSSOM, без расширения numerical tolerance; исходный FAIL сохранён. Original
+LAB ZIP2210725bytes SHA256
+`bbd3f4dce56469c082be6e61f8d9abdd913d48987af6575620a6493e4bcb3a09`
+и собственные source/numerics/failure reviews сохранены в evidence branch
+`codex/lab-aggregate-evidence-20261004`, commit
+`41f38a5d1ca57f01ad21088bd14ce92117c906aa`, tree
+`eb4c2b2682336d4c9b90042c93ca54c182c648bf`. Closed20files/1ZIP2310183B,
+manifest `db972e9ff96862843b0ed683c7dfd8dacefa028cf26cd2e01177681df690632b`,
+fresh independent Git object database size/SHA/CRC PASS.
+
+Source/UX review actual первого PNG выявил мелкие оси; Astra одобрил
+210CSSpx responsive SVG с actual measured width/11CSSpx axis-only rounded
+labels. Root candidate `60015b28a42e222fcdafd33ed80da6c81f57c6db`, tree
+`117583151afcc3e6326971f87c44f3e41bc56eac`, full CI run37245225939
+FAILURE. Actual LAB first6gates PASS:24runs/48endpoints/all raw curves,
+160published pair selections, controls, real URL/back/reload/keyboard.
+Gate7 layout FAIL: plotFrame throws too-narrow after clearing plots;
+ResizeObserver cannot recover from partial tree. Two sticky initial/reload
+comparisons body aborts remain unresolved; initial abort precedes reload by
+3minutes, so navigation-only explanation rejected. Run budget210s retained;
+no unchanged retry, tolerance widening, skipped gate or source PASS transfer.
+
+LAB600 original artifact11319250919:49316006bytes SHA256
+`bdc0b53a6543c560b505737a83c1dcae214f74d79bdad05ecdb9793307b06b80`.
+Native32MiB limit закрыт reviewed fixed evidence-only helper
+`5148bfea758292f0d67babc941d38ba4ba993ac2`, tree
+`459189b6661eda76c1e40807ee39492e3af65fd8`, run37246516009:3raw ranges
+16777216/16777216/15761574 + separate original report companion.
+Native original size/SHA/outerCRC и original report exactbytes PASS; сам
+browser verdict остаётся FAIL. Independent failure/trace/privacy review
+и durable publication этого второго FAIL ещё pending.
+
+Candidate79 original physical3D artifact11318935319 отдельно accepted
+qualified13gates PASS, independent code/numerics0. Original59183146B SHA
+`8d773a29f6bef2443124a73c31917189dd4a921ae6972e6c08ba83de2d49aa60`,
+22outer+1595nestedCRC, all12PNG viewed, all3paused captures encodedbytes
+и decodedRGBA exact/no changedpixel, pre/post API/camera/viewport/layers
+проверены independently. Oldmain5bea FAIL причина неизвестна и не relabel.
+Software WebGL2/stock guarded SwiftShader qualification; no hardwareFPS
+claim. Expanded traces131207138B выше64MiB; archive cap толькоpublishedbytes.
+Evidence branch `codex/lab-3d-79-evidence-20261004`, commit
+`e43cb056ba61f38822b1a3f21815bb73eda9d169`, tree
+`ab86c981875bd8670961106e9d6988c71d6da4f3`:closed11files/1ZIP59546673B,
+manifestSHA `4444c926a8eb800e88cea2e71057073068497b4c5f7e0c699067095e9dbd6a96`.
+Fresh independent Git object database normal network size/SHA/CRC PASS,
+readback `docs/experiments/handoff/lab-3d-79-network-readback.json`.
+
+Astra approved narrow repair: permanent4plot shells, measureall usable
+widths before replacingcurves, detached construction/synchronouscommit,
+hidden/zero-size defer to next RO/pageshow without retry loop; unexpected
+error visiblefatal. Separate QA batches DOMreads while retaining all
+9gates/48endpoints/all24/all160pairs/210s. Unreached compactJSON transport
+negative-control LF assumption replaced by approved single numeric e→E
+spelling with exactoffset/sameparsedvalues/samelength/differentSHA.
+Scientific source21cbe907/world30/chamber1/raw24SHA6fd944 remains unchanged;
+no new modelrun during this delivery repair.
+
+Public LAB QA preparation `codex/lab-public-smoke-preparation`, commit
+`64bf82130e5992947c9d2ee999eb018dc92d0a51`, tree
+`98a485613794cebcf7b7d5938094999f1168c0a1`:independent source review0,
+NOT_RUN. Manifest deployed product SHA intentionally null; runtime refuses
+before public requests. After accepted guardedmerge/deployment only: repin
+accepted candidate/tree/deployedmerge and all8assets, source delta review,
+existingofficial protected browser/public bytes/readback. No new hosting.
+
+Следующий шаг: independent nativeFAIL600 review/archive, narrow UI/loader/QA
+fixes и fresh exactfullCI; только GREEN/review/runtime acceptance разрешает
+PR21 merge. После accepted/public LAB3a Astra выбрал отдельный bounded LAB4a
+dt30/15/7.5s sensitivity plan; до этого новые model runs не запускаются.
