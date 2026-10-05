@@ -1,0 +1,180 @@
+{
+  "review_kind": "Independent final combined source/workflow review for second expressly authorized reader lifecycle diagnostic",
+  "verdict": "QUALIFIED_SOURCE_0_BLOCKERS",
+  "blockers": [],
+  "reviewed_at_utc": "2026-10-05T01:39:08.411986+00:00",
+  "head": "0b52aeec6c6dd07bc2a7b73fe506adcbb12cbf7a",
+  "tree": "e4a1fcca97f7d5f4bbef915858dba49b5c3f0233",
+  "clean_tree": true,
+  "author_head": "10a1db125b0e4a63d9e77a23d62d062da0c1d98f",
+  "author_tree": "ee322a747e9ae8fd0b0c03bc45353b0ffe7a5d6f",
+  "prior_diagnostic_head": "edca9b9fa16a11bb24317dead67362515b9d1e00",
+  "candidate_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "candidate_tree": "64bdb5f4794f48907f99886c540f6391571b1914",
+  "files": [
+    {
+      "path": ".github/workflows/lab-transport-diagnostic.yml",
+      "bytes": 2243,
+      "sha256": "d65f7b28ac44c69e501b2006fed031318fbc32c96ab5475258c2ad5422fdf58e",
+      "owner": "root"
+    },
+    {
+      "path": "scripts/check_lab_transport_diagnostic.mjs",
+      "bytes": 40220,
+      "sha256": "285a32de1bb0f232d3c4ce6ba51bd3a520622cc48d7061406f2e87e4dd7d867d",
+      "owner": "QA author"
+    },
+    {
+      "path": "scripts/lab-transport-diagnostic-assets.json",
+      "bytes": 2061,
+      "sha256": "3402878d7b33e08f92812ca25f33bcc5c8319a412cc67cd0ecb1f8752fcf1847",
+      "owner": "QA author"
+    }
+  ],
+  "scope": {
+    "author_delta_only_two_QA_files": true,
+    "author_to_combined_only_root_workflow": true,
+    "candidate_to_combined_only_three_diagnostic_files": true,
+    "all_other_product_core_API_config_version_frozen_docs_data_ui_bytes_unchanged": true,
+    "eight_original_site_assets_and_pins": [
+      {
+        "filename": "lab.html",
+        "bytes": 5393,
+        "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52"
+      },
+      {
+        "filename": "lab.js",
+        "bytes": 22571,
+        "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871"
+      },
+      {
+        "filename": "lab.css",
+        "bytes": 5019,
+        "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1"
+      },
+      {
+        "filename": "lab-data.mjs",
+        "bytes": 20808,
+        "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a"
+      },
+      {
+        "filename": "data/lab-2/descriptor.json",
+        "bytes": 50708,
+        "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb"
+      },
+      {
+        "filename": "data/lab-2/results.json",
+        "bytes": 5294742,
+        "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a"
+      },
+      {
+        "filename": "data/lab-2/comparisons.json",
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3"
+      },
+      {
+        "filename": "data/lab-2/manifest.json",
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3"
+      }
+    ],
+    "eight_original_bytes": 6599049,
+    "runtime_browser_HTTP_Cargo_models_CI": "NOT_RUN"
+  },
+  "reader_source_audit": {
+    "target_source_sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+    "anchors": [
+      {
+        "phase": "entry",
+        "line": 131,
+        "column": 2,
+        "max_column": 25,
+        "source_line": "  const response = await fetchImpl(url);"
+      },
+      {
+        "phase": "finally",
+        "line": 139,
+        "column": 4,
+        "max_column": 24,
+        "source_line": "    let cleanupFailed = false, cleanupError;"
+      },
+      {
+        "phase": "pre_release",
+        "line": 142,
+        "column": 10,
+        "max_column": 23,
+        "source_line": "    try { await reader.releaseLock(); }"
+      },
+      {
+        "phase": "post_release",
+        "line": 144,
+        "column": 4,
+        "max_column": 41,
+        "source_line": "    if (cleanupFailed && !primaryFailed) throw cleanupError;"
+      }
+    ],
+    "method": "Read full final script/manifest and exact candidate readBytes/loadLab adjacent semantics; literal source lines independently matched; final script and manifest bytes equal author blobs.",
+    "arming": "Four Debugger.setBreakpointByUrl false conditions armed by exact literal module URL before goto. Initial locations must be empty; no post-execution breakpoint setup race.",
+    "compiled_binding": "Exactly one target script; exact getScriptSource UTF8 SHA and bytes; native engineHash retained, four possible-location inventories, exactly one resolved point per phase and distinct exact coordinates. Runtime final proof rejects alias, missing/duplicate or out-of-bound locations.",
+    "entry_TDZ": "Entry point131 references only initialized url/limit and browser clock; Response/Reader/length/completed/primaryFailed fields are literal null, no typeof access to TDZ.",
+    "post_EOF_and_release": "Later points139/142/144 read initialized scalar flags/length/bodyUsed/body.locked; pre-release bound ends at method name column23 before invocation; post-release follows existing awaited release. Source marks actual EOF only via completed===true set on native done===true.",
+    "native_semantics": "No source patch, fetch/Response/Reader method replacement, Promise handler/observer, second request, forced native cancellation or synthetic body. Logpoint IIFE returns false in every branch; no debugger pause expected. Scalar properties copied into bounded independent diagnostic array only.",
+    "limits_and_errors": "Four phases for each of four original data URLs: exactly16 unique ordered records, contiguous sequence and max32. Errors/prefix disappearance/overflow/malformed records reject. Unexpected Debugger.paused is sticky FAIL; resume only releases the accidental pause for failure evidence/cleanup.",
+    "raw_preservation": "Collected event prefix cannot disappear; raw records remain even if verification fails; postcleanup verification rebuilt idempotently rather than accumulating derived order."
+  },
+  "clock_audit": {
+    "sampling": "Performance timeTicks Timestamp before/after synchronous Runtime.evaluate performance.now/timeOrigin on the exact actual document URL; not about:blank, no awaitPromise/native handlers.",
+    "binding": "All samples and scalar phases require same timeOrigin; clocks finite and ordered.",
+    "precision_allowance_seconds": 0.001,
+    "interval": "Declared precision allowance expands both anchor offset bounds and event interval; sample intersections only. No midpoint estimate or Node-arrival causal clock.",
+    "unknown": "Overlapping intervals and inconsistent offset assumptions produce explicit UNKNOWN; wrong document/timeOrigin/malformed/CDP errors remain FAIL. Clock inconsistency does not establish a native cause or erase transport errors.",
+    "qualifications": "TimeTicks alignment and 1ms coarsening allowance are stated assumptions for this runtime, not universal/exact clock guarantees; debugger timing/liveness effects prevent uninstrumented cause or GC inference."
+  },
+  "preserved_existing_diagnostic_guards": {
+    "response_proof": "All eight original response-stage size/SHA pins then unchanged continueResponse({requestId}) ACK; exact unique request/network/server inventory and native loadingFinished required. No ERR_ABORTED/body-failure allowances.",
+    "failures": "Every original native/PW requestfailed, Runtime/page/console/unhandled, callback/cleanup failure remains sticky DIAGNOSTIC_FAIL. Native unhandled listener has no preventDefault.",
+    "lifecycle": "Pre/postclose bounded callbacks, guard until page closure, context/browser cleanup, final UI/error/matrix/run/tick assertions and final aggregate preserved. Reader evidence is also collected on FAIL; observing reader phases is separate from outer diagnostic PASS.",
+    "sandbox": "Official PW1.61.1, chromiumSandbox:true, only enable-automation; all prior observed argv prohibitions plus GPU/web-security weakening guards unchanged.",
+    "budget": "Single initial1440x900 page,150s script run; original request/event/callback/operation limits unchanged; one actualPNG with no requested trace."
+  },
+  "workflow_audit": {
+    "sha256": "d65f7b28ac44c69e501b2006fed031318fbc32c96ab5475258c2ad5422fdf58e",
+    "delta_from_prior": "Exactly four labels/branch/artifact-name edits; no other workflow behavior changed.",
+    "trigger": "push only codex/lab-reader-lifecycle-run-20261005; preparation push does not match",
+    "permissions": "contents:read",
+    "checkout": "github.sha; persist-credentials:false; sparse known assets/scripts",
+    "source_fetch": "fixed1be --filter=blob:none --no-tags --depth=1",
+    "runtime": "Ubuntu22/Node24/official pinned Playwright1.61.1",
+    "identity": "EXPECTED_HEAD github.sha and EXPECTED_TREE exactcheckout tree; script checks both and source file/Git equality",
+    "artifact": "always/error-if-missing; same target path; 7day retention",
+    "budget_minutes": 8,
+    "scope_exclusions": [
+      "No models",
+      "No Cargo",
+      "No deploy",
+      "No PR trigger",
+      "No source or security infrastructure changes"
+    ],
+    "single_execution": "Coordinator-authorized ONE push/run; branch trigger is not a persistent execution counter."
+  },
+  "reviewer_checks": {
+    "node_syntax": "PASS",
+    "git_diff_whitespace": "PASS",
+    "workflow_yaml_parse": "PASS",
+    "exact_3_blobs_author_root_boundary": "PASS",
+    "8_original_Git_local_manifest_pins": "PASS",
+    "4_exact_source_lines": "PASS",
+    "actual_Chrome_positions_reader_events_and_clocks": "NOT_RUN"
+  },
+  "author_source_checks_qualified": {
+    "reported": "Syntax/preflight/whitespace; extracted false-condition/primitive verifier controls for TDZ, errors, cap/prefix, phase16/aliases, overlap/drift UNKNOWN and wrong document. Definition-only Node24 inspector module compilation found131col25/139col24/142col23/144col4.",
+    "reviewer_note": "NodeV8 definition/source feasibility does not execute loadLab/fetch/models and does not establish actual Chrome points or browser PASS. Reviewer did not repeat these tests."
+  },
+  "remaining_gates": [
+    "ONE actual protected diagnostic at this exact combined HEAD/tree",
+    "Independent original artifact integrity/compiled-source/possible-resolvedpoints/16raw lifecycle/clock intervals/native error/PNG/privacy review",
+    "Evidence-based decision; if cancellation disappears, claim only instrumented observation and no root cause",
+    "Separate final product LAB nine gates/fullCI/regressions/public acceptance"
+  ],
+  "preserved_old_actual_status": "Original edca diagnostic remains DIAGNOSTIC_FAIL; product1be/600/79 and main5bea original failures remain failures. No transfer from source checks to runtime/overall acceptance."
+}

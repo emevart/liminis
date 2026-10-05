@@ -1,0 +1,946 @@
+{
+  "review_kind": "Independent original actual reader lifecycle diagnostic artifact review",
+  "verdict": "CONFIRMED_DIAGNOSTIC_FAIL_NOT_ACCEPTED",
+  "reviewed_at_utc": "2026-10-05T01:47:45.337691+00:00",
+  "acceptance_blocker": "Native descriptor.json Network.loadingFailed canceled:true/net::ERR_ABORTED remains unclassified; no product/browser/fullCI acceptance.",
+  "additional_integrity_or_privacy_blockers": [],
+  "coordinator_delivery_pins": {
+    "run": "37252287604",
+    "job": "111582214941",
+    "artifact": "11321850249",
+    "qualification": "Run is recorded in browser report; job/artifact provenance supplied by coordinator, no independent HTTP/API request by reviewer."
+  },
+  "original_integrity": {
+    "bytes": 399750,
+    "sha256": "c628ee972f4ea13bc095d5decb9c8c77c542145e693c133ebd83733642b727c0",
+    "closed_two_members": [
+      "page.png",
+      "report.json"
+    ],
+    "crc": "PASS",
+    "duplicates_traversal_symlinks": 0,
+    "nested_zip_count": 0,
+    "expanded_bytes": 480156,
+    "extracted_byte_equal_original": true,
+    "original_unchanged_not_repacked": true,
+    "inventory": [
+      {
+        "filename": "page.png",
+        "bytes": 429673,
+        "compressed_bytes": 391093,
+        "crc32": "2638fd4e",
+        "sha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014"
+      },
+      {
+        "filename": "report.json",
+        "bytes": 50483,
+        "compressed_bytes": 8413,
+        "crc32": "7cdb5102",
+        "sha256": "fd7325a41c49246dc03d115800bb8928c6683bdace08a51ff360f712176ff085"
+      }
+    ]
+  },
+  "source_binding": {
+    "diagnostic_head": "0b52aeec6c6dd07bc2a7b73fe506adcbb12cbf7a",
+    "diagnostic_tree": "e4a1fcca97f7d5f4bbef915858dba49b5c3f0233",
+    "candidate_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+    "candidate_tree": "64bdb5f4794f48907f99886c540f6391571b1914",
+    "script_sha256": "285a32de1bb0f232d3c4ce6ba51bd3a520622cc48d7061406f2e87e4dd7d867d",
+    "manifest_sha256": "3402878d7b33e08f92812ca25f33bcc5c8319a412cc67cd0ecb1f8752fcf1847",
+    "workflow_sha256": "d65f7b28ac44c69e501b2006fed031318fbc32c96ab5475258c2ad5422fdf58e",
+    "independent_check": "Exact frozen Git blobs/source digests and all eight candidate asset size/SHA compared; actual source/case distinct from historical producer.",
+    "status": "PASS"
+  },
+  "compiled_and_breakpoint_proof": {
+    "compiled_scripts": [
+      {
+        "scriptId": "6",
+        "url": "http://127.0.0.1:38551/lab-data.mjs",
+        "engineHash": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+        "startLine": 0,
+        "startColumn": 0,
+        "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a"
+      }
+    ],
+    "breakpoints": [
+      {
+        "phase": "entry",
+        "requestedLocation": {
+          "lineNumber": 130,
+          "columnNumber": 2
+        },
+        "resolved": [
+          {
+            "scriptId": "6",
+            "lineNumber": 130,
+            "columnNumber": 25
+          }
+        ],
+        "conditionSha256": "572d10c9b84a9976f3a5991b50904fbaeabb7528aa701409ca0be18de810a182",
+        "breakpointId": "1:130:2:http://127.0.0.1:38551/lab-data.mjs",
+        "possible": [
+          {
+            "scriptId": "6",
+            "lineNumber": 130,
+            "columnNumber": 25,
+            "type": "call"
+          }
+        ],
+        "expectedLocation": {
+          "scriptId": "6",
+          "lineNumber": 130,
+          "columnNumber": 25,
+          "type": "call"
+        }
+      },
+      {
+        "phase": "finally",
+        "requestedLocation": {
+          "lineNumber": 138,
+          "columnNumber": 4
+        },
+        "resolved": [
+          {
+            "scriptId": "6",
+            "lineNumber": 138,
+            "columnNumber": 24
+          }
+        ],
+        "conditionSha256": "ba7630b132c1a14ec143483626ca62b962eaff62f69b6c66df12bf13d6bbdb8e",
+        "breakpointId": "1:138:4:http://127.0.0.1:38551/lab-data.mjs",
+        "possible": [
+          {
+            "scriptId": "6",
+            "lineNumber": 138,
+            "columnNumber": 24
+          },
+          {
+            "scriptId": "6",
+            "lineNumber": 138,
+            "columnNumber": 31
+          }
+        ],
+        "expectedLocation": {
+          "scriptId": "6",
+          "lineNumber": 138,
+          "columnNumber": 24
+        }
+      },
+      {
+        "phase": "pre_release",
+        "requestedLocation": {
+          "lineNumber": 141,
+          "columnNumber": 10
+        },
+        "resolved": [
+          {
+            "scriptId": "6",
+            "lineNumber": 141,
+            "columnNumber": 23
+          }
+        ],
+        "conditionSha256": "c4346e718073386b799bf0c51d8c259ad28c6ea9e33d423bce8aceb88342b43c",
+        "breakpointId": "1:141:10:http://127.0.0.1:38551/lab-data.mjs",
+        "possible": [
+          {
+            "scriptId": "6",
+            "lineNumber": 141,
+            "columnNumber": 23,
+            "type": "call"
+          }
+        ],
+        "expectedLocation": {
+          "scriptId": "6",
+          "lineNumber": 141,
+          "columnNumber": 23,
+          "type": "call"
+        }
+      },
+      {
+        "phase": "post_release",
+        "requestedLocation": {
+          "lineNumber": 143,
+          "columnNumber": 4
+        },
+        "resolved": [
+          {
+            "scriptId": "6",
+            "lineNumber": 143,
+            "columnNumber": 4
+          }
+        ],
+        "conditionSha256": "f3ab6f3ca1139fca3175429220d5cc5dd3cb71c20b3ef7924f41ec9a7e48136b",
+        "breakpointId": "1:143:4:http://127.0.0.1:38551/lab-data.mjs",
+        "possible": [
+          {
+            "scriptId": "6",
+            "lineNumber": 143,
+            "columnNumber": 4
+          },
+          {
+            "scriptId": "6",
+            "lineNumber": 143,
+            "columnNumber": 41
+          }
+        ],
+        "expectedLocation": {
+          "scriptId": "6",
+          "lineNumber": 143,
+          "columnNumber": 4
+        }
+      }
+    ],
+    "independent_checks": [
+      "One target script with b034 raw-source SHA and same native engineHash",
+      "All four exact source-line anchors and requested bounds",
+      "Actual resolved locations equal first allowed actual possible point; all four coordinates unique",
+      "All four condition SHA values independently reconstructed from reviewed immutable source",
+      "No actual Debugger.paused, errors or overflow"
+    ],
+    "locations_human_1_based": {
+      "entry": "131:25 call before fetchImpl",
+      "finally": "139:24 before cleanup",
+      "pre_release": "142:23 call before releaseLock",
+      "post_release": "144:4 condition after awaited release"
+    },
+    "qualified_status": "ACTUAL_COMPILED_SOURCE_LOCATIONS_OBSERVED"
+  },
+  "reader_lifecycle": {
+    "status": "PRIMITIVE_SOURCE_PATH_OBSERVED",
+    "raw_sequence": 16,
+    "raw_event_count": 16,
+    "max_records": 32,
+    "exact_four_phase_records_per_file": [
+      {
+        "filename": "data/lab-2/descriptor.json",
+        "bytes": 50708,
+        "records": [
+          {
+            "seq": 1,
+            "phase": "entry",
+            "path": "/data/lab-2/descriptor.json",
+            "limit": 262144,
+            "now": 49.89999999999418,
+            "timeOrigin": 1791164412143.2,
+            "completed": null,
+            "primaryFailed": null,
+            "length": null,
+            "cleanupFailed": null,
+            "bodyUsed": null,
+            "locked": null
+          },
+          {
+            "seq": 2,
+            "phase": "finally",
+            "path": "/data/lab-2/descriptor.json",
+            "limit": 262144,
+            "now": 87.89999999999418,
+            "timeOrigin": 1791164412143.2,
+            "completed": true,
+            "primaryFailed": false,
+            "length": 50708,
+            "cleanupFailed": null,
+            "bodyUsed": true,
+            "locked": true
+          },
+          {
+            "seq": 3,
+            "phase": "pre_release",
+            "path": "/data/lab-2/descriptor.json",
+            "limit": 262144,
+            "now": 88.10000000000582,
+            "timeOrigin": 1791164412143.2,
+            "completed": true,
+            "primaryFailed": false,
+            "length": 50708,
+            "cleanupFailed": null,
+            "bodyUsed": true,
+            "locked": true
+          },
+          {
+            "seq": 4,
+            "phase": "post_release",
+            "path": "/data/lab-2/descriptor.json",
+            "limit": 262144,
+            "now": 88.29999999998836,
+            "timeOrigin": 1791164412143.2,
+            "completed": true,
+            "primaryFailed": false,
+            "length": 50708,
+            "cleanupFailed": false,
+            "bodyUsed": true,
+            "locked": false
+          }
+        ],
+        "actual_EOF_path_observed": true,
+        "primary_read_error": false,
+        "adapter_cancel_branch_taken": false,
+        "release_locked_transition": [
+          true,
+          false
+        ],
+        "release_cleanup_error": false,
+        "scope": "Only this Debugger-instrumented initial load; not transfer to original uninstrumented failures"
+      },
+      {
+        "filename": "data/lab-2/results.json",
+        "bytes": 5294742,
+        "records": [
+          {
+            "seq": 5,
+            "phase": "entry",
+            "path": "/data/lab-2/results.json",
+            "limit": 5294742,
+            "now": 90.29999999998836,
+            "timeOrigin": 1791164412143.2,
+            "completed": null,
+            "primaryFailed": null,
+            "length": null,
+            "cleanupFailed": null,
+            "bodyUsed": null,
+            "locked": null
+          },
+          {
+            "seq": 14,
+            "phase": "finally",
+            "path": "/data/lab-2/results.json",
+            "limit": 5294742,
+            "now": 243.5,
+            "timeOrigin": 1791164412143.2,
+            "completed": true,
+            "primaryFailed": false,
+            "length": 5294742,
+            "cleanupFailed": null,
+            "bodyUsed": true,
+            "locked": true
+          },
+          {
+            "seq": 15,
+            "phase": "pre_release",
+            "path": "/data/lab-2/results.json",
+            "limit": 5294742,
+            "now": 243.60000000000582,
+            "timeOrigin": 1791164412143.2,
+            "completed": true,
+            "primaryFailed": false,
+            "length": 5294742,
+            "cleanupFailed": null,
+            "bodyUsed": true,
+            "locked": true
+          },
+          {
+            "seq": 16,
+            "phase": "post_release",
+            "path": "/data/lab-2/results.json",
+            "limit": 5294742,
+            "now": 244,
+            "timeOrigin": 1791164412143.2,
+            "completed": true,
+            "primaryFailed": false,
+            "length": 5294742,
+            "cleanupFailed": false,
+            "bodyUsed": true,
+            "locked": false
+          }
+        ],
+        "actual_EOF_path_observed": true,
+        "primary_read_error": false,
+        "adapter_cancel_branch_taken": false,
+        "release_locked_transition": [
+          true,
+          false
+        ],
+        "release_cleanup_error": false,
+        "scope": "Only this Debugger-instrumented initial load; not transfer to original uninstrumented failures"
+      },
+      {
+        "filename": "data/lab-2/comparisons.json",
+        "bytes": 1116928,
+        "records": [
+          {
+            "seq": 6,
+            "phase": "entry",
+            "path": "/data/lab-2/comparisons.json",
+            "limit": 1116928,
+            "now": 90.79999999998836,
+            "timeOrigin": 1791164412143.2,
+            "completed": null,
+            "primaryFailed": null,
+            "length": null,
+            "cleanupFailed": null,
+            "bodyUsed": null,
+            "locked": null
+          },
+          {
+            "seq": 11,
+            "phase": "finally",
+            "path": "/data/lab-2/comparisons.json",
+            "limit": 1116928,
+            "now": 140.69999999998254,
+            "timeOrigin": 1791164412143.2,
+            "completed": true,
+            "primaryFailed": false,
+            "length": 1116928,
+            "cleanupFailed": null,
+            "bodyUsed": true,
+            "locked": true
+          },
+          {
+            "seq": 12,
+            "phase": "pre_release",
+            "path": "/data/lab-2/comparisons.json",
+            "limit": 1116928,
+            "now": 141,
+            "timeOrigin": 1791164412143.2,
+            "completed": true,
+            "primaryFailed": false,
+            "length": 1116928,
+            "cleanupFailed": null,
+            "bodyUsed": true,
+            "locked": true
+          },
+          {
+            "seq": 13,
+            "phase": "post_release",
+            "path": "/data/lab-2/comparisons.json",
+            "limit": 1116928,
+            "now": 141.19999999998254,
+            "timeOrigin": 1791164412143.2,
+            "completed": true,
+            "primaryFailed": false,
+            "length": 1116928,
+            "cleanupFailed": false,
+            "bodyUsed": true,
+            "locked": false
+          }
+        ],
+        "actual_EOF_path_observed": true,
+        "primary_read_error": false,
+        "adapter_cancel_branch_taken": false,
+        "release_locked_transition": [
+          true,
+          false
+        ],
+        "release_cleanup_error": false,
+        "scope": "Only this Debugger-instrumented initial load; not transfer to original uninstrumented failures"
+      },
+      {
+        "filename": "data/lab-2/manifest.json",
+        "bytes": 82880,
+        "records": [
+          {
+            "seq": 7,
+            "phase": "entry",
+            "path": "/data/lab-2/manifest.json",
+            "limit": 82880,
+            "now": 91.19999999998254,
+            "timeOrigin": 1791164412143.2,
+            "completed": null,
+            "primaryFailed": null,
+            "length": null,
+            "cleanupFailed": null,
+            "bodyUsed": null,
+            "locked": null
+          },
+          {
+            "seq": 8,
+            "phase": "finally",
+            "path": "/data/lab-2/manifest.json",
+            "limit": 82880,
+            "now": 113,
+            "timeOrigin": 1791164412143.2,
+            "completed": true,
+            "primaryFailed": false,
+            "length": 82880,
+            "cleanupFailed": null,
+            "bodyUsed": true,
+            "locked": true
+          },
+          {
+            "seq": 9,
+            "phase": "pre_release",
+            "path": "/data/lab-2/manifest.json",
+            "limit": 82880,
+            "now": 113.19999999998254,
+            "timeOrigin": 1791164412143.2,
+            "completed": true,
+            "primaryFailed": false,
+            "length": 82880,
+            "cleanupFailed": null,
+            "bodyUsed": true,
+            "locked": true
+          },
+          {
+            "seq": 10,
+            "phase": "post_release",
+            "path": "/data/lab-2/manifest.json",
+            "limit": 82880,
+            "now": 113.39999999999418,
+            "timeOrigin": 1791164412143.2,
+            "completed": true,
+            "primaryFailed": false,
+            "length": 82880,
+            "cleanupFailed": false,
+            "bodyUsed": true,
+            "locked": false
+          }
+        ],
+        "actual_EOF_path_observed": true,
+        "primary_read_error": false,
+        "adapter_cancel_branch_taken": false,
+        "release_locked_transition": [
+          true,
+          false
+        ],
+        "release_cleanup_error": false,
+        "scope": "Only this Debugger-instrumented initial load; not transfer to original uninstrumented failures"
+      }
+    ],
+    "observations": [
+      {
+        "label": "initial UI observation",
+        "count": 16,
+        "observedMonotonicMs": 2475.681147
+      },
+      {
+        "label": "final live page",
+        "count": 16,
+        "observedMonotonicMs": 2785.924655
+      }
+    ],
+    "errors": [],
+    "overflow": false,
+    "independent_check": "16 contiguous unique scalar records, each source URL exactly entry/finally/pre_release/post_release, matching read limits/counts/timeOrigin and phase order.",
+    "scope_limits": [
+      "completed:true is source-bound to native reader.read() done===true, observed before cleanup on this instrumented path.",
+      "completed:true at finally/pre-release plus immutable source proves this adapter did not call its !completed cancellation branch on these four positive reads.",
+      "This is not evidence for earlier uninstrumented cases, internal browser cancellation cause, native signal reason, GC or a released-root-cause fix.",
+      "Debugger/local inspection may affect optimization, timing, retention and liveness."
+    ]
+  },
+  "original_body_and_traffic_proof": {
+    "assets": [
+      {
+        "filename": "lab.html",
+        "bytes": 5393,
+        "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52",
+        "network_id": "B95A9324D941B0252376741E2B7E1E0B",
+        "fetch_body_pin_exact": true,
+        "continue_response_arguments": [
+          "requestId"
+        ],
+        "body_before_continuation_ack": true,
+        "decoded_data_count": 5393,
+        "native_terminal": "loadingFinished",
+        "server_finished_no_abort": true
+      },
+      {
+        "filename": "lab.js",
+        "bytes": 22571,
+        "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871",
+        "network_id": "3095.3",
+        "fetch_body_pin_exact": true,
+        "continue_response_arguments": [
+          "requestId"
+        ],
+        "body_before_continuation_ack": true,
+        "decoded_data_count": 22571,
+        "native_terminal": "loadingFinished",
+        "server_finished_no_abort": true
+      },
+      {
+        "filename": "lab.css",
+        "bytes": 5019,
+        "sha256": "98664d1223cdc8f3bf46b122c51a6e70438d39a72cd69940ea51d8c6941eb6c1",
+        "network_id": "3095.2",
+        "fetch_body_pin_exact": true,
+        "continue_response_arguments": [
+          "requestId"
+        ],
+        "body_before_continuation_ack": true,
+        "decoded_data_count": 5019,
+        "native_terminal": "loadingFinished",
+        "server_finished_no_abort": true
+      },
+      {
+        "filename": "lab-data.mjs",
+        "bytes": 20808,
+        "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+        "network_id": "3095.6",
+        "fetch_body_pin_exact": true,
+        "continue_response_arguments": [
+          "requestId"
+        ],
+        "body_before_continuation_ack": true,
+        "decoded_data_count": 20808,
+        "native_terminal": "loadingFinished",
+        "server_finished_no_abort": true
+      },
+      {
+        "filename": "data/lab-2/descriptor.json",
+        "bytes": 50708,
+        "sha256": "457d0d92616472f4007539bb9b92d755057f7b7eb536493ddda90c77daef26bb",
+        "network_id": "3095.7",
+        "fetch_body_pin_exact": true,
+        "continue_response_arguments": [
+          "requestId"
+        ],
+        "body_before_continuation_ack": true,
+        "decoded_data_count": 50708,
+        "native_terminal": "loadingFailed",
+        "server_finished_no_abort": true
+      },
+      {
+        "filename": "data/lab-2/results.json",
+        "bytes": 5294742,
+        "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+        "network_id": "3095.8",
+        "fetch_body_pin_exact": true,
+        "continue_response_arguments": [
+          "requestId"
+        ],
+        "body_before_continuation_ack": true,
+        "decoded_data_count": 5294742,
+        "native_terminal": "loadingFinished",
+        "server_finished_no_abort": true
+      },
+      {
+        "filename": "data/lab-2/comparisons.json",
+        "bytes": 1116928,
+        "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+        "network_id": "3095.9",
+        "fetch_body_pin_exact": true,
+        "continue_response_arguments": [
+          "requestId"
+        ],
+        "body_before_continuation_ack": true,
+        "decoded_data_count": 1116928,
+        "native_terminal": "loadingFinished",
+        "server_finished_no_abort": true
+      },
+      {
+        "filename": "data/lab-2/manifest.json",
+        "bytes": 82880,
+        "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+        "network_id": "3095.10",
+        "fetch_body_pin_exact": true,
+        "continue_response_arguments": [
+          "requestId"
+        ],
+        "body_before_continuation_ack": true,
+        "decoded_data_count": 82880,
+        "native_terminal": "loadingFinished",
+        "server_finished_no_abort": true
+      }
+    ],
+    "total_bytes": 6599049,
+    "native_network_requests": 8,
+    "fetch_records": 8,
+    "server_requests": 8,
+    "timeline_events": 35,
+    "all_eight_body_pins_exact": true,
+    "all_eight_original_continuation_ACK": true,
+    "all_eight_server_finished_closed_after_finish": true,
+    "all_eight_native_decoded_byte_counts_full": true,
+    "no_extra_retry_redirect_external_requests": true,
+    "unique_native_Fetch_ID_and_Network_mapping": true,
+    "http200_exact_content_length_no_content_encoding": true,
+    "from_disk_cache_or_service_worker": false,
+    "terminal_counts": {
+      "loadingFinished": 7,
+      "loadingFailed": 1
+    },
+    "qualification": "Actual Response-stage body digests retained; raw actual body files are not retained by this bounded design. Server/body/full byte counts are separate from native terminal success."
+  },
+  "native_failure": {
+    "filename": "data/lab-2/descriptor.json",
+    "network_id": "3095.7",
+    "events": [
+      {
+        "event": "requestWillBeSent",
+        "observedMonotonicMs": 2088.198693,
+        "timestamp": 148.490435,
+        "wallTime": 1791164412.194532,
+        "method": "GET",
+        "location": {
+          "origin": "http://127.0.0.1:38551",
+          "path": "/data/lab-2/descriptor.json",
+          "initialQuery": false
+        },
+        "type": "Fetch"
+      },
+      {
+        "event": "responseReceived",
+        "observedMonotonicMs": 2106.73348,
+        "timestamp": 148.509644,
+        "status": 200,
+        "mimeType": "application/json",
+        "encodedDataLength": 183,
+        "fromDiskCache": false,
+        "fromServiceWorker": false
+      },
+      {
+        "event": "dataReceived",
+        "observedMonotonicMs": 2107.624326,
+        "timestamp": 148.510776,
+        "dataLength": 50708,
+        "encodedDataLength": 50708
+      },
+      {
+        "event": "loadingFailed",
+        "observedMonotonicMs": 2127.821222,
+        "timestamp": 148.526763,
+        "errorText": "net::ERR_ABORTED",
+        "canceled": true,
+        "blockedReason": null,
+        "type": "Fetch"
+      }
+    ],
+    "fetch_body_completed_node_ms": 2100.011158,
+    "continue_ACK_node_ms": 2103.892838,
+    "playwright_error": {
+      "method": "GET",
+      "location": {
+        "origin": "http://127.0.0.1:38551",
+        "path": "/data/lab-2/descriptor.json",
+        "initialQuery": false
+      },
+      "errorText": "net::ERR_ABORTED",
+      "observedMonotonicMs": 2128.482476
+    },
+    "native_timestamp": 148.526763,
+    "stage_list": [
+      "Network loadingFailed",
+      "Playwright requestfailed",
+      "main",
+      "main settlement",
+      "post-cleanup aggregate"
+    ],
+    "qualification": "One request has Native/PW errors and derived main/main-settlement/aggregate assertion failures. Source run fails before finally screenshot; exact screenshot-start timestamp not retained. Failed asset differs from edca results; no flake or cause inference."
+  },
+  "independent_clock_math": {
+    "clocks": [
+      {
+        "label": "actual document after DOM before UI observation",
+        "beforeTimestamp": 148.494039,
+        "afterTimestamp": 148.499499,
+        "now": 56.39999999999418,
+        "timeOrigin": 1791164412143.2,
+        "precisionAllowanceSeconds": 0.001,
+        "offsetSeconds": [
+          148.43663899999999,
+          148.444099
+        ],
+        "qualification": "Timestamp/timeTicks alignment and a conservative 1ms allowance for this Chrome document's coarsened JS clock are assumptions; this is not an exact offset or universal precision bound."
+      },
+      {
+        "label": "actual document after PNG before closure",
+        "beforeTimestamp": 149.188937,
+        "afterTimestamp": 149.190242,
+        "now": 750.5,
+        "timeOrigin": 1791164412143.2,
+        "precisionAllowanceSeconds": 0.001,
+        "offsetSeconds": [
+          148.43743700000002,
+          148.44074200000003
+        ],
+        "qualification": "Timestamp/timeTicks alignment and a conservative 1ms allowance for this Chrome document's coarsened JS clock are assumptions; this is not an exact offset or universal precision bound."
+      }
+    ],
+    "precision_allowance_seconds": 0.001,
+    "intersection_offset_seconds": [
+      148.43743700000002,
+      148.44074200000003
+    ],
+    "consistency": "CONSISTENT_WITH_DECLARED_CLOCK_ASSUMPTIONS",
+    "derived_order": [
+      {
+        "filename": "data/lab-2/descriptor.json",
+        "phase": "finally",
+        "jsEventChromeIntervalSeconds": [
+          148.524337,
+          148.52964200000002
+        ],
+        "nativeFailureTimestamp": 148.526763,
+        "relation": "UNKNOWN_OVERLAPPING_INTERVALS",
+        "qualification": "Conditional on protocol clock alignment and declared precision allowance; ordering is not a cancellation-cause proof."
+      },
+      {
+        "filename": "data/lab-2/descriptor.json",
+        "phase": "pre_release",
+        "jsEventChromeIntervalSeconds": [
+          148.524537,
+          148.52984200000003
+        ],
+        "nativeFailureTimestamp": 148.526763,
+        "relation": "UNKNOWN_OVERLAPPING_INTERVALS",
+        "qualification": "Conditional on protocol clock alignment and declared precision allowance; ordering is not a cancellation-cause proof."
+      },
+      {
+        "filename": "data/lab-2/descriptor.json",
+        "phase": "post_release",
+        "jsEventChromeIntervalSeconds": [
+          148.524737,
+          148.530042
+        ],
+        "nativeFailureTimestamp": 148.526763,
+        "relation": "UNKNOWN_OVERLAPPING_INTERVALS",
+        "qualification": "Conditional on protocol clock alignment and declared precision allowance; ordering is not a cancellation-cause proof."
+      }
+    ],
+    "independent_recalculation": "Each before/after Timestamp sandwich and declared precision expansion, intersection, and additional point expansion recalculated exactly; native148.526763 falls inside all three intervals.",
+    "all_three_relations": "UNKNOWN_OVERLAPPING_INTERVALS",
+    "qualification": "Same-document/timeOrigin and declared protocol alignment/coarsening assumptions only. No midpoint, Node-arrival causal clock, phase/failure order, or release-cause claim."
+  },
+  "ui_actual_png": {
+    "view_image_actual_count": 1,
+    "filename": "page.png",
+    "dimensions": [
+      1440,
+      2443
+    ],
+    "png_sha256": "a19cd223b6fc4475c737c33c916bf7a84ec1be7671aa6fc90b19814669474014",
+    "rgba_sha256": "d8bfac48aa3c1986425bfe8e6299867c0e64c47279857f9518b5c0ee08556387",
+    "byte_equal_prior_edca_and_1be_initial_png": true,
+    "initial": {
+      "ready": true,
+      "workspaceHidden": false,
+      "errorVisible": false,
+      "layout": "ready",
+      "ariaBusy": "false",
+      "status": "Verified published bytes · 24 runs · four paired seeds · aggregate observations",
+      "matrixRows": 24,
+      "plots": [
+        {
+          "metric": "living_cells",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        },
+        {
+          "metric": "structural_mass_mol",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        },
+        {
+          "metric": "food_free_mol",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        },
+        {
+          "metric": "oxygen_free_mol",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        }
+      ],
+      "runId": "seed-1-baseline",
+      "tick": "0",
+      "unhandled": []
+    },
+    "final": {
+      "ready": true,
+      "workspaceHidden": false,
+      "errorVisible": false,
+      "layout": "ready",
+      "ariaBusy": "false",
+      "status": "Verified published bytes · 24 runs · four paired seeds · aggregate observations",
+      "matrixRows": 24,
+      "plots": [
+        {
+          "metric": "living_cells",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        },
+        {
+          "metric": "structural_mass_mol",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        },
+        {
+          "metric": "food_free_mol",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        },
+        {
+          "metric": "oxygen_free_mol",
+          "visible": "visible",
+          "width": 453,
+          "height": 210
+        }
+      ],
+      "runId": "seed-1-baseline",
+      "tick": "0",
+      "unhandled": []
+    },
+    "visual_review": "Four complete saved aggregate curves, 24-row matrix, baseline seed1/detail tick0, units/environment/histogram/source qualifiers; no partial blank plot or obvious private content.",
+    "qualification": "One initial positive page only. Post-PNG readiness wait skipped because actionsPassed:false; final actual sampled state nevertheless ready. Full nine LAB gates/layout/endpoints/control/science acceptance not performed."
+  },
+  "runtime_and_errors": {
+    "browser": {
+      "playwright": "1.61.1",
+      "version": "149.0.7827.55",
+      "node": "v24.21.0",
+      "runner": "ubuntu22",
+      "workflowRun": "37252287604"
+    },
+    "sandbox_argv_forbidden_flags": 0,
+    "sandbox_launch_settings": {
+      "headless": true,
+      "chromiumSandbox": true,
+      "args": [
+        "--enable-automation"
+      ]
+    },
+    "stock_GPU_qualification": "Official stock SwiftShader flags retained; no hardware/WebGL/FPS/kernel-isolation attestation.",
+    "request_failures": 1,
+    "page_errors": 0,
+    "Runtime_exceptions": 0,
+    "console_errors": 0,
+    "browser_unhandled_initial_final": [
+      [],
+      []
+    ],
+    "node_unhandled": 0,
+    "callback_errors": 0,
+    "cleanup_errors": 0,
+    "Debugger_pauses": 0,
+    "guard_blocked": 0,
+    "guard_status": "RUNNING",
+    "finalization": {
+      "pageClosed": true,
+      "pendingCallbacks": 0,
+      "pausedRequests": 0,
+      "contextAndBrowserCleanupErrors": 0,
+      "networkRequests": 8,
+      "timelineEvents": 35,
+      "actionsPassed": false
+    },
+    "qualification": "Native/PW failure sticky; closed page, no pending callbacks/paused requests, raw arrays through cleanup checked. reader status observed is not outer PASS."
+  },
+  "bounded_privacy": {
+    "UTF8_members_decoded": 1,
+    "decoded_UTF8_bytes": 50483,
+    "binary_members_skipped": 1,
+    "actual_PNGs_viewed": 1,
+    "nested_zip_count": 0,
+    "expanded_bytes": 480156,
+    "max_decoded_budget_bytes": 67108864,
+    "obvious_credential_candidates": 0,
+    "auth_cookie_header_candidates": 0,
+    "private_chat_old_VM_pattern_candidates": 0,
+    "qualification": "Bounded obvious-pattern/structural headers and actual image review; not an exhaustive secret guarantee. No raw joblogs or arbitrary model bodies added."
+  },
+  "reviewer_execution": "Read-only original/source parsing/hashing/image review and clock arithmetic only; no browser/tests/HTTP/CI/models/Cargo/source edits.",
+  "remaining_gates": [
+    "Evidence-based compatibility/root-cause decision; no generic ERR_ABORTED exception",
+    "Independent source and actual acceptance of any next expressly authorized scope",
+    "Fresh final-product full LAB nine gates/protected fullCI/existing regressions/public delivery acceptance before merge"
+  ],
+  "preserved_status": "Original0b52 and edca diagnostic FAIL remain FAIL. Originalproduct1be/600/79 and main5bea failure histories unaltered."
+}

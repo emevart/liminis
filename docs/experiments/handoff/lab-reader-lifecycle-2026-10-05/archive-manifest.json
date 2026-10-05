@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "kind": "Original bounded evidence-only LAB reader lifecycle diagnostic FAIL",
+  "diagnostic_head": "0b52aeec6c6dd07bc2a7b73fe506adcbb12cbf7a",
+  "diagnostic_tree": "e4a1fcca97f7d5f4bbef915858dba49b5c3f0233",
+  "candidate_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
+  "workflow_run": 37252287604,
+  "workflow_job": 111582214941,
+  "artifact_id": 11321850249,
+  "actual_diagnostic_status": "FAIL",
+  "actual_reader_source_path": "OBSERVED_UNDER_DEBUGGER",
+  "causal_failure_release_order": "UNKNOWN_OVERLAPPING_INTERVALS",
+  "product_acceptance": "NOT_ACCEPTED",
+  "archive_group_cap_bytes": 67108864,
+  "unique_bytes": 504337,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3110,
+      "sha256": "a2ff9aff27c3ba432d24455826c711dc8d03a11c10b79048c3a171886b734bff"
+    },
+    {
+      "path": "lab-reader-lifecycle-0b52aee-actual-review.json",
+      "bytes": 32093,
+      "sha256": "cc65780ab62a758d41b25c920a496cc78b42d0355f8b55eb86dcfd561194ae40"
+    },
+    {
+      "path": "lab-reader-lifecycle-0b52aee-actual-review.md",
+      "bytes": 4046,
+      "sha256": "01736dc118789fefb1892ba9b4516772dd16f8281efbf94970c07ad98f694c89"
+    },
+    {
+      "path": "lab-reader-lifecycle-0b52aee-original.zip",
+      "bytes": 399750,
+      "sha256": "c628ee972f4ea13bc095d5decb9c8c77c542145e693c133ebd83733642b727c0"
+    },
+    {
+      "path": "lab-reader-lifecycle-source-review.json",
+      "bytes": 10746,
+      "sha256": "164e503a5629710dbf56be560f35126f87de326ae84625af27dac6a91981b07b"
+    },
+    {
+      "path": "lab-reader-lifecycle-source-review.md",
+      "bytes": 4109,
+      "sha256": "14a0b8e02dbcedb508f80010e40c34dacb04075acef19216c397d40392f89bfd"
+    },
+    {
+      "path": "report.json",
+      "bytes": 50483,
+      "sha256": "fd7325a41c49246dc03d115800bb8928c6683bdace08a51ff360f712176ff085"
+    }
+  ]
+}
