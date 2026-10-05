@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "run_id": 37284723150,
+  "head": "000e2eb6b6d42b81f4cee19eaa23e3f09c917ee6",
+  "tree": "a8cdcc995fe3f6c6ec130ff5400b81d733c55286",
+  "artifacts": [
+    {
+      "id": 11333946691,
+      "name": "dense-recording-browser-000e2eb6b6d42b81f4cee19eaa23e3f09c917ee6",
+      "bytes": 17542218,
+      "digest": "sha256:46c9f3b228c101a49ef2d4380a24b59a18a5e95e63b05f7bab45e512423cc1cb",
+      "expired": false
+    },
+    {
+      "id": 11333771997,
+      "name": "live-cells-browser-000e2eb6b6d42b81f4cee19eaa23e3f09c917ee6",
+      "bytes": 16511492,
+      "digest": "sha256:50020b72346f1902848a1a5b1f65dd84320c0da17dfd0598479df44e8ee08f79",
+      "expired": false
+    },
+    {
+      "id": 11333447645,
+      "name": "recorded-browser-000e2eb6b6d42b81f4cee19eaa23e3f09c917ee6-1",
+      "bytes": 15133635,
+      "digest": "sha256:f303a0013ada2d76a9e88a9366b93f58cef5e98e99d8d83fe4c7e447167e07bc",
+      "expired": false
+    }
+  ],
+  "qualification": "Second LIVE original failure ZIP saved. Recorded/dense ZIP metadata retained only; no new independent review or republication of those ZIP bytes."
+}

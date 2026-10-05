@@ -1,0 +1,10 @@
+{
+  "artifact_id": 11333771997,
+  "bytes": 16511492,
+  "sha256": "50020b72346f1902848a1a5b1f65dd84320c0da17dfd0598479df44e8ee08f79",
+  "run_id": 37284723150,
+  "head": "000e2eb6b6d42b81f4cee19eaa23e3f09c917ee6",
+  "tree": "a8cdcc995fe3f6c6ec130ff5400b81d733c55286",
+  "outer_crc_pass": true,
+  "inflated_bytes": 19236524
+}

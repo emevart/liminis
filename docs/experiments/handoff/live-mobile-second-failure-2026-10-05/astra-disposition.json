@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "decision": "HOLD_NO_SUPPORTED_REPAIR",
+  "pr24_status": "HOLD",
+  "accepted_main": "813be1efad29569a3011f00697bd5d41b7397dc6",
+  "failed_head": "000e2eb6b6d42b81f4cee19eaa23e3f09c917ee6",
+  "failed_tree": "a8cdcc995fe3f6c6ec130ff5400b81d733c55286",
+  "run": "37284723150",
+  "attempt": 1,
+  "original_zip_sha256_verified": "50020b72346f1902848a1a5b1f65dd84320c0da17dfd0598479df44e8ee08f79",
+  "completed_legacy_checks": 12,
+  "failed_viewport_width": 1440,
+  "paused_tick": 1044,
+  "selected_id": "116",
+  "upper_lower_current_inspector_checks_completed": true,
+  "environment_check_completed": true,
+  "failed_target": "Persistent section containing #events",
+  "failed_assertion": "clipped must equal false; actual true",
+  "prior_visibility_enabled_center_hit_assertions_completed": true,
+  "exact_target_rect_retained": false,
+  "exact_clipping_ancestor_axis_magnitude_retained": false,
+  "events_measurement_in_report": false,
+  "element_evaluation_result_in_trace": false,
+  "last_target_resolution_call": "call@349",
+  "mobile_cases_executed": false,
+  "physical_projection_gl_steps_executed": false,
+  "final_responsive_assertions_executed": false,
+  "supported_cause": null,
+  "supported_fix": null,
+  "future_observability_specification": {
+    "authorization": "NOT_OPENED",
+    "record_before_assertions": true,
+    "all_targets_with_full_ancestor_chain": true,
+    "target_identity_current_id_tick_native_scroll_evidence": true,
+    "strict_failure_and_oracle_preserved": true,
+    "does_not_predict_green": true,
+    "requires_separate_bounded_scope_and_resource_decision": true
+  },
+  "new_authoring_authorized": false,
+  "third_full_ci_authorized": false,
+  "alternative_diagnostic_runtime_authorized": false,
+  "not_supported": [
+    "Border, rounding, scroll-limit or renderer cause claim",
+    "Tolerance, clipping suppression, retry or JavaScript scroll fallback",
+    "Desktop product CSS change",
+    "Events target-granularity substitution to obtain PASS",
+    "Treating visible PNG text or center hit as complete clipping proof"
+  ],
+  "required_completion": [
+    "Current run terminal status receipt",
+    "Independent original-failure artifact and privacy review",
+    "Immutable archive/readback and truthful checkpoint"
+  ],
+  "previous_plans_failures_archives_modified": false,
+  "lab_status": "HOLD",
+  "review_activity": {
+    "product_qa_git_mutations": 0,
+    "external_requests_browser_test_model_build_ci_runs": 0,
+    "written_files": ["live-mobile-readout-second-failure-astra.md", "live-mobile-readout-second-failure-astra.json"]
+  }
+}
