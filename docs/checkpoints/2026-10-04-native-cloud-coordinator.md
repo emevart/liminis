@@ -791,3 +791,47 @@ existingofficial protected browser/public bytes/readback. No new hosting.
 fixes и fresh exactfullCI; только GREEN/review/runtime acceptance разрешает
 PR21 merge. После accepted/public LAB3a Astra выбрал отдельный bounded LAB4a
 dt30/15/7.5s sensitivity plan; до этого новые model runs не запускаются.
+
+### LAB600 durable FAIL закрыт; три narrow fixes на едином чистом candidate
+
+2026-10-05, 00:32 UTC. Original LAB600 FAIL archive опубликован в
+`codex/lab-600-failure-evidence-20261005`, commit
+`8c8347764b6a4d2bd41386cff73ce00e14b3acc5`, tree
+`750c4b18096338d2d513e8f3d0d5fdca07dc22fe`:closed14files/1originalZIP,
+49,824,379bytes<64MiB, manifestSHA
+`3d5b70b29f0a1fc8c1f2c2d38adc34b452e1dd81d07ec7f7b1b1a1bc3820d42a`.
+Fresh independent Git database without alternates normal network size/SHA/CRC
+PASS. Один lazy blob fetch получил HTTP503; повторная проверка прошла без
+изменения сети/security/credential settings. Readback:
+`docs/experiments/handoff/lab-600-failure-network-readback.json`.
+
+Independent code confirmedclosed5outer/416nestedCRC/13Gitpins/3PNGFAIL;
+independentnumerics reconstructed272reportedSVGpathSHA/39152points exact,
+но actual raster blank и fullLABFAIL сохраняются. Два ROexceptions внутри
+fullPage captures176446/192287ms, второй до shortresize192456ms. Actual
+transient width и cancellation timing не записаны; причинность cleanup
+исправления со старыми abort не заявляется.
+
+Root integrated clean `1be0d0940ef75aa00d6152e5b718df0cc5fb446f`, tree
+`64bdb5f4794f48907f99886c540f6391571b1914`. Narrow source authors:
+loader4c0a31a/independentcode+numerics0; UI6a6dbdf5/permanent4shells/atomic
+commit/finite0..96pending+visibilityhidden/no loop/fatalinvalid; QA41089782/
+DOMbatching/exact e→E offset5496/no parsedvalue change/all9gates/210s.
+Nativecombined30Node and15Python PASS; builderexact24/4044/6494550rawbytes
+PASS, syntax/diffcheck clean. Rawscience/core/config/frozen/oldREC/production3D/
+observerHTML/publicpins/CI unchanged vs prior approved source boundaries.
+Independent final UI+QA source review pending; fresh CI NOT_RUN yet.
+
+Public smoke preparation now `3788400ea3dbf9b7de7da555c6b8f6d86748f72f`, tree
+`2327d27bb9cce58b590bd2f78894ffbba01ae402`:pending readiness plus repeated
+32raw endpoint/frame/font assertions AFTER fullPage capture, independent
+source review0,17preflight controlsPASS. HTTP/browserNOT_RUN, manifeststill
+old79/null intentionallyblocks runtime. After final acceptedmerge/deployment
+only: adoptaccepted8sitebytes, repin candidate/tree/deployedSHA, independent
+source delta review, official existing protected public smoke.
+
+Следующий шаг: finalsource reviews0, ordinarypush exact1be combined head,
+freshfullCI/nativeoriginalartifactacceptance/durablebytearchive/readback;
+PR21guardedmerge толькоGREEN. Пользователь не получает вопросы до утра;
+спорные решения Astra. LAB4a пока только selected bounded futureplan, models
+не запускались.
