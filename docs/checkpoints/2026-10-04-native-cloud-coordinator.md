@@ -1548,3 +1548,57 @@ actual review. После merge необходим fresh MAIN и public playback
 Следующий product scope пока не начат. LAB21/publicLAB/LAB4/models/causal
 retries сохраняют HOLD. До утра решения делегированы Astra; вопросы
 пользователю не отправляем. Integration receipt сохранён рядом с checkpoint.
+
+
+## 2026-10-05 06:44 UTC — HUD candidate принят, PR23 merged, fresh MAIN pending
+
+Candidate d8e69e4/tree c5775c завершил единственный protected full CI
+37270688687 attempt1: **11/11 checks SUCCESS**, 10/10 jobs и все шесть
+mandatory browser steps реально исполнены. Независимые source и actual
+recorded/dense reviews: 0 blockers; 13 PNG лично просмотрены reviewer,
+legacy22/dense14 gates, 20legacy HTTP checks, exact rawframes/counters/inspector,
+keyboard clear → single saved-pixel pointer, trace/cancel/source/body pins.
+Bounded privacy: 38UTF8/83,739,295B, patterns/auth/cookies0; ограничения
+omitted trace bodies/legacy unhandled+drain/partial large horizon и отсутствие
+hardwareFPS/kernel/fullsecret guarantee остаются в frozen actual report.
+
+Closed affected evidence archive:
+`codex/recorded-hud-candidate-evidence-20261005`, commit
+`c40242da8f6bdeacd271288dfd7260b3a3118a88`, tree
+`b232c31f2d5a550df0aab410f6d9132d6f75982a`, prefix
+`docs/experiments/handoff/recorded-hud-candidate-2026-10-05`.
+15files/31,429,082B <64MiB; два оригинальных ZIP без перепаковки.
+Manifest SHA256 `05da2766cd3174e895eb676bb141973de940a8769218e63ea31a81fdf2f62282`.
+Separate GitDB без alternates, normal network readback: closed inventory,
+все sizes/SHA и оба ZIP CRC PASS. Один whitespace warning относится к строке
+26 замороженного archived analysis script; его exact reviewed bytes сохранены,
+archive diff-check не объявляется чистым. Product/QA source gate остаётся
+отдельным accepted review; archived script не часть product/CI execution.
+
+[PR23](https://github.com/emevart/liminis/pull/23) переведён ready и merged
+с expected HEAD guard после source/actual/CI/archive/readback gates.
+Новый MAIN `813be1efad29569a3011f00697bd5d41b7397dc6`, tree
+`c5775c00a150768f2819e265a4165d8605bd48e3`, parents e2fd620 +d8e69e4:
+полностью byte-identical candidate tree, normal fetch проверен, own sparse
+acceptance checkout clean. Новый push CI
+[37273770904](https://github.com/emevart/liminis/actions/runs/37273770904)
+IN_PROGRESS. Fresh MAIN/runtime/public acceptance **PENDING**.
+
+Astra одобрила proportionate follow-up только при tree/source identity:
+новый exact MAIN CI с9SUCCESS/двумя известными PR-only SKIPs и реальным
+SUCCESS всех шести mandatory browser steps; новые main recorded/dense reports
+с exact source/body/head/tree/run/artifact pins,22+14 complete gates и
+geometry/selection/прежними guards; глубокий independent новый public
+19HTTPS/14browserasset/4gate desktop+mobile PNG/trace review и durable
+public evidence/readback. Candidate deep recorded/dense acceptance остаётся
+candidate-bound, не новый full independent main artifact PASS. Independent
+GL actual review остаётся e2-bound с source bridge и fresh regression jobs.
+Любой failed/not-executed/drift/mismatch/new concern → HOLD/scoped actual
+review; retry ради GREEN не разрешён.
+
+Следующий stage по Astra — legacy LIVE chamber1 mobile readout в normal
+flow, только CSS mobile block cell-viewer.html плюс bounded existing LIVE QA.
+Он **не начат** до main/public acceptance. Recorded sticky defect этим LIVE
+finding не доказан. LAB21/publicLAB/LAB4/models/causal retries HOLD; user
+questions до утра не отправляем. Archive network receipt и main source bridge
+сохранены рядом с checkpoint; исходные refs/evidence не удалялись.

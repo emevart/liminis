@@ -1,0 +1,31 @@
+{
+  "status": "ASTRA_APPROVED_PLAN_ONLY_NOT_STARTED",
+  "condition": "Only after recorded HUD exact MAIN and public acceptance",
+  "scope": "Legacy LIVE chamber1 mobile readout, CSS mobile block only in crates/liminis/src/cell-viewer.html; adopt existing chamber2 normal-flow stage/readout/sidebar ordering; preserve desktop/physical stage geometry, DOM, JS, API, rendering and simulation",
+  "evidence": {
+    "accepted_head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+    "image": "live-cells-browser/viewer-320.png",
+    "bytes": 145527,
+    "sha256": "ca2d8136958a6c9c852c5ec9dc63c53c26c768e68b6b3fd98866b28bd86283aa"
+  },
+  "qa_scope": "Existing scripts/check_live_cells_browser.mjs paused responsive phase: actual 320/390/590 plus desktop geometry/readout static/scroll/control hits/real Find existing cell ID, viewport PNG before and after scroll, network baseline before resize, no extra control POST or tick/state change",
+  "gates": [
+    "Independent source review",
+    "Fresh exact candidate full CI",
+    "Deep independent actual chamber1 mobile and physical responsive regression",
+    "Durable affected original artifacts and readback",
+    "Guarded merge and fresh main/public regression scope"
+  ],
+  "stops": [
+    "Desktop or physical computed geometry changes",
+    "JS/DOM/API/renderer changes needed",
+    "New model transitions or actions needed",
+    "Controls/inspector remain obscured",
+    "Mandatory gate fails; preserve FAIL and consult Astra without automatic retry"
+  ],
+  "qualifications": [
+    "LIVE chamber1 finding, not evidence of recorded CSS sticky defect",
+    "Public recorded page does not serve live HTML; no live-public claim from recorded public gate",
+    "LAB21/publicLAB/LAB4/models/causal retries remain HOLD"
+  ]
+}
