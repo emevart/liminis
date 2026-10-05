@@ -3,6 +3,17 @@
   "scope": "single_initial_page_transport_diagnostic_only",
   "candidate_head": "1be0d0940ef75aa00d6152e5b718df0cc5fb446f",
   "candidate_tree": "64bdb5f4794f48907f99886c540f6391571b1914",
+  "reader_logpoints": {
+    "filename": "lab-data.mjs",
+    "sha256": "b0341865222c0692a86daf73b8611205aa99d27e54f96968c8a31851a0c2353a",
+    "max_events": 32,
+    "anchors": [
+      { "phase": "entry", "line": 131, "column": 2, "max_column": 25, "source_line": "  const response = await fetchImpl(url);" },
+      { "phase": "finally", "line": 139, "column": 4, "max_column": 24, "source_line": "    let cleanupFailed = false, cleanupError;" },
+      { "phase": "pre_release", "line": 142, "column": 10, "max_column": 23, "source_line": "    try { await reader.releaseLock(); }" },
+      { "phase": "post_release", "line": 144, "column": 4, "max_column": 41, "source_line": "    if (cleanupFailed && !primaryFailed) throw cleanupError;" }
+    ]
+  },
   "assets": [
     { "filename": "lab.html", "bytes": 5393, "sha256": "123b5f0e66058492fbc18dbb37e7cf8c44257375322b7ac1536ac8028a924c52" },
     { "filename": "lab.js", "bytes": 22571, "sha256": "1688c75fedd8ad83899528cdcdbf0600b15fa4fb6c1b9ea0cd4762a3a275b871" },
