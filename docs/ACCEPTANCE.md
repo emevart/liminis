@@ -1762,3 +1762,22 @@ web security/GPU blocklist сохраняются. Software geometry acceptance 
 означает hardwareFPS или аттестацию изоляции ядра.
 Существующие chamber1/livephysical/2D projection gates сохраняются.
 Scope/pending: `docs/checkpoints/2026-10-04-live-physical-observer-3d.md`.
+
+
+## LIVE-3b: точная paused compositor identity без привязки к PNG encoding
+
+Historical main5bea/run37241483046 остаётся FAIL: encoded PNG SHA отличается,
+а original per-canvas captures/post-FPS audits отсутствуют. Причина неизвестна;
+новая проверка не устанавливает, что прежние pixels были одинаковыми.
+
+Fresh protected13GL gate сохраняет baseline/30/60 original PNG, dimensions,
+encoded и decodedRGBA SHA, pre/post API/camera/viewport/layers до assertions.
+Dimensions и каждый RGBA byte всей прежней compositor области должны совпасть;
+opaqueRGB получает alpha255. Любое отличие pixel/alpha/dimensions — FAIL
+с changedcount/bounds; masking/cropping/tolerance/retries не разрешены.
+Actualstate/positions/tick/dt/pacing/pollcount сохраняются independently.
+Synthetic5filters/encoding/RGBalpha/dimensions/error controls проверяют actual
+QA decoder/comparator, не browserPASS. Production3D/core/site/recordings
+не меняются. Separatefreshmain head/independentreview/fullCI/actual13GL и
+прежниеREC/dense/physical regressions обязательны; old79/c02PASS не переносится.
+LABcandidate/publicLAB/models остаются отдельным HOLD.
