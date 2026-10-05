@@ -1,0 +1,1548 @@
+{
+  "status": "QUALIFIED_PASS",
+  "blockers": [],
+  "sourceHead": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+  "sourceTree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "originalRun": 37263650472,
+  "originalJob": 111615835988,
+  "artifactId": 11325537040,
+  "transport": {
+    "run": 37264672318,
+    "sourceHead": "246ee768d0fe8cfbf3c3483b5fd54f442498ed11",
+    "parts": [
+      {
+        "containerArtifactId": 11326036770,
+        "containerBytes": 16778485,
+        "containerSha256": "20423d006c8a6a5a63b9ab190244024b7fb62018a27c823a69c56e76d15e5a86",
+        "containerCrc": "PASS",
+        "closedMembers": 2,
+        "receiptByteIdentity": true,
+        "part": {
+          "ordinal": 1,
+          "count": 3,
+          "offset": 0,
+          "file": "original.part-001.bin",
+          "bytes": 16777216,
+          "sha256": "2a1f4deca83385506623b1d43d9df2682e6fa9233357c69a644e6c5415f208ce"
+        },
+        "capturedWorkflowStatus": "in_progress",
+        "capturedWorkflowConclusion": null
+      },
+      {
+        "containerArtifactId": 11326470667,
+        "containerBytes": 16778492,
+        "containerSha256": "eb4d85715b9952996e0df2bbcc19e291e1daa9d5c9d3de205c8748608e4be8aa",
+        "containerCrc": "PASS",
+        "closedMembers": 2,
+        "receiptByteIdentity": true,
+        "part": {
+          "ordinal": 2,
+          "count": 3,
+          "offset": 16777216,
+          "file": "original.part-002.bin",
+          "bytes": 16777216,
+          "sha256": "16f81b4321349d6e430fb09a03c3a492ff9308ca870c9d73569c424bd5199909"
+        },
+        "capturedWorkflowStatus": "in_progress",
+        "capturedWorkflowConclusion": null
+      },
+      {
+        "containerArtifactId": 11325622826,
+        "containerBytes": 15004060,
+        "containerSha256": "86fb423fe2504e69fa3015110863c8b5de1cf4f9bf92b69fb1ff3a52e5dc9212",
+        "containerCrc": "PASS",
+        "closedMembers": 2,
+        "receiptByteIdentity": true,
+        "part": {
+          "ordinal": 3,
+          "count": 3,
+          "offset": 33554432,
+          "file": "original.part-003.bin",
+          "bytes": 15002784,
+          "sha256": "6ddba1dfa268e265de750a5c5f9d9e7442e6c2a5b5f0cac996bad3149d16a7ff"
+        },
+        "capturedWorkflowStatus": "in_progress",
+        "capturedWorkflowConclusion": null
+      }
+    ],
+    "completeContiguousByteEquality": true,
+    "repacked": false,
+    "qualification": "Original workflow in_progress/null is an immutable receipt-time observation, not a completed overall-main CI assertion."
+  },
+  "original": {
+    "bytes": 48557216,
+    "sha256": "0fd16c56d8e0e7c840436c58e29fe7835b974f3911f0e05ebd7a89c05aa3a1c4",
+    "crc": "PASS",
+    "closedRegularInventory": true,
+    "members": [
+      {
+        "path": "coincident-daughters.png",
+        "bytes": 123037,
+        "sha256": "9c8a2de379f008ab4119d4302c00c1e05fcfa0d0129d9fc63c32166dc012f9fc"
+      },
+      {
+        "path": "desktop.png",
+        "bytes": 123420,
+        "sha256": "95d121e249d961a41375660442e23cb751275cacfd0b528cd20b8c56b9ce0bd7"
+      },
+      {
+        "path": "context-loss-current-2d.png",
+        "bytes": 89454,
+        "sha256": "347001d04052153f1a387932c40e982f96fb7ea1574eb974bc483cf71f1853ac"
+      },
+      {
+        "path": "first-division-state.json",
+        "bytes": 18184,
+        "sha256": "424385bc718ae4eb1d1fc0116d8d049652172d9627afed1dc96b78aeb48b2071"
+      },
+      {
+        "path": "held-history.json",
+        "bytes": 130,
+        "sha256": "a1198b939f8d1168407056b1079678cb47d37046e12f4e1ea381679ff5e3e78f"
+      },
+      {
+        "path": "held-module.mjs",
+        "bytes": 15849,
+        "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+      },
+      {
+        "path": "host.log",
+        "bytes": 413,
+        "sha256": "a5a64bf099749ade13eb259b44b315eddfa4be9f0357e1e7d4c16fefca5310f7"
+      },
+      {
+        "path": "legacy-schematic.png",
+        "bytes": 97680,
+        "sha256": "d9ed84c75f6c2ff2b3acecfa523f86f66c46959321d4c4575697c908d35ab34c"
+      },
+      {
+        "path": "mobile320.png",
+        "bytes": 128042,
+        "sha256": "8a8197231a3384cf455b45ac4bec564620f184b6d4c1754f907d5d5ad8111c10"
+      },
+      {
+        "path": "mobile390.png",
+        "bytes": 130524,
+        "sha256": "0340331de9fad906d9badfca40769e7eb3a4b952a85d43b3a522df100cc340ad"
+      },
+      {
+        "path": "nonsquare-state.json",
+        "bytes": 10028,
+        "sha256": "514960d5fb4a13f99fa2a93234a8165f1b9654e3a02a0b219d75fd739a7c2c6f"
+      },
+      {
+        "path": "paused-30.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6"
+      },
+      {
+        "path": "paused-60.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6"
+      },
+      {
+        "path": "paused-baseline.png",
+        "bytes": 54350,
+        "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6"
+      },
+      {
+        "path": "paused-captures.json",
+        "bytes": 78965,
+        "sha256": "7089aa6859db8796edf932f269c9e8fa2aee7d8715346873be685027f7a2c17c"
+      },
+      {
+        "path": "physical-nonsquare.toml",
+        "bytes": 3538,
+        "sha256": "3da686962b4c14e54d82b11559805a96d4abba4da84532dbbb291850096630f7"
+      },
+      {
+        "path": "report.json",
+        "bytes": 311244,
+        "sha256": "e7396f04d962c1eb941c465b311efbe6da846858e6bdf6d24134406054f4a9ce"
+      },
+      {
+        "path": "short.png",
+        "bytes": 110296,
+        "sha256": "d50476bff44be53abac8f0029dd94009b659eb6895cac37083c971ce174689d9"
+      },
+      {
+        "path": "source-cube-state.json",
+        "bytes": 10017,
+        "sha256": "0a8b305e80a07e5083ffd6e8b46b6afd83d0a8c2f6e616d0fe320a33c3154ad1"
+      },
+      {
+        "path": "source-cube.png",
+        "bytes": 101092,
+        "sha256": "084d073aae0524096be498b2d349284fdfa81eb3a10d0182f4a00e3b76fbcc30"
+      },
+      {
+        "path": "trace.zip",
+        "bytes": 48431504,
+        "sha256": "bfde06ce2069192f1d43ae0c5321dba2304c9fb791462534833e0663db971edb"
+      },
+      {
+        "path": "webgl-unavailable-current-2d.png",
+        "bytes": 109684,
+        "sha256": "ac22757009f278d46821cbd7151a7c80e101965478bd43fe3d4d36f2e7cba416"
+      }
+    ],
+    "extractedByteEquality": true
+  },
+  "source": {
+    "sources": [
+      {
+        "filename": "scripts/check_physical_3d_browser.mjs",
+        "bytes": 65448,
+        "sha256": "59fab4f9323e240b913a3006584b402ee3586032b98efad2dfa67ca78a908730"
+      },
+      {
+        "filename": "crates/liminis/src/cell-viewer.html",
+        "bytes": 62466,
+        "sha256": "c8d325cd575ea12b4ec9e6be88e9db4720da510b90044e7d2d480d95aa93bb5b"
+      },
+      {
+        "filename": "crates/liminis/src/cell-viewer-3d.mjs",
+        "bytes": 15849,
+        "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+      },
+      {
+        "filename": "configs/scenarios/cell-chamber-physical.toml",
+        "bytes": 3538,
+        "sha256": "867b52c37b6160bb6a9076f13cac9378fc49e226ae96753596d0c5d01fe90245"
+      },
+      {
+        "filename": "crates/liminis/src/cell-viewer-3d.mjs",
+        "bytes": 15849,
+        "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac"
+      },
+      {
+        "filename": "crates/liminis/src/vendor/three-r180/three.module.js",
+        "bytes": 603113,
+        "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a"
+      },
+      {
+        "filename": "crates/liminis/src/vendor/three-r180/three.core.js",
+        "bytes": 1403455,
+        "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20"
+      },
+      {
+        "filename": "crates/liminis/src/vendor/three-r180/OrbitControls.js",
+        "bytes": 38703,
+        "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c"
+      },
+      {
+        "filename": "crates/liminis/src/vendor/three-r180/LICENSE",
+        "bytes": 1081,
+        "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+      },
+      {
+        "filename": "crates/liminis/src/vendor/three-r180/provenance.json",
+        "bytes": 1576,
+        "sha256": "1d507127da6b37d10a9c7c2941b2d2d7f39e1ee54a0655519706008bbed3584a"
+      }
+    ],
+    "assets": [
+      {
+        "url": "/assets/cell-viewer-3d.mjs",
+        "filename": "crates/liminis/src/cell-viewer-3d.mjs",
+        "bytes": 15849,
+        "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "url": "/assets/vendor/three-r180/three.module.js",
+        "filename": "crates/liminis/src/vendor/three-r180/three.module.js",
+        "bytes": 603113,
+        "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "url": "/assets/vendor/three-r180/three.core.js",
+        "filename": "crates/liminis/src/vendor/three-r180/three.core.js",
+        "bytes": 1403455,
+        "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "url": "/assets/vendor/three-r180/OrbitControls.js",
+        "filename": "crates/liminis/src/vendor/three-r180/OrbitControls.js",
+        "bytes": 38703,
+        "sha256": "b97879c748170baadeb3fb84cea1ffdf4674e283dc06042f34e2acb95a76042c",
+        "contentType": "text/javascript; charset=utf-8"
+      },
+      {
+        "url": "/assets/vendor/three-r180/LICENSE",
+        "filename": "crates/liminis/src/vendor/three-r180/LICENSE",
+        "bytes": 1081,
+        "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+        "contentType": "text/plain; charset=utf-8"
+      },
+      {
+        "url": "/assets/vendor/three-r180/provenance.json",
+        "filename": "crates/liminis/src/vendor/three-r180/provenance.json",
+        "bytes": 1576,
+        "sha256": "1d507127da6b37d10a9c7c2941b2d2d7f39e1ee54a0655519706008bbed3584a",
+        "contentType": "application/json"
+      }
+    ],
+    "hostGitSha256": "caf0a290dbf7f6167204f276b7f9b496a6699c7c13b3dc2d69b0b1af95c10325",
+    "ciGitSha256": "2c38bf5455fad728903901ad9850d0d96c11c6dab9b6131283c947bf9d6c1b58",
+    "binary": {
+      "bytes": 7390448,
+      "sha256": "e40d2e9be40939e40d73d8e5a93bded40a1c91a8efb1087d9d2dcaf0087469a5",
+      "provenance": "Existing protected CI release build, not cryptographic standalone source attestation"
+    },
+    "configs": {
+      "sourceSha256": "867b52c37b6160bb6a9076f13cac9378fc49e226ae96753596d0c5d01fe90245",
+      "fixtureSha256": "3da686962b4c14e54d82b11559805a96d4abba4da84532dbbb291850096630f7",
+      "onlyChange": "dimensions [2e-4,1e-4,5e-5]; same mathematical product, binary volume recorded separately"
+    },
+    "vendor": {
+      "version": "0.180.0",
+      "commit": "0af9729d0c143a86a1d725d6e2c3ad83301f3f34",
+      "provenanceSha256": "1d507127da6b37d10a9c7c2941b2d2d7f39e1ee54a0655519706008bbed3584a"
+    },
+    "allPinsMatchExactGitBlobs": true,
+    "traceRetainedQaSourceByteEquality": true,
+    "importClosure": {
+      "traceActualAuditCount": 73,
+      "exactPausedCameraAuditMatches": [
+        {
+          "callId": "call@1054",
+          "traceEndMs": 12624.913
+        },
+        {
+          "callId": "call@1076",
+          "traceEndMs": 12905.404
+        },
+        {
+          "callId": "call@1082",
+          "traceEndMs": 13134.216
+        },
+        {
+          "callId": "call@1106",
+          "traceEndMs": 14618.818
+        },
+        {
+          "callId": "call@1114",
+          "traceEndMs": 14861.536
+        },
+        {
+          "callId": "call@1140",
+          "traceEndMs": 16492.385
+        },
+        {
+          "callId": "call@1146",
+          "traceEndMs": 16777.051
+        }
+      ],
+      "vendorImportClosureExcludingDocExamples": {
+        "three.module.js": [
+          "./three.core.js"
+        ],
+        "three.core.js": [],
+        "OrbitControls.js": [
+          "three"
+        ]
+      },
+      "viewerLiteralLazyImports": [
+        "/assets/cell-viewer-3d.mjs",
+        "/assets/vendor/three-r180/three.module.js",
+        "/assets/vendor/three-r180/OrbitControls.js"
+      ],
+      "rendererModuleHasNoDirectImports": true,
+      "literalLocalImportMap": true
+    }
+  },
+  "checks": [
+    {
+      "name": "Observed official Chromium argv preserves sandbox; exact stock launch adds only enable-automation",
+      "status": "PASS",
+      "elapsedMs": 7
+    },
+    {
+      "name": "Actual source cube defaults to 2D; WebGL2 and independent SI centers/box match compositor pixels",
+      "status": "PASS",
+      "elapsedMs": 1099
+    },
+    {
+      "name": "A real Step commits current 2D/3D geometry and inspector before held original history; lazy activation uses latest snapshot",
+      "status": "PASS",
+      "elapsedMs": 997
+    },
+    {
+      "name": "Real orbit, zoom, pan and reset preserve paused SI data and project actual centers with equal scale",
+      "status": "PASS",
+      "elapsedMs": 2439
+    },
+    {
+      "name": "Exact ID, arrows and peak-movement/cancel gestures use current camera revision without selecting on drag",
+      "status": "PASS",
+      "elapsedMs": 962
+    },
+    {
+      "name": "Opacity and center/box/slice layers change actual pixels; hidden centers have no pointer targets",
+      "status": "PASS",
+      "elapsedMs": 3364
+    },
+    {
+      "name": "All slice axes use inclusive real centers and exact zero-width inputs; outside selection stays inspectable",
+      "status": "PASS",
+      "elapsedMs": 3014
+    },
+    {
+      "name": "Paused target30/60 draws hold exact canvas/API state and preserve normal single-flight polling",
+      "status": "PASS",
+      "elapsedMs": 4364
+    },
+    {
+      "name": "Bounded actual Steps reach coincident daughters; both exact IDs are selectable and camera revision invalidates candidates",
+      "status": "PASS",
+      "elapsedMs": 13187
+    },
+    {
+      "name": "Toggles retain one context and resources only for current population; four viewport layouts show current geometry",
+      "status": "PASS",
+      "elapsedMs": 4312
+    },
+    {
+      "name": "Actual context-loss negative control falls back to current 2D; inspector and a real Step remain usable",
+      "status": "PASS",
+      "elapsedMs": 390
+    },
+    {
+      "name": "Explicit unavailable-WebGL negative control retains current 2D and exact SI inspector",
+      "status": "PASS",
+      "elapsedMs": 617
+    },
+    {
+      "name": "Real chamber1 keeps schematic 2D without physical controls or loading WebGL vendor",
+      "status": "PASS",
+      "elapsedMs": 379
+    }
+  ],
+  "browser": {
+    "version": "149.0.7827.55",
+    "playwright": "1.61.1",
+    "chromiumSandbox": true
+  },
+  "sandbox": {
+    "status": "PASS",
+    "arguments": [
+      "/home/runner/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell",
+      "--disable-field-trial-config",
+      "--disable-background-networking",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-back-forward-cache",
+      "--disable-breakpad",
+      "--disable-client-side-phishing-detection",
+      "--disable-component-extensions-with-background-pages",
+      "--disable-component-update",
+      "--no-default-browser-check",
+      "--disable-default-apps",
+      "--disable-dev-shm-usage",
+      "--disable-edgeupdater",
+      "--disable-extensions",
+      "--disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion",
+      "--enable-features=CDPScreenshotNewSurface",
+      "--allow-pre-commit-input",
+      "--disable-hang-monitor",
+      "--disable-ipc-flooding-protection",
+      "--disable-popup-blocking",
+      "--disable-prompt-on-repost",
+      "--disable-renderer-backgrounding",
+      "--force-color-profile=srgb",
+      "--metrics-recording-only",
+      "--no-first-run",
+      "--password-store=basic",
+      "--use-mock-keychain",
+      "--no-service-autorun",
+      "--export-tagged-pdf",
+      "--disable-search-engine-choice-screen",
+      "--unsafely-disable-devtools-self-xss-warnings",
+      "--edge-skip-compat-layer-relaunch",
+      "--disable-infobars",
+      "--disable-search-engine-choice-screen",
+      "--disable-sync",
+      "--enable-unsafe-swiftshader",
+      "--headless",
+      "--hide-scrollbars",
+      "--mute-audio",
+      "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+      "--enable-automation",
+      "--user-data-dir=/tmp/playwright_chromiumdev_profile-LSuklq",
+      "--remote-debugging-pipe",
+      "--no-startup-window",
+      "--use-gl=angle",
+      "--use-angle=swiftshader-webgl",
+      "--ozone-platform=headless",
+      "--allow-pre-commit-input"
+    ],
+    "launchSettings": {
+      "headless": true,
+      "chromiumSandbox": true,
+      "args": [
+        "--enable-automation"
+      ]
+    },
+    "stockGPUFlags": [
+      "--enable-unsafe-swiftshader",
+      "--use-gl=angle",
+      "--use-angle=swiftshader-webgl"
+    ],
+    "qualification": "Pinned official Playwright defaults may include enable-unsafe-swiftshader. No extra GPU switches supplied; actual backend is reported, hardware GPU is unasserted. Same accepted sandbox process model."
+  },
+  "backend": {
+    "vendor": "Google Inc. (Google)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "pages": [
+    {
+      "origin": "http://127.0.0.1:42613",
+      "activeState": 0,
+      "maxState": 1,
+      "failures": [],
+      "external": [],
+      "unhandled": [],
+      "nativeGL": {
+        "creations": 1,
+        "calls": [
+          {
+            "canvasId": "chamber-3d",
+            "type": "webgl2",
+            "success": true
+          }
+        ],
+        "backend": {
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+        }
+      },
+      "closed": true,
+      "requestCount": 8,
+      "stateRequestCount": 2,
+      "postCount": 0
+    },
+    {
+      "origin": "http://127.0.0.1:38903",
+      "activeState": 0,
+      "maxState": 1,
+      "failures": [],
+      "external": [],
+      "unhandled": [],
+      "nativeGL": {
+        "creations": 1,
+        "calls": [
+          {
+            "canvasId": "chamber-3d",
+            "type": "webgl2",
+            "success": true
+          },
+          {
+            "canvasId": "chamber-3d",
+            "type": "webgl2",
+            "success": true
+          }
+        ],
+        "backend": {
+          "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+          "vendor": "Google Inc. (Google)",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)"
+        }
+      },
+      "closed": true,
+      "requestCount": 160,
+      "stateRequestCount": 99,
+      "postCount": 48
+    },
+    {
+      "origin": "http://127.0.0.1:38903",
+      "activeState": 0,
+      "maxState": 1,
+      "failures": [],
+      "external": [],
+      "expectedCreationError": true,
+      "unhandled": [],
+      "nativeGL": {
+        "creations": 0,
+        "calls": [],
+        "backend": null
+      },
+      "closed": true,
+      "requestCount": 7,
+      "stateRequestCount": 1,
+      "postCount": 0
+    },
+    {
+      "origin": "http://127.0.0.1:40129",
+      "activeState": 0,
+      "maxState": 1,
+      "failures": [],
+      "external": [],
+      "unhandled": [],
+      "nativeGL": {
+        "creations": 0,
+        "calls": [],
+        "backend": null
+      },
+      "closed": true,
+      "requestCount": 3,
+      "stateRequestCount": 1,
+      "postCount": 0
+    }
+  ],
+  "rawConsole": [
+    {
+      "messageType": "warning",
+      "text": "[.WebGL-0x1604000ace00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "location": {
+        "url": "http://127.0.0.1:42613/",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "pageId": "page@c0b947c1b531bc7afc673f5a4ecb33a5"
+    },
+    {
+      "messageType": "warning",
+      "text": "[.WebGL-0x1604000ace00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "location": {
+        "url": "http://127.0.0.1:42613/",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "pageId": "page@c0b947c1b531bc7afc673f5a4ecb33a5"
+    },
+    {
+      "messageType": "warning",
+      "text": "[.WebGL-0x1604000ace00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels",
+      "location": {
+        "url": "http://127.0.0.1:42613/",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "pageId": "page@c0b947c1b531bc7afc673f5a4ecb33a5"
+    },
+    {
+      "messageType": "warning",
+      "text": "[.WebGL-0x1604000ace00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)",
+      "location": {
+        "url": "http://127.0.0.1:42613/",
+        "lineNumber": 0,
+        "columnNumber": 0
+      },
+      "pageId": "page@c0b947c1b531bc7afc673f5a4ecb33a5"
+    },
+    {
+      "messageType": "log",
+      "text": "THREE.WebGLRenderer: Context Lost.",
+      "location": {
+        "url": "http://127.0.0.1:38903/assets/vendor/three-r180/three.module.js",
+        "lineNumber": 15855,
+        "columnNumber": 11
+      },
+      "pageId": "page@0a6acf08315b3686915cf315340bbcfd"
+    },
+    {
+      "messageType": "error",
+      "text": "THREE.WebGLRenderer: Error creating WebGL context.",
+      "location": {
+        "url": "http://127.0.0.1:38903/assets/vendor/three-r180/three.module.js",
+        "lineNumber": 15226,
+        "columnNumber": 11
+      },
+      "pageId": "page@8a2b685b2a6514f75e921d3844d6ffa8"
+    }
+  ],
+  "expectedConsoleNegative": [
+    {
+      "text": "THREE.WebGLRenderer: Error creating WebGL context.",
+      "location": {
+        "url": "http://127.0.0.1:38903/assets/vendor/three-r180/three.module.js",
+        "line": 15226,
+        "column": 11,
+        "lineNumber": 15226,
+        "columnNumber": 11
+      },
+      "page": 2,
+      "expectedNegativeControl": true
+    }
+  ],
+  "errors": {
+    "pageErrors": [],
+    "unhandled": [],
+    "cleanupErrors": [],
+    "routeErrors": [],
+    "prohibitedRequests": [],
+    "failures": []
+  },
+  "trace": {
+    "bytes": 48431504,
+    "sha256": "bfde06ce2069192f1d43ae0c5321dba2304c9fb791462534833e0663db971edb",
+    "members": 1343,
+    "expandedBytes": 58982852,
+    "crc": "PASS",
+    "closedRegularInventory": true,
+    "pairedActions": 1284,
+    "actionErrors": 0,
+    "pageCloseAcknowledgements": 4,
+    "requests": 180,
+    "pageRequests": 178,
+    "actualOriginalRouteFetches": 2,
+    "pageRequestMultisetEquality": true,
+    "methods": {
+      "GET": 132,
+      "POST": 48
+    },
+    "paths": {
+      "/": 4,
+      "/api/state": 103,
+      "/api/history": 12,
+      "/assets/cell-viewer-3d.mjs": 4,
+      "/assets/vendor/three-r180/OrbitControls.js": 3,
+      "/assets/vendor/three-r180/three.module.js": 3,
+      "/assets/vendor/three-r180/three.core.js": 3,
+      "/api/control": 48
+    },
+    "origins": [
+      "http://127.0.0.1:38903",
+      "http://127.0.0.1:40129",
+      "http://127.0.0.1:42613"
+    ],
+    "statusCodes": [
+      200
+    ],
+    "requestFailures": 0,
+    "retainedContentAddressedResponseBodies": 168,
+    "omittedScriptBodies": [
+      {
+        "path": "/assets/cell-viewer-3d.mjs",
+        "mimeType": "text/javascript; charset=utf-8",
+        "reason": "Playwright trace records script headers/status but omits this body"
+      },
+      {
+        "path": "/assets/vendor/three-r180/OrbitControls.js",
+        "mimeType": "text/javascript; charset=utf-8",
+        "reason": "Playwright trace records script headers/status but omits this body"
+      },
+      {
+        "path": "/assets/vendor/three-r180/three.module.js",
+        "mimeType": "text/javascript; charset=utf-8",
+        "reason": "Playwright trace records script headers/status but omits this body"
+      },
+      {
+        "path": "/assets/vendor/three-r180/three.core.js",
+        "mimeType": "text/javascript; charset=utf-8",
+        "reason": "Playwright trace records script headers/status but omits this body"
+      },
+      {
+        "path": "/assets/vendor/three-r180/OrbitControls.js",
+        "mimeType": "text/javascript; charset=utf-8",
+        "reason": "Playwright trace records script headers/status but omits this body"
+      },
+      {
+        "path": "/assets/vendor/three-r180/three.module.js",
+        "mimeType": "text/javascript; charset=utf-8",
+        "reason": "Playwright trace records script headers/status but omits this body"
+      },
+      {
+        "path": "/assets/vendor/three-r180/three.core.js",
+        "mimeType": "text/javascript; charset=utf-8",
+        "reason": "Playwright trace records script headers/status but omits this body"
+      },
+      {
+        "path": "/assets/cell-viewer-3d.mjs",
+        "mimeType": "text/javascript; charset=utf-8",
+        "reason": "Playwright trace records script headers/status but omits this body"
+      },
+      {
+        "path": "/assets/cell-viewer-3d.mjs",
+        "mimeType": "text/javascript; charset=utf-8",
+        "reason": "Playwright trace records script headers/status but omits this body"
+      },
+      {
+        "path": "/assets/vendor/three-r180/OrbitControls.js",
+        "mimeType": "text/javascript; charset=utf-8",
+        "reason": "Playwright trace records script headers/status but omits this body"
+      },
+      {
+        "path": "/assets/vendor/three-r180/three.module.js",
+        "mimeType": "text/javascript; charset=utf-8",
+        "reason": "Playwright trace records script headers/status but omits this body"
+      },
+      {
+        "path": "/assets/vendor/three-r180/three.core.js",
+        "mimeType": "text/javascript; charset=utf-8",
+        "reason": "Playwright trace records script headers/status but omits this body"
+      }
+    ],
+    "actualStateResponses": 103,
+    "pausedTick1NonsquareStateResponses": 24,
+    "heldBytesFulfillAcknowledgements": 2,
+    "servedHtmlResponseByteEquality": 4,
+    "keyboardEvents": 2
+  },
+  "images": [
+    {
+      "filename": "coincident-daughters.png",
+      "bytes": 123037,
+      "sha256": "9c8a2de379f008ab4119d4302c00c1e05fcfa0d0129d9fc63c32166dc012f9fc",
+      "width": 1440,
+      "height": 900,
+      "rgbaSha256": "753e45dc62a4c63c3bae6155249c76056bf362707647580f0aca1cb9d02c9dbd",
+      "viewed": true
+    },
+    {
+      "filename": "desktop.png",
+      "bytes": 123420,
+      "sha256": "95d121e249d961a41375660442e23cb751275cacfd0b528cd20b8c56b9ce0bd7",
+      "width": 1440,
+      "height": 900,
+      "rgbaSha256": "c881cd6077f0c0167e717cbc1f995657f5153a4b7772ae788fd1a6b515c10fe7",
+      "viewed": true
+    },
+    {
+      "filename": "context-loss-current-2d.png",
+      "bytes": 89454,
+      "sha256": "347001d04052153f1a387932c40e982f96fb7ea1574eb974bc483cf71f1853ac",
+      "width": 1440,
+      "height": 900,
+      "rgbaSha256": "845a77dbc0de90f3d19a6b1178ad05e1f53db1fa5e1e996782f9c0301fc8f056",
+      "viewed": true
+    },
+    {
+      "filename": "legacy-schematic.png",
+      "bytes": 97680,
+      "sha256": "d9ed84c75f6c2ff2b3acecfa523f86f66c46959321d4c4575697c908d35ab34c",
+      "width": 1440,
+      "height": 900,
+      "rgbaSha256": "5a972eee164d2a64d5726e315bea935b095bfd906a0741027509215ef53dc379",
+      "viewed": true
+    },
+    {
+      "filename": "mobile320.png",
+      "bytes": 128042,
+      "sha256": "8a8197231a3384cf455b45ac4bec564620f184b6d4c1754f907d5d5ad8111c10",
+      "width": 320,
+      "height": 2520,
+      "rgbaSha256": "b65679ad72ef76f6f3291f0a34f513e31e285f157d2f2d3256475c4854263196",
+      "viewed": true
+    },
+    {
+      "filename": "mobile390.png",
+      "bytes": 130524,
+      "sha256": "0340331de9fad906d9badfca40769e7eb3a4b952a85d43b3a522df100cc340ad",
+      "width": 390,
+      "height": 2476,
+      "rgbaSha256": "084f23868014cee3ace3d246291643f3cfedc25e712b5a498a1e268d92713b86",
+      "viewed": true
+    },
+    {
+      "filename": "paused-30.png",
+      "bytes": 54350,
+      "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+      "width": 1130,
+      "height": 752,
+      "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+      "viewed": true
+    },
+    {
+      "filename": "paused-60.png",
+      "bytes": 54350,
+      "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+      "width": 1130,
+      "height": 752,
+      "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+      "viewed": true
+    },
+    {
+      "filename": "paused-baseline.png",
+      "bytes": 54350,
+      "sha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+      "width": 1130,
+      "height": 752,
+      "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+      "viewed": true
+    },
+    {
+      "filename": "short.png",
+      "bytes": 110296,
+      "sha256": "d50476bff44be53abac8f0029dd94009b659eb6895cac37083c971ce174689d9",
+      "width": 1440,
+      "height": 720,
+      "rgbaSha256": "f6d1a471cdc155f2743996f475aaa23156bef42b10fa3f6b4d8fbbc22c27018a",
+      "viewed": true
+    },
+    {
+      "filename": "source-cube.png",
+      "bytes": 101092,
+      "sha256": "084d073aae0524096be498b2d349284fdfa81eb3a10d0182f4a00e3b76fbcc30",
+      "width": 1440,
+      "height": 900,
+      "rgbaSha256": "4bbd87cb13572fd6d1f159d4eea5b08c96cfd951d5ca84b5dff98287f2011057",
+      "viewed": true
+    },
+    {
+      "filename": "webgl-unavailable-current-2d.png",
+      "bytes": 109684,
+      "sha256": "ac22757009f278d46821cbd7151a7c80e101965478bd43fe3d4d36f2e7cba416",
+      "width": 1440,
+      "height": 900,
+      "rgbaSha256": "961c4f5072664a4948793bfd7d3fb7b6cc375a17e95479186a73bb481d9a3b55",
+      "viewed": true
+    }
+  ],
+  "paused": {
+    "captures": [
+      {
+        "label": "baseline",
+        "file": "paused-baseline.png",
+        "startedAtMs": 12876.17481,
+        "layersBefore": {
+          "plane": "xy",
+          "enabled": false,
+          "center": 0.000025,
+          "thickness": 0.000005,
+          "centers": true,
+          "opacity": 1,
+          "box": true,
+          "slice": true
+        },
+        "pngBytes": 54350,
+        "pngSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "capturedAtMs": 13030.976399,
+        "width": 1130,
+        "height": 752,
+        "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+        "layersAfter": {
+          "plane": "xy",
+          "enabled": false,
+          "center": 0.000025,
+          "thickness": 0.000005,
+          "centers": true,
+          "opacity": 1,
+          "box": true,
+          "slice": true
+        }
+      },
+      {
+        "label": "30",
+        "file": "paused-30.png",
+        "startedAtMs": 14599.913096,
+        "layersBefore": {
+          "plane": "xy",
+          "enabled": false,
+          "center": 0.000025,
+          "thickness": 0.000005,
+          "centers": true,
+          "opacity": 1,
+          "box": true,
+          "slice": true
+        },
+        "pngBytes": 54350,
+        "pngSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "capturedAtMs": 14749.01718,
+        "width": 1130,
+        "height": 752,
+        "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+        "layersAfter": {
+          "plane": "xy",
+          "enabled": false,
+          "center": 0.000025,
+          "thickness": 0.000005,
+          "centers": true,
+          "opacity": 1,
+          "box": true,
+          "slice": true
+        }
+      },
+      {
+        "label": "60",
+        "file": "paused-60.png",
+        "startedAtMs": 16453.685756,
+        "layersBefore": {
+          "plane": "xy",
+          "enabled": false,
+          "center": 0.000025,
+          "thickness": 0.000005,
+          "centers": true,
+          "opacity": 1,
+          "box": true,
+          "slice": true
+        },
+        "pngBytes": 54350,
+        "pngSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+        "capturedAtMs": 16648.097963,
+        "width": 1130,
+        "height": 752,
+        "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+        "layersAfter": {
+          "plane": "xy",
+          "enabled": false,
+          "center": 0.000025,
+          "thickness": 0.000005,
+          "centers": true,
+          "opacity": 1,
+          "box": true,
+          "slice": true
+        }
+      }
+    ],
+    "windows": [
+      {
+        "fps": 30,
+        "requestedHoldMs": 1400,
+        "measuredWallMs": 1400.1565420000006,
+        "stateRequests": 3,
+        "difference": {
+          "equal": true,
+          "sameDimensions": true,
+          "changedPixels": 0,
+          "bounds": null
+        }
+      },
+      {
+        "fps": 60,
+        "requestedHoldMs": 1400,
+        "measuredWallMs": 1399.4710099999993,
+        "stateRequests": 3,
+        "difference": {
+          "equal": true,
+          "sameDimensions": true,
+          "changedPixels": 0,
+          "bounds": null
+        }
+      }
+    ],
+    "independentWholeRgbaEquality": true,
+    "dimensions": [
+      1130,
+      752
+    ],
+    "changedPixels": 0,
+    "bounds": null,
+    "pngSha256": "50f771d4172a3168eaae71742b5c1718cc2035d6215e7b63bc4467d993cffbf6",
+    "rgbaSha256": "50f0990570355fc88d797b96654ae87e774f8476421aede8cf020bd555705c28",
+    "apiBeforeAfterAllCapturesExact": true,
+    "auditBeforeAfterAllCapturesExact": true,
+    "layersBeforeAfterAllCapturesExact": true,
+    "audit": {
+      "mode": "3d",
+      "requestedMode": "3d",
+      "revision": 96,
+      "drawnRevision": 96,
+      "drawnTick": 1,
+      "dimensions_m": [
+        0.0002,
+        0.0001,
+        0.00005
+      ],
+      "sceneScale": 5000,
+      "camera": {
+        "position": [
+          2.400225924721921,
+          2.150225924721921,
+          2.025225924721921
+        ],
+        "target": [
+          0.5,
+          0.25,
+          0.125
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "quaternion": [
+          -0.2798481423331213,
+          0.3647051996310008,
+          0.11591689595929511,
+          0.8804762392171493
+        ],
+        "left": -1.8576153536423716,
+        "right": 1.8576153536423716,
+        "top": 0.71602745233685,
+        "bottom": -0.71602745233685,
+        "near": 0.01,
+        "far": 100,
+        "zoom": 1
+      },
+      "viewport": {
+        "left": 24,
+        "top": 286,
+        "width": 1082,
+        "height": 417.0625,
+        "canvasWidth": 1130,
+        "canvasHeight": 751.0625,
+        "pixelRatio": 1,
+        "rect": {
+          "left": 0,
+          "top": 54,
+          "width": 1130,
+          "height": 751.0625
+        }
+      },
+      "resources": {
+        "sprites": 8,
+        "visibleSprites": 8,
+        "selectionSprites": 1,
+        "paletteMaterials": 8,
+        "materials": 15,
+        "textures": 2,
+        "geometries": 7,
+        "rendererGeometries": 7,
+        "rendererTextures": 2,
+        "disposed": false,
+        "lost": false,
+        "contextCreations": 1
+      },
+      "backend": {
+        "vendor": "Google Inc. (Google)",
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+      }
+    },
+    "apiSummary": {
+      "tick": 1,
+      "dt": 30,
+      "cells": 8
+    },
+    "achievedFPS": "UNASSERTED",
+    "traceActualAuditCount": 73,
+    "exactActualTraceAuditMatches": [
+      {
+        "callId": "call@1054",
+        "traceEndMs": 12624.913
+      },
+      {
+        "callId": "call@1076",
+        "traceEndMs": 12905.404
+      },
+      {
+        "callId": "call@1082",
+        "traceEndMs": 13134.216
+      },
+      {
+        "callId": "call@1106",
+        "traceEndMs": 14618.818
+      },
+      {
+        "callId": "call@1114",
+        "traceEndMs": 14861.536
+      },
+      {
+        "callId": "call@1140",
+        "traceEndMs": 16492.385
+      },
+      {
+        "callId": "call@1146",
+        "traceEndMs": 16777.051
+      }
+    ]
+  },
+  "actual": {
+    "atomicStep": {
+      "fromTick": 0,
+      "toTick": 1,
+      "selectedId": "0",
+      "historyReleasedAtAssertion": false,
+      "lazyActivationTick": 1
+    },
+    "delayedHistory": {
+      "status": "RELEASED",
+      "path": "/api/history",
+      "bytes": 130,
+      "sha256": "a1198b939f8d1168407056b1079678cb47d37046e12f4e1ea381679ff5e3e78f",
+      "originalStatus": 200,
+      "originalHeaders": {
+        "content-type": "application/json",
+        "content-length": "130",
+        "cache-control": "no-store",
+        "connection": "close"
+      },
+      "qualification": "Delayed route.fetch original response; only exact original bytes are fulfilled"
+    },
+    "delayedModule": {
+      "status": "RELEASED",
+      "path": "/assets/cell-viewer-3d.mjs",
+      "bytes": 15849,
+      "sha256": "e2a59108da60e289feeacede0a72c2e65c81bc64248fac58100ecb6cb2da00ac",
+      "originalStatus": 200,
+      "originalHeaders": {
+        "content-type": "text/javascript; charset=utf-8",
+        "content-length": "15849",
+        "cache-control": "no-store",
+        "connection": "close"
+      },
+      "qualification": "Delayed route.fetch original response; only exact original bytes are fulfilled"
+    },
+    "camera": {
+      "actualRotate": true,
+      "actualPan": true,
+      "actualZoom": true,
+      "actualReset": true,
+      "outsideViewId": "0",
+      "pausedTick": 1
+    },
+    "gestures": {
+      "arrowIds": [
+        "0",
+        "7"
+      ],
+      "cameraUnchangedByArrow": true,
+      "dragReturnPeakCSSpx": 30,
+      "cancel": "Actual CDP touch input cancellation; input negative control, no fabricated cells"
+    },
+    "layers": {
+      "fullContrast": 212,
+      "opacity020Contrast": 42,
+      "opacityZeroContrast": 0,
+      "actualPixelChanges": true,
+      "noHiddenPointerTargets": true,
+      "glyph": {
+        "widthCSS": 8,
+        "heightCSS": 8.988779920212766,
+        "nominalCSS": 7,
+        "rasterToleranceCSS": 2
+      },
+      "zoomGlyph": {
+        "widthCSS": 8,
+        "heightCSS": 7.9900265957446805,
+        "nominalCSS": 7,
+        "rasterToleranceCSS": 2
+      }
+    },
+    "sliceBoundary": {
+      "axis": 0,
+      "plane": "yz",
+      "actualInputCenter_m": 0.00004181575039094887,
+      "boundaryId": "1",
+      "outsideId": "0",
+      "zeroWidthMembershipFromActualInputs": true
+    },
+    "division": {
+      "tick": 47,
+      "realStepCount": 46,
+      "parentId": "5",
+      "daughterIds": [
+        "16",
+        "17"
+      ],
+      "position_m": [
+        0.0001680090356467213,
+        0.00005394273663219153,
+        0.00004654609064929371
+      ],
+      "candidateIds": [
+        "16",
+        "17"
+      ],
+      "parentAbsenceIsNotDeath": true
+    },
+    "resourceToggles": {
+      "toggles": 6,
+      "contextCreations": 1,
+      "currentPopulation": 15,
+      "baseline": {
+        "sprites": 15,
+        "visibleSprites": 15,
+        "selectionSprites": 1,
+        "paletteMaterials": 8,
+        "materials": 15,
+        "textures": 2,
+        "geometries": 7,
+        "rendererGeometries": 7,
+        "rendererTextures": 2,
+        "disposed": false,
+        "lost": false,
+        "contextCreations": 1
+      },
+      "resources": {
+        "sprites": 15,
+        "visibleSprites": 15,
+        "selectionSprites": 1,
+        "paletteMaterials": 8,
+        "materials": 15,
+        "textures": 2,
+        "geometries": 7,
+        "rendererGeometries": 7,
+        "rendererTextures": 2,
+        "disposed": false,
+        "lost": false,
+        "contextCreations": 1
+      }
+    },
+    "contextLoss": {
+      "label": "Synthetic GPU-loss negative control via actual native extension; no fabricated model state",
+      "current2DTick": 48,
+      "realStepFrom": 47,
+      "resources": {
+        "sprites": 0,
+        "visibleSprites": 0,
+        "selectionSprites": 0,
+        "paletteMaterials": 8,
+        "materials": 0,
+        "textures": 0,
+        "geometries": 0,
+        "rendererGeometries": 0,
+        "rendererTextures": 0,
+        "disposed": true,
+        "lost": true,
+        "contextCreations": 1
+      }
+    },
+    "unavailable": {
+      "label": "Synthetic allocation-negative control: only target canvas WebGL getContext returns null; actual API is unchanged",
+      "shownTick": 48,
+      "contextCreations": 0
+    },
+    "legacy": {
+      "chamberFormat": 1,
+      "tick": 0,
+      "schematic": true,
+      "no3DRequests": true
+    },
+    "layouts": [
+      {
+        "label": "desktop",
+        "width": 1440,
+        "height": 900,
+        "layout": {
+          "overflow": false,
+          "controls": {
+            "bottom": 315.78125,
+            "left": 17,
+            "right": 1113
+          },
+          "captionBottom": 223.5625,
+          "metaTop": 778.3125,
+          "viewportTop": 340,
+          "viewportBottom": 757.0625
+        },
+        "actualViewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 417.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 751.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 751.0625
+          }
+        }
+      },
+      {
+        "label": "short",
+        "width": 1440,
+        "height": 720,
+        "layout": {
+          "overflow": false,
+          "controls": {
+            "bottom": 315.78125,
+            "left": 17,
+            "right": 1113
+          },
+          "captionBottom": 223.5625,
+          "metaTop": 598.3125,
+          "viewportTop": 340,
+          "viewportBottom": 577.0625
+        },
+        "actualViewport": {
+          "left": 24,
+          "top": 286,
+          "width": 1082,
+          "height": 237.0625,
+          "canvasWidth": 1130,
+          "canvasHeight": 571.0625,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 54,
+            "width": 1130,
+            "height": 571.0625
+          }
+        }
+      },
+      {
+        "label": "mobile390",
+        "width": 390,
+        "height": 844,
+        "layout": {
+          "overflow": false,
+          "controls": {
+            "bottom": 383.71875,
+            "left": 17,
+            "right": 373
+          },
+          "captionBottom": 238.5,
+          "metaTop": 575.4375,
+          "viewportTop": 407.9375,
+          "viewportBottom": 553.9375
+        },
+        "actualViewport": {
+          "left": 24,
+          "top": 347,
+          "width": 342,
+          "height": 146,
+          "canvasWidth": 390,
+          "canvasHeight": 560,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 60.9375,
+            "width": 390,
+            "height": 560
+          }
+        }
+      },
+      {
+        "label": "mobile320",
+        "width": 320,
+        "height": 844,
+        "layout": {
+          "overflow": false,
+          "controls": {
+            "bottom": 428.90625,
+            "left": 17,
+            "right": 303
+          },
+          "captionBottom": 284.078125,
+          "metaTop": 605.625,
+          "viewportTop": 453.125,
+          "viewportBottom": 584.125
+        },
+        "actualViewport": {
+          "left": 24,
+          "top": 362,
+          "width": 272,
+          "height": 131,
+          "canvasWidth": 320,
+          "canvasHeight": 560,
+          "pixelRatio": 1,
+          "rect": {
+            "left": 0,
+            "top": 91.125,
+            "width": 320,
+            "height": 560
+          }
+        }
+      }
+    ],
+    "qualifications": [
+      "Actual release host and saved current API centers only; no fabricated cells, interpolated motion or model helper/hit-map geometry proof.",
+      "Independent orthographic math uses copied actual camera facts and actual compositor PNG pixels, not Three projection functions.",
+      "Center Sprite display pixels are not bodies, hydrodynamic radii, morphology or collisions; shared well-mixed chemistry is unchanged.",
+      "Four Chromium viewport sizes; no achieved FPS, full accessibility, native background, cross-platform float or new science claim.",
+      "WebGL loss/unavailable controls are explicitly negative renderer/input controls, not model states. Full existing 2D/chamber1 acceptance remains a separate protected regression gate."
+    ]
+  },
+  "geometry": {
+    "count": 40,
+    "labels": [
+      "source-cube",
+      "atomic-after-lazy-import-before-history",
+      "nonsquare-reset",
+      "actual-pointer-orbit",
+      "actual-wheel-zoom",
+      "actual-right-pointer-pan",
+      "actual-reset",
+      "pan-outside-current-view",
+      "keyboard-camera",
+      "centers-only-full-opacity",
+      "centers-only-zoom-fixed-glyph",
+      "centers-opacity-020",
+      "zero-opacity",
+      "centers-layer-off",
+      "box-layer-on",
+      "box-layer-off",
+      "slice-boundaries-on",
+      "slice-boundaries-off",
+      "full-inclusive-xy",
+      "full-inclusive-xz",
+      "full-inclusive-yz",
+      "inclusive-upper",
+      "inclusive-lower",
+      "exact-zero-width",
+      "outside-slice-selected",
+      "paused-before-display-controls",
+      "first-real-division",
+      "coincident-xy",
+      "coincident-xz",
+      "coincident-yz",
+      "toggle-0",
+      "toggle-1",
+      "toggle-2",
+      "toggle-3",
+      "toggle-4",
+      "toggle-5",
+      "desktop",
+      "short",
+      "mobile390",
+      "mobile320"
+    ],
+    "detailedIndependentNumericsReview": "Separate agent; not transferred from prior runtime"
+  },
+  "privacy": {
+    "files": 128,
+    "bytes": 6904511,
+    "budgetBytes": 134217728,
+    "matches": {
+      "credential_literal": [],
+      "private_key": [],
+      "credential_assignment": [],
+      "private_chat_context": [],
+      "private_vm_ipv4": []
+    },
+    "authCookieHeaders": 0,
+    "nonemptyCookieArrays": 0
+  },
+  "reviewType": "Independent fresh MAIN GL code/browser/privacy artifact acceptance",
+  "reviewedAt": "2026-10-05",
+  "reviewBoundary": {
+    "readOnly": true,
+    "newBrowserRuns": false,
+    "networkRequestsByReviewer": false,
+    "modelsOrCargoOrTestsRun": false,
+    "productionEdits": false,
+    "priorRuntimePassTransferred": false,
+    "overallMainAcceptanceDeclared": false
+  },
+  "ciReceipt": {
+    "filename": "paused-3d-main-exact-head-checks.json",
+    "bytes": 14255,
+    "sha256": "fe4c6bedcf20facc0fa3d8e1f62e9fe24293fe581e076d312c28d376d0434b4d",
+    "head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+    "tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+    "run": 37263650472,
+    "rootOfficialApiObservation": "completed SUCCESS, attempt1; eight applicable GHA jobs and Workers Builds SUCCESS; exactly ADR020 and ADR032 PR-only guards SKIPPED on push",
+    "reviewerMethod": "Read pinned local receipt, no API query or CI execution; actual acceptance and durable readbacks remain separate."
+  },
+  "qualifications": [
+    "Qualified PASS applies only to this fresh MAIN original/run and independent code/browser/privacy evidence. Prior83/79 runtime results were not transferred.",
+    "All12 original PNGs were viewed through view_image; large mobile images were displayed with tool resizing. Original dimensions and every decoded RGBA byte were inspected separately without modifying images.",
+    "Four real pages close with acknowledgements, activeState0/maxState1, no unknown request failures/external/unhandled/late aggregate errors. One exact attributable unavailable-WebGL renderer console error is an explicit negative control; no generic console/network allowance is accepted.",
+    "Six original release-host asset pins match exact Git source; ten report source entries cover nine unique files, with the renderer module deliberately recorded twice. Vendor import closure is local and literal, pinned Three0.180.0 upstream0af9729d... with MIT/license/provenance.",
+    "Trace retains168 content-addressed response bodies, including all HTML/API and original delayed module. It omits12 ordinary browser JavaScript response bodies. Their headers/status/import requests remain recorded; vendor byte proof rests on exact source and the six actual Node release-host asset pin checks, not an invented full browser-body archive.",
+    "Atomic API0→1 precedes original history release; lazy import uses currenttick1. Original15,849B module and130B history bodies were delayed and fulfilled unchanged, with both route ACKs in trace; no substituted cells/API states.",
+    "Paused baseline/30/60 has exact1130×752 whole RGBA and alpha, zero changed pixels/boundsnull, identical pre/post API/layers/camera/viewport/mode/revision96/drawnRevision96/drawnTick1. Target30/60 and normal poll counts3/3 are not achieved hardware FPS claims.",
+    "Actual WebGL2 runs on observed stock official SwiftShader/softwareGPU backend, with official PW1.61.1/Chromium149 and sandbox opt-outs absent. No hardwareGPU, native background or cross-platform rendering assertion.",
+    "Context-loss via native extension and allocation-unavailable getContext override are explicitly labelled renderer negatives. Current2D tick48 and usable inspector/real Step are proved; this is not a natural hardware-failure frequency claim.",
+    "Resources remain one successful native context per physical page and current-population-only display resources through six toggles. This does not establish long-run GPU memory stability or native heap limits.",
+    "Point-center display glyphs are visual markers, not bodies/radii/morphology/collisions; chemistry remains well mixed. No new transport/science/biology/full-public-delivery claim.",
+    "Bounded privacy review covers128 UTF-8 outer/nested/receipt files totaling6,904,511B, plus all12 PNGs. Obvious secret/private-VM/private-chat-context patterns/auth/cookies0; no exhaustive secret guarantee or manual viewing of all1228 trace JPEG resources.",
+    "Original compressed unique byte archive49MB and recursively expanded evidence are different budgets. The nested trace alone expands to58,982,852B; no assertion that combined recursive expansion fits a64MiB archive-group cap.",
+    "Receipt workflow in_progress/null remains the immutable transport-time observation. The later exact-main CI receipt is completedSUCCESS with nine applicable checks, two explicitly PR-only skipped guards; final durable archive/readbacks and other independent evidence remain separate.",
+    "Historical main5bea encoded-PNG mismatch remains FAIL/unknown cause. Current RGBA PASS does not diagnose that old failure. LAB PR21/publicLAB/models remain HOLD."
+  ],
+  "remainingGates": [
+    "Final independent numerics evidence and remaining MAIN regression/public reports owned by other reviewers",
+    "Durable closed original/review archives and independent network readbacks before parent declares overall MAIN acceptance"
+  ]
+}

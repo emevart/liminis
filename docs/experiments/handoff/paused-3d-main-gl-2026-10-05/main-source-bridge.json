@@ -1,0 +1,24 @@
+{
+  "status": "PASS",
+  "scope": "Committed source identity only; actual runtime main acceptance separate",
+  "head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+  "tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+  "parents": [
+    "5beaafb2c4f717862b62e67fd3e23e7d81860535",
+    "83fa1e52e478e2a33602a24bf83b5456e55e70a3"
+  ],
+  "accepted_PR_head": "83fa1e52e478e2a33602a24bf83b5456e55e70a3",
+  "diff_accepted_PR_to_main": [],
+  "checkout_clean": true,
+  "unchanged_product_objects_vs_preQA_main": [
+    ".github/workflows/ci.yml",
+    "docs/ACCEPTANCE.md",
+    "docs/checkpoints/2026-10-05-3d-paused-pixel-qa.md",
+    "scripts/check_physical_3d_browser.mjs",
+    "scripts/physical-3d-png.test.mjs"
+  ],
+  "qualifications": [
+    "FiveQA/operationaldoc paths only; no production/core/site/config/raw/frozen changes",
+    "Tree equality does not transfer runtimePASS"
+  ]
+}

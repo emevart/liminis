@@ -1,0 +1,20 @@
+{
+  "reviewer": "/root/recorded_acceptance_review",
+  "review_kind": "independent source-only byte transport review",
+  "created_at_utc": "2026-10-05T04:42:51.727858+00:00",
+  "verdict": "CHANGES_REQUESTED",
+  "superseded_by": "246ee768d0fe8cfbf3c3483b5fd54f442498ed11",
+  "head": "bd69797f7098fda7f3f60e3f320fcac6ff851ddc",
+  "tree": "c48843e8c8280510f57c12228aa71ec288423b29",
+  "workflow": ".github/workflows/evidence-paused-3d-main-transport.yml",
+  "workflow_bytes": 9058,
+  "workflow_sha256": "d406bb146b23e79e564f1ad941c9f563849f3b2b7cec0286dd8fb7a1362584b5",
+  "blockers": [
+    {
+      "line": 84,
+      "finding": "Main push source was incorrectly required to have head_branch codex/paused-3d-pixel-qa. Pinned source metadata has head_branch main; execution would refuse the original before artifact download.",
+      "resolution": "246ee changes only this assertion to main."
+    }
+  ],
+  "runtime_status": "NOT_RUN"
+}

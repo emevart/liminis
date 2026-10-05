@@ -1,0 +1,86 @@
+{
+  "reviewer": "/root/recorded_acceptance_review",
+  "review_kind": "independent source-only byte transport review",
+  "created_at_utc": "2026-10-05T04:42:51.727858+00:00",
+  "verdict": "SOURCE_PASS",
+  "blockers": [],
+  "blocker_count": 0,
+  "helper": {
+    "head": "246ee768d0fe8cfbf3c3483b5fd54f442498ed11",
+    "tree": "9d4289bd171b23377315399ef7f794ef06b06485",
+    "parent": "bd69797f7098fda7f3f60e3f320fcac6ff851ddc",
+    "worktree_clean": true,
+    "changed_paths_from_source": [
+      ".github/workflows/evidence-paused-3d-main-transport.yml"
+    ],
+    "workflow_bytes": 9038,
+    "workflow_sha256": "bf4e151a6930ab8de4991580319c63aa6ac4ebee3cb3e138a60157d321753424",
+    "future_trigger_branch": "codex/evidence-paused-3d-main-transport-20261005",
+    "publication_at_review": "NOT_CREATED / NOT_PUSHED / NOT_RUN"
+  },
+  "original": {
+    "repository": "emevart/liminis",
+    "repository_id": 1317617987,
+    "source_head": "e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+    "source_tree": "47ce45646315b09493d58d87ca8fce4dc867aa8d",
+    "run_id": 37263650472,
+    "head_branch": "main",
+    "event": "push",
+    "workflow_status_snapshot": "in_progress",
+    "workflow_conclusion_snapshot": null,
+    "job_id": 111615835988,
+    "job_name": "live cells browser acceptance",
+    "job_status": "completed",
+    "job_conclusion": "success",
+    "artifact_id": 11325537040,
+    "artifact_name": "physical-3d-browser-e2fd620baa492b2c2ff4316d2f083ac3e78bc252",
+    "artifact_expired": false,
+    "zip_bytes": 48557216,
+    "zip_sha256": "0fd16c56d8e0e7c840436c58e29fe7835b974f3911f0e05ebd7a89c05aa3a1c4",
+    "part_bytes": [
+      16777216,
+      16777216,
+      15002784
+    ]
+  },
+  "baseline": {
+    "workflow": "/workspace/liminis-paused-3d-evidence-transport/.github/workflows/evidence-paused-3d-transport.yml",
+    "bytes": 9031,
+    "sha256": "35e024d21ebbcbd48c03c9b9399af75e5edaea730c677816e4882b1261b3cfa4",
+    "comparison": "Differences are intended trigger/path/display/upload names, source run/job/artifact/head/size/SHA/last-part pins, and main/push metadata assertions. HTTP/authentication/bounds/CRC/receipt logic is unchanged."
+  },
+  "source_controls": {
+    "git_identity_and_single_owned_path": "PASS",
+    "inline_python_ast_parse": "PASS; parsed only, never executed",
+    "fixed_api_origin_and_actions_read_only": "PASS",
+    "no_automatic_redirects": "PASS",
+    "artifact_location_exact_302_and_allowed_https_storage": "PASS",
+    "fresh_storage_request_without_authorization": "PASS",
+    "signed_locations_tokens_headers_not_logged": "PASS",
+    "metadata_cap_bytes": 1048576,
+    "artifact_cap_bytes": 48557216,
+    "read_loop_deadline_seconds": 150,
+    "socket_timeout_seconds": 25,
+    "overall_job_timeout_minutes": 5,
+    "budget_qualification": "150s is checked before each read; an in-flight read can last up to the socket timeout. Five-minute job timeout bounds metadata, ZIP CRC/split/upload stages.",
+    "exact_length_sha256_zip_crc_before_split": "PASS source requirement; runtime NOT_RUN",
+    "three_parts_and_per_part_receipts": "PASS source requirement; runtime NOT_RUN",
+    "original_vs_transport_identity_and_workflow_status": "PASS; completed LIVE success is separate from overall workflow status/conclusion",
+    "single_fixed_branch_push_trigger_no_checkout_build_browser_model": "PASS",
+    "superseded_branch_blocker_fixed": "PASS"
+  },
+  "metadata_observation": {
+    "method": "Read-only existing GitHub connector GETs for run, jobs and exact artifact metadata; no ZIP/storage fetch",
+    "independently_observed_fields": "Run main/push/head/tree/repository IDs/status; LIVE job ID/run/name/status/conclusion; artifact ID/name/size/digest/nonexpired/workflow_run IDs/head/branch",
+    "limitation": "Jobs wrapper omits job.head_sha. Additional direct job endpoint was refused by connector endpoint allowlist; no bypass attempted. Runtime source explicitly requires job.head_sha == pinned HEAD."
+  },
+  "qualification": {
+    "actual_authenticated_302_storage_download": "NOT_RUN",
+    "actual_zip_hash_crc_split_upload_readback": "NOT_RUN",
+    "browser_png_visual_review": "NOT_RUN",
+    "overall_main_acceptance": "PENDING; no full CI PASS inferred",
+    "lab": "HOLD unchanged",
+    "interop_audit": "OUT_OF_SCOPE",
+    "no_new_ci_browser_models_cargo_tests_or_source_edits": true
+  }
+}
