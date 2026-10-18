@@ -1815,3 +1815,178 @@ HTML/CSS served byte pins выводятся из нового source, стар�
 LAB21/publicLAB/LAB4/models сохраняют Astra HOLD; legacy mobile sticky
 transport/sidebar overlap остаётся отдельным отложенным finding.
 Scope/pending: `docs/checkpoints/2026-10-05-recorded-hud.md`.
+## LAB-3a: агрегатный каталог 24 сохранённых прогонов (ADR-112)
+
+Отдельный stdlib builder проверяет pinned LAB source21cbe907/world30/chamber1,
+3 original JSON SHA/bytes,6 conditions × 4 seeds,4044 retained samples и TOML
+согласованность внутри условий. Original 6 494 550 bytes копируются без
+reserialization/recalculation; deterministic descriptor и `--check` должны
+отвергать stale/tampered bytes/source/schema/joins. Frozen/core/config/rawLAB,
+recorded catalog/oldJSON/SHA и existing player/clock/dense codec неизменны.
+
+Lab adapter и focused Node checks подтверждают exact IDs/strings/fixed URLs/
+SHA, retained sample выбор, published paired landmarks/latestcommon, missing
+null ranges, provenance separation и explicit integrity error.20 censored
+20000 runs и4 extinct 454 runs не смешиваются; common400/terminal454/landmark500
+имеют разные роли. Genesis residual неизвестен; living allele histogram
+не заменяет historical richness/fullgenomes/species. Эти source/data checks
+не являются actual browser или новым scientific validation PASS.
+
+`node scripts/check_lab_browser.mjs` в existing official protected pinned
+Chromium должен принять реально обслуженные JSON/descriptor/module bytes,
+24 run matrix, actual baseline/mutation_off/starvation controls/retainedsample/
+4 paired curve geometry, living/biomass/freeFOOD/O2 units и declaredenvironment,
+published differences/available0of4/null, terminal454 lineend/common400,
+kineticsalleles/provenance links, deepURL/reload/back и keyboard. Независимый
+expected oracle не импортирует production adapter для calculations. Counts
+и signed exact counters не теряют precision. Synthetic corrupted-transport
+case показывает integrity failure, не новую model trajectory.
+
+Обязательны desktop/short/390/320 PNG и trace, tracked clean expectedHEAD/tree,
+chromiumSandbox:true / observed argv guard, bounded deadlines, final console/page/
+request/cleanup verdict. Existing recorded/live regressions сохраняются.
+Independent source/numerics и actualartifact review обязательны перед merge;
+existing public LAB bytes/browser delivery принимаются после merge отдельно.
+Scope/pending: `docs/checkpoints/2026-10-04-lab-aggregate-catalog.md`.
+
+### Уточнение paused3D pixel oracle после main5bea FAIL
+
+Original run37241483046 остаётся FAIL: encoded PNG SHA mismatch не объяснён
+сохранёнными JPEG/API данными. Для нового exact source paused30/60 gate
+сравнивает dimensions и каждый decoded RGBA byte всей прежней compositor
+области. Opaque RGB нормализуется с alpha255; raw PNG SHA сохраняется отдельно.
+Любое отличие пикселя/alpha/dimensions — FAIL, без masking/cropping/tolerance
+или повторов до PASS. Все baseline/30/60 originals, encoded/decoded SHA,
+camera/viewport/revision/mode/drawnTick и actual API/все layer settings до и
+после capture сохраняются перед identity assertions; mismatch содержит count
+и bounds. Synthetic PNG filter/encoding/one-byte/alpha/dimension controls
+проверяют сам oracle, не объявляют actual browser PASS. Production3D bytes
+не меняются. Независимый review и свежий protected artifact обязательны.
+
+### LAB histogram CSSOM и фактическая читаемость осей
+
+Original LAB79/run37243706546 остаётся FAIL: browser CSSOM сериализовал
+89/92×100 как96.7391%, что прежний fixed1e-5 oracle отверг. Новая проверка
+берёт ratio только из pinned raw counts/living, применяет detached CSS width
+setter и требует точного совпадения serialized declarations. Counts/text/
+composition/empty histogram остаются exact; rawratio/actual/reference строки
+сохраняются. Это declaration proof, не измерение pixel width; общие SVG и
+accounting допуски не расширяются.
+
+Actual PNG показал слишком мелкие оси. Responsive SVG имеет210 CSSpx height,
+viewBox width равен фактической ширине; frame x72→width−12, y12→178. Text11px
+и axis-only3significantdigits сохраняют original data/detail/domains/units.
+Actual desktop/short/390/320 gate должен подтвердить font≥10CSSpx через
+getScreenCTM, labels внутри SVG и без перекрытия. Axis values независимо
+привязываются к raw observed quantities и model-time domain, каждый sample
+path/dot — к raw данным с прежним1e-5. Свежий exact protected CI обязателен;
+прежний FAIL и новый source-only review не считаются actual LAB PASS.
+
+### LAB fullPage capture, streaming EOF и полный browser verdict
+
+Original LAB600/run37245225939 остаётся FAIL: first6gates PASS не принимают
+все9gates. Два ResizeObserver исключения произошли внутри fullPage captures
+starvation/desktop, до short viewport. Destructive clear оставлял один пустой
+SVG; измеренное transient width не записано. Новый render должен сохранять
+все4 attached plot shells, измерять все usable widths до изменения curves,
+собирать полное новое содержимое отдельно и публиковать синхронно. Hidden
+layout сохраняет целые графики до следующего RO/pageshow, без fake width или
+циклического retry. Неожиданная ошибка отображается явно. Fresh protected
+browser сверяет4raw curves и typography ПОСЛЕ каждого fullPage capture,
+далее desktop→short→390→320; снимки и sticky page errors обязательны.
+
+Stream cleanup: actual done=true означает успешный EOF; releaseLock без
+cancel. При unfinished/read/oversize failure — один awaited cancel, затем
+releaseLock; исходная ошибка сохраняется, cleanup rejection потребляется,
+самостоятельный cleanup failure виден. Bytes/hash/parser/size limits не
+ослабляются. Original initial comparisons abort предшествует reload примерно
+на3min; navigation-only/URL allowance отвергнут. Корректность EOF lifecycle
+не доказывает причину прежнего abort. Actual responses всех raw файлов
+должны иметь size/SHA pins; failed/body/protocol/page/unhandled/cleanup
+errors остаются итоговыми gates после закрытия контекстов.
+
+QA batching читает один DOM snapshot для detail/comparison, сохраняет
+независимые assertions по исходным raw данным,48endpoints/all24runs/160pairs/
+9gates/реальные keyboard/history/210s. Node/source controls не browser PASS.
+Compact results JSON не имеет предполагаемого LF; прежний unreached LF
+negative control не объявляется успешным. Transport negative меняет ровно
+один pinned numeric exponent byte e→E: записаны field/token/offset и обе
+SHA; длина и полный JSON.parse результат сохраняются, SHA отличается.
+Positive файлы остаются byte-exact; отрицательный case проверяет integrity
+transport, не новую биологию. Свежий exact-head artifact и независимый review
+обязательны; старые FAIL и старые PASS не переносятся на новую базу.
+
+### LAB bounded native pipe и отдельная приёмка совместимости
+
+Original product1be/run37248220760 остаётся FAIL. Два отдельных diagnostic
+CASE edca/0b52 также остаются FAIL; observed EOF/release без adapter cancel
+не объяснили native ERR_ABORTED. Последняя A/B probe3b17/run37254028918
+сохранила overall AB_PROBE_FAIL: A получил comparisons ERR_ABORTED, B
+завершил восемь native requests с exact original body pins и без ошибок.
+Independent source/actual review0 и решение Astra разрешают только узкий
+UA-compatibility candidate. Причина Chromium, повторяемость, скорость и
+девять LAB gates этой probe не доказаны; дополнительные causal runs закрыты.
+
+Для нового consumer успешный EOF, cancellation и unlock выполняет стандартный
+awaited `response.body.pipeTo(new WritableStream(...))`. Sink проверяет прежний
+size cap до сохранения очередного chunk, сохраняет исходную write/size error
+при secondary cancellation rejection. Прежние concat/SHA/parser/joins
+не меняются. Missing stream явно отвергается; unbounded arrayBuffer fallback,
+timers/retainedResponses и allowances для native errors запрещены. Это
+заменяет описанный выше manual-reader cleanup только для нового consumer;
+исторические исходники и FAIL evidence сохраняются.
+
+Native ReadableStream/WritableStream tests подтверждают full exact bytes/SHA,
+delayed EOF, отсутствие success cancel, incremental oversize refusal,
+awaited cancellation/lock release, primary error identity/no unhandled,
+read failure/backpressure и missing-stream refusal. Все original data/source
+pins и24runs/4044samples сохраняются; Node tests не browser PASS. Exact B
+function/prefix/suffix binding и independent code/data-numerics review
+обязательны. Новый exact head проходит прежние все9LABgates/fullCI с
+неизменёнными oracle/security/negative controls и независимым actualartifact
+review, затем отдельную public delivery/browser приёмку после merge/deploy.
+
+### Чтение страницы, а не приёмка, отменяло уже полученную загрузку
+
+Original LABc02/run37259168567 остаётся FAIL, но причина установлена и она
+не в данных и не в приёмке. `page.on("response")` читал тело через Playwright
+`response.body()`, то есть CDP `Network.getResponseBody`, и получал
+`No data found for resource with given identifier` при полностью принятых
+5 294 742 байтах и совпавшем SHA-256: страница отрисовала все 24 прогона,
+прежде чем приёмка не смогла перечитать то же тело. Рядом Chromium записывал
+`net::ERR_ABORTED` — это одно событие, не два. Загрузку отменял renderer:
+при потоковом чтении тела он освобождает загрузку по EOF тела раньше, чем
+browser process запишет её завершение, DevTools фиксирует
+`loadingFailed(canceled)` и выбрасывает буфер. Порядок невоспроизводим.
+
+Измерено зондом на том же pinned Chromium: страница получила точные байты
+во всех 170 случаях, а отмена пришла 25 раз и только при потоковом чтении —
+`pipeTo` 9/50, `getReader` 16/50, на размерах от 1 116 928 до 5 294 742 байт.
+`arrayBuffer` не отменился ни разу (0/50), как и вариант с предварительной
+проверкой объявленной длины (0/20). Отмена и `No data found` всегда приходили
+вместе. Прежний A/B сравнивал два потоковых способа, то есть не тот параметр,
+и поэтому не мог выявить причину.
+
+`site/lab-data.mjs` поэтому отвергает запрос по объявленной длине до передачи
+тела и дальше читает тело целиком: `content-length` обязан быть точным
+десятичным счётом не больше пина, иначе отказ без единого прочитанного байта.
+Прежнее потоковое чтение с инкрементным лимитом остаётся там, где длина не
+объявлена, и его прежние восемь native-проверок сохранены без изменений.
+Точную границу в обоих случаях по-прежнему ставит сверка length/SHA-256
+у вызывающего: короткое тело при допустимой объявленной длине отвергается.
+Это согласованное с `site/recording-loader.mjs` чтение пинованного файла,
+а не отказ от границы; сжатый `content-encoding` объявляет длину сжатого
+тела, поэтому ранняя граница там слабее, а точную даёт тот же length/SHA.
+
+`scripts/check_lab_browser.mjs` не менялся: приёмка по-прежнему читает тело
+того же запроса, который браузер сам выполнил к loopback-серверу. Удержание
+тела в DevTools Chromium не гарантирует вообще; гарантия здесь в том, что
+LAB consumer больше не читает эти пинованные файлы потоком.
+
+Переполнение 320: `#source-links` содержит неразрывные 64-символьные SHA-256,
+flex-элемент не сжимается ниже min-content, и document уходил на 374px при
+viewport 320. `.source-links a` получает `min-width:0; overflow-wrap:anywhere`.
+Данные, тексты ссылок и их URL/SHA не меняются.
+
+Все9LABgates проходят локально на Windows-gnu с official Playwright1.61.1.
+Linux CI остаётся обязательным: прежние gates3—9 там ещё не исполнялись.

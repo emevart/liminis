@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="Inspect the published paired Liminis cell laboratory observations."/>
+  <link rel="canonical" href="https://liminis.dev/lab.html"/>
+  <link rel="stylesheet" href="./lab.css"/>
+  <title>Liminis · Paired laboratory</title>
+</head>
+<body>
+  <header class="masthead"><a class="brand" href="./">Liminis</a><span class="section-name">Paired laboratory</span><nav aria-label="Project links"><a href="./observe.html">Recording</a><a href="https://github.com/emevart/liminis">GitHub</a></nav></header>
+  <div id="lab-status" role="status">Loading published aggregate observations…</div>
+  <div id="lab-error" role="alert" hidden></div>
+  <main id="lab-workspace" aria-busy="true" hidden>
+    <section class="toolbar" aria-label="Observation selection">
+      <label>Condition <select id="condition-select" disabled></select></label>
+      <label>Paired seed <select id="seed-select" disabled></select></label>
+      <label>Retained sample <select id="sample-select" disabled></select></label>
+      <div class="identity mono" id="sample-stamp"></div>
+    </section>
+    <div class="layout">
+      <section class="plots panel" aria-label="Paired observed trajectories">
+        <div class="panel-head"><h1>Observed trajectories</h1><label>Time window <select id="plot-window"><option value="20000">Requested horizon</option><option value="1000">First 1,000 ticks</option></select></label></div>
+        <div class="plot-key"><span class="arm-key">Solid: selected condition · dashed: baseline</span><div id="seed-key"></div></div>
+        <div class="plot-grid" id="plots"></div>
+        <p class="note">Dots are retained observations. Lines only guide the eye; they do not reconstruct states between samples. Four paired seeds, not 24 independent replicates. Extinct runs end at their last observation.</p>
+      </section>
+      <section class="panel" aria-label="Selected aggregate sample"><div class="panel-head"><h2>Run / sample</h2><span class="eyebrow" id="run-status"></span></div><dl class="kv" id="run-detail"></dl><div class="panel-head subhead"><h2>Living kinetics alleles</h2><span id="living-alleles" class="mono"></span></div><div id="allele-histogram"></div><p class="note" id="allele-history"></p><details><summary>Exact counters and exported ledger</summary><dl class="kv" id="exact-counters"></dl></details></section>
+      <section class="panel comparisons" aria-label="Published paired comparisons"><div class="panel-head"><h2>Condition − baseline</h2><label>Published comparison <select id="comparison-select"><option value="latest">Latest common sample per seed</option></select></label></div><div id="comparison-status" class="mono"></div><div class="table-wrap"><table id="pair-comparison"><caption>Published paired differences</caption><thead><tr><th>Metric</th><th>Baseline</th><th>Condition</th><th>Difference</th><th>Four-pair difference range</th></tr></thead><tbody></tbody></table></div><details><summary>All published landmarks / common endpoints</summary><div class="table-wrap"><table id="landmark-summary"><caption>Seven published landmarks for this condition</caption><thead><tr><th>Tick</th><th>Available pairs</th><th>Status</th></tr></thead><tbody></tbody></table></div><div class="table-wrap"><table id="latest-common-summary"><caption>Latest common retained sample per paired seed</caption><thead><tr><th>Seed</th><th>Common tick</th><th>Condition terminal tick</th></tr></thead><tbody></tbody></table></div></details><p class="note">Only published landmarks and latest common samples are compared. Missing pairs are unavailable, never zero or carried forward. Latest endpoints are per pair and are not pooled across different times.</p></section>
+      <section class="panel" aria-label="Declared environment"><div class="panel-head"><h2>Declared environment</h2><span class="eyebrow">TOML inputs</span></div><dl id="environment" class="kv"></dl><details><summary>Full declared parameters</summary><pre id="declared-parameters"></pre></details><p class="note">Declared concentrations are mol/m³; observed free pools in the plots are mol. Uncalibrated, well-mixed chamber1; no spatial positions or individual-cell genomes are recorded here.</p></section>
+      <section class="panel matrix-panel" aria-label="Twenty-four aggregate runs"><div class="panel-head"><h2>Run matrix</h2><span class="eyebrow">6 conditions × 4 paired seeds</span></div><div class="table-wrap"><table id="run-matrix"><caption>Actual stopping boundaries of all 24 runs</caption><thead><tr><th>Condition</th><th>Seed</th><th>Last tick</th><th>Living</th><th>Status</th><th>Stop reason</th></tr></thead><tbody></tbody></table></div></section>
+      <section class="panel provenance-panel" aria-label="Historical source and evidence"><div class="panel-head"><h2>Source / evidence</h2><span class="eyebrow">Published LAB-2</span></div><dl id="provenance" class="kv"></dl><div id="source-links" class="source-links"></div><p class="note">This page reads aggregate evidence. It does not run a simulation, resume a checkpoint, infer events between samples, rank conditions, or establish an evolutionary discovery.</p></section>
+    </div>
+  </main>
+  <script type="module" src="./lab.js"></script>
+</body>
+</html>

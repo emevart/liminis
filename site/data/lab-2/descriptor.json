@@ -1,0 +1,1793 @@
+{
+  "batch_id": "lab-2-chamber1-paired-v1",
+  "capabilities": {
+    "aggregate_samples": true,
+    "event_reconstruction": false,
+    "full_genomes": false,
+    "individual_cells": false,
+    "resumable_states": false,
+    "spatial_positions": false
+  },
+  "conditions": [
+    {
+      "canonical_config_sha256": "4e72889e4cc2857a7f259a359b8a9bda349861f8bb72d6c9dd74fe6511ca03de",
+      "condition": "baseline",
+      "declared_parameters": {
+        "chamber": {
+          "max_cells": 512,
+          "medium_exchange_per_s": 2e-06,
+          "temperature_k": 298.15,
+          "volume_m3": 1e-12
+        },
+        "chamber_format": 1,
+        "conserved": {
+          "C": 12.0107,
+          "H": 1.00794,
+          "O": 15.9994
+        },
+        "death": {
+          "detritus_substance": "DET"
+        },
+        "dt": 30.0,
+        "extent_fraction": 0.015625,
+        "founder": {
+          "count": 8,
+          "genome": {
+            "capture_denominator": 1000,
+            "capture_numerator": 1,
+            "division_energy_j": 1e-12,
+            "division_mass_mol": 6e-14,
+            "kinetics": 0,
+            "maintenance_power_w": 5e-16,
+            "max_growth_rate_per_s": 0.0005,
+            "starvation_tolerance_s": 3600.0,
+            "uptake_km_mol_m3": 0.05
+          },
+          "internal_energy_j": 5e-12,
+          "structural_mass_mol": 3e-14
+        },
+        "genome": {
+          "affinity_cost_per_step": 1.8,
+          "kinetics_max": 4,
+          "kinetics_min": -4,
+          "mutation_probability": 0.02,
+          "mutation_step": 1,
+          "speed_factor_per_step": 1.35
+        },
+        "growth": {
+          "biomass_substance": "BIO",
+          "enthalpy_j_per_extent": -459340.0,
+          "id": "aerobic_growth",
+          "inputs": {
+            "FOOD": 2,
+            "O2": 1
+          },
+          "limiting_substance": "FOOD",
+          "outputs": {
+            "BIO": 1,
+            "CO2": 1,
+            "WATER": 1
+          }
+        },
+        "initial": {
+          "concentration": {
+            "BIO": 0.0,
+            "CO2": 0.01,
+            "DET": 0.0,
+            "FOOD": 10.0,
+            "O2": 2.0,
+            "WATER": 55500.0
+          }
+        },
+        "medium": {
+          "concentration": {
+            "BIO": 0.0,
+            "CO2": 0.01,
+            "DET": 0.0,
+            "FOOD": 10.0,
+            "O2": 2.0,
+            "WATER": 55500.0
+          }
+        },
+        "name": "cell-chamber",
+        "substance": [
+          {
+            "c_p": 75.3,
+            "composition": {
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 2.3e-09,
+            "enthalpy_formation": -285830.0,
+            "id": "WATER",
+            "max_conc": 55600.0,
+            "molar_mass": 18.01528,
+            "partial_molar_volume": 1.807e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 55500.0
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 8e-10,
+            "enthalpy_formation": -200000.0,
+            "id": "FOOD",
+            "max_conc": 100.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 10.0
+          },
+          {
+            "c_p": 30.0,
+            "composition": {
+              "O": 2
+            },
+            "diffusivity": 2e-09,
+            "enthalpy_formation": 0.0,
+            "id": "O2",
+            "max_conc": 100.0,
+            "molar_mass": 31.9988,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 2.0
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "O": 2
+            },
+            "diffusivity": 1.6e-09,
+            "enthalpy_formation": -393510.0,
+            "id": "CO2",
+            "max_conc": 100.0,
+            "molar_mass": 44.0095,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.01
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 4e-11,
+            "enthalpy_formation": -181000.0,
+            "id": "DET",
+            "max_conc": 20.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.002
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 0.0,
+            "enthalpy_formation": -180000.0,
+            "id": "BIO",
+            "max_conc": 20.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.002
+          }
+        ]
+      },
+      "identity": {
+        "biomass_substance": "BIO",
+        "canonical_digest": "blake3:1802c0f129855749f729458a90221c071092552a3c0b4e16e114d81a7c5a33ec",
+        "chamber_format": 1,
+        "config_hash": "blake3:1802c0f129855749",
+        "declared_max_cells": 512,
+        "derived": true,
+        "dt_seconds": 30.0,
+        "energy_units_per_joule": "147573952589676412928",
+        "matter_scales": [
+          {
+            "id": "WATER",
+            "units_per_mol": "36028797018963968"
+          },
+          {
+            "id": "FOOD",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "O2",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "CO2",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "DET",
+            "units_per_mol": "9223372036854775808"
+          },
+          {
+            "id": "BIO",
+            "units_per_mol": "9223372036854775808"
+          }
+        ],
+        "model": "well_mixed_individual_cells",
+        "scenario": "cell-chamber",
+        "spatial_positions": false,
+        "temperature_k": 298.15,
+        "units": {
+          "concentration": "mol/m^3",
+          "energy": "J",
+          "structural_mass": "mol structural biomass",
+          "temperature": "K",
+          "time": "s"
+        },
+        "volume_m3": 1e-12,
+        "world_format_version": 30
+      },
+      "input_toml_digest": "blake3:d1b6c597f4d5bbd3b198022e4928ba050b75fa5485c3c9000c839a3f0bce0073",
+      "toml_bytes": 3102,
+      "toml_sha256": "d6a2d667317b0eca9837e96f4d8234d8be7e55e67927cd95ab67042b3906d526"
+    },
+    {
+      "canonical_config_sha256": "04e20919a97134ff7acfce8cc999a9f8b7523bf43f15744c9fdd2592a5b6a421",
+      "condition": "mutation_off",
+      "declared_parameters": {
+        "chamber": {
+          "max_cells": 512,
+          "medium_exchange_per_s": 2e-06,
+          "temperature_k": 298.15,
+          "volume_m3": 1e-12
+        },
+        "chamber_format": 1,
+        "conserved": {
+          "C": 12.0107,
+          "H": 1.00794,
+          "O": 15.9994
+        },
+        "death": {
+          "detritus_substance": "DET"
+        },
+        "dt": 30.0,
+        "extent_fraction": 0.015625,
+        "founder": {
+          "count": 8,
+          "genome": {
+            "capture_denominator": 1000,
+            "capture_numerator": 1,
+            "division_energy_j": 1e-12,
+            "division_mass_mol": 6e-14,
+            "kinetics": 0,
+            "maintenance_power_w": 5e-16,
+            "max_growth_rate_per_s": 0.0005,
+            "starvation_tolerance_s": 3600.0,
+            "uptake_km_mol_m3": 0.05
+          },
+          "internal_energy_j": 5e-12,
+          "structural_mass_mol": 3e-14
+        },
+        "genome": {
+          "affinity_cost_per_step": 1.8,
+          "kinetics_max": 4,
+          "kinetics_min": -4,
+          "mutation_probability": 0.0,
+          "mutation_step": 1,
+          "speed_factor_per_step": 1.35
+        },
+        "growth": {
+          "biomass_substance": "BIO",
+          "enthalpy_j_per_extent": -459340.0,
+          "id": "aerobic_growth",
+          "inputs": {
+            "FOOD": 2,
+            "O2": 1
+          },
+          "limiting_substance": "FOOD",
+          "outputs": {
+            "BIO": 1,
+            "CO2": 1,
+            "WATER": 1
+          }
+        },
+        "initial": {
+          "concentration": {
+            "BIO": 0.0,
+            "CO2": 0.01,
+            "DET": 0.0,
+            "FOOD": 10.0,
+            "O2": 2.0,
+            "WATER": 55500.0
+          }
+        },
+        "medium": {
+          "concentration": {
+            "BIO": 0.0,
+            "CO2": 0.01,
+            "DET": 0.0,
+            "FOOD": 10.0,
+            "O2": 2.0,
+            "WATER": 55500.0
+          }
+        },
+        "name": "cell-chamber",
+        "substance": [
+          {
+            "c_p": 75.3,
+            "composition": {
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 2.3e-09,
+            "enthalpy_formation": -285830.0,
+            "id": "WATER",
+            "max_conc": 55600.0,
+            "molar_mass": 18.01528,
+            "partial_molar_volume": 1.807e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 55500.0
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 8e-10,
+            "enthalpy_formation": -200000.0,
+            "id": "FOOD",
+            "max_conc": 100.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 10.0
+          },
+          {
+            "c_p": 30.0,
+            "composition": {
+              "O": 2
+            },
+            "diffusivity": 2e-09,
+            "enthalpy_formation": 0.0,
+            "id": "O2",
+            "max_conc": 100.0,
+            "molar_mass": 31.9988,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 2.0
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "O": 2
+            },
+            "diffusivity": 1.6e-09,
+            "enthalpy_formation": -393510.0,
+            "id": "CO2",
+            "max_conc": 100.0,
+            "molar_mass": 44.0095,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.01
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 4e-11,
+            "enthalpy_formation": -181000.0,
+            "id": "DET",
+            "max_conc": 20.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.002
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 0.0,
+            "enthalpy_formation": -180000.0,
+            "id": "BIO",
+            "max_conc": 20.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.002
+          }
+        ]
+      },
+      "identity": {
+        "biomass_substance": "BIO",
+        "canonical_digest": "blake3:7b21aa2fef3501ee9b9e471ca2a66962f069c5b0c3272e0694e619d0f17bc299",
+        "chamber_format": 1,
+        "config_hash": "blake3:7b21aa2fef3501ee",
+        "declared_max_cells": 512,
+        "derived": true,
+        "dt_seconds": 30.0,
+        "energy_units_per_joule": "147573952589676412928",
+        "matter_scales": [
+          {
+            "id": "WATER",
+            "units_per_mol": "36028797018963968"
+          },
+          {
+            "id": "FOOD",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "O2",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "CO2",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "DET",
+            "units_per_mol": "9223372036854775808"
+          },
+          {
+            "id": "BIO",
+            "units_per_mol": "9223372036854775808"
+          }
+        ],
+        "model": "well_mixed_individual_cells",
+        "scenario": "cell-chamber",
+        "spatial_positions": false,
+        "temperature_k": 298.15,
+        "units": {
+          "concentration": "mol/m^3",
+          "energy": "J",
+          "structural_mass": "mol structural biomass",
+          "temperature": "K",
+          "time": "s"
+        },
+        "volume_m3": 1e-12,
+        "world_format_version": 30
+      },
+      "input_toml_digest": "blake3:a3e0a406aa7c8b06bac02f048edeb277770d3841d9571e0058e1dd08cadd1be9",
+      "toml_bytes": 3101,
+      "toml_sha256": "3b7e2f3421df1f09ecdeae2c3da57b907318d4106987cbb384a7165b25619cc7"
+    },
+    {
+      "canonical_config_sha256": "75e3184ae421d3840cacba0ef8ede5ae91fe02249aeca9a3a60e35270d9b0358",
+      "condition": "starvation",
+      "declared_parameters": {
+        "chamber": {
+          "max_cells": 512,
+          "medium_exchange_per_s": 2e-06,
+          "temperature_k": 298.15,
+          "volume_m3": 1e-12
+        },
+        "chamber_format": 1,
+        "conserved": {
+          "C": 12.0107,
+          "H": 1.00794,
+          "O": 15.9994
+        },
+        "death": {
+          "detritus_substance": "DET"
+        },
+        "dt": 30.0,
+        "extent_fraction": 0.015625,
+        "founder": {
+          "count": 8,
+          "genome": {
+            "capture_denominator": 1000,
+            "capture_numerator": 1,
+            "division_energy_j": 1e-12,
+            "division_mass_mol": 6e-14,
+            "kinetics": 0,
+            "maintenance_power_w": 5e-16,
+            "max_growth_rate_per_s": 0.0005,
+            "starvation_tolerance_s": 3600.0,
+            "uptake_km_mol_m3": 0.05
+          },
+          "internal_energy_j": 5e-12,
+          "structural_mass_mol": 3e-14
+        },
+        "genome": {
+          "affinity_cost_per_step": 1.8,
+          "kinetics_max": 4,
+          "kinetics_min": -4,
+          "mutation_probability": 0.02,
+          "mutation_step": 1,
+          "speed_factor_per_step": 1.35
+        },
+        "growth": {
+          "biomass_substance": "BIO",
+          "enthalpy_j_per_extent": -459340.0,
+          "id": "aerobic_growth",
+          "inputs": {
+            "FOOD": 2,
+            "O2": 1
+          },
+          "limiting_substance": "FOOD",
+          "outputs": {
+            "BIO": 1,
+            "CO2": 1,
+            "WATER": 1
+          }
+        },
+        "initial": {
+          "concentration": {
+            "BIO": 0.0,
+            "CO2": 0.01,
+            "DET": 0.0,
+            "FOOD": 0.0,
+            "O2": 2.0,
+            "WATER": 55500.0
+          }
+        },
+        "medium": {
+          "concentration": {
+            "BIO": 0.0,
+            "CO2": 0.01,
+            "DET": 0.0,
+            "FOOD": 0.0,
+            "O2": 2.0,
+            "WATER": 55500.0
+          }
+        },
+        "name": "cell-chamber",
+        "substance": [
+          {
+            "c_p": 75.3,
+            "composition": {
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 2.3e-09,
+            "enthalpy_formation": -285830.0,
+            "id": "WATER",
+            "max_conc": 55600.0,
+            "molar_mass": 18.01528,
+            "partial_molar_volume": 1.807e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 55500.0
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 8e-10,
+            "enthalpy_formation": -200000.0,
+            "id": "FOOD",
+            "max_conc": 100.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 10.0
+          },
+          {
+            "c_p": 30.0,
+            "composition": {
+              "O": 2
+            },
+            "diffusivity": 2e-09,
+            "enthalpy_formation": 0.0,
+            "id": "O2",
+            "max_conc": 100.0,
+            "molar_mass": 31.9988,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 2.0
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "O": 2
+            },
+            "diffusivity": 1.6e-09,
+            "enthalpy_formation": -393510.0,
+            "id": "CO2",
+            "max_conc": 100.0,
+            "molar_mass": 44.0095,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.01
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 4e-11,
+            "enthalpy_formation": -181000.0,
+            "id": "DET",
+            "max_conc": 20.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.002
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 0.0,
+            "enthalpy_formation": -180000.0,
+            "id": "BIO",
+            "max_conc": 20.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.002
+          }
+        ]
+      },
+      "identity": {
+        "biomass_substance": "BIO",
+        "canonical_digest": "blake3:a0805173cd95cc6b4f27d2d1608745c72c5ac87285eef3dc919ef6aef4144548",
+        "chamber_format": 1,
+        "config_hash": "blake3:a0805173cd95cc6b",
+        "declared_max_cells": 512,
+        "derived": true,
+        "dt_seconds": 30.0,
+        "energy_units_per_joule": "147573952589676412928",
+        "matter_scales": [
+          {
+            "id": "WATER",
+            "units_per_mol": "36028797018963968"
+          },
+          {
+            "id": "FOOD",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "O2",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "CO2",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "DET",
+            "units_per_mol": "9223372036854775808"
+          },
+          {
+            "id": "BIO",
+            "units_per_mol": "9223372036854775808"
+          }
+        ],
+        "model": "well_mixed_individual_cells",
+        "scenario": "cell-chamber",
+        "spatial_positions": false,
+        "temperature_k": 298.15,
+        "units": {
+          "concentration": "mol/m^3",
+          "energy": "J",
+          "structural_mass": "mol structural biomass",
+          "temperature": "K",
+          "time": "s"
+        },
+        "volume_m3": 1e-12,
+        "world_format_version": 30
+      },
+      "input_toml_digest": "blake3:737aff093033d67e0beb720f544ca32c8875d261c381d931fbae44cebb1a8181",
+      "toml_bytes": 3100,
+      "toml_sha256": "469c8bc63dc191e8af594a883ab4f728744b342a1900e1c5f122f7965beffbef"
+    },
+    {
+      "canonical_config_sha256": "682204146ce53feeb0099eec99610053f6f108fbbd6a952987f2f4caab7853d7",
+      "condition": "oxygen_low",
+      "declared_parameters": {
+        "chamber": {
+          "max_cells": 512,
+          "medium_exchange_per_s": 2e-06,
+          "temperature_k": 298.15,
+          "volume_m3": 1e-12
+        },
+        "chamber_format": 1,
+        "conserved": {
+          "C": 12.0107,
+          "H": 1.00794,
+          "O": 15.9994
+        },
+        "death": {
+          "detritus_substance": "DET"
+        },
+        "dt": 30.0,
+        "extent_fraction": 0.015625,
+        "founder": {
+          "count": 8,
+          "genome": {
+            "capture_denominator": 1000,
+            "capture_numerator": 1,
+            "division_energy_j": 1e-12,
+            "division_mass_mol": 6e-14,
+            "kinetics": 0,
+            "maintenance_power_w": 5e-16,
+            "max_growth_rate_per_s": 0.0005,
+            "starvation_tolerance_s": 3600.0,
+            "uptake_km_mol_m3": 0.05
+          },
+          "internal_energy_j": 5e-12,
+          "structural_mass_mol": 3e-14
+        },
+        "genome": {
+          "affinity_cost_per_step": 1.8,
+          "kinetics_max": 4,
+          "kinetics_min": -4,
+          "mutation_probability": 0.02,
+          "mutation_step": 1,
+          "speed_factor_per_step": 1.35
+        },
+        "growth": {
+          "biomass_substance": "BIO",
+          "enthalpy_j_per_extent": -459340.0,
+          "id": "aerobic_growth",
+          "inputs": {
+            "FOOD": 2,
+            "O2": 1
+          },
+          "limiting_substance": "FOOD",
+          "outputs": {
+            "BIO": 1,
+            "CO2": 1,
+            "WATER": 1
+          }
+        },
+        "initial": {
+          "concentration": {
+            "BIO": 0.0,
+            "CO2": 0.01,
+            "DET": 0.0,
+            "FOOD": 10.0,
+            "O2": 0.05,
+            "WATER": 55500.0
+          }
+        },
+        "medium": {
+          "concentration": {
+            "BIO": 0.0,
+            "CO2": 0.01,
+            "DET": 0.0,
+            "FOOD": 10.0,
+            "O2": 0.05,
+            "WATER": 55500.0
+          }
+        },
+        "name": "cell-chamber",
+        "substance": [
+          {
+            "c_p": 75.3,
+            "composition": {
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 2.3e-09,
+            "enthalpy_formation": -285830.0,
+            "id": "WATER",
+            "max_conc": 55600.0,
+            "molar_mass": 18.01528,
+            "partial_molar_volume": 1.807e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 55500.0
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 8e-10,
+            "enthalpy_formation": -200000.0,
+            "id": "FOOD",
+            "max_conc": 100.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 10.0
+          },
+          {
+            "c_p": 30.0,
+            "composition": {
+              "O": 2
+            },
+            "diffusivity": 2e-09,
+            "enthalpy_formation": 0.0,
+            "id": "O2",
+            "max_conc": 100.0,
+            "molar_mass": 31.9988,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 2.0
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "O": 2
+            },
+            "diffusivity": 1.6e-09,
+            "enthalpy_formation": -393510.0,
+            "id": "CO2",
+            "max_conc": 100.0,
+            "molar_mass": 44.0095,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.01
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 4e-11,
+            "enthalpy_formation": -181000.0,
+            "id": "DET",
+            "max_conc": 20.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.002
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 0.0,
+            "enthalpy_formation": -180000.0,
+            "id": "BIO",
+            "max_conc": 20.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.002
+          }
+        ]
+      },
+      "identity": {
+        "biomass_substance": "BIO",
+        "canonical_digest": "blake3:b5cfa83a3fa90e795e8a792917ba3b00ba09bac36d9bbc6356d56e448fe7d82d",
+        "chamber_format": 1,
+        "config_hash": "blake3:b5cfa83a3fa90e79",
+        "declared_max_cells": 512,
+        "derived": true,
+        "dt_seconds": 30.0,
+        "energy_units_per_joule": "147573952589676412928",
+        "matter_scales": [
+          {
+            "id": "WATER",
+            "units_per_mol": "36028797018963968"
+          },
+          {
+            "id": "FOOD",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "O2",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "CO2",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "DET",
+            "units_per_mol": "9223372036854775808"
+          },
+          {
+            "id": "BIO",
+            "units_per_mol": "9223372036854775808"
+          }
+        ],
+        "model": "well_mixed_individual_cells",
+        "scenario": "cell-chamber",
+        "spatial_positions": false,
+        "temperature_k": 298.15,
+        "units": {
+          "concentration": "mol/m^3",
+          "energy": "J",
+          "structural_mass": "mol structural biomass",
+          "temperature": "K",
+          "time": "s"
+        },
+        "volume_m3": 1e-12,
+        "world_format_version": 30
+      },
+      "input_toml_digest": "blake3:df19482c4ccae154df33b4ebc71a1589ebbdc0c6bffcdae85dba8ffe0104bc23",
+      "toml_bytes": 3104,
+      "toml_sha256": "b479ffb1c0d0e08991090f3ae6aad08248d084a0520ef39a6831a976677fd147"
+    },
+    {
+      "canonical_config_sha256": "2e66a44a5641d3317f3fc211c38b3e599214a2e1be7559c8bbb7e6c083a17881",
+      "condition": "exchange_half",
+      "declared_parameters": {
+        "chamber": {
+          "max_cells": 512,
+          "medium_exchange_per_s": 1e-06,
+          "temperature_k": 298.15,
+          "volume_m3": 1e-12
+        },
+        "chamber_format": 1,
+        "conserved": {
+          "C": 12.0107,
+          "H": 1.00794,
+          "O": 15.9994
+        },
+        "death": {
+          "detritus_substance": "DET"
+        },
+        "dt": 30.0,
+        "extent_fraction": 0.015625,
+        "founder": {
+          "count": 8,
+          "genome": {
+            "capture_denominator": 1000,
+            "capture_numerator": 1,
+            "division_energy_j": 1e-12,
+            "division_mass_mol": 6e-14,
+            "kinetics": 0,
+            "maintenance_power_w": 5e-16,
+            "max_growth_rate_per_s": 0.0005,
+            "starvation_tolerance_s": 3600.0,
+            "uptake_km_mol_m3": 0.05
+          },
+          "internal_energy_j": 5e-12,
+          "structural_mass_mol": 3e-14
+        },
+        "genome": {
+          "affinity_cost_per_step": 1.8,
+          "kinetics_max": 4,
+          "kinetics_min": -4,
+          "mutation_probability": 0.02,
+          "mutation_step": 1,
+          "speed_factor_per_step": 1.35
+        },
+        "growth": {
+          "biomass_substance": "BIO",
+          "enthalpy_j_per_extent": -459340.0,
+          "id": "aerobic_growth",
+          "inputs": {
+            "FOOD": 2,
+            "O2": 1
+          },
+          "limiting_substance": "FOOD",
+          "outputs": {
+            "BIO": 1,
+            "CO2": 1,
+            "WATER": 1
+          }
+        },
+        "initial": {
+          "concentration": {
+            "BIO": 0.0,
+            "CO2": 0.01,
+            "DET": 0.0,
+            "FOOD": 10.0,
+            "O2": 2.0,
+            "WATER": 55500.0
+          }
+        },
+        "medium": {
+          "concentration": {
+            "BIO": 0.0,
+            "CO2": 0.01,
+            "DET": 0.0,
+            "FOOD": 10.0,
+            "O2": 2.0,
+            "WATER": 55500.0
+          }
+        },
+        "name": "cell-chamber",
+        "substance": [
+          {
+            "c_p": 75.3,
+            "composition": {
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 2.3e-09,
+            "enthalpy_formation": -285830.0,
+            "id": "WATER",
+            "max_conc": 55600.0,
+            "molar_mass": 18.01528,
+            "partial_molar_volume": 1.807e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 55500.0
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 8e-10,
+            "enthalpy_formation": -200000.0,
+            "id": "FOOD",
+            "max_conc": 100.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 10.0
+          },
+          {
+            "c_p": 30.0,
+            "composition": {
+              "O": 2
+            },
+            "diffusivity": 2e-09,
+            "enthalpy_formation": 0.0,
+            "id": "O2",
+            "max_conc": 100.0,
+            "molar_mass": 31.9988,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 2.0
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "O": 2
+            },
+            "diffusivity": 1.6e-09,
+            "enthalpy_formation": -393510.0,
+            "id": "CO2",
+            "max_conc": 100.0,
+            "molar_mass": 44.0095,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.01
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 4e-11,
+            "enthalpy_formation": -181000.0,
+            "id": "DET",
+            "max_conc": 20.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.002
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 0.0,
+            "enthalpy_formation": -180000.0,
+            "id": "BIO",
+            "max_conc": 20.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.002
+          }
+        ]
+      },
+      "identity": {
+        "biomass_substance": "BIO",
+        "canonical_digest": "blake3:46a0ba13d90eec747010f83d213dcf399dec121f4835f9c854ee35a18e56d7ce",
+        "chamber_format": 1,
+        "config_hash": "blake3:46a0ba13d90eec74",
+        "declared_max_cells": 512,
+        "derived": true,
+        "dt_seconds": 30.0,
+        "energy_units_per_joule": "147573952589676412928",
+        "matter_scales": [
+          {
+            "id": "WATER",
+            "units_per_mol": "36028797018963968"
+          },
+          {
+            "id": "FOOD",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "O2",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "CO2",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "DET",
+            "units_per_mol": "9223372036854775808"
+          },
+          {
+            "id": "BIO",
+            "units_per_mol": "9223372036854775808"
+          }
+        ],
+        "model": "well_mixed_individual_cells",
+        "scenario": "cell-chamber",
+        "spatial_positions": false,
+        "temperature_k": 298.15,
+        "units": {
+          "concentration": "mol/m^3",
+          "energy": "J",
+          "structural_mass": "mol structural biomass",
+          "temperature": "K",
+          "time": "s"
+        },
+        "volume_m3": 1e-12,
+        "world_format_version": 30
+      },
+      "input_toml_digest": "blake3:c28687d7ab2541b3b4504e2fed5ae8dbde3e28c2ba7b8c544dc27d357c0fddfc",
+      "toml_bytes": 3102,
+      "toml_sha256": "b5c12296d47b83ffcc919482134d995d85086b5dc335fa9a20d8c08831e07b8e"
+    },
+    {
+      "canonical_config_sha256": "a38587228f228cf3efd4f00eb0af19b8983594773742514aed4be36d8df33b53",
+      "condition": "founder_k2",
+      "declared_parameters": {
+        "chamber": {
+          "max_cells": 512,
+          "medium_exchange_per_s": 2e-06,
+          "temperature_k": 298.15,
+          "volume_m3": 1e-12
+        },
+        "chamber_format": 1,
+        "conserved": {
+          "C": 12.0107,
+          "H": 1.00794,
+          "O": 15.9994
+        },
+        "death": {
+          "detritus_substance": "DET"
+        },
+        "dt": 30.0,
+        "extent_fraction": 0.015625,
+        "founder": {
+          "count": 8,
+          "genome": {
+            "capture_denominator": 1000,
+            "capture_numerator": 1,
+            "division_energy_j": 1e-12,
+            "division_mass_mol": 6e-14,
+            "kinetics": 2,
+            "maintenance_power_w": 5e-16,
+            "max_growth_rate_per_s": 0.0005,
+            "starvation_tolerance_s": 3600.0,
+            "uptake_km_mol_m3": 0.05
+          },
+          "internal_energy_j": 5e-12,
+          "structural_mass_mol": 3e-14
+        },
+        "genome": {
+          "affinity_cost_per_step": 1.8,
+          "kinetics_max": 4,
+          "kinetics_min": -4,
+          "mutation_probability": 0.02,
+          "mutation_step": 1,
+          "speed_factor_per_step": 1.35
+        },
+        "growth": {
+          "biomass_substance": "BIO",
+          "enthalpy_j_per_extent": -459340.0,
+          "id": "aerobic_growth",
+          "inputs": {
+            "FOOD": 2,
+            "O2": 1
+          },
+          "limiting_substance": "FOOD",
+          "outputs": {
+            "BIO": 1,
+            "CO2": 1,
+            "WATER": 1
+          }
+        },
+        "initial": {
+          "concentration": {
+            "BIO": 0.0,
+            "CO2": 0.01,
+            "DET": 0.0,
+            "FOOD": 10.0,
+            "O2": 2.0,
+            "WATER": 55500.0
+          }
+        },
+        "medium": {
+          "concentration": {
+            "BIO": 0.0,
+            "CO2": 0.01,
+            "DET": 0.0,
+            "FOOD": 10.0,
+            "O2": 2.0,
+            "WATER": 55500.0
+          }
+        },
+        "name": "cell-chamber",
+        "substance": [
+          {
+            "c_p": 75.3,
+            "composition": {
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 2.3e-09,
+            "enthalpy_formation": -285830.0,
+            "id": "WATER",
+            "max_conc": 55600.0,
+            "molar_mass": 18.01528,
+            "partial_molar_volume": 1.807e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 55500.0
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 8e-10,
+            "enthalpy_formation": -200000.0,
+            "id": "FOOD",
+            "max_conc": 100.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 10.0
+          },
+          {
+            "c_p": 30.0,
+            "composition": {
+              "O": 2
+            },
+            "diffusivity": 2e-09,
+            "enthalpy_formation": 0.0,
+            "id": "O2",
+            "max_conc": 100.0,
+            "molar_mass": 31.9988,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 2.0
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "O": 2
+            },
+            "diffusivity": 1.6e-09,
+            "enthalpy_formation": -393510.0,
+            "id": "CO2",
+            "max_conc": 100.0,
+            "molar_mass": 44.0095,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.01
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 4e-11,
+            "enthalpy_formation": -181000.0,
+            "id": "DET",
+            "max_conc": 20.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.002
+          },
+          {
+            "c_p": 75.0,
+            "composition": {
+              "C": 1,
+              "H": 2,
+              "O": 1
+            },
+            "diffusivity": 0.0,
+            "enthalpy_formation": -180000.0,
+            "id": "BIO",
+            "max_conc": 20.0,
+            "molar_mass": 30.02598,
+            "partial_molar_volume": 3e-05,
+            "settling_radius": 0.0,
+            "typical_conc": 0.002
+          }
+        ]
+      },
+      "identity": {
+        "biomass_substance": "BIO",
+        "canonical_digest": "blake3:91aa58420b2f4209acf132cf3041edce4f494a0267e0dc5892919df9d16bd8a4",
+        "chamber_format": 1,
+        "config_hash": "blake3:91aa58420b2f4209",
+        "declared_max_cells": 512,
+        "derived": true,
+        "dt_seconds": 30.0,
+        "energy_units_per_joule": "147573952589676412928",
+        "matter_scales": [
+          {
+            "id": "WATER",
+            "units_per_mol": "36028797018963968"
+          },
+          {
+            "id": "FOOD",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "O2",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "CO2",
+            "units_per_mol": "2305843009213693952"
+          },
+          {
+            "id": "DET",
+            "units_per_mol": "9223372036854775808"
+          },
+          {
+            "id": "BIO",
+            "units_per_mol": "9223372036854775808"
+          }
+        ],
+        "model": "well_mixed_individual_cells",
+        "scenario": "cell-chamber",
+        "spatial_positions": false,
+        "temperature_k": 298.15,
+        "units": {
+          "concentration": "mol/m^3",
+          "energy": "J",
+          "structural_mass": "mol structural biomass",
+          "temperature": "K",
+          "time": "s"
+        },
+        "volume_m3": 1e-12,
+        "world_format_version": 30
+      },
+      "input_toml_digest": "blake3:8ef7a0f3fb4b6cf0a2b08a7f25932e398a57d8791bf71fffbae5094bee273089",
+      "toml_bytes": 3102,
+      "toml_sha256": "7788568a676fc6588ac4b47af585b7d9afa7f03fba7ace258192831abbe8440c"
+    }
+  ],
+  "delivery": {
+    "builder": "scripts/build_lab_catalog.py",
+    "builder_schema_version": 1,
+    "numerical_recalculation": false,
+    "total_raw_bytes": 6494550
+  },
+  "files": {
+    "comparisons": {
+      "bytes": 1116928,
+      "sha256": "e2faeda80c9f47ff23e5aff14879f3780627d867fae51aa655b77d4ad52a8ae3",
+      "url": "./data/lab-2/comparisons.json"
+    },
+    "manifest": {
+      "bytes": 82880,
+      "sha256": "f7a669548650754864a410a46e86593ab722116e0a01057e17f6efc84efcb2f3",
+      "url": "./data/lab-2/manifest.json"
+    },
+    "results": {
+      "bytes": 5294742,
+      "sha256": "6fd944f6fe2e25ca5418ac357dcb97ce68620afee569b2ecd6dc684c22f7d37a",
+      "url": "./data/lab-2/results.json"
+    }
+  },
+  "kind": "aggregate_cell_lab_descriptor",
+  "matrix": {
+    "conditions": [
+      "baseline",
+      "mutation_off",
+      "starvation",
+      "oxygen_low",
+      "exchange_half",
+      "founder_k2"
+    ],
+    "dt_seconds": 30.0,
+    "expected_runs": 24,
+    "requested_steps": 20000,
+    "sample_every": 100,
+    "seeds": [
+      "1",
+      "7",
+      "42",
+      "2026"
+    ]
+  },
+  "runs": [
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "baseline",
+      "requested_steps": 20000,
+      "results_index": 0,
+      "run_id": "seed-1-baseline",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "1",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "mutation_off",
+      "requested_steps": 20000,
+      "results_index": 1,
+      "run_id": "seed-1-mutation_off",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "1",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 454,
+      "checked_ticks": 454,
+      "condition": "starvation",
+      "requested_steps": 20000,
+      "results_index": 2,
+      "run_id": "seed-1-starvation",
+      "sample_count": 6,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "1",
+      "status": "extinct",
+      "stop_reason": "extinction"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "oxygen_low",
+      "requested_steps": 20000,
+      "results_index": 3,
+      "run_id": "seed-1-oxygen_low",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "1",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "exchange_half",
+      "requested_steps": 20000,
+      "results_index": 4,
+      "run_id": "seed-1-exchange_half",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "1",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "founder_k2",
+      "requested_steps": 20000,
+      "results_index": 5,
+      "run_id": "seed-1-founder_k2",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "1",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "baseline",
+      "requested_steps": 20000,
+      "results_index": 6,
+      "run_id": "seed-7-baseline",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "7",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "mutation_off",
+      "requested_steps": 20000,
+      "results_index": 7,
+      "run_id": "seed-7-mutation_off",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "7",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 454,
+      "checked_ticks": 454,
+      "condition": "starvation",
+      "requested_steps": 20000,
+      "results_index": 8,
+      "run_id": "seed-7-starvation",
+      "sample_count": 6,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "7",
+      "status": "extinct",
+      "stop_reason": "extinction"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "oxygen_low",
+      "requested_steps": 20000,
+      "results_index": 9,
+      "run_id": "seed-7-oxygen_low",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "7",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "exchange_half",
+      "requested_steps": 20000,
+      "results_index": 10,
+      "run_id": "seed-7-exchange_half",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "7",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "founder_k2",
+      "requested_steps": 20000,
+      "results_index": 11,
+      "run_id": "seed-7-founder_k2",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "7",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "baseline",
+      "requested_steps": 20000,
+      "results_index": 12,
+      "run_id": "seed-42-baseline",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "42",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "mutation_off",
+      "requested_steps": 20000,
+      "results_index": 13,
+      "run_id": "seed-42-mutation_off",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "42",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 454,
+      "checked_ticks": 454,
+      "condition": "starvation",
+      "requested_steps": 20000,
+      "results_index": 14,
+      "run_id": "seed-42-starvation",
+      "sample_count": 6,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "42",
+      "status": "extinct",
+      "stop_reason": "extinction"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "oxygen_low",
+      "requested_steps": 20000,
+      "results_index": 15,
+      "run_id": "seed-42-oxygen_low",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "42",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "exchange_half",
+      "requested_steps": 20000,
+      "results_index": 16,
+      "run_id": "seed-42-exchange_half",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "42",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "founder_k2",
+      "requested_steps": 20000,
+      "results_index": 17,
+      "run_id": "seed-42-founder_k2",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "42",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "baseline",
+      "requested_steps": 20000,
+      "results_index": 18,
+      "run_id": "seed-2026-baseline",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "2026",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "mutation_off",
+      "requested_steps": 20000,
+      "results_index": 19,
+      "run_id": "seed-2026-mutation_off",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "2026",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 454,
+      "checked_ticks": 454,
+      "condition": "starvation",
+      "requested_steps": 20000,
+      "results_index": 20,
+      "run_id": "seed-2026-starvation",
+      "sample_count": 6,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "2026",
+      "status": "extinct",
+      "stop_reason": "extinction"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "oxygen_low",
+      "requested_steps": 20000,
+      "results_index": 21,
+      "run_id": "seed-2026-oxygen_low",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "2026",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "exchange_half",
+      "requested_steps": 20000,
+      "results_index": 22,
+      "run_id": "seed-2026-exchange_half",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "2026",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    },
+    {
+      "attempted_tick": 20000,
+      "checked_ticks": 20000,
+      "condition": "founder_k2",
+      "requested_steps": 20000,
+      "results_index": 23,
+      "run_id": "seed-2026-founder_k2",
+      "sample_count": 201,
+      "sample_every": 100,
+      "samples_truncated": false,
+      "seed": "2026",
+      "status": "censored",
+      "stop_reason": "requested_horizon_reached"
+    }
+  ],
+  "schema_version": 1,
+  "source": {
+    "chamber_format": 1,
+    "dt_seconds": 30.0,
+    "limitations": [
+      "Uncalibrated prototype chemistry and bounded inherited kinetics.",
+      "No temperature dependence, spatial dynamics, GRN or open-ended evolution.",
+      "Finite horizons and resource stops are censored observations, not completed biological histories.",
+      "Samples contain aggregates, not resumable states or event reconstructions."
+    ],
+    "provenance": {
+      "build_attestation": false,
+      "build_requirement": "Use cargo run in this checkout. Runtime rustc and profile are observations, not proof of how a standalone binary was built.",
+      "host_arch": "x86_64",
+      "host_os": "linux",
+      "numerical_mode": "FLOAT/native f32 Q and f64 genome decoding; exact i128 ledgers",
+      "profile": "release",
+      "runner_version": "0.1.0",
+      "runtime_rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "source_verification": "git_head_and_clean_provenance_inputs"
+    },
+    "source_commit": "21cbe90732128edee61963544e414d29a7420577",
+    "world_format_version": 30
+  }
+}
