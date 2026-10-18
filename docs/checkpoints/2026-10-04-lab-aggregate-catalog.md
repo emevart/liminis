@@ -188,3 +188,41 @@ mandatoryCI с all9LAB/recorded/dense/13GL gates, original artifact actualreview
 и durablearchive/readback. Только green permits guardedmerge и existing
 publicdeployment/browser delivery. Пользователь отсутствует, вопросы/спорные
 решения Astra; LAB4a/newmodels/Cargo вне нового mandatoryCI NOT_RUN.
+
+### Причина отмены загрузки и 320px, 2026-10-18
+
+Ветка обновлена от main813be1e; конфликтов было два, оба текстовые:
+`.github/workflows/ci.yml` (шаг LAB-каталога рядом с новым
+`scripts/physical-3d-png.test.mjs`) и `docs/ACCEPTANCE.md` (встречные append —
+LIVE-3b/REC observer из main и LAB-3a ветки сохранены оба, LAB-3a в конце).
+ADR-112 остался единственным с этим номером.
+
+Причина LABgate2 FAIL установлена и воспроизведена локально 1/1 на том же
+pinned Playwright1.61.1/Chromium149.0.7827.55: `net::ERR_ABORTED` и
+`Network.getResponseBody: No data found` — одно событие. Загрузку отменяет
+renderer при потоковом чтении тела: он освобождает загрузку по EOF тела
+раньше, чем browser process запишет завершение, и буфер DevTools пропадает.
+Зонд, 170 случаев: точные байты в странице во всех; отмена `pipeTo` 9/50,
+`getReader` 16/50, `arrayBuffer` 0/50, вариант с проверкой объявленной длины
+0/20, на размерах от 1 116 928 до 5 294 742. Прежний A/B сравнивал два
+потоковых способа.
+
+Исправление в `site/lab-data.mjs`: запрос отвергается по объявленной длине
+до передачи тела (`content-length` — точный десятичный счёт не больше пина),
+затем тело читается целиком. Потоковый путь с инкрементным лимитом сохранён
+там, где длина не объявлена, прежние восемь native-проверок не менялись.
+Добавлены четыре проверки нового пути: точная длина читает тело без потока,
+завышенная длина отказывает до первого байта, неточный счёт отказывает,
+короткое тело при допустимой длине отвергается по length/SHA.
+`scripts/check_lab_browser.mjs` не менялся.
+
+Второй найденный дефект — настоящий, продуктовый: при viewport320 document
+уходил на 374px, потому что `#source-links` содержит неразрывные
+64-символьные SHA-256, а flex-элемент не сжимается ниже min-content.
+`.source-links a` получил `min-width:0; overflow-wrap:anywhere`; данные
+и URL не менялись.
+
+Локально (Windows-gnu, `chromiumSandbox:true`) все9LABgates PASS. Это не
+Linux CI: gates3—9 на Linux ещё ни разу не исполнялись, mandatory fullCI
+обязателен. Независимый code/data review правки consumer PENDING. PR21 снят
+с черновика для решения владельца; merge/deploy/publicLAB остаются за ним.

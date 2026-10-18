@@ -170,3 +170,47 @@ test('missing streamed response refuses visibly without an unbounded body fallba
   await assert.rejects(loadLab({ baseURL: 'https://liminis.dev/lab.html', fetchImpl, cryptoImpl: webcrypto }), /LAB streamed response is unavailable/);
   assert.equal(requested, 1); assert.equal(fallback, 0);
 });
+
+function declaredTransport({ declared, truncate = 0 } = {}) {
+  const records = [];
+  const fetchImpl = async url => {
+    const name = url.pathname.match(/\/(descriptor|results|comparisons|manifest)\.json$/)?.[1]; assert.ok(name);
+    const full = new Uint8Array(bytes(name)), payload = truncate && name === 'descriptor' ? full.subarray(0, full.length - truncate) : full;
+    const record = { name, arrayBufferCalls: 0, pulls: 0 };
+    const body = new ReadableStream({ pull(controller) { record.pulls++; controller.enqueue(payload); controller.close(); } }, { highWaterMark: 0 });
+    const response = new Response(body, { status: 200, headers: { 'Content-Type': 'application/json', 'Content-Length': declared === undefined ? String(payload.length) : declared } });
+    const native = response.arrayBuffer.bind(response); response.arrayBuffer = async () => { record.arrayBufferCalls++; return native(); };
+    record.response = response; record.body = response.body; records.push(record); return response;
+  };
+  return { records, load: () => loadLab({ baseURL: 'https://liminis.dev/lab.html', fetchImpl, cryptoImpl: webcrypto }) };
+}
+
+test('declared response length admits the exact original bodies without a streamed read', { timeout: 5000 }, async () => {
+  const net = declaredTransport(), data = await net.load();
+  assert.equal(data.runs.size, 24); assert.equal([...data.runs.values()].reduce((sum, run) => sum + run.samples.length, 0), 4044);
+  assert.equal(net.records.length, 4);
+  for (const record of net.records) { assert.equal(record.arrayBufferCalls, 1); assert.equal(record.response.bodyUsed, true); }
+});
+
+test('a declared length above the pin refuses before any body byte is requested', { timeout: 5000 }, async () => {
+  const net = declaredTransport({ declared: String(256 * 1024 + 1) });
+  await assert.rejects(net.load(), /Invalid published LAB evidence: declared response size/);
+  assert.equal(net.records.length, 1); const record = net.records[0];
+  assert.equal(record.arrayBufferCalls, 0); assert.equal(record.pulls, 0); assert.equal(record.body.locked, false); assert.equal(record.response.bodyUsed, false);
+});
+
+test('a declared length that is not an exact decimal count refuses without reading the body', { timeout: 5000 }, async () => {
+  // Окружающие пробелы снимает сам Headers, поэтому проверяются только значения,
+  // которые доходят до чтения в виде, отличном от точного десятичного счёта.
+  for (const declared of ['1e3', '-1', '0x400', '050708', '1.0', '', 'none', '9007199254740993', '+50708']) {
+    const net = declaredTransport({ declared });
+    await assert.rejects(net.load(), /Invalid published LAB evidence: declared response size/);
+    assert.equal(net.records[0].arrayBufferCalls, 0); assert.equal(net.records[0].pulls, 0); assert.equal(net.records[0].body.locked, false);
+  }
+});
+
+test('a declared length within the pin cannot admit a short body past the exact byte and SHA check', { timeout: 5000 }, async () => {
+  const net = declaredTransport({ truncate: 1 });
+  await assert.rejects(net.load(), /Invalid published LAB evidence: descriptor SHA-256/);
+  assert.equal(net.records.length, 1); assert.equal(net.records[0].arrayBufferCalls, 1);
+});

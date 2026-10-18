@@ -127,9 +127,20 @@ export async function validateLab(d, results, comparisons, manifest, cryptoImpl 
   }
   return { descriptor: d, results, comparisons, manifest, runs };
 }
+// Объявленная длина отвергается до передачи тела, и дальше тело берётся целиком.
+// Потоковое чтение заставляет Chromium отменять уже полученную загрузку
+// (ERR_ABORTED), и тогда доставленные байты нельзя предъявить приёмке. Там, где
+// длина не объявлена, остаётся прежнее чтение с инкрементным лимитом. Точную
+// границу в обоих случаях ставит сверка length/SHA-256 у вызывающего.
 async function readBytes(url, limit, fetchImpl) {
   const response = await fetchImpl(url);
   if (!response.ok) throw new Error(`LAB data request failed (${response.status}).`);
+  const declared = response.headers?.get?.('content-length') ?? null;
+  if (declared !== null) {
+    const length = Number(declared);
+    check(/^(0|[1-9]\d*)$/.test(declared) && Number.isSafeInteger(length) && length <= limit, 'declared response size');
+    return new Uint8Array(await response.arrayBuffer());
+  }
   if (!response.body?.pipeTo) throw new Error('LAB streamed response is unavailable.');
   const chunks = []; let length = 0, writeFailed = false, writeError;
   const sink = new WritableStream({
