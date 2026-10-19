@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Validate recordings, catalog freshness, and download integrity
-        run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs scripts/cell-viewer-3d.test.mjs scripts/physical-3d-png.test.mjs
+        run: node --test site/*.test.mjs scripts/cell-viewer.test.mjs scripts/cell-viewer-3d.test.mjs scripts/physical-3d-png.test.mjs scripts/public-edge-insertion.test.mjs
       - name: Validate immutable aggregate laboratory delivery
         run: |
           python3 scripts/test_build_lab_catalog.py

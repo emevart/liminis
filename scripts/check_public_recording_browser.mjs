@@ -17,13 +17,30 @@ const siteRoot = resolve(repoRoot, "site");
 const evidenceDir = resolve(repoRoot, "target/qa/public-playback");
 const publicBase = new URL("https://liminis.dev/");
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
-// Reviewed production-only Cloudflare insertion, including its preceding LF.
-// Its digest is pinned before execution, never learned from a new response.
+// Reviewed production-only Cloudflare insertion: the beacon tag with the one LF
+// that closes its line. Cloudflare rotates the beacon version in src and the
+// SRI paired with it, so pinning the insertion to exact bytes failed acceptance
+// at every rotation. The insertion is matched against a template instead: only
+// the version and its integrity vary, every other byte of the tag is literal,
+// and the site token is matched by shape so it is not kept in the repository.
+// The shape is pinned before execution, never learned from a new response; the
+// HTML outside the insertion must still equal the checkout byte for byte, and
+// the blocked GET must name exactly the beacon this HTML declared.
 const knownEdgeInsertion = {
   sourceBytes: 6954, sourceSha256: "105c5a860651769c0310c4185a96d7ad2442c3726b51779a8afa1f1707d0b72e",
-  offset: 6938, bytes: 367, sha256: "bbba70d1fbb140fe2cff2d40386e726bfe911227760ad6e69e29644e42b6f40a",
-  scriptUrl: "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+  offset: 6938, maxBytes: 512,
+  beaconOrigin: "https://static.cloudflareinsights.com", beaconPath: /^\/beacon\.min\.js\/v[0-9a-f]{40,64}$/,
+  pattern: /^<script type="module" src="(https:\/\/static\.cloudflareinsights\.com\/beacon\.min\.js\/v[0-9a-f]{40,64})" integrity="(sha512-[A-Za-z0-9+/]{86}==)" data-cf-beacon='\{"version":"\d{4}\.\d{1,2}\.\d{1,2}","token":"[0-9a-f]{32}","r":1,"spa":2\}' crossorigin="anonymous"><\/script>\n?$/,
 };
+function beaconScriptUrl(value) {
+  let url; try { url = new URL(value); } catch { return null; }
+  return url.origin === knownEdgeInsertion.beaconOrigin && knownEdgeInsertion.beaconPath.test(url.pathname) && !url.search && !url.hash ? url.href : null;
+}
+function edgeInsertionFacts(insertion) {
+  const match = knownEdgeInsertion.pattern.exec(insertion.toString("utf8"));
+  if (!match || beaconScriptUrl(match[1]) !== match[1]) return null;
+  return { bytes: insertion.byteLength, beaconUrl: match[1], integrity: match[2] };
+}
 const controls = ["play", "previous", "next", "scrub", "speed", "speed-preset", "draw-fps"];
 const sourceNames = ["observe.html", "observer.js", "observer.css", "playback.mjs", "recording-loader.mjs", "recording.mjs", "dense-recording.mjs", "catalog.mjs", "data/catalog.json"];
 const timeouts = { deployment: 180_000, retry: 5000, fetch: 15_000, operation: 15_000, viewport: 60_000, launch: 20_000, cdp: 5000, traceStop: 15_000, cleanup: 5000 };
@@ -35,7 +52,7 @@ const evidence = {
   workflowRun: process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_SERVER_URL || "https://github.com"}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}` : null,
   workflowAttempt: process.env.GITHUB_RUN_ATTEMPT || null,
   timeouts, checks: [], screenshots: [], publicAssetAttempts: [], browserObservations: [], blockedRequests: [], analyticsRequests: [],
-  hostingHtmlQualification: { knownEdgeInsertion, analytics_execution: "not_tested", policy: "Actual browser HTML is retained; only this exact pinned insertion may differ. Its analytics Script GET is intentionally blocked before transmission." },
+  hostingHtmlQualification: { knownEdgeInsertion, analytics_execution: "not_tested", policy: "Actual browser HTML is retained; only the reviewed Cloudflare beacon tag may differ, and only in its rotated version and paired SRI. Its analytics Script GET is intentionally blocked before transmission." },
   publicAssets: { status: "NOT_RUN", measurement: "Node HTTPS GET response bytes, size and SHA-256 against the clean local checkout" },
   launchArgumentCheck: { status: "NOT_RUN", method: "CDP Browser.getBrowserCommandLine" },
   trace: { status: "NOT_RUN", filename: "trace.zip", coverage: "Actual public browser actions, responses, snapshots and screenshots; Node fetch observations are in evidence.json." },
@@ -168,7 +185,7 @@ async function viewportSmoke(name, viewport, assets, entry, control) {
       if (request.method === "GET" && url.origin === publicBase.origin) {
         observation.requestGuard.allowed++;
         await bounded(networkSession.send("Fetch.continueRequest", { requestId: event.requestId }), timeouts.cdp, "Public GET guard acknowledgement");
-      } else if (request.method === "GET" && url.href === knownEdgeInsertion.scriptUrl && event.resourceType === "Script") {
+      } else if (request.method === "GET" && beaconScriptUrl(url.href) && event.resourceType === "Script") {
         const frameTree = await bounded(networkSession.send("Page.getFrameTree"), timeouts.cdp, "Analytics document attribution");
         assert.equal(event.frameId, frameTree.frameTree.frame.id, "Analytics exception belongs only to the checked main document");
         assert.equal(frameTree.frameTree.frame.url, documentUrl);
@@ -211,12 +228,12 @@ async function viewportSmoke(name, viewport, assets, entry, control) {
     if (message.type() !== "error") return;
     const item = { text: message.text(), location: message.location() };
     consoleErrors.push(item);
-    if (!(item.location.url === knownEdgeInsertion.scriptUrl && /^Failed to load resource: net::ERR_BLOCKED_BY_CLIENT(?:\.Inspector)?$/.test(item.text))) observation.errors.push(`Console error: ${item.text}`);
+    if (!(beaconScriptUrl(item.location.url) && /^Failed to load resource: net::ERR_BLOCKED_BY_CLIENT(?:\.Inspector)?$/.test(item.text))) observation.errors.push(`Console error: ${item.text}`);
   });
   page.on("requestfailed", (request) => {
     const item = { url: request.url(), method: request.method(), errorText: request.failure()?.errorText };
     failedRequests.push(item);
-    if (!(item.url === knownEdgeInsertion.scriptUrl && item.method === "GET" && /^net::ERR_BLOCKED_BY_CLIENT(?:\.Inspector)?$/.test(item.errorText || ""))) observation.errors.push(`Request failed: ${item.url} (${item.errorText})`);
+    if (!(beaconScriptUrl(item.url) && item.method === "GET" && /^net::ERR_BLOCKED_BY_CLIENT(?:\.Inspector)?$/.test(item.errorText || ""))) observation.errors.push(`Request failed: ${item.url} (${item.errorText})`);
   });
   page.on("request", (request) => observation.requests.push({ method: request.method(), url: request.url() }));
   page.on("response", (response) => {
@@ -250,11 +267,14 @@ async function viewportSmoke(name, viewport, assets, entry, control) {
         if (!result.rawHtmlMatchesSource) {
           assert.equal(asset.bytes, knownEdgeInsertion.sourceBytes);
           assert.equal(asset.sha256, knownEdgeInsertion.sourceSha256);
-          assert.equal(bytes.byteLength, asset.bytes + knownEdgeInsertion.bytes);
-          const insertion = bytes.subarray(knownEdgeInsertion.offset, knownEdgeInsertion.offset + knownEdgeInsertion.bytes);
-          assert.equal(digest(insertion), knownEdgeInsertion.sha256, "Only the independently reviewed exact Cloudflare insertion is allowed");
-          normalized = Buffer.concat([bytes.subarray(0, knownEdgeInsertion.offset), bytes.subarray(knownEdgeInsertion.offset + knownEdgeInsertion.bytes)]);
+          const insertionBytes = bytes.byteLength - asset.bytes;
+          assert.ok(insertionBytes > 0 && insertionBytes <= knownEdgeInsertion.maxBytes, "The edge may add only one bounded insertion");
+          const insertion = bytes.subarray(knownEdgeInsertion.offset, knownEdgeInsertion.offset + insertionBytes);
+          const facts = edgeInsertionFacts(insertion);
+          assert.ok(facts, "Only the reviewed Cloudflare beacon tag, varying solely in its rotated version and paired SRI, is allowed");
+          normalized = Buffer.concat([bytes.subarray(0, knownEdgeInsertion.offset), bytes.subarray(knownEdgeInsertion.offset + insertionBytes)]);
           result.knownEdgeInjectionVerified = true;
+          result.edgeInsertion = { offset: knownEdgeInsertion.offset, ...facts, sha256: digest(insertion) };
         }
         assert.equal(normalized.byteLength, asset.bytes); assert.equal(digest(normalized), asset.sha256);
         result.afterExactInsertionRemovalMatchesSource = true;
@@ -290,16 +310,19 @@ async function viewportSmoke(name, viewport, assets, entry, control) {
     assert.equal(observation.requestGuard.blocked, 0);
     assert.notEqual(observation.requestGuard.status, "FAIL");
     const expectedAnalyticsCount = observation.html.knownEdgeInjectionVerified ? 1 : 0;
-    assert.equal(observation.analyticsRequests.length, expectedAnalyticsCount, "Only one pinned insertion's blocked analytics request is permitted");
+    // The blocked GET is matched against the beacon the verified HTML declared.
+    const observedBeaconUrl = observation.html.edgeInsertion?.beaconUrl ?? null;
+    assert.equal(observation.analyticsRequests.length, expectedAnalyticsCount, "Only the verified insertion's blocked analytics request is permitted");
+    assert.ok(observation.analyticsRequests.every((item) => item.url === observedBeaconUrl), "The blocked analytics GET must name the beacon of the verified HTML");
     assert.ok(observation.analyticsRequests.every((item) => item.status === "BLOCKED_ACKNOWLEDGED"));
-    assert.ok(observation.requests.every((item) => item.method === "GET" && (new URL(item.url).origin === publicBase.origin || (item.url === knownEdgeInsertion.scriptUrl && expectedAnalyticsCount === 1))), "Every final browser request must satisfy public read-only scope");
+    assert.ok(observation.requests.every((item) => item.method === "GET" && (new URL(item.url).origin === publicBase.origin || (item.url === observedBeaconUrl && expectedAnalyticsCount === 1))), "Every final browser request must satisfy public read-only scope");
     observation.expectedErrors = [];
     for (const item of failedRequests) {
-      if (expectedAnalyticsCount === 1 && item.url === knownEdgeInsertion.scriptUrl && item.method === "GET" && /^net::ERR_BLOCKED_BY_CLIENT(?:\.Inspector)?$/.test(item.errorText || "")) observation.expectedErrors.push({ kind: "requestfailed", ...item });
+      if (expectedAnalyticsCount === 1 && item.url === observedBeaconUrl && item.method === "GET" && /^net::ERR_BLOCKED_BY_CLIENT(?:\.Inspector)?$/.test(item.errorText || "")) observation.expectedErrors.push({ kind: "requestfailed", ...item });
       else observation.errors.push(`Request failed: ${item.url} (${item.errorText})`);
     }
     for (const item of consoleErrors) {
-      if (expectedAnalyticsCount === 1 && item.location.url === knownEdgeInsertion.scriptUrl && /^Failed to load resource: net::ERR_BLOCKED_BY_CLIENT(?:\.Inspector)?$/.test(item.text)) observation.expectedErrors.push({ kind: "console", ...item });
+      if (expectedAnalyticsCount === 1 && item.location.url === observedBeaconUrl && /^Failed to load resource: net::ERR_BLOCKED_BY_CLIENT(?:\.Inspector)?$/.test(item.text)) observation.expectedErrors.push({ kind: "console", ...item });
       else observation.errors.push(`Console error: ${item.text}`);
     }
     observation.playbackPageRequests = observation.requests.slice(observation.playbackRequestBaseline);
@@ -322,7 +345,7 @@ async function viewportSmoke(name, viewport, assets, entry, control) {
     for (const asset of assets) assert.ok(observation.sourceResponses.some((item) => item.filename === asset.filename && item.status === "PASS"), `Browser did not receive verified ${asset.filename}`);
     assert.ok(observation.sourceResponses.every((item) => item.status === "PASS"), "Every observed critical browser response must match the checkout");
     assert.ok((observation.redirectResponses || []).every((item) => item.status === "PASS"), "Browser redirects must match the verified canonical chain");
-    assert.ok(observation.requests.every((item) => item.method === "GET" && (new URL(item.url).origin === publicBase.origin || (item.url === knownEdgeInsertion.scriptUrl && observation.html.knownEdgeInjectionVerified && observation.analyticsRequests.some((request) => request.status === "BLOCKED_ACKNOWLEDGED")))), "Only public same-origin GETs or the exact intentionally blocked analytics request may be observed");
+    assert.ok(observation.requests.every((item) => item.method === "GET" && (new URL(item.url).origin === publicBase.origin || (item.url === observation.html.edgeInsertion?.beaconUrl && observation.html.knownEdgeInjectionVerified && observation.analyticsRequests.some((request) => request.status === "BLOCKED_ACKNOWLEDGED")))), "Only public same-origin GETs or the exact intentionally blocked analytics request may be observed");
 
     const { first, next, horizon } = control;
     assert.equal(Number(await page.locator("#speed").inputValue()), horizon / 120);
